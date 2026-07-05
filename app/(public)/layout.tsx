@@ -22,7 +22,7 @@ export default function PublicLayout({
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <header className="sticky top-0 z-40 border-b border-raised-panel bg-background/95 backdrop-blur-md">
-        <div className="mx-auto flex max-w-7xl h-16 items-center justify-between px-6">
+        <div className="flex h-16 items-center justify-between px-10">
           <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center gap-2 font-display text-xl font-bold tracking-wider text-foreground">
               <span className="h-5 w-5 rounded-xs bg-primary-brand inline-block" />
@@ -118,16 +118,6 @@ export default function PublicLayout({
 
       <main className="flex-1 flex flex-col">{children}</main>
 
-      <footer className="border-t border-raised-panel bg-background py-8">
-        <div className="mx-auto max-w-7xl px-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="font-display text-lg font-bold tracking-wider text-secondary-text">
-            COLLEGIUM
-          </p>
-          <p className="font-sans text-xs text-secondary-text">
-            &copy; 2026 Collegium. All rights reserved. Philippine Collegiate Esports Circuit.
-          </p>
-        </div>
-      </footer>
     </div>
   );
 }
