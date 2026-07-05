@@ -24,33 +24,37 @@ export default function PublicLayout({
       <header className="sticky top-0 z-40 border-b border-raised-panel bg-background/95 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl h-16 items-center justify-between px-6">
           <div className="flex items-center gap-8">
-            <Link href="/" className="font-display text-2xl font-bold tracking-wider text-primary-brand">
-              COLLEGIUM
+            <Link href="/" className="flex items-center gap-2 font-display text-xl font-bold tracking-wider text-foreground">
+              <span className="h-5 w-5 rounded-xs bg-primary-brand inline-block" />
+              <span>COLLEGIUM</span>
             </Link>
-            <nav className="hidden md:flex items-center gap-6">
+            <nav className="hidden md:flex items-center gap-6 h-16">
               {navItems.map((item) => {
                 const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`font-sans text-sm font-medium transition-colors hover:text-primary-brand ${
-                      isActive ? "text-primary-brand" : "text-secondary-text"
+                    className={`font-sans text-sm font-medium transition-colors hover:text-foreground relative flex items-center h-full ${
+                      isActive ? "text-foreground" : "text-secondary-text"
                     }`}
                   >
                     {item.name}
+                    {isActive && (
+                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-brand" />
+                    )}
                   </Link>
                 );
               })}
             </nav>
           </div>
           <div className="hidden md:flex items-center gap-4">
-            <Link href="/login" className="font-sans text-sm font-medium text-secondary-text transition-colors hover:text-foreground">
+            <Link href="/login" className="inline-flex h-9 items-center justify-center rounded border border-raised-panel px-4 text-sm font-bold text-foreground transition-colors hover:bg-raised-panel">
               Log In
             </Link>
             <Link
               href="/register"
-              className="inline-flex h-9 items-center justify-center rounded bg-primary-brand px-4 text-sm font-bold text-foreground transition-colors hover:bg-opacity-95"
+              className="inline-flex h-9 items-center justify-center rounded bg-primary-brand px-4 text-sm font-bold text-foreground transition-colors hover:bg-opacity-90"
             >
               Sign Up
             </Link>
