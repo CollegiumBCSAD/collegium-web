@@ -5,33 +5,47 @@ export interface TeamInMatch {
   isWinner?: boolean;
 }
 
-export const mockTournaments = [
+export interface Tournament {
+  id: string;
+  title: string;
+  game: string;
+  status: "COMPLETED" | "UPCOMING" | "LIVE";
+  statusText: string;
+  bulletPoints: string[];
+  image?: string;
+  bgGradient: string;
+}
+
+export const mockTournaments: Tournament[] = [
   {
     id: "1",
     title: "UNIVERSITY CIRCUIT OPEN",
     game: "VALORANT",
-    teamsCount: "24 teams",
-    info: "18 tournaments",
-    status: "UPCOMING",
-    statusText: "Registration closes in 10 days",
+    status: "COMPLETED",
+    statusText: "Final standings published",
+    bulletPoints: ["8 participating teams", "Eliminations"],
+    image: "/valorant.png",
+    bgGradient: "from-[#8E2632] via-[#48161D] to-[#11141C]",
   },
   {
     id: "2",
     title: "Campus Clash Invitational",
     game: "LEAGUE OF LEGENDS",
-    teamsCount: "16 participating teams",
-    info: "Round robin format",
-    status: "LIVE",
-    statusText: "Registration closes in 4 days",
+    status: "UPCOMING",
+    statusText: "Registration closes in 10 days",
+    bulletPoints: ["8 participating teams", "Round robin format"],
+    image: "/lol.png",
+    bgGradient: "from-[#233568] via-[#141C38] to-[#11141C]",
   },
   {
     id: "3",
     title: "METRO LEAGUE FINALS",
     game: "MOBILE LEGENDS: BANG BANG",
-    teamsCount: "12 participating teams",
-    info: "Best-of-5 finals",
-    status: "COMPLETED",
-    statusText: "Final standings published",
+    status: "UPCOMING",
+    statusText: "Registration closes in 4 days",
+    bulletPoints: ["8 participating teams", "Best-of-5 finals"],
+    image: "/mlbb.png",
+    bgGradient: "from-[#8E6519] via-[#42300E] to-[#11141C]",
   },
 ];
 
