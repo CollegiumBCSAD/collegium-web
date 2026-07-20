@@ -6,7 +6,7 @@ export default function CommunityPage() {
     <div className="flex flex-col flex-1 bg-gradient-to-b md:bg-gradient-to-r from-[#CC0000]/25 from-0% to-[#0A0C10] to-[50%] md:to-[40%]">
       <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 md:px-10 lg:px-16 py-8 sm:py-12 lg:py-16">
         <div className="border-t border-raised-panel/50 pt-8 mb-8 sm:mb-10">
-          <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground uppercase">
+          <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-foreground uppercase">
             LATEST NEWS
           </h1>
           <p className="font-sans text-xs sm:text-sm text-primary-brand mt-1 font-normal tracking-tight">
@@ -42,7 +42,7 @@ export default function CommunityPage() {
                 </span>
                 <Link
                   href={`/community/article/${article.id}`}
-                  className="font-sans text-xs font-semibold text-foreground underline hover:text-primary-brand transition-colors"
+                  className="font-sans text-xs font-semibold text-secondary-text underline hover:text-primary-brand transition-colors"
                 >
                   Read More
                 </Link>
