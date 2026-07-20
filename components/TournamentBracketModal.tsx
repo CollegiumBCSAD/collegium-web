@@ -108,7 +108,7 @@ export default function TournamentBracketModal({
             <button
               onClick={onClose}
               aria-label="Close Modal"
-              className="flex h-9 w-9 items-center justify-center rounded-lg bg-card-bg text-secondary-text transition-colors hover:text-foreground hover:bg-raised-panel"
+              className="flex h-9 w-9 items-center justify-center rounded-lg bg-card-bg text-foreground transition-colors hover:text-foreground hover:bg-raised-panel"
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -151,7 +151,7 @@ export default function TournamentBracketModal({
                   </div>
                 </div>
 
-                <svg className="absolute inset-0 w-full h-full pointer-events-none stroke-panel-border-hover fill-none" strokeWidth="1.5">
+                <svg className="absolute inset-0 w-full h-full pointer-events-none stroke-[#3A4056] fill-none" strokeWidth="1.5">
                   <path d="M 224 64 H 260 V 132 H 224 M 260 98 H 296" />
                   <path d="M 224 336 H 260 V 404 H 224 M 260 370 H 296" />
                   <path d="M 520 132 H 556 V 370 H 520 M 556 251 H 592" />

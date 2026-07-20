@@ -21,21 +21,21 @@
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-primary-brand: var(--primary-brand);
-  --color-secondary-brand: var(--secondary-brand);
-  --color-accent: var(--accent);
-  --color-card-bg: var(--card-bg);
-  --color-modal-bg: var(--modal-bg);
-  --color-raised-panel: var(--raised-panel);
-  --color-panel-border: var(--panel-border);
-  --color-panel-border-hover: var(--panel-border-hover);
-  --color-secondary-text: var(--secondary-text);
-  --color-dark: var(--dark);
-  --color-success: var(--success);
-  --color-error: var(--error);
-  --color-disabled: var(--disabled);
+  --color-background: #0A0C10;
+  --color-foreground: #EDEEF2;
+  --color-primary-brand: #E53A4C;
+  --color-secondary-brand: #F2B705;
+  --color-accent: #8B5CF6;
+  --color-card-bg: #121520;
+  --color-modal-bg: #0C0F17;
+  --color-raised-panel: #191D27;
+  --color-panel-border: #272B3A;
+  --color-panel-border-hover: #3A4259;
+  --color-secondary-text: #8B92A5;
+  --color-dark: #121212;
+  --color-success: #2FD97A;
+  --color-error: #E53A4C;
+  --color-disabled: #6E6E6E;
   --font-sans: var(--font-inter);
   --font-display: var(--font-oswald);
 }

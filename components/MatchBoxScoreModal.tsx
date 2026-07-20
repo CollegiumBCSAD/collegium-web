@@ -131,7 +131,7 @@ export default function MatchBoxScoreModal({
                       <th className="pb-2 text-center">ACS</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-panel-border/60">
+                  <tbody className="divide-y divide-[#1D212E]">
                     {team1.players.map((p) => (
                       <tr key={p.name}>
                         <td className="py-2.5 font-bold text-foreground flex items-center gap-1.5">
@@ -170,7 +170,7 @@ export default function MatchBoxScoreModal({
                       <th className="pb-2 text-center">ACS</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-panel-border/60">
+                  <tbody className="divide-y divide-[#1D212E]">
                     {team2.players.map((p) => (
                       <tr key={p.name}>
                         <td className="py-2.5 font-bold text-foreground flex items-center gap-1.5">
