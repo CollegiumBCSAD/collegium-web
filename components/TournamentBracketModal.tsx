@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect } from "react";
+import MatchBoxScoreModal from "@/components/MatchBoxScoreModal";
+import { useEffect, useState } from "react";
 
 interface MatchTeam {
   name: string;
@@ -28,9 +28,11 @@ export default function TournamentBracketModal({
   title = "TOURNAMENT BRACKET",
   subtitle = "SINGLE ELIMINATION • 8 TEAMS",
 }: TournamentBracketModalProps) {
+  const [activeBoxScore, setActiveBoxScore] = useState<BracketMatch | null>(null);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape" && !activeBoxScore) onClose();
     };
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -40,7 +42,7 @@ export default function TournamentBracketModal({
       document.body.style.overflow = "unset";
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, activeBoxScore]);
 
   if (!isOpen) return null;
 
@@ -89,80 +91,89 @@ export default function TournamentBracketModal({
   const champion = "University Of Makati";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 md:p-10 bg-black/80 backdrop-blur-md">
-      <div className="absolute inset-0" onClick={onClose} />
+    <>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 md:p-10 bg-black/80 backdrop-blur-md">
+        <div className="absolute inset-0" onClick={onClose} />
 
-      <div className="relative w-full max-w-6xl max-h-[92vh] flex flex-col rounded-2xl border border-[#272B3A] bg-[#0C0F17] shadow-2xl overflow-hidden z-10">
-        <div className="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-[#222636]">
-          <div>
-            <h2 className="font-display text-2xl sm:text-3xl font-bold tracking-normal text-foreground uppercase">
-              {title}
-            </h2>
-            <p className="font-sans text-xs font-semibold tracking-wider text-secondary-text uppercase mt-1">
-              {subtitle}
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            aria-label="Close Modal"
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#272B3A] bg-[#141824] text-secondary-text transition-colors hover:text-foreground hover:bg-[#1C2234]"
-          >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-x-auto p-6 sm:p-8">
-          <div className="min-w-[960px] mx-auto">
-            <div className="grid grid-cols-4 gap-8 mb-6 text-xs sm:text-sm font-bold tracking-wide text-foreground uppercase text-left pl-1">
-              <div>QUARTERFINALS</div>
-              <div>SEMIFINALS</div>
-              <div>GRAND FINALS</div>
-              <div>CHAMPION</div>
+        <div className="relative w-full max-w-6xl max-h-[92vh] flex flex-col rounded-2xl border border-[#272B3A] bg-[#0C0F17] shadow-2xl overflow-hidden z-10">
+          <div className="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-[#222636]">
+            <div>
+              <h2 className="font-display text-2xl sm:text-3xl font-bold tracking-normal text-foreground uppercase">
+                {title}
+              </h2>
+              <p className="font-sans text-xs font-semibold tracking-wider text-secondary-text uppercase mt-1">
+                {subtitle}
+              </p>
             </div>
-
-            <div className="grid grid-cols-4 gap-8 items-center relative min-h-[480px]">
-              <div className="flex flex-col justify-between h-full gap-4 py-2 z-10">
-                {qfMatches.map((m) => (
-                  <MatchCard key={m.id} match={m} />
-                ))}
-              </div>
-
-              <div className="flex flex-col justify-around h-full py-10 z-10">
-                {sfMatches.map((m) => (
-                  <MatchCard key={m.id} match={m} />
-                ))}
-              </div>
-
-              <div className="flex flex-col justify-center h-full z-10">
-                <MatchCard match={gfMatch} />
-              </div>
-
-              <div className="flex items-center justify-start z-10">
-                <div className="flex items-center gap-2.5 rounded-lg border-2 border-[#EAB308] bg-[#141824] px-4 py-3 shadow-xl">
-                  <span className="text-base">👑</span>
-                  <span className="font-sans text-xs sm:text-sm font-bold text-foreground">
-                    {champion}
-                  </span>
-                </div>
-              </div>
-
-              <svg className="absolute inset-0 w-full h-full pointer-events-none stroke-[#3A4056] fill-none" strokeWidth="1.5">
-                <path d="M 224 64 H 260 V 132 H 224 M 260 98 H 296" />
-                <path d="M 224 336 H 260 V 404 H 224 M 260 370 H 296" />
-                <path d="M 520 132 H 556 V 370 H 520 M 556 251 H 592" />
-                <path d="M 816 251 H 888" />
+            <button
+              onClick={onClose}
+              aria-label="Close Modal"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#272B3A] bg-[#141824] text-secondary-text transition-colors hover:text-foreground hover:bg-[#1C2234]"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-x-auto p-6 sm:p-8">
+            <div className="min-w-[960px] mx-auto">
+              <div className="grid grid-cols-4 gap-8 mb-6 text-xs sm:text-sm font-bold tracking-wide text-foreground uppercase text-left pl-1">
+                <div>QUARTERFINALS</div>
+                <div>SEMIFINALS</div>
+                <div>GRAND FINALS</div>
+                <div>CHAMPION</div>
+              </div>
+
+              <div className="grid grid-cols-4 gap-8 items-center relative min-h-[480px]">
+                <div className="flex flex-col justify-between h-full gap-4 py-2 z-10">
+                  {qfMatches.map((m) => (
+                    <MatchCard key={m.id} match={m} onViewBoxScore={() => setActiveBoxScore(m)} />
+                  ))}
+                </div>
+
+                <div className="flex flex-col justify-around h-full py-10 z-10">
+                  {sfMatches.map((m) => (
+                    <MatchCard key={m.id} match={m} onViewBoxScore={() => setActiveBoxScore(m)} />
+                  ))}
+                </div>
+
+                <div className="flex flex-col justify-center h-full z-10">
+                  <MatchCard match={gfMatch} onViewBoxScore={() => setActiveBoxScore(gfMatch)} />
+                </div>
+
+                <div className="flex items-center justify-start z-10">
+                  <div className="flex items-center gap-2.5 rounded-lg border-2 border-[#EAB308] bg-[#141824] px-4 py-3 shadow-xl">
+                    <span className="text-base">👑</span>
+                    <span className="font-sans text-xs sm:text-sm font-bold text-foreground">
+                      {champion}
+                    </span>
+                  </div>
+                </div>
+
+                <svg className="absolute inset-0 w-full h-full pointer-events-none stroke-[#3A4056] fill-none" strokeWidth="1.5">
+                  <path d="M 224 64 H 260 V 132 H 224 M 260 98 H 296" />
+                  <path d="M 224 336 H 260 V 404 H 224 M 260 370 H 296" />
+                  <path d="M 520 132 H 556 V 370 H 520 M 556 251 H 592" />
+                  <path d="M 816 251 H 888" />
+                </svg>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+
+      <MatchBoxScoreModal
+        isOpen={!!activeBoxScore}
+        onClose={() => setActiveBoxScore(null)}
+        title="MATCH BOX SCORE"
+        subtitle="VALORANT • GRAND FINALS • ELIMINATION"
+      />
+    </>
   );
 }
 
-function MatchCard({ match }: { match: BracketMatch }) {
+function MatchCard({ match, onViewBoxScore }: { match: BracketMatch; onViewBoxScore: () => void }) {
   return (
     <div className="w-52 sm:w-56 rounded-lg border border-[#272B3A] bg-[#121520] overflow-hidden shadow-xl flex flex-col">
       <div className="flex items-center justify-between px-3.5 py-2 font-sans text-xs font-bold text-foreground bg-[#1C202E] border-b border-[#222636]">
@@ -179,12 +190,12 @@ function MatchCard({ match }: { match: BracketMatch }) {
         </span>
       </div>
 
-      <Link
-        href="/tournaments/1/box-score"
-        className="w-full py-1.5 bg-[#E53A4C] hover:bg-[#D42D3F] text-foreground font-sans text-xs font-bold tracking-normal text-center transition-colors"
+      <button
+        onClick={onViewBoxScore}
+        className="w-full py-1.5 bg-[#E53A4C] hover:bg-[#D42D3F] text-foreground font-sans text-xs font-bold tracking-normal text-center transition-colors cursor-pointer"
       >
         View
-      </Link>
+      </button>
     </div>
   );
 }
