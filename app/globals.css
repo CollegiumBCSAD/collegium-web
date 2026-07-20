@@ -6,12 +6,15 @@
   --primary-brand: #E53A4C;
   --secondary-brand: #F2B705;
   --accent: #8B5CF6;
-  --card-bg: #14171F;
+  --card-bg: #121520;
+  --modal-bg: #0C0F14;
   --raised-panel: #191D27;
+  --panel-border: #272B3A;
+  --panel-border-hover: #3A4259;
   --secondary-text: #8B92A5;
   --dark: #121212;
   --success: #2FD97A;
-  --error: #D91818;
+  --error: #E53A4C;
   --disabled: #6E6E6E;
   --font-oswald: var(--font-oswald);
   --font-inter: var(--font-inter);
@@ -24,7 +27,10 @@
   --color-secondary-brand: var(--secondary-brand);
   --color-accent: var(--accent);
   --color-card-bg: var(--card-bg);
+  --color-modal-bg: var(--modal-bg);
   --color-raised-panel: var(--raised-panel);
+  --color-panel-border: var(--panel-border);
+  --color-panel-border-hover: var(--panel-border-hover);
   --color-secondary-text: var(--secondary-text);
   --color-dark: var(--dark);
   --color-success: var(--success);

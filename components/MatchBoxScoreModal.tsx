@@ -61,8 +61,8 @@ export default function MatchBoxScoreModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 md:p-10 bg-black/80 backdrop-blur-md">
       <div className="absolute inset-0" onClick={onClose} />
 
-      <div className="relative w-full max-w-5xl max-h-[92vh] flex flex-col rounded-2xl border border-[#272B3A] bg-[#0C0F17] shadow-2xl overflow-hidden z-10">
-        <div className="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-[#222636]">
+      <div className="relative w-full max-w-5xl max-h-[92vh] flex flex-col rounded-2xl border border-panel-border bg-modal-bg shadow-2xl overflow-hidden z-10">
+        <div className="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-panel-border">
           <div>
             <h2 className="font-display text-2xl sm:text-3xl font-bold tracking-normal text-foreground uppercase">
               {title}
@@ -74,7 +74,7 @@ export default function MatchBoxScoreModal({
           <button
             onClick={onClose}
             aria-label="Close Modal"
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#272B3A] bg-[#141824] text-secondary-text transition-colors hover:text-foreground hover:bg-[#1C2234]"
+            className="flex h-9 w-9 items-center justify-center rounded-lg bg-card-bg text-foreground transition-colors hover:text-foreground hover:bg-raised-panel"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -84,14 +84,14 @@ export default function MatchBoxScoreModal({
 
         <div className="flex-1 overflow-y-auto p-6 sm:p-8">
           <div className="flex items-center justify-center gap-6 sm:gap-10 mb-8">
-            <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-[#2FD97A] bg-[#0E1A16] px-8 sm:px-12 py-4 shadow-lg min-w-[140px] text-center">
+            <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-success bg-[#0E1A16] px-8 sm:px-12 py-4 shadow-lg min-w-[140px] text-center">
               <span className="font-sans text-sm font-bold text-foreground">
                 {team1.name}
               </span>
               <span className="font-display text-3xl sm:text-4xl font-bold text-foreground my-0.5">
                 {team1.score}
               </span>
-              <span className="font-sans text-xs font-bold text-[#2FD97A] tracking-wider uppercase">
+              <span className="font-sans text-xs font-bold text-success tracking-wider uppercase">
                 {team1.result}
               </span>
             </div>
@@ -100,28 +100,28 @@ export default function MatchBoxScoreModal({
               VS
             </span>
 
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-[#272B3A] bg-[#121520] px-8 sm:px-12 py-4 shadow-lg min-w-[140px] text-center">
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-panel-border bg-card-bg px-8 sm:px-12 py-4 shadow-lg min-w-[140px] text-center">
               <span className="font-sans text-sm font-bold text-foreground">
                 {team2.name}
               </span>
               <span className="font-display text-3xl sm:text-4xl font-bold text-foreground my-0.5">
                 {team2.score}
               </span>
-              <span className="font-sans text-xs font-bold text-[#E53A4C] tracking-wider uppercase">
+              <span className="font-sans text-xs font-bold text-primary-brand tracking-wider uppercase">
                 {team2.result}
               </span>
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="rounded-xl border border-[#232736] bg-[#121520] p-4 sm:p-5">
+            <div className="rounded-xl border border-panel-border bg-card-bg p-4 sm:p-5">
               <h3 className="font-sans text-base font-bold text-foreground mb-4">
                 {team1.name}
               </h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-left font-sans text-xs">
                   <thead>
-                    <tr className="border-b border-[#222636] text-[11px] font-bold text-secondary-text tracking-wider uppercase pb-2">
+                    <tr className="border-b border-panel-border text-[11px] font-bold text-secondary-text tracking-wider uppercase pb-2">
                       <th className="pb-2">PLAYER</th>
                       <th className="pb-2">ROLE / AGENT</th>
                       <th className="pb-2 text-center">K</th>
@@ -131,11 +131,11 @@ export default function MatchBoxScoreModal({
                       <th className="pb-2 text-center">ACS</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#1D212E]">
+                  <tbody className="divide-y divide-panel-border/60">
                     {team1.players.map((p) => (
                       <tr key={p.name}>
                         <td className="py-2.5 font-bold text-foreground flex items-center gap-1.5">
-                          <span className="text-[#E53A4C]">•</span>
+                          <span className="text-primary-brand">•</span>
                           <span>{p.name}</span>
                         </td>
                         <td className="py-2.5 text-secondary-text font-medium">
@@ -144,7 +144,7 @@ export default function MatchBoxScoreModal({
                         <td className="py-2.5 text-center font-bold text-foreground">{p.k}</td>
                         <td className="py-2.5 text-center font-medium text-foreground">{p.d}</td>
                         <td className="py-2.5 text-center font-medium text-foreground">{p.a}</td>
-                        <td className="py-2.5 text-center font-bold text-[#2FD97A]">{p.kda}</td>
+                        <td className="py-2.5 text-center font-bold text-success">{p.kda}</td>
                         <td className="py-2.5 text-center font-medium text-foreground">{p.acs}</td>
                       </tr>
                     ))}
@@ -153,14 +153,14 @@ export default function MatchBoxScoreModal({
               </div>
             </div>
 
-            <div className="rounded-xl border border-[#232736] bg-[#121520] p-4 sm:p-5">
+            <div className="rounded-xl border border-panel-border bg-card-bg p-4 sm:p-5">
               <h3 className="font-sans text-base font-bold text-foreground mb-4">
                 {team2.name}
               </h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-left font-sans text-xs">
                   <thead>
-                    <tr className="border-b border-[#222636] text-[11px] font-bold text-secondary-text tracking-wider uppercase pb-2">
+                    <tr className="border-b border-panel-border text-[11px] font-bold text-secondary-text tracking-wider uppercase pb-2">
                       <th className="pb-2">PLAYER</th>
                       <th className="pb-2">ROLE / AGENT</th>
                       <th className="pb-2 text-center">K</th>
@@ -170,11 +170,11 @@ export default function MatchBoxScoreModal({
                       <th className="pb-2 text-center">ACS</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#1D212E]">
+                  <tbody className="divide-y divide-panel-border/60">
                     {team2.players.map((p) => (
                       <tr key={p.name}>
                         <td className="py-2.5 font-bold text-foreground flex items-center gap-1.5">
-                          <span className="text-[#E53A4C]">•</span>
+                          <span className="text-primary-brand">•</span>
                           <span>{p.name}</span>
                         </td>
                         <td className="py-2.5 text-secondary-text font-medium">
@@ -193,7 +193,7 @@ export default function MatchBoxScoreModal({
             </div>
           </div>
 
-          <div className="mt-8 pt-4 border-t border-[#222636] text-center">
+          <div className="mt-8 pt-4 border-t border-panel-border text-center">
             <p className="font-sans text-xs text-secondary-text">
               Individual player statistics for Tournament Mode matches. KDA = (Kills + Assists) / Deaths
             </p>
