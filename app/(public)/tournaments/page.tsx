@@ -47,7 +47,7 @@ export default function TournamentsPage() {
                     <span className="font-sans text-xs sm:text-sm font-bold tracking-wider text-foreground uppercase">
                       {tournament.game}
                     </span>
-                    <span className="font-sans text-2xs sm:text-xs font-bold tracking-wider text-secondary-text uppercase">
+                    <span className="font-sans text-2xs sm:text-xs font-bold tracking-wider text-foreground uppercase">
                       {tournament.status}
                     </span>
                   </div>
