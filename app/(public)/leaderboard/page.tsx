@@ -80,7 +80,7 @@ export default function LeaderboardPage() {
                       {entry.university}
                     </h2>
                   </div>
-                  <div className="mt-1 flex items-baseline gap-2">
+                  <div className="mt-1 flex flex-col items-baseline ">
                     <span className="font-sans text-[10px] sm:text-xs font-bold tracking-widest text-secondary-text uppercase">
                       RATING
                     </span>
