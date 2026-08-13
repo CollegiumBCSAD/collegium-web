@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -31,7 +32,7 @@ function HeaderAuthControls() {
               {user.displayName}
             </span>
             <span className="text-[9px] font-sans text-secondary-text tracking-widest uppercase font-semibold">
-              {user.role} · {user.university.split(" ")[0]}
+              {user.role} · {user.university.name.split(" ")[0]}
             </span>
           </div>
           <svg className="w-3.5 h-3.5 text-secondary-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -51,6 +52,13 @@ function HeaderAuthControls() {
             </div>
             <div className="py-1">
               <Link
+                href="/dashboard"
+                onClick={() => setDropdownOpen(false)}
+                className="w-full flex items-center gap-2 px-4 py-2 text-xs font-sans text-secondary-text hover:text-foreground hover:bg-white/5"
+              >
+                <span>🏠 My Dashboard</span>
+              </Link>
+              <Link
                 href="/team/create"
                 onClick={() => setDropdownOpen(false)}
                 className="w-full flex items-center gap-2 px-4 py-2 text-xs font-sans text-secondary-text hover:text-foreground hover:bg-white/5"
@@ -63,6 +71,13 @@ function HeaderAuthControls() {
                 className="w-full flex items-center gap-2 px-4 py-2 text-xs font-sans text-secondary-text hover:text-foreground hover:bg-white/5"
               >
                 <span>🤝 Join Squad</span>
+              </Link>
+              <Link
+                href="/scrims"
+                onClick={() => setDropdownOpen(false)}
+                className="w-full flex items-center gap-2 px-4 py-2 text-xs font-sans text-secondary-text hover:text-foreground hover:bg-white/5"
+              >
+                <span>⚔️ Scrims</span>
               </Link>
             </div>
             <div className="pt-1 border-t border-raised-panel px-2 mt-1">

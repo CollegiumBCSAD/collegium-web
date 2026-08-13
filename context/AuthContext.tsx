@@ -1,63 +1,120 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { configureApiClient, api } from "@/lib/api";
 
-export interface UserSession {
-  displayName: string;
+export interface UserProfile {
+  id: string;
   email: string;
-  university: string;
+  displayName: string;
   role: string;
-  createdAt?: string;
+  status: string;
+  universityId: string;
+  university: {
+    id: string;
+    name: string;
+    domain: string;
+  };
+  createdAt: string;
 }
 
 interface AuthContextType {
-  user: UserSession | null;
+  user: UserProfile | null;
+  accessToken: string | null;
   isLoggedIn: boolean;
   isLoaded: boolean;
-  loginUser: (session: UserSession) => void;
-  logoutUser: () => void;
+  loginWithToken: (token: string) => Promise<void>;
+  logoutUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<UserSession | null>(null);
-  const [isLoaded, setIsLoaded] = useState<boolean>(false);
+const STORAGE_KEY = "collegium_access_token";
 
-  useEffect(() => {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  const getToken = useCallback(() => accessToken, [accessToken]);
+
+  const clearAuth = useCallback(() => {
+    setUser(null);
+    setAccessToken(null);
     try {
-      const stored = localStorage.getItem("collegium_user_session");
-      if (stored) {
-        setUser(JSON.parse(stored));
-      }
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {}
+  }, []);
+
+  const fetchProfile = useCallback(async (token: string): Promise<UserProfile | null> => {
+    try {
+      const profile = await api.get<UserProfile>("/auth/me");
+      return profile;
     } catch {
-      setUser(null);
-    } finally {
-      setIsLoaded(true);
+      return null;
     }
   }, []);
 
-  const loginUser = (session: UserSession) => {
-    setUser(session);
+  const loginWithToken = useCallback(async (token: string) => {
+    setAccessToken(token);
     try {
-      localStorage.setItem("collegium_user_session", JSON.stringify(session));
+      localStorage.setItem(STORAGE_KEY, token);
     } catch {}
-  };
 
-  const logoutUser = () => {
-    setUser(null);
+    configureApiClient(() => token, clearAuth);
+
+    const profile = await fetchProfile(token);
+    if (profile) {
+      setUser(profile);
+    } else {
+      clearAuth();
+    }
+  }, [clearAuth, fetchProfile]);
+
+  const logoutUser = useCallback(async () => {
     try {
-      localStorage.removeItem("collegium_user_session");
+      await api.post("/auth/logout", {});
     } catch {}
-  };
+    clearAuth();
+  }, [clearAuth]);
+
+  useEffect(() => {
+    const storedToken = (() => {
+      try {
+        return localStorage.getItem(STORAGE_KEY);
+      } catch {
+        return null;
+      }
+    })();
+
+    if (storedToken) {
+      configureApiClient(() => storedToken, clearAuth);
+      setAccessToken(storedToken);
+      fetchProfile(storedToken).then((profile) => {
+        if (profile) {
+          setUser(profile);
+        } else {
+          clearAuth();
+        }
+        setIsLoaded(true);
+      });
+    } else {
+      setIsLoaded(true);
+    }
+  }, [clearAuth, fetchProfile]);
+
+  useEffect(() => {
+    configureApiClient(getToken, clearAuth);
+  }, [getToken, clearAuth]);
 
   return (
     <AuthContext.Provider
       value={{
         user,
+        accessToken,
         isLoggedIn: !!user,
         isLoaded,
-        loginUser,
+        loginWithToken,
         logoutUser,
       }}
     >
