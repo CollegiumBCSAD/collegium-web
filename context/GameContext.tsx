@@ -1,0 +1,82 @@
+"use client";
+
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { GameId, GameInfo, GAMES, STORAGE_KEY } from "@/lib/games";
+
+interface GameContextType {
+  selectedGame: GameId | null;
+  selectedGameInfo: GameInfo | null;
+  isSelectorOpen: boolean;
+  isLoaded: boolean;
+  selectGame: (gameId: GameId) => void;
+  openGameSelector: () => void;
+  closeGameSelector: () => void;
+}
+
+const GameContext = createContext<GameContextType | undefined>(undefined);
+
+export function GameProvider({ children }: { children: React.ReactNode }) {
+  const [selectedGame, setSelectedGame] = useState<GameId | null>(null);
+  const [isSelectorOpen, setIsSelectorOpen] = useState<boolean>(false);
+  const [isLoaded, setIsLoaded] = useState<boolean>(false);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored && stored in GAMES) {
+        setSelectedGame(stored as GameId);
+        setIsSelectorOpen(false);
+      } else {
+        setIsSelectorOpen(true);
+      }
+    } catch {
+      setIsSelectorOpen(true);
+    } finally {
+      setIsLoaded(true);
+    }
+  }, []);
+
+  const selectGame = (gameId: GameId) => {
+    setSelectedGame(gameId);
+    setIsSelectorOpen(false);
+    try {
+      localStorage.setItem(STORAGE_KEY, gameId);
+    } catch {}
+  };
+
+  const openGameSelector = () => {
+    setIsSelectorOpen(true);
+  };
+
+  const closeGameSelector = () => {
+    if (selectedGame) {
+      setIsSelectorOpen(false);
+    }
+  };
+
+  const selectedGameInfo = selectedGame ? GAMES[selectedGame] : null;
+
+  return (
+    <GameContext.Provider
+      value={{
+        selectedGame,
+        selectedGameInfo,
+        isSelectorOpen,
+        isLoaded,
+        selectGame,
+        openGameSelector,
+        closeGameSelector,
+      }}
+    >
+      {children}
+    </GameContext.Provider>
+  );
+}
+
+export function useGame() {
+  const context = useContext(GameContext);
+  if (!context) {
+    throw new Error("useGame must be used within a GameProvider");
+  }
+  return context;
+}
