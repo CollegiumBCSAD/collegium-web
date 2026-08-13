@@ -50,16 +50,16 @@ export function getStoredTeams(): Team[] {
           gameTitle: "valo",
           universityId: "umak",
           universityName: "University of Makati",
-          captainId: "user-1",
-          captainName: "Christian Baldesco",
+          captainId: "seed-user-1",
+          captainName: "Varsity Captain",
           inviteCode: "umak-alpha-77",
           createdAt: new Date().toISOString(),
           members: [
             {
-              id: "mem-1",
-              userId: "user-1",
-              displayName: "Christian Baldesco",
-              email: "baldesco@umak.edu.ph",
+              id: "mem-seed-1",
+              userId: "seed-user-1",
+              displayName: "Varsity Captain",
+              email: "seed.captain@umak.edu.ph",
               gameHandle: "Heron#UMAK",
               preferredRole: "Duelist",
               status: "ACCEPTED",
@@ -86,12 +86,13 @@ export function saveStoredTeams(teams: Team[]): void {
 
 export function getUserActiveTeamForGame(userEmail: string, gameTitle: GameId): Team | null {
   const teams = getStoredTeams();
+  const targetEmail = userEmail.toLowerCase().trim();
   return (
     teams.find(
       (t) =>
         t.gameTitle === gameTitle &&
         t.members.some(
-          (m) => m.email.toLowerCase() === userEmail.toLowerCase() && m.status === "ACCEPTED"
+          (m) => m.email.toLowerCase().trim() === targetEmail && m.status === "ACCEPTED"
         )
     ) || null
   );
@@ -130,7 +131,7 @@ export function createLocalTeam(
         id: `mem-${Date.now()}`,
         userId: `user-${Date.now()}`,
         displayName: userDisplayName,
-        email: userEmail,
+        email: userEmail.toLowerCase().trim(),
         gameHandle,
         preferredRole,
         status: "ACCEPTED",
@@ -158,8 +159,9 @@ export function joinLocalTeam(
     return { success: false, isInstant: false, message: "Team not found or link expired." };
   }
 
+  const targetEmail = userEmail.toLowerCase().trim();
   const existingMember = team.members.find(
-    (m) => m.email.toLowerCase() === userEmail.toLowerCase()
+    (m) => m.email.toLowerCase().trim() === targetEmail
   );
 
   if (existingMember) {
@@ -195,7 +197,7 @@ export function joinLocalTeam(
     id: `mem-${Date.now()}`,
     userId: `user-${Date.now()}`,
     displayName: userDisplayName,
-    email: userEmail,
+    email: targetEmail,
     gameHandle,
     preferredRole,
     status,

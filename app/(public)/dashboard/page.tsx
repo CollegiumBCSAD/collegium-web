@@ -9,7 +9,7 @@ import { GAMES } from "@/lib/games";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, isLoggedIn, isLoaded, logoutUser } = useAuth();
+  const { user, isLoggedIn, isLoaded } = useAuth();
   const [userTeams, setUserTeams] = useState<Team[]>([]);
 
   useEffect(() => {
@@ -20,9 +20,15 @@ export default function DashboardPage() {
 
     if (user) {
       const allTeams = getStoredTeams();
+      const myEmail = user.email.toLowerCase().trim();
+      const myName = user.displayName.toLowerCase().trim();
+
       const myTeams = allTeams.filter((t) =>
         t.members.some(
-          (m) => m.email.toLowerCase() === user.email.toLowerCase() && m.status === "ACCEPTED"
+          (m) =>
+            m.email.toLowerCase().trim() === myEmail ||
+            m.displayName.toLowerCase().trim() === myName ||
+            t.captainName.toLowerCase().trim() === myName
         )
       );
       setUserTeams(myTeams);
@@ -58,7 +64,7 @@ export default function DashboardPage() {
                 {user.displayName}
               </h1>
               <p className="font-sans text-xs text-secondary-text mt-0.5">
-                {user.email} · {user.university.name}
+                {user.email} · {user.university?.name || "University of Makati"}
               </p>
             </div>
           </div>
@@ -98,7 +104,7 @@ export default function DashboardPage() {
                 <div className="flex justify-center gap-3">
                   <Link
                     href="/team/create"
-                    className="h-10 px-4 rounded-lg bg-primary-brand text-foreground font-sans text-xs font-bold uppercase tracking-wider flex items-center justify-center"
+                    className="h-10 px-4 rounded-lg bg-primary-brand text-foreground font-sans text-xs font-bold uppercase tracking-wider flex items-center justify-center font-bold"
                   >
                     Establish Squad
                   </Link>
@@ -176,28 +182,28 @@ export default function DashboardPage() {
               </Link>
 
               <Link
-                href="/leaderboard"
+                href="/scrims"
                 className="w-full p-3 rounded-xl bg-background border border-panel-border hover:border-primary-brand flex items-center justify-between transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-lg">📊</span>
+                  <span className="text-lg">⚔️</span>
                   <div>
-                    <h4 className="font-display text-xs font-bold uppercase text-foreground">Rankings</h4>
-                    <span className="text-[10px] font-sans text-secondary-text">Glicko-2 University Standings</span>
+                    <h4 className="font-display text-xs font-bold uppercase text-foreground">Scrim Finder</h4>
+                    <span className="text-[10px] font-sans text-secondary-text">Book practice matches</span>
                   </div>
                 </div>
                 <span className="text-xs text-secondary-text">→</span>
               </Link>
 
               <Link
-                href="/community"
+                href="/recruit"
                 className="w-full p-3 rounded-xl bg-background border border-panel-border hover:border-primary-brand flex items-center justify-between transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-lg">📰</span>
+                  <span className="text-lg">📢</span>
                   <div>
-                    <h4 className="font-display text-xs font-bold uppercase text-foreground">Circuit News</h4>
-                    <span className="text-[10px] font-sans text-secondary-text">Philippine collegiate esports feed</span>
+                    <h4 className="font-display text-xs font-bold uppercase text-foreground">LFT / LFP Board</h4>
+                    <span className="text-[10px] font-sans text-secondary-text">Recruit athletes or find squads</span>
                   </div>
                 </div>
                 <span className="text-xs text-secondary-text">→</span>
