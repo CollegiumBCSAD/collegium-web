@@ -5,36 +5,25 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { getStoredTeams, joinLocalTeam, Team } from "@/lib/teams";
 import { GAMES } from "@/lib/games";
+import { useAuth } from "@/context/AuthContext";
 
 function JoinTeamContent() {
   const searchParams = useSearchParams();
   const inviteCodeParam = searchParams.get("invite");
+  const { user } = useAuth();
 
   const [teams, setTeams] = useState<Team[]>([]);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [gameHandle, setGameHandle] = useState("");
   const [preferredRole, setPreferredRole] = useState("");
-  const [userSession, setUserSession] = useState<{ displayName: string; email: string; university: string } | null>(null);
   const [resultMessage, setResultMessage] = useState<{ success: boolean; isInstant: boolean; message: string } | null>(null);
   const [alreadyMemberInfo, setAlreadyMemberInfo] = useState<string | null>(null);
   const [error, setError] = useState("");
 
+  const currentEmail = user?.email || "athlete@umak.edu.ph";
+  const currentName = user?.displayName || "Verified Athlete";
+
   useEffect(() => {
-    let currentUser = {
-      displayName: "Korbin Canlas",
-      email: "canlas@umak.edu.ph",
-      university: "University of Makati",
-    };
-
-    try {
-      const storedUser = localStorage.getItem("collegium_user_session");
-      if (storedUser) {
-        currentUser = JSON.parse(storedUser);
-      }
-    } catch {}
-
-    setUserSession(currentUser);
-
     const loadedTeams = getStoredTeams();
     setTeams(loadedTeams);
 
@@ -43,7 +32,7 @@ function JoinTeamContent() {
       if (found) {
         setSelectedTeam(found);
         const existing = found.members.find(
-          (m) => m.email.toLowerCase() === currentUser.email.toLowerCase()
+          (m) => m.email.toLowerCase() === currentEmail.toLowerCase()
         );
         if (existing) {
           if (existing.status === "ACCEPTED") {
@@ -54,7 +43,7 @@ function JoinTeamContent() {
         }
       }
     }
-  }, [inviteCodeParam]);
+  }, [inviteCodeParam, currentEmail]);
 
   const handleJoinSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,8 +61,8 @@ function JoinTeamContent() {
     const res = joinLocalTeam(
       selectedTeam.id,
       inviteCodeParam || undefined,
-      userSession?.email || "canlas@umak.edu.ph",
-      userSession?.displayName || "Korbin Canlas",
+      currentEmail,
+      currentName,
       gameHandle.trim(),
       preferredRole
     );
@@ -101,7 +90,7 @@ function JoinTeamContent() {
 
         <div className="border-b border-raised-panel pb-4">
           <span className="text-xs font-sans font-extrabold uppercase tracking-widest text-secondary-brand block mb-1">
-            {userSession?.university || "University of Makati"} Circuit
+            {user?.university?.name || "University of Makati"} Circuit
           </span>
           <h1 className="font-display text-2xl sm:text-3xl font-bold uppercase tracking-wider text-foreground">
             {inviteCodeParam ? "Join Team via Invite" : "Browse & Join Squad"}
@@ -129,10 +118,10 @@ function JoinTeamContent() {
 
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <Link
-                href="/tournaments"
-                className="flex-1 h-11 rounded-lg bg-primary-brand hover:bg-primary-brand/90 text-foreground font-sans text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center text-center"
+                href="/dashboard"
+                className="flex-1 h-11 rounded-lg bg-primary-brand hover:bg-primary-brand/90 text-foreground font-sans text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center text-center font-bold"
               >
-                View Circuit Tournaments
+                Go to Dashboard
               </Link>
               <button
                 onClick={() => setAlreadyMemberInfo(null)}
@@ -158,10 +147,10 @@ function JoinTeamContent() {
 
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <Link
-                href="/tournaments"
-                className="flex-1 h-11 rounded-lg bg-primary-brand hover:bg-primary-brand/90 text-foreground font-sans text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center text-center"
+                href="/dashboard"
+                className="flex-1 h-11 rounded-lg bg-primary-brand hover:bg-primary-brand/90 text-foreground font-sans text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center text-center font-bold"
               >
-                Go to Tournaments
+                Go to Dashboard
               </Link>
               <button
                 onClick={() => setResultMessage(null)}
@@ -198,7 +187,7 @@ function JoinTeamContent() {
                           onClick={() => {
                             setSelectedTeam(t);
                             const existing = t.members.find(
-                              (m) => m.email.toLowerCase() === userSession?.email.toLowerCase()
+                              (m) => m.email.toLowerCase() === currentEmail.toLowerCase()
                             );
                             if (existing) {
                               if (existing.status === "ACCEPTED") {

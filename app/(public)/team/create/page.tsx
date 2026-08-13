@@ -1,42 +1,22 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { GAME_LIST, GameId, GAMES } from "@/lib/games";
 import { createLocalTeam, Team } from "@/lib/teams";
+import { useAuth } from "@/context/AuthContext";
 
 export default function CreateTeamPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [selectedGame, setSelectedGame] = useState<GameId>("valo");
   const [teamName, setTeamName] = useState("");
   const [gameHandle, setGameHandle] = useState("");
   const [preferredRole, setPreferredRole] = useState("");
-  const [userSession, setUserSession] = useState<{ displayName: string; email: string; university: string } | null>(null);
   const [createdTeam, setCreatedTeam] = useState<Team | null>(null);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem("collegium_user_session");
-      if (stored) {
-        setUserSession(JSON.parse(stored));
-      } else {
-        setUserSession({
-          displayName: "Christian Baldesco",
-          email: "baldesco@umak.edu.ph",
-          university: "University of Makati",
-        });
-      }
-    } catch {
-      setUserSession({
-        displayName: "Christian Baldesco",
-        email: "baldesco@umak.edu.ph",
-        university: "University of Makati",
-      });
-    }
-  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,12 +31,16 @@ export default function CreateTeamPage() {
       return;
     }
 
+    const currentEmail = user?.email || "athlete@umak.edu.ph";
+    const currentName = user?.displayName || "Verified Athlete";
+    const currentUni = user?.university?.name || "University of Makati";
+
     const res = createLocalTeam(
       teamName.trim(),
       selectedGame,
-      userSession?.university || "University of Makati",
-      userSession?.email || "baldesco@umak.edu.ph",
-      userSession?.displayName || "Christian Baldesco",
+      currentUni,
+      currentEmail,
+      currentName,
       gameHandle.trim(),
       preferredRole
     );
@@ -103,7 +87,7 @@ export default function CreateTeamPage() {
 
         <div className="border-b border-raised-panel pb-4">
           <span className="text-xs font-sans font-extrabold uppercase tracking-widest text-secondary-brand block mb-1">
-            {userSession?.university || "University of Makati"} Hub
+            {user?.university?.name || "University of Makati"} Hub
           </span>
           <h1 className="font-display text-2xl sm:text-3xl font-bold uppercase tracking-wider text-foreground">
             Create University Squad
@@ -152,10 +136,10 @@ export default function CreateTeamPage() {
 
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <Link
-                href={`/team/join?invite=${createdTeam.inviteCode}`}
-                className="flex-1 h-11 rounded-lg border border-raised-panel bg-transparent hover:bg-raised-panel text-foreground font-sans text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center text-center"
+                href="/dashboard"
+                className="flex-1 h-11 rounded-lg bg-primary-brand hover:bg-primary-brand/90 text-foreground font-sans text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center text-center font-bold"
               >
-                View Roster Dashboard
+                Go to Dashboard
               </Link>
               <button
                 onClick={() => setCreatedTeam(null)}
