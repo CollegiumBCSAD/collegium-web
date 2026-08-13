@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import { useGame } from "@/context/GameContext";
 import { GAME_LIST, GAMES, GameId, GameInfo } from "@/lib/games";
 
@@ -101,10 +102,11 @@ export default function GameSelectorModal() {
                       : "border-[#272B3A] group-hover:border-white/50"
                   }`}
                 >
-                  <img
+                  <Image
                     src={game.image}
                     alt={game.name}
-                    className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
+                    fill
+                    className="object-cover object-center transition-transform duration-300 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
 

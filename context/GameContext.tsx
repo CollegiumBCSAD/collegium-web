@@ -21,19 +21,23 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
 
   useEffect(() => {
+    let storedGame: GameId | null = null;
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored && stored in GAMES) {
-        setSelectedGame(stored as GameId);
+        storedGame = stored as GameId;
+      }
+    } catch {}
+
+    queueMicrotask(() => {
+      if (storedGame) {
+        setSelectedGame(storedGame);
         setIsSelectorOpen(false);
       } else {
         setIsSelectorOpen(true);
       }
-    } catch {
-      setIsSelectorOpen(true);
-    } finally {
       setIsLoaded(true);
-    }
+    });
   }, []);
 
   const selectGame = (gameId: GameId) => {

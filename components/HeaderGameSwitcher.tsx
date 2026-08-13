@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import { useGame } from "@/context/GameContext";
-import { GAME_LIST, GameId, GameInfo } from "@/lib/games";
+import { GAME_LIST, GameInfo } from "@/lib/games";
 
 export default function HeaderGameSwitcher() {
   const { selectedGame, selectedGameInfo, selectGame, openGameSelector, isLoaded } = useGame();
@@ -36,10 +37,11 @@ export default function HeaderGameSwitcher() {
         {selectedGameInfo ? (
           <>
             <div className="relative w-6 h-6 rounded overflow-hidden shrink-0 border border-white/20">
-              <img
+              <Image
                 src={selectedGameInfo.image}
                 alt={selectedGameInfo.name}
-                className="w-full h-full object-cover"
+                fill
+                className="object-cover"
               />
             </div>
             <div className="flex flex-col text-left leading-tight hidden sm:flex">
@@ -106,8 +108,8 @@ export default function HeaderGameSwitcher() {
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-7 h-7 rounded-md overflow-hidden shrink-0 border border-white/10 bg-card-bg">
-                      <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
+                    <div className="relative w-7 h-7 rounded-md overflow-hidden shrink-0 border border-white/10 bg-card-bg">
+                      <Image src={game.image} alt={game.name} fill className="object-cover" />
                     </div>
                     <div className="flex flex-col">
                       <span className="font-display font-bold text-sm tracking-wide text-foreground uppercase">
