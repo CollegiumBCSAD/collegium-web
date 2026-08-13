@@ -16,27 +16,24 @@ function JoinTeamContent() {
   const [preferredRole, setPreferredRole] = useState("");
   const [userSession, setUserSession] = useState<{ displayName: string; email: string; university: string } | null>(null);
   const [resultMessage, setResultMessage] = useState<{ success: boolean; isInstant: boolean; message: string } | null>(null);
+  const [alreadyMemberInfo, setAlreadyMemberInfo] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
+    let currentUser = {
+      displayName: "Korbin Canlas",
+      email: "canlas@umak.edu.ph",
+      university: "University of Makati",
+    };
+
     try {
       const storedUser = localStorage.getItem("collegium_user_session");
       if (storedUser) {
-        setUserSession(JSON.parse(storedUser));
-      } else {
-        setUserSession({
-          displayName: "Korbin Canlas",
-          email: "canlas@umak.edu.ph",
-          university: "University of Makati",
-        });
+        currentUser = JSON.parse(storedUser);
       }
-    } catch {
-      setUserSession({
-        displayName: "Korbin Canlas",
-        email: "canlas@umak.edu.ph",
-        university: "University of Makati",
-      });
-    }
+    } catch {}
+
+    setUserSession(currentUser);
 
     const loadedTeams = getStoredTeams();
     setTeams(loadedTeams);
@@ -45,6 +42,16 @@ function JoinTeamContent() {
       const found = loadedTeams.find((t) => t.inviteCode.toLowerCase() === inviteCodeParam.toLowerCase());
       if (found) {
         setSelectedTeam(found);
+        const existing = found.members.find(
+          (m) => m.email.toLowerCase() === currentUser.email.toLowerCase()
+        );
+        if (existing) {
+          if (existing.status === "ACCEPTED") {
+            setAlreadyMemberInfo(`You are already an active verified athlete on ${found.name}.`);
+          } else if (existing.status === "PENDING") {
+            setAlreadyMemberInfo(`You already have a pending join request awaiting Captain approval for ${found.name}.`);
+          }
+        }
       }
     }
   }, [inviteCodeParam]);
@@ -91,14 +98,43 @@ function JoinTeamContent() {
           </p>
         </div>
 
-        {resultMessage ? (
+        {alreadyMemberInfo ? (
           <div className="space-y-6 text-center">
-            <div className={`p-6 rounded-xl border ${resultMessage.isInstant ? "bg-success/10 border-success/30" : "bg-secondary-brand/10 border-secondary-brand/30"}`}>
-              <span className={`w-12 h-12 rounded-full inline-flex items-center justify-center text-xl font-bold mb-3 ${resultMessage.isInstant ? "bg-success/20 text-success" : "bg-secondary-brand/20 text-secondary-brand"}`}>
-                {resultMessage.isInstant ? "✓" : "⏳"}
+            <div className="p-6 rounded-xl border bg-primary-brand/10 border-primary-brand/30">
+              <span className="w-12 h-12 rounded-full bg-primary-brand/20 text-primary-brand inline-flex items-center justify-center text-xl font-bold mb-3">
+                ℹ
               </span>
               <h2 className="font-display text-xl font-bold uppercase text-foreground">
-                {resultMessage.isInstant ? "Roster Entry Confirmed!" : "Request Submitted"}
+                Already Registered on Roster
+              </h2>
+              <p className="text-xs font-sans text-secondary-text mt-2 max-w-md mx-auto leading-relaxed">
+                {alreadyMemberInfo}
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <Link
+                href="/tournaments"
+                className="flex-1 h-11 rounded-lg bg-primary-brand hover:bg-primary-brand/90 text-foreground font-sans text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center text-center"
+              >
+                View Circuit Tournaments
+              </Link>
+              <button
+                onClick={() => setAlreadyMemberInfo(null)}
+                className="h-11 px-6 rounded-lg border border-raised-panel bg-transparent hover:bg-raised-panel text-secondary-text hover:text-foreground font-sans text-xs font-bold uppercase tracking-wider transition-colors"
+              >
+                Browse Other Squads
+              </button>
+            </div>
+          </div>
+        ) : resultMessage ? (
+          <div className="space-y-6 text-center">
+            <div className={`p-6 rounded-xl border ${resultMessage.success ? (resultMessage.isInstant ? "bg-success/10 border-success/30" : "bg-secondary-brand/10 border-secondary-brand/30") : "bg-error/10 border-error/30"}`}>
+              <span className={`w-12 h-12 rounded-full inline-flex items-center justify-center text-xl font-bold mb-3 ${resultMessage.success ? (resultMessage.isInstant ? "bg-success/20 text-success" : "bg-secondary-brand/20 text-secondary-brand") : "bg-error/20 text-error"}`}>
+                {resultMessage.success ? (resultMessage.isInstant ? "✓" : "⏳") : "!"}
+              </span>
+              <h2 className="font-display text-xl font-bold uppercase text-foreground">
+                {resultMessage.success ? (resultMessage.isInstant ? "Roster Entry Confirmed!" : "Request Submitted") : "Notice"}
               </h2>
               <p className="text-xs font-sans text-secondary-text mt-2 max-w-md mx-auto">
                 {resultMessage.message}
@@ -144,7 +180,19 @@ function JoinTeamContent() {
                         <button
                           key={t.id}
                           type="button"
-                          onClick={() => setSelectedTeam(t)}
+                          onClick={() => {
+                            setSelectedTeam(t);
+                            const existing = t.members.find(
+                              (m) => m.email.toLowerCase() === userSession?.email.toLowerCase()
+                            );
+                            if (existing) {
+                              if (existing.status === "ACCEPTED") {
+                                setAlreadyMemberInfo(`You are already an active athlete on ${t.name}.`);
+                              } else if (existing.status === "PENDING") {
+                                setAlreadyMemberInfo(`You already have a pending join request for ${t.name}.`);
+                              }
+                            }
+                          }}
                           className={`w-full p-3 rounded-xl border text-left flex items-center justify-between transition-all ${
                             isSel
                               ? `${game.borderColor} border-2 bg-background`

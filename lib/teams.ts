@@ -138,6 +138,27 @@ export function joinLocalTeam(
     return { success: false, isInstant: false, message: "Team not found or link expired." };
   }
 
+  const existingMember = team.members.find(
+    (m) => m.email.toLowerCase() === userEmail.toLowerCase()
+  );
+
+  if (existingMember) {
+    if (existingMember.status === "ACCEPTED") {
+      return {
+        success: false,
+        isInstant: false,
+        message: `You are already an active athlete on ${team.name}.`,
+      };
+    }
+    if (existingMember.status === "PENDING") {
+      return {
+        success: false,
+        isInstant: false,
+        message: `You already have a pending join request awaiting Team Captain approval for ${team.name}.`,
+      };
+    }
+  }
+
   const isInstant = inviteCode === team.inviteCode;
   const status = isInstant ? "ACCEPTED" : "PENDING";
 
