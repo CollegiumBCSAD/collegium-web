@@ -33,7 +33,7 @@ export default function RegisterPage() {
     setError("");
 
     setTimeout(() => {
-      const umakGoogleAccount = {
+      const googleAccount = {
         displayName: "Isiah Baldesco",
         email: "baldesco@umak.edu.ph",
         university: "University of Makati (UMAK)",
@@ -41,7 +41,7 @@ export default function RegisterPage() {
         provider: "GOOGLE_WORKSPACE",
         createdAt: new Date().toISOString(),
       };
-      localStorage.setItem("collegium_user_session", JSON.stringify(umakGoogleAccount));
+      localStorage.setItem("collegium_user_session", JSON.stringify(googleAccount));
       setIsGoogleLoading(false);
       router.push("/team/create");
     }, 800);
@@ -137,12 +137,12 @@ export default function RegisterPage() {
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
                   />
                 </svg>
-                <span>Continue with UMAK Google Workspace</span>
+                <span>Continue with Institutional Google Account</span>
               </>
             )}
           </button>
           <span className="block text-[10px] font-sans text-secondary-text text-center mt-1.5">
-            Auto-verifies @umak.edu.ph institutional domain
+            Auto-verifies institutional .edu.ph Google Workspace domains
           </span>
         </div>
 
