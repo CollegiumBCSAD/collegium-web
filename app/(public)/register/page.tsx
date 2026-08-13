@@ -32,19 +32,8 @@ export default function RegisterPage() {
     setIsGoogleLoading(true);
     setError("");
 
-    setTimeout(() => {
-      const googleAccount = {
-        displayName: "Isiah Baldesco",
-        email: "baldesco@umak.edu.ph",
-        university: "University of Makati (UMAK)",
-        role: "ATHLETE",
-        provider: "GOOGLE_WORKSPACE",
-        createdAt: new Date().toISOString(),
-      };
-      localStorage.setItem("collegium_user_session", JSON.stringify(googleAccount));
-      setIsGoogleLoading(false);
-      router.push("/team/create");
-    }, 800);
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+    window.location.href = `${backendUrl}/auth/google`;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
