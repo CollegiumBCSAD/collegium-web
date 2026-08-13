@@ -84,6 +84,19 @@ export function saveStoredTeams(teams: Team[]): void {
   } catch {}
 }
 
+export function getUserActiveTeamForGame(userEmail: string, gameTitle: GameId): Team | null {
+  const teams = getStoredTeams();
+  return (
+    teams.find(
+      (t) =>
+        t.gameTitle === gameTitle &&
+        t.members.some(
+          (m) => m.email.toLowerCase() === userEmail.toLowerCase() && m.status === "ACCEPTED"
+        )
+    ) || null
+  );
+}
+
 export function createLocalTeam(
   name: string,
   gameTitle: GameId,
@@ -92,7 +105,14 @@ export function createLocalTeam(
   userDisplayName: string,
   gameHandle: string,
   preferredRole?: string
-): Team {
+): { team?: Team; error?: string } {
+  const existingGameTeam = getUserActiveTeamForGame(userEmail, gameTitle);
+  if (existingGameTeam) {
+    return {
+      error: `You are already on an active roster for this game (${existingGameTeam.name}). Leave your current squad before creating a new team for this game.`,
+    };
+  }
+
   const teams = getStoredTeams();
   const inviteCode = Math.random().toString(36).substring(2, 8).toLowerCase();
   const newTeam: Team = {
@@ -121,7 +141,7 @@ export function createLocalTeam(
 
   teams.push(newTeam);
   saveStoredTeams(teams);
-  return newTeam;
+  return { team: newTeam };
 }
 
 export function joinLocalTeam(
@@ -157,6 +177,15 @@ export function joinLocalTeam(
         message: `You already have a pending join request awaiting Team Captain approval for ${team.name}.`,
       };
     }
+  }
+
+  const existingGameTeam = getUserActiveTeamForGame(userEmail, team.gameTitle);
+  if (existingGameTeam) {
+    return {
+      success: false,
+      isInstant: false,
+      message: `You are already on an active roster for this game (${existingGameTeam.name}). You cannot join another squad for the same game.`,
+    };
   }
 
   const isInstant = inviteCode === team.inviteCode;

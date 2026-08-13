@@ -51,7 +51,7 @@ export default function CreateTeamPage() {
       return;
     }
 
-    const team = createLocalTeam(
+    const res = createLocalTeam(
       teamName.trim(),
       selectedGame,
       userSession?.university || "University of Makati",
@@ -61,7 +61,14 @@ export default function CreateTeamPage() {
       preferredRole
     );
 
-    setCreatedTeam(team);
+    if (res.error) {
+      setError(res.error);
+      return;
+    }
+
+    if (res.team) {
+      setCreatedTeam(res.team);
+    }
   };
 
   const getInviteUrl = () => {
@@ -87,7 +94,7 @@ export default function CreateTeamPage() {
             Create University Squad
           </h1>
           <p className="font-sans text-xs text-secondary-text mt-1">
-            Establish a team squad under your university banner and get a unique invite link for teammates.
+            Establish a team squad under your university banner. (Limit: 1 active squad per game title).
           </p>
         </div>
 
@@ -139,14 +146,14 @@ export default function CreateTeamPage() {
                 onClick={() => setCreatedTeam(null)}
                 className="h-11 px-6 rounded-lg bg-raised-panel text-secondary-text hover:text-foreground font-sans text-xs font-bold uppercase tracking-wider transition-colors"
               >
-                Create Another Team
+                Create Another Squad
               </button>
             </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
-              <div className="p-3 rounded-lg bg-error/10 border border-error/30 text-error text-xs font-sans">
+              <div className="p-3 rounded-lg bg-error/10 border border-error/30 text-error text-xs font-sans leading-relaxed">
                 {error}
               </div>
             )}
