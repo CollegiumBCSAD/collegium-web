@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { getStoredTeams, joinLocalTeam, Team } from "@/lib/teams";
 import { GAMES } from "@/lib/games";
 import { useAuth } from "@/context/AuthContext";
 
 function JoinTeamContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const inviteCodeParam = searchParams.get("invite");
   const { user } = useAuth();
 
@@ -70,10 +71,24 @@ function JoinTeamContent() {
     setResultMessage(res);
   };
 
+  const handleClose = () => {
+    router.push("/dashboard");
+  };
+
   return (
-    <div className="min-h-[85vh] flex items-center justify-center px-4 py-12 bg-background">
-      <div className="w-full max-w-xl bg-card-bg border border-raised-panel rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6">
-        <div className="flex border-b border-raised-panel pb-3 gap-2">
+    <div className="flex flex-col flex-1 items-center justify-center px-4 py-12 bg-gradient-to-b md:bg-gradient-to-r from-[#CC0000]/20 from-0% to-[#0A0C10] to-[50%] md:to-[40%]">
+      <div className="w-full max-w-xl bg-card-bg border border-raised-panel rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6 relative">
+        <button
+          type="button"
+          onClick={handleClose}
+          className="absolute top-5 right-5 w-8 h-8 rounded-lg border border-raised-panel bg-background hover:bg-raised-panel text-secondary-text hover:text-foreground flex items-center justify-center transition-colors z-10 cursor-pointer"
+          title="Close window"
+          aria-label="Close window"
+        >
+          ✕
+        </button>
+
+        <div className="flex border-b border-raised-panel pb-3 gap-2 pr-10">
           <Link
             href="/team/create"
             className="flex-1 py-2 rounded-lg bg-background hover:bg-raised-panel text-secondary-text hover:text-foreground text-xs font-sans font-bold uppercase tracking-wider text-center border border-panel-border transition-colors"
@@ -82,7 +97,7 @@ function JoinTeamContent() {
           </Link>
           <Link
             href="/team/join"
-            className="flex-1 py-2 rounded-lg bg-primary-brand text-foreground text-xs font-sans font-bold uppercase tracking-wider text-center"
+            className="flex-1 py-2 rounded-lg bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] text-foreground text-xs font-sans font-bold uppercase tracking-wider text-center shadow-md shadow-primary-brand/20"
           >
             🤝 Join Existing Squad
           </Link>
@@ -270,7 +285,7 @@ function JoinTeamContent() {
             <div className="pt-3">
               <button
                 type="submit"
-                className="w-full h-11 rounded-lg bg-primary-brand hover:bg-primary-brand/90 text-foreground font-sans text-xs font-bold uppercase tracking-widest transition-colors flex items-center justify-center cursor-pointer"
+                className="w-full h-11 rounded-lg bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] hover:from-[#EF4444] hover:to-[#991B1B] text-foreground font-sans text-xs font-bold uppercase tracking-widest transition-all active:scale-[0.98] shadow-lg shadow-primary-brand/20 flex items-center justify-center cursor-pointer"
               >
                 {inviteCodeParam ? "Instant Domain Join Roster" : "Submit Join Request to Captain"}
               </button>

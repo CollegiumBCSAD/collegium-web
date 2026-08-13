@@ -8,40 +8,61 @@ import { GameProvider } from "@/context/GameContext";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import GameSelectorModal from "@/components/GameSelectorModal";
 import HeaderGameSwitcher from "@/components/HeaderGameSwitcher";
+import FloatingChatWidget from "@/components/FloatingChatWidget";
 
 function HeaderAuthControls() {
   const { user, isLoggedIn, logoutUser, isLoaded } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   if (!isLoaded) {
-    return <div className="h-9 w-24 rounded-lg bg-raised-panel/60 border border-raised-panel animate-pulse" />;
+    return <div className="h-10 w-32 rounded-full bg-raised-panel/60 border border-raised-panel animate-pulse" />;
   }
 
   if (isLoggedIn && user) {
     return (
-      <div className="relative">
+      <div className="relative" ref={dropdownRef}>
         <button
           onClick={() => setDropdownOpen(!dropdownOpen)}
-          className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg border border-raised-panel bg-card-bg hover:bg-raised-panel transition-all focus:outline-none"
+          className="flex items-center gap-3 px-4 py-2 rounded-full border border-panel-border bg-card-bg/90 hover:bg-raised-panel transition-all focus:outline-none shadow-md cursor-pointer group"
         >
-          <div className="w-6 h-6 rounded-full bg-primary-brand/20 text-primary-brand border border-primary-brand/30 flex items-center justify-center font-display text-xs font-bold uppercase">
+          <div className="w-7 h-7 rounded-full bg-primary-brand text-foreground flex items-center justify-center font-bold text-xs shrink-0 shadow-sm">
             {user.displayName.charAt(0)}
           </div>
           <div className="hidden sm:flex flex-col text-left leading-tight">
-            <span className="text-xs font-display font-bold text-foreground uppercase tracking-wide">
+            <span className="text-xs font-sans font-bold text-foreground">
               {user.displayName}
             </span>
-            <span className="text-[9px] font-sans text-secondary-text tracking-widest uppercase font-semibold">
-              {user.role} · {user.university.name.split(" ")[0]}
+            <span className="text-[10px] font-sans text-secondary-text">
+              {user.university?.name?.split(" ")[0] || "Athlete"} · {user.role || "Player"}
             </span>
           </div>
-          <svg className="w-3.5 h-3.5 text-secondary-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            className={`w-3.5 h-3.5 text-secondary-text group-hover:text-foreground transition-transform duration-200 ${
+              dropdownOpen ? "rotate-180" : ""
+            }`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </button>
 
         {dropdownOpen && (
-          <div className="absolute right-0 mt-2 w-56 rounded-xl border border-[#272B3A] bg-[#0C0F17] shadow-2xl z-50 py-2">
+          <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-[#272B3A] bg-[#0C0F17] shadow-2xl z-50 py-2">
             <div className="px-4 py-2 border-b border-raised-panel">
               <span className="text-xs font-display font-bold text-foreground uppercase block">
                 {user.displayName}
@@ -86,7 +107,7 @@ function HeaderAuthControls() {
                   logoutUser();
                   setDropdownOpen(false);
                 }}
-                className="w-full text-left px-3 py-1.5 rounded text-xs font-sans font-semibold text-error hover:bg-error/10 transition-colors"
+                className="w-full text-left px-3 py-1.5 rounded-lg text-xs font-sans font-semibold text-error hover:bg-error/10 transition-colors"
               >
                 Log Out
               </button>
@@ -99,12 +120,12 @@ function HeaderAuthControls() {
 
   return (
     <div className="hidden md:flex items-center gap-3">
-      <Link href="/login" className="inline-flex h-9 items-center justify-center rounded border border-raised-panel px-4 text-sm font-bold text-foreground transition-colors hover:bg-raised-panel">
+      <Link href="/login" className="inline-flex h-10 items-center justify-center rounded-full border border-raised-panel px-5 text-sm font-bold text-foreground transition-colors hover:bg-raised-panel">
         Log In
       </Link>
       <Link
         href="/register"
-        className="inline-flex h-9 items-center justify-center rounded bg-primary-brand px-4 text-sm font-bold text-foreground transition-colors hover:bg-opacity-90"
+        className="inline-flex h-10 items-center justify-center rounded-full bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] hover:from-[#EF4444] hover:to-[#991B1B] px-5 text-sm font-bold text-foreground transition-all active:scale-[0.98] shadow-md shadow-primary-brand/20"
       >
         Sign Up
       </Link>
@@ -211,6 +232,7 @@ export default function PublicLayout({
           )}
 
           <main className="flex-1 flex flex-col">{children}</main>
+          <FloatingChatWidget />
         </div>
       </GameProvider>
     </AuthProvider>

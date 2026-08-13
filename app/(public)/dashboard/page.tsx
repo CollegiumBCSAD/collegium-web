@@ -44,8 +44,8 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-[85vh] py-10 px-4 sm:px-6 lg:px-10 bg-background">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <div className="flex flex-col flex-1 bg-gradient-to-b md:bg-gradient-to-r from-[#CC0000]/20 from-0% to-[#0A0C10] to-[50%] md:to-[40%] py-10 px-4 sm:px-6 lg:px-10">
+      <div className="max-w-6xl mx-auto space-y-8 w-full">
         <div className="p-6 sm:p-8 rounded-2xl bg-card-bg border border-raised-panel shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-primary-brand/20 text-primary-brand border border-primary-brand/30 flex items-center justify-center font-display text-2xl font-bold uppercase">
@@ -72,13 +72,13 @@ export default function DashboardPage() {
           <div className="flex items-center gap-3 w-full md:w-auto">
             <Link
               href="/team/create"
-              className="flex-1 md:flex-initial h-11 px-5 rounded-lg bg-primary-brand hover:bg-primary-brand/90 text-foreground font-sans text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center"
+              className="flex-1 md:flex-initial h-11 px-5 rounded-lg bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] hover:from-[#EF4444] hover:to-[#991B1B] text-foreground font-sans text-xs font-bold uppercase tracking-wider transition-all shadow-md shadow-primary-brand/20 active:scale-[0.98] flex items-center justify-center"
             >
               ➕ Create Squad
             </Link>
             <Link
               href="/team/join"
-              className="flex-1 md:flex-initial h-11 px-5 rounded-lg border border-raised-panel bg-background hover:bg-raised-panel text-foreground font-sans text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center"
+              className="flex-1 md:flex-initial h-11 px-5 rounded-lg border border-raised-panel bg-gradient-to-r from-[#191D27] to-[#121520] hover:from-[#232836] hover:to-[#191D27] text-foreground font-sans text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] flex items-center justify-center"
             >
               🤝 Join Squad
             </Link>
@@ -104,13 +104,13 @@ export default function DashboardPage() {
                 <div className="flex justify-center gap-3">
                   <Link
                     href="/team/create"
-                    className="h-10 px-4 rounded-lg bg-primary-brand text-foreground font-sans text-xs font-bold uppercase tracking-wider flex items-center justify-center font-bold"
+                    className="h-10 px-4 rounded-lg bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] hover:from-[#EF4444] hover:to-[#991B1B] text-foreground font-sans text-xs font-bold uppercase tracking-wider flex items-center justify-center shadow-md shadow-primary-brand/20 transition-all active:scale-[0.98]"
                   >
                     Establish Squad
                   </Link>
                   <Link
                     href="/team/join"
-                    className="h-10 px-4 rounded-lg border border-raised-panel text-secondary-text hover:text-foreground font-sans text-xs font-bold uppercase tracking-wider flex items-center justify-center"
+                    className="h-10 px-4 rounded-lg border border-raised-panel bg-gradient-to-r from-[#191D27] to-[#121520] hover:from-[#232836] hover:to-[#191D27] text-secondary-text hover:text-foreground font-sans text-xs font-bold uppercase tracking-wider flex items-center justify-center transition-all active:scale-[0.98]"
                   >
                     Browse University Teams
                   </Link>

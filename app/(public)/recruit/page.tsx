@@ -110,8 +110,8 @@ export default function RecruitPage() {
   };
 
   return (
-    <div className="min-h-[85vh] py-10 px-4 sm:px-6 lg:px-10 bg-background">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <div className="flex flex-col flex-1 bg-gradient-to-b md:bg-gradient-to-r from-[#CC0000]/20 from-0% to-[#0A0C10] to-[50%] md:to-[40%] py-10 px-4 sm:px-6 lg:px-10">
+      <div className="max-w-6xl mx-auto space-y-8 w-full">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-raised-panel pb-6">
           <div>
             <span className="text-xs font-sans font-extrabold uppercase tracking-widest text-secondary-brand block mb-1">
@@ -127,7 +127,7 @@ export default function RecruitPage() {
 
           <button
             onClick={() => setIsModalOpen(true)}
-            className="h-11 px-6 rounded-lg bg-primary-brand hover:bg-primary-brand/90 text-foreground font-sans text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center cursor-pointer shadow-lg"
+            className="h-11 px-6 rounded-lg bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] hover:from-[#EF4444] hover:to-[#991B1B] text-foreground font-sans text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] flex items-center justify-center cursor-pointer shadow-lg shadow-primary-brand/20"
           >
             📢 Post LFT / LFP Listing
           </button>
@@ -139,7 +139,7 @@ export default function RecruitPage() {
               onClick={() => setActiveTab("LFT")}
               className={`flex-1 sm:flex-initial px-6 py-2 rounded-lg font-sans text-xs font-bold uppercase tracking-wider transition-all ${
                 activeTab === "LFT"
-                  ? "bg-primary-brand text-foreground"
+                  ? "bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] text-foreground shadow-md shadow-primary-brand/20"
                   : "text-secondary-text hover:text-foreground"
               }`}
             >
@@ -149,7 +149,7 @@ export default function RecruitPage() {
               onClick={() => setActiveTab("LFP")}
               className={`flex-1 sm:flex-initial px-6 py-2 rounded-lg font-sans text-xs font-bold uppercase tracking-wider transition-all ${
                 activeTab === "LFP"
-                  ? "bg-primary-brand text-foreground"
+                  ? "bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] text-foreground shadow-md shadow-primary-brand/20"
                   : "text-secondary-text hover:text-foreground"
               }`}
             >
@@ -374,7 +374,7 @@ export default function RecruitPage() {
                   </button>
                   <button
                     type="submit"
-                    className="h-10 px-6 rounded-lg bg-primary-brand hover:bg-primary-brand/90 text-foreground text-xs font-bold uppercase"
+                    className="h-10 px-6 rounded-lg bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] hover:from-[#EF4444] hover:to-[#991B1B] text-foreground text-xs font-bold uppercase transition-all active:scale-[0.98] shadow-md shadow-primary-brand/20 cursor-pointer"
                   >
                     Publish Listing
                   </button>

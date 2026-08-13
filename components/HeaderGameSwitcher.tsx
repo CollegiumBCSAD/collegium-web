@@ -32,11 +32,11 @@ export default function HeaderGameSwitcher() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg border border-raised-panel bg-card-bg hover:bg-raised-panel hover:border-white/20 transition-all duration-200 focus:outline-none group"
+        className="flex items-center gap-3 px-4 py-2 rounded-full border border-panel-border bg-card-bg/90 hover:bg-raised-panel hover:border-white/20 transition-all duration-200 focus:outline-none shadow-md cursor-pointer group"
       >
         {selectedGameInfo ? (
           <>
-            <div className="relative w-6 h-6 rounded overflow-hidden shrink-0 border border-white/20">
+            <div className="relative w-6 h-6 rounded-md overflow-hidden shrink-0 border border-white/20">
               <Image
                 src={selectedGameInfo.image}
                 alt={selectedGameInfo.name}
@@ -45,23 +45,23 @@ export default function HeaderGameSwitcher() {
               />
             </div>
             <div className="flex flex-col text-left leading-tight hidden sm:flex">
-              <span className="text-[9px] font-sans text-secondary-text tracking-widest uppercase font-semibold">
+              <span className="text-[9px] font-sans text-secondary-text tracking-wider uppercase font-semibold">
                 GAME TITLE
               </span>
               <span
-                className="text-xs font-display font-bold uppercase tracking-wider text-foreground"
+                className="text-xs font-sans font-bold uppercase"
                 style={{ color: selectedGameInfo.accentColor }}
               >
                 {selectedGameInfo.shortName}
               </span>
             </div>
-            <span className="sm:hidden font-display text-xs font-bold uppercase" style={{ color: selectedGameInfo.accentColor }}>
+            <span className="sm:hidden font-sans text-xs font-bold uppercase" style={{ color: selectedGameInfo.accentColor }}>
               {selectedGameInfo.shortName}
             </span>
           </>
         ) : (
           <>
-            <span className="w-5 h-5 rounded bg-primary-brand/20 text-primary-brand flex items-center justify-center text-xs font-bold">
+            <span className="w-6 h-6 rounded-full bg-primary-brand/20 text-primary-brand flex items-center justify-center text-xs font-bold">
               🎮
             </span>
             <span className="text-xs font-sans font-bold uppercase tracking-wider text-foreground">
@@ -83,7 +83,7 @@ export default function HeaderGameSwitcher() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-64 rounded-xl border border-[#272B3A] bg-[#0C0F17] shadow-2xl z-50 py-2">
+        <div className="absolute right-0 mt-2 w-64 rounded-2xl border border-[#272B3A] bg-[#0C0F17] shadow-2xl z-50 py-2">
           <div className="px-4 py-2 border-b border-raised-panel">
             <span className="text-[10px] font-sans font-extrabold tracking-widest uppercase text-secondary-text block">
               Active Game Preference
