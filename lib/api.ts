@@ -28,28 +28,35 @@ async function request<T>(
     }
   }
 
-  const res = await fetch(`${BASE_URL}${path}`, {
-    ...options,
-    headers,
-    credentials: "include",
-  });
+  try {
+    const res = await fetch(`${BASE_URL}${path}`, {
+      ...options,
+      headers,
+      credentials: "include",
+    });
 
-  if (res.status === 401 && _onUnauthorized) {
-    _onUnauthorized();
-    throw new Error("Unauthorized");
+    if (res.status === 401 && _onUnauthorized) {
+      _onUnauthorized();
+      throw new Error("Unauthorized");
+    }
+
+    if (!res.ok) {
+      let message = `API error ${res.status}`;
+      try {
+        const body = await res.json();
+        message = body.message || message;
+      } catch {}
+      throw new Error(message);
+    }
+
+    const text = await res.text();
+    return text ? (JSON.parse(text) as T) : ({} as T);
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message === "Unauthorized") {
+      throw err;
+    }
+    throw new Error(err instanceof Error ? err.message : "Network error");
   }
-
-  if (!res.ok) {
-    let message = `API error ${res.status}`;
-    try {
-      const body = await res.json();
-      message = body.message || message;
-    } catch {}
-    throw new Error(message);
-  }
-
-  const text = await res.text();
-  return text ? (JSON.parse(text) as T) : ({} as T);
 }
 
 export const api = {
