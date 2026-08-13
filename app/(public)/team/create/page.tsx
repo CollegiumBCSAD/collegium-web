@@ -85,8 +85,23 @@ export default function CreateTeamPage() {
 
   return (
     <div className="min-h-[85vh] flex items-center justify-center px-4 py-12 bg-background">
-      <div className="w-full max-w-xl bg-card-bg border border-raised-panel rounded-2xl p-6 sm:p-8 shadow-2xl">
-        <div className="mb-6 border-b border-raised-panel pb-4">
+      <div className="w-full max-w-xl bg-card-bg border border-raised-panel rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6">
+        <div className="flex border-b border-raised-panel pb-3 gap-2">
+          <Link
+            href="/team/create"
+            className="flex-1 py-2 rounded-lg bg-primary-brand text-foreground text-xs font-sans font-bold uppercase tracking-wider text-center"
+          >
+            ➕ Create a Squad
+          </Link>
+          <Link
+            href="/team/join"
+            className="flex-1 py-2 rounded-lg bg-background hover:bg-raised-panel text-secondary-text hover:text-foreground text-xs font-sans font-bold uppercase tracking-wider text-center border border-panel-border transition-colors"
+          >
+            🤝 Join Existing Squad
+          </Link>
+        </div>
+
+        <div className="border-b border-raised-panel pb-4">
           <span className="text-xs font-sans font-extrabold uppercase tracking-widest text-secondary-brand block mb-1">
             {userSession?.university || "University of Makati"} Hub
           </span>
