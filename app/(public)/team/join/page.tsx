@@ -139,7 +139,7 @@ function JoinTeamContent() {
                 Go to Dashboard
               </Link>
               <button
-                onClick={() => setAlreadyMemberInfo(null)}
+                onClick={() => setUserSelectedTeam(null)}
                 className="h-11 px-6 rounded-lg border border-raised-panel bg-transparent hover:bg-raised-panel text-secondary-text hover:text-foreground font-sans text-xs font-bold uppercase tracking-wider transition-colors"
               >
                 Browse Other Squads
