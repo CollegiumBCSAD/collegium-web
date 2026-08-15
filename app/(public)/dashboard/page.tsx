@@ -1,39 +1,37 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { getStoredTeams, Team } from "@/lib/teams";
+import { getStoredTeams } from "@/lib/teams";
 import { GAMES } from "@/lib/games";
 
 export default function DashboardPage() {
   const router = useRouter();
   const { user, isLoggedIn, isLoaded } = useAuth();
-  const [userTeams, setUserTeams] = useState<Team[]>([]);
+
+  const userTeams = useMemo(() => {
+    if (!user) return [];
+    const allTeams = getStoredTeams();
+    const myEmail = user.email.toLowerCase().trim();
+    const myName = user.displayName.toLowerCase().trim();
+
+    return allTeams.filter((t) =>
+      t.members.some(
+        (m) =>
+          m.email.toLowerCase().trim() === myEmail ||
+          m.displayName.toLowerCase().trim() === myName ||
+          t.captainName.toLowerCase().trim() === myName
+      )
+    );
+  }, [user]);
 
   useEffect(() => {
     if (isLoaded && !isLoggedIn) {
       router.push("/login");
-      return;
     }
-
-    if (user) {
-      const allTeams = getStoredTeams();
-      const myEmail = user.email.toLowerCase().trim();
-      const myName = user.displayName.toLowerCase().trim();
-
-      const myTeams = allTeams.filter((t) =>
-        t.members.some(
-          (m) =>
-            m.email.toLowerCase().trim() === myEmail ||
-            m.displayName.toLowerCase().trim() === myName ||
-            t.captainName.toLowerCase().trim() === myName
-        )
-      );
-      setUserTeams(myTeams);
-    }
-  }, [isLoaded, isLoggedIn, user, router]);
+  }, [isLoaded, isLoggedIn, router]);
 
   if (!isLoaded || !isLoggedIn || !user) {
     return (
@@ -127,6 +125,7 @@ export default function DashboardPage() {
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={game.image} alt={game.name} className="w-10 h-10 rounded-lg object-cover" />
                           <div>
                             <h3 className="font-display text-base font-bold uppercase text-foreground">

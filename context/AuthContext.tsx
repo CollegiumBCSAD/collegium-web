@@ -33,7 +33,14 @@ const STORAGE_KEY = "collegium_access_token";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      return localStorage.getItem(STORAGE_KEY);
+    } catch {
+      return null;
+    }
+  });
   const [isLoaded, setIsLoaded] = useState(false);
 
   const getToken = useCallback(() => accessToken, [accessToken]);
@@ -46,7 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {}
   }, []);
 
-  const fetchProfile = useCallback(async (token: string): Promise<UserProfile | null> => {
+  const fetchProfile = useCallback(async (): Promise<UserProfile | null> => {
     try {
       const profile = await api.get<UserProfile>("/auth/me");
       return profile;
@@ -63,7 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     configureApiClient(() => token, clearAuth);
 
-    const profile = await fetchProfile(token);
+    const profile = await fetchProfile();
     if (profile) {
       setUser(profile);
     } else {
@@ -79,18 +86,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [clearAuth]);
 
   useEffect(() => {
-    const storedToken = (() => {
-      try {
-        return localStorage.getItem(STORAGE_KEY);
-      } catch {
-        return null;
-      }
-    })();
-
-    if (storedToken) {
-      configureApiClient(() => storedToken, clearAuth);
-      setAccessToken(storedToken);
-      fetchProfile(storedToken).then((profile) => {
+    if (accessToken) {
+      configureApiClient(() => accessToken, clearAuth);
+      fetchProfile().then((profile) => {
         if (profile) {
           setUser(profile);
         } else {
@@ -99,9 +97,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoaded(true);
       });
     } else {
-      setIsLoaded(true);
+      queueMicrotask(() => {
+        setIsLoaded(true);
+      });
     }
-  }, [clearAuth, fetchProfile]);
+  }, [accessToken, clearAuth, fetchProfile]);
 
   useEffect(() => {
     configureApiClient(getToken, clearAuth);

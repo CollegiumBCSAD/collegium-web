@@ -187,6 +187,7 @@ export default function CreateTeamPage() {
                         : "border-panel-border bg-background opacity-70 hover:opacity-100"
                     }`}
                   >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={game.image} alt={game.name} className="w-8 h-8 rounded-md object-cover mb-1" />
                     <span className="font-display text-xs font-bold uppercase">{game.shortName}</span>
                   </button>

@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import Link from "next/link";
+import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { GAME_LIST, GameId, GAMES } from "@/lib/games";
 
@@ -19,7 +18,7 @@ interface ScrimOffer {
 }
 
 export default function ScrimsPage() {
-  const { user, isLoggedIn } = useAuth();
+  const { user } = useAuth();
   const [selectedGame, setSelectedGame] = useState<GameId | "all">("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [scrims, setScrims] = useState<ScrimOffer[]>([
@@ -149,6 +148,7 @@ export default function ScrimsPage() {
                   : "bg-card-bg border border-raised-panel text-secondary-text hover:text-foreground"
               }`}
             >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={game.image} alt={game.name} className="w-4 h-4 rounded object-cover" />
               <span>{game.shortName}</span>
             </button>
@@ -165,6 +165,7 @@ export default function ScrimsPage() {
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={game.image} alt={game.name} className="w-10 h-10 rounded-lg object-cover" />
                     <div>
                       <span className="text-[10px] font-sans font-extrabold uppercase tracking-widest text-secondary-brand block">
@@ -202,7 +203,7 @@ export default function ScrimsPage() {
 
                 {scrim.notes && (
                   <p className="text-xs font-sans text-secondary-text bg-background/50 p-2.5 rounded-lg border border-panel-border">
-                    "{scrim.notes}"
+                    &quot;{scrim.notes}&quot;
                   </p>
                 )}
 

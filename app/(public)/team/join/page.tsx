@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { getStoredTeams, joinLocalTeam, Team } from "@/lib/teams";
@@ -13,38 +13,38 @@ function JoinTeamContent() {
   const inviteCodeParam = searchParams.get("invite");
   const { user } = useAuth();
 
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
+  const teams = useMemo(() => getStoredTeams(), []);
+  const [userSelectedTeam, setUserSelectedTeam] = useState<Team | null>(null);
+
+  const inviteTeam = useMemo(() => {
+    if (!inviteCodeParam || teams.length === 0) return null;
+    return teams.find((t) => t.inviteCode.toLowerCase() === inviteCodeParam.toLowerCase()) || null;
+  }, [inviteCodeParam, teams]);
+
+  const selectedTeam = userSelectedTeam || inviteTeam;
+
   const [gameHandle, setGameHandle] = useState("");
   const [preferredRole, setPreferredRole] = useState("");
   const [resultMessage, setResultMessage] = useState<{ success: boolean; isInstant: boolean; message: string } | null>(null);
-  const [alreadyMemberInfo, setAlreadyMemberInfo] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   const currentEmail = user?.email || "athlete@umak.edu.ph";
   const currentName = user?.displayName || "Verified Athlete";
 
-  useEffect(() => {
-    const loadedTeams = getStoredTeams();
-    setTeams(loadedTeams);
-
-    if (inviteCodeParam) {
-      const found = loadedTeams.find((t) => t.inviteCode.toLowerCase() === inviteCodeParam.toLowerCase());
-      if (found) {
-        setSelectedTeam(found);
-        const existing = found.members.find(
-          (m) => m.email.toLowerCase() === currentEmail.toLowerCase()
-        );
-        if (existing) {
-          if (existing.status === "ACCEPTED") {
-            setAlreadyMemberInfo(`You are already an active verified athlete on ${found.name}.`);
-          } else if (existing.status === "PENDING") {
-            setAlreadyMemberInfo(`You already have a pending join request awaiting Captain approval for ${found.name}.`);
-          }
-        }
+  const alreadyMemberInfo = useMemo(() => {
+    if (!selectedTeam) return null;
+    const existing = selectedTeam.members.find(
+      (m) => m.email.toLowerCase() === currentEmail.toLowerCase()
+    );
+    if (existing) {
+      if (existing.status === "ACCEPTED") {
+        return `You are already an active verified athlete on ${selectedTeam.name}.`;
+      } else if (existing.status === "PENDING") {
+        return `You already have a pending join request awaiting Captain approval for ${selectedTeam.name}.`;
       }
     }
-  }, [inviteCodeParam, currentEmail]);
+    return null;
+  }, [selectedTeam, currentEmail]);
 
   const handleJoinSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -199,19 +199,7 @@ function JoinTeamContent() {
                         <button
                           key={t.id}
                           type="button"
-                          onClick={() => {
-                            setSelectedTeam(t);
-                            const existing = t.members.find(
-                              (m) => m.email.toLowerCase() === currentEmail.toLowerCase()
-                            );
-                            if (existing) {
-                              if (existing.status === "ACCEPTED") {
-                                setAlreadyMemberInfo(`You are already an active athlete on ${t.name}.`);
-                              } else if (existing.status === "PENDING") {
-                                setAlreadyMemberInfo(`You already have a pending join request for ${t.name}.`);
-                              }
-                            }
-                          }}
+                          onClick={() => setUserSelectedTeam(t)}
                           className={`w-full p-3 rounded-xl border text-left flex items-center justify-between transition-all ${
                             isSel
                               ? `${game.borderColor} border-2 bg-background`
@@ -219,6 +207,7 @@ function JoinTeamContent() {
                           }`}
                         >
                           <div className="flex items-center gap-3">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={game.image} alt={game.name} className="w-8 h-8 rounded-md object-cover" />
                             <div>
                               <h4 className="font-display text-sm font-bold uppercase text-foreground">{t.name}</h4>

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { GAME_LIST, GameId, GAMES } from "@/lib/games";
 
@@ -178,6 +177,7 @@ export default function RecruitPage() {
                     : "text-secondary-text hover:text-foreground"
                 }`}
               >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={g.image} alt={g.name} className="w-3.5 h-3.5 rounded object-cover" />
                 <span>{g.shortName}</span>
               </button>
@@ -226,7 +226,7 @@ export default function RecruitPage() {
                 </div>
 
                 <p className="text-xs font-sans text-secondary-text leading-relaxed">
-                  "{post.bio}"
+                  &quot;{post.bio}&quot;
                 </p>
 
                 <div className="pt-2 border-t border-raised-panel flex items-center justify-between text-xs font-sans">
@@ -338,17 +338,32 @@ export default function RecruitPage() {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-sans font-semibold uppercase tracking-wider text-secondary-text mb-1">
-                    In-Game Tag / Contact
-                  </label>
-                  <input
-                    type="text"
-                    value={formContact}
-                    onChange={(e) => setFormContact(e.target.value)}
-                    placeholder="Riot ID / Discord Handle"
-                    className="w-full h-11 px-4 rounded-lg bg-background border border-panel-border text-foreground text-sm font-sans focus:outline-none"
-                  />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-sans font-semibold uppercase tracking-wider text-secondary-text mb-1">
+                      In-Game Tag / Contact
+                    </label>
+                    <input
+                      type="text"
+                      value={formContact}
+                      onChange={(e) => setFormContact(e.target.value)}
+                      placeholder="Riot ID / Discord Handle"
+                      className="w-full h-11 px-3 rounded-lg bg-background border border-panel-border text-foreground text-xs font-sans focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-sans font-semibold uppercase tracking-wider text-secondary-text mb-1">
+                      Availability
+                    </label>
+                    <input
+                      type="text"
+                      value={formAvailability}
+                      onChange={(e) => setFormAvailability(e.target.value)}
+                      placeholder="Weekdays 7 PM+"
+                      className="w-full h-11 px-3 rounded-lg bg-background border border-panel-border text-foreground text-xs font-sans focus:outline-none"
+                    />
+                  </div>
                 </div>
 
                 <div>
