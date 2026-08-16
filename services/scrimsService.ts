@@ -7,6 +7,7 @@ export interface CreateScrimPayload {
   scheduledAt: string;
   format: string;
   rankRange?: string;
+  mapPreference?: string;
   notes?: string;
 }
 
