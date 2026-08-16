@@ -60,9 +60,20 @@ Before implementing features, modifying components, or introducing state:
 
 ---
 
-## 6. Verification and Quality Assurance
+## 6. Git Commit and Branching Discipline
+- **Granular Commits**: Commit every fix, feature, refactor, documentation update, or chore step-by-step with clean, isolated git commits. Never bundle unrelated changes into a single monolithic commit.
+- **Conventional Commits**: All commit messages **MUST** strictly follow the Conventional Commits format specified in `CONTRIBUTING.md`:
+  - Format: `<type>(<scope>): <description>` or `<type>: <description>`
+  - Allowed Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`.
+  - Allowed Scopes: `app`, `components`, `lib`, `css`, `auth`, `rankings`, `tournaments`, `scrims`, `ci`.
+  - Formatting Rules: Use imperative mood (e.g. `add` instead of `added`), do not capitalize the first letter of the description unless it is a proper noun, and do not end subject lines with a period.
+- **Reference CONTRIBUTING.md**: Always check `CONTRIBUTING.md` for explicit branch naming (`feat/*`, `fix/*`, `refactor/*`, `chore/*`) and commit naming guidelines before performing git operations.
+
+---
+
+## 7. Verification and Quality Assurance
 Prior to completing any task or submitting a pull request:
 - [ ] Execute `npm run lint` — Must pass with **0 errors and 0 warnings**.
 - [ ] Execute `npm run build` — Must compile successfully without TypeScript errors.
 - [ ] Type Audit — Confirm all component props and models are imported from `@/types`.
-- [ ] Git Commit Discipline — Write clear, conventional commit messages (`refactor: ...`, `feat: ...`, `fix: ...`).
+- [ ] Commit Discipline — Confirm every fix, feature, and chore is committed step-by-step adhering to `CONTRIBUTING.md`.
