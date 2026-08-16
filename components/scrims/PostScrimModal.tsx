@@ -39,20 +39,12 @@ export default function PostScrimModal({
 }: PostScrimModalProps) {
   const [userTeams] = useState<Team[]>(() => getStoredTeams());
   const [formGame, setFormGame] = useState<GameId>("valo");
-  const [selectedTeamId, setSelectedTeamId] = useState<string>("");
-  const [formTeamName, setFormTeamName] = useState("");
+  const [selectedTeamId, setSelectedTeamId] = useState<string>(() => (userTeams.length > 0 ? userTeams[0].id : ""));
+  const [formTeamName, setFormTeamName] = useState<string>(() => (userTeams.length > 0 ? userTeams[0].name : ""));
   const [formFormat, setFormFormat] = useState("BO3");
   const [formRank, setFormRank] = useState("Ascendant+");
   const [formMap, setFormMap] = useState("Ascent");
   const [formNotes, setFormNotes] = useState("");
-
-  // Auto-select first team name if available
-  useEffect(() => {
-    if (userTeams.length > 0 && !selectedTeamId) {
-      setSelectedTeamId(userTeams[0].id);
-      setFormTeamName(userTeams[0].name);
-    }
-  }, [userTeams, selectedTeamId]);
 
   // Modal lifecycle listeners
   useEffect(() => {

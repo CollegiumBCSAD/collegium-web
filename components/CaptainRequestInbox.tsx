@@ -12,13 +12,12 @@ export default function CaptainRequestInbox() {
     return loaded.length > 0 ? loaded[0] : null;
   });
   const [apiRequests, setApiRequests] = useState<JoinRequest[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(() => !!activeTeam);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!activeTeam) return;
     let isMounted = true;
-    setLoading(true);
 
     teamsService
       .getJoinRequests(activeTeam.id)
