@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -16,8 +17,6 @@
   --success: #2FD97A;
   --error: #E53A4C;
   --disabled: #6E6E6E;
-  --font-oswald: var(--font-oswald);
-  --font-inter: var(--font-inter);
 }
 
 @theme inline {
@@ -37,11 +36,17 @@
   --color-error: #E53A4C;
   --color-disabled: #6E6E6E;
   --font-sans: var(--font-inter);
-  --font-display: var(--font-oswald);
+  --font-display: 'Oswald', var(--font-oswald), sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+h1, h2, h3, h4, .font-display, .font-oswald {
+  font-family: 'Oswald', var(--font-oswald), sans-serif !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em;
 }

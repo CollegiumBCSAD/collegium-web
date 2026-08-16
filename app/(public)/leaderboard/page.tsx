@@ -1,14 +1,53 @@
 "use client";
 
-import { mockLeaderboards } from "@/lib/mock/leaderboard";
+import { useState, useEffect } from "react";
+import { mockLeaderboards, LeaderboardEntry } from "@/lib/mock/leaderboard";
 import Link from "next/link";
-import { useState } from "react";
+import { universitiesService } from "@/services";
+import { University } from "@/types";
+
+const GAME_TAB_TO_ENUM: Record<string, string> = {
+  "VALORANT": "VALORANT",
+  "LEAGUE OF LEGENDS": "LOL",
+  "MOBILE LEGENDS: BANG BANG": "MLBB",
+  "CALL OF DUTY: MOBILE": "CODM",
+};
+
+function mapUniversitiesToLeaderboard(universities: University[], game: string): LeaderboardEntry[] {
+  return universities.map((u, i) => ({
+    id: u.id,
+    rank: i + 1,
+    university: u.name.toUpperCase(),
+    rating: u.glicko2_rating,
+    winRate: u.wins + u.losses > 0 ? Math.round((u.wins / (u.wins + u.losses)) * 100) : 0,
+    streak: u.wins > 0 ? `${Math.min(u.wins, 9)}W` : `${Math.min(u.losses, 9)}L`,
+    game,
+    icon: i === 0 ? "👑" : i === 1 ? "🥈" : i === 2 ? "🥉" : undefined,
+  }));
+}
 
 export default function LeaderboardPage() {
   const games = ["VALORANT", "LEAGUE OF LEGENDS", "MOBILE LEGENDS: BANG BANG", "CALL OF DUTY: MOBILE"];
   const [selectedGame, setSelectedGame] = useState("VALORANT");
+  const [standings, setStandings] = useState<LeaderboardEntry[]>(mockLeaderboards["VALORANT"] || []);
 
-  const standings = mockLeaderboards[selectedGame] || [];
+  useEffect(() => {
+    const enumValue = GAME_TAB_TO_ENUM[selectedGame];
+    let cancelled = false;
+
+    universitiesService.getUniversities(enumValue)
+      .then((universities) => {
+        if (cancelled) return;
+        const mapped = mapUniversitiesToLeaderboard(universities, selectedGame);
+        setStandings(mapped.length > 0 ? mapped : (mockLeaderboards[selectedGame] || []));
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setStandings(mockLeaderboards[selectedGame] || []);
+      });
+
+    return () => { cancelled = true; };
+  }, [selectedGame]);
 
   return (
     <div className="flex flex-col flex-1 bg-gradient-to-b md:bg-gradient-to-r from-[#CC0000]/25 from-0% to-[#0A0C10] to-[50%] md:to-[40%]">

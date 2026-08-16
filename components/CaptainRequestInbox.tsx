@@ -1,19 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { getStoredTeams, saveStoredTeams, Team, TeamMember } from "@/lib/teams";
 
 export default function CaptainRequestInbox() {
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [activeTeam, setActiveTeam] = useState<Team | null>(null);
-
-  useEffect(() => {
+  const [teams, setTeams] = useState<Team[]>(() => getStoredTeams());
+  const [activeTeam, setActiveTeam] = useState<Team | null>(() => {
     const loaded = getStoredTeams();
-    setTeams(loaded);
-    if (loaded.length > 0) {
-      setActiveTeam(loaded[0]);
-    }
-  }, []);
+    return loaded.length > 0 ? loaded[0] : null;
+  });
 
   if (!activeTeam) return null;
 

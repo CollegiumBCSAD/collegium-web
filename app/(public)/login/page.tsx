@@ -65,7 +65,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center px-4 py-12 bg-background">
+    <div className="flex flex-col flex-1 items-center justify-center px-4 py-12 bg-gradient-to-b md:bg-gradient-to-r from-[#CC0000]/20 from-0% to-[#0A0C10] to-[50%] md:to-[40%]">
       <div className="w-full max-w-md bg-card-bg border border-raised-panel rounded-2xl p-6 sm:p-8 shadow-2xl">
         <div className="text-center mb-6">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary-brand/10 text-primary-brand mb-3 border border-primary-brand/20">
@@ -160,7 +160,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full h-11 rounded-lg bg-primary-brand hover:bg-primary-brand/90 text-foreground font-sans text-xs font-bold uppercase tracking-widest transition-colors flex items-center justify-center cursor-pointer disabled:opacity-50"
+              className="w-full h-11 rounded-lg bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] hover:from-[#EF4444] hover:to-[#991B1B] text-foreground font-sans text-xs font-bold uppercase tracking-widest transition-all active:scale-[0.98] shadow-lg shadow-primary-brand/20 flex items-center justify-center cursor-pointer disabled:opacity-50"
             >
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
@@ -172,7 +172,7 @@ export default function LoginPage() {
         </form>
 
         <div className="mt-6 text-center text-xs font-sans text-secondary-text">
-          Don't have an account yet?{" "}
+          Don&apos;t have an account yet?{" "}
           <Link href="/register" className="text-primary-brand hover:underline font-semibold">
             Register
           </Link>

@@ -57,13 +57,13 @@ export default function LandingPage() {
             <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row w-full sm:w-auto gap-3 sm:gap-4">
               <Link
                 href="/tournaments"
-                className="inline-flex h-12 items-center justify-center rounded bg-primary-brand px-6 text-sm font-normal text-foreground transition-colors hover:bg-opacity-90 w-full sm:w-auto text-center"
+                className="inline-flex h-12 items-center justify-center rounded bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] hover:from-[#EF4444] hover:to-[#991B1B] px-6 text-sm font-bold uppercase tracking-wider text-foreground transition-all active:scale-[0.98] shadow-lg shadow-primary-brand/20 w-full sm:w-auto text-center font-display"
               >
                 Explore Tournaments
               </Link>
               <button
                 onClick={openGameSelector}
-                className="inline-flex h-12 items-center justify-center rounded border border-raised-panel bg-transparent px-6 text-sm font-normal text-foreground transition-colors hover:bg-raised-panel w-full sm:w-auto text-center cursor-pointer"
+                className="inline-flex h-12 items-center justify-center rounded border border-raised-panel bg-gradient-to-r from-[#191D27] to-[#121520] hover:from-[#232836] hover:to-[#191D27] px-6 text-sm font-bold uppercase tracking-wider text-foreground transition-all active:scale-[0.98] w-full sm:w-auto text-center cursor-pointer font-display"
               >
                 Switch Game Title
               </button>
@@ -103,9 +103,8 @@ export default function LandingPage() {
                       className="flex items-center gap-1.5 sm:gap-3 font-sans text-xs sm:text-sm"
                     >
                       <div
-                        className={`flex-1 min-w-0 grid grid-cols-[auto_1fr_auto] items-center gap-1.5 sm:gap-2 border rounded px-2.5 sm:px-4 py-2 sm:py-2.5 bg-card-bg ${
-                          t1Wins ? "border-secondary-brand" : "border-raised-panel"
-                        }`}
+                        className={`flex-1 min-w-0 grid grid-cols-[auto_1fr_auto] items-center gap-1.5 sm:gap-2 border rounded px-2.5 sm:px-4 py-2 sm:py-2.5 bg-card-bg ${t1Wins ? "border-secondary-brand" : "border-raised-panel"
+                          }`}
                       >
                         <span className="text-[10px] sm:text-xs text-secondary-text font-normal whitespace-nowrap">
                           {m.team1.code}
@@ -114,18 +113,16 @@ export default function LandingPage() {
                           {m.team1.name}
                         </span>
                         <span
-                          className={`font-display font-normal justify-self-end text-sm sm:text-base ${
-                            t1Wins ? "text-secondary-brand" : "text-foreground"
-                          }`}
+                          className={`font-display font-normal justify-self-end text-sm sm:text-base ${t1Wins ? "text-secondary-brand" : "text-foreground"
+                            }`}
                         >
                           {m.team1.score}
                         </span>
                       </div>
                       <span className="shrink-0 text-[10px] sm:text-2xs text-secondary-text px-0.5 sm:px-1 lowercase">vs</span>
                       <div
-                        className={`flex-1 min-w-0 grid grid-cols-[auto_1fr_auto] items-center gap-1.5 sm:gap-2 border rounded px-2.5 sm:px-4 py-2 sm:py-2.5 bg-card-bg ${
-                          !t1Wins ? "border-secondary-brand" : "border-raised-panel"
-                        }`}
+                        className={`flex-1 min-w-0 grid grid-cols-[auto_1fr_auto] items-center gap-1.5 sm:gap-2 border rounded px-2.5 sm:px-4 py-2 sm:py-2.5 bg-card-bg ${!t1Wins ? "border-secondary-brand" : "border-raised-panel"
+                          }`}
                       >
                         <span className="text-[10px] sm:text-xs text-secondary-text font-normal whitespace-nowrap">
                           {m.team2.code}
@@ -134,9 +131,8 @@ export default function LandingPage() {
                           {m.team2.name}
                         </span>
                         <span
-                          className={`font-display font-normal justify-self-end text-sm sm:text-base ${
-                            !t1Wins ? "text-secondary-brand" : "text-foreground"
-                          }`}
+                          className={`font-display font-normal justify-self-end text-sm sm:text-base ${!t1Wins ? "text-secondary-brand" : "text-foreground"
+                            }`}
                         >
                           {m.team2.score}
                         </span>
@@ -186,11 +182,10 @@ export default function LandingPage() {
               return (
                 <div
                   key={game.id}
-                  className={`relative flex flex-col justify-between rounded-xl border bg-card-bg p-4 transition-all duration-300 ${
-                    isSelected
+                  className={`relative flex flex-col justify-between rounded-xl border bg-card-bg p-4 transition-all duration-300 ${isSelected
                       ? `${game.borderColor} border-2`
                       : "border-raised-panel hover:border-raised-panel/80"
-                  }`}
+                    }`}
                 >
                   {isSelected && (
                     <div

@@ -11,16 +11,13 @@ function GoogleCallbackContent() {
   const token = searchParams.get("token");
 
   useEffect(() => {
-    if (!token) {
-      router.push("/login?error=oauth_failed");
-      return;
-    }
-
-    loginWithToken(token).then(() => {
-      router.push("/dashboard");
-    }).catch(() => {
-      router.push("/login?error=profile_failed");
-    });
+    loginWithToken(token || undefined)
+      .then(() => {
+        router.push("/dashboard");
+      })
+      .catch(() => {
+        router.push("/login?error=profile_failed");
+      });
   }, [token, loginWithToken, router]);
 
   return (

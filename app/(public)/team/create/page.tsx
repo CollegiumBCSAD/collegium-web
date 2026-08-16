@@ -4,7 +4,8 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { GAME_LIST, GameId, GAMES } from "@/lib/games";
-import { createLocalTeam, Team } from "@/lib/teams";
+import { Team } from "@/types";
+import { teamsService } from "@/services";
 import { useAuth } from "@/context/AuthContext";
 
 export default function CreateTeamPage() {
@@ -17,8 +18,9 @@ export default function CreateTeamPage() {
   const [createdTeam, setCreatedTeam] = useState<Team | null>(null);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -31,27 +33,74 @@ export default function CreateTeamPage() {
       return;
     }
 
-    const currentEmail = user?.email || "athlete@umak.edu.ph";
-    const currentName = user?.displayName || "Verified Athlete";
-    const currentUni = user?.university?.name || "University of Makati";
-
-    const res = createLocalTeam(
-      teamName.trim(),
-      selectedGame,
-      currentUni,
-      currentEmail,
-      currentName,
-      gameHandle.trim(),
-      preferredRole
-    );
-
-    if (res.error) {
-      setError(res.error);
+    if (!user?.id || !user?.universityId) {
+      setError("You must be logged in with a verified university to create a team.");
       return;
     }
 
-    if (res.team) {
-      setCreatedTeam(res.team);
+    setIsLoading(true);
+    try {
+      const gameTitleMap: Record<string, GameId> = {
+        valo: "valo",
+        lol: "lol",
+        ml: "ml",
+        codm: "codm"
+      };
+      interface ServerTeamResponse {
+        id: string;
+        name: string;
+        universityId: string;
+        captainId: string;
+        inviteCode: string;
+        createdAt: string;
+        university?: { name: string };
+        members?: Array<{
+          id: string;
+          user?: { id?: string; displayName?: string; email?: string };
+          gameHandle: string;
+          preferredRole?: string;
+          status: string;
+          createdAt?: string;
+        }>;
+      }
+
+      const res = (await teamsService.createTeam({
+        name: teamName.trim(),
+        gameTitle: gameTitleMap[selectedGame] as GameId,
+        universityId: user.universityId,
+        captainId: user.id,
+        gameHandle: gameHandle.trim(),
+        preferredRole: preferredRole.trim()
+      })) as unknown as ServerTeamResponse;
+
+      const mappedTeam: Team = {
+        id: res.id,
+        name: res.name,
+        gameTitle: selectedGame,
+        universityId: res.universityId,
+        universityName: res.university?.name || user.university?.name || "Unknown University",
+        captainId: res.captainId,
+        captainName: user.displayName,
+        inviteCode: res.inviteCode,
+        createdAt: res.createdAt,
+        members: (res.members || []).map((m) => ({
+          id: m.id,
+          userId: m.user?.id || "",
+          displayName: m.user?.displayName || "",
+          email: m.user?.email || "",
+          gameHandle: m.gameHandle,
+          preferredRole: m.preferredRole,
+          status: m.status as "ACCEPTED" | "PENDING" | "DECLINED",
+          joinedAt: m.createdAt || new Date().toISOString(),
+        })),
+      };
+
+      setCreatedTeam(mappedTeam);
+    } catch (err: unknown) {
+      const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
+      setError(errorObj?.response?.data?.message || errorObj?.message || "Failed to create team.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -67,13 +116,27 @@ export default function CreateTeamPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleClose = () => {
+    router.push("/dashboard");
+  };
+
   return (
-    <div className="min-h-[85vh] flex items-center justify-center px-4 py-12 bg-background">
-      <div className="w-full max-w-xl bg-card-bg border border-raised-panel rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6">
-        <div className="flex border-b border-raised-panel pb-3 gap-2">
+    <div className="flex flex-col flex-1 items-center justify-center px-4 py-12 bg-gradient-to-b md:bg-gradient-to-r from-[#CC0000]/20 from-0% to-[#0A0C10] to-[50%] md:to-[40%]">
+      <div className="w-full max-w-xl bg-card-bg border border-raised-panel rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6 relative">
+        <button
+          type="button"
+          onClick={handleClose}
+          className="absolute top-5 right-5 w-8 h-8 rounded-lg border border-raised-panel bg-background hover:bg-raised-panel text-secondary-text hover:text-foreground flex items-center justify-center transition-colors z-10 cursor-pointer"
+          title="Close window"
+          aria-label="Close window"
+        >
+          ✕
+        </button>
+
+        <div className="flex border-b border-raised-panel pb-3 gap-2 pr-10">
           <Link
             href="/team/create"
-            className="flex-1 py-2 rounded-lg bg-primary-brand text-foreground text-xs font-sans font-bold uppercase tracking-wider text-center"
+            className="flex-1 py-2 rounded-lg bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] text-foreground text-xs font-sans font-bold uppercase tracking-wider text-center shadow-md shadow-primary-brand/20"
           >
             ➕ Create a Squad
           </Link>
@@ -173,6 +236,7 @@ export default function CreateTeamPage() {
                         : "border-panel-border bg-background opacity-70 hover:opacity-100"
                     }`}
                   >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={game.image} alt={game.name} className="w-8 h-8 rounded-md object-cover mb-1" />
                     <span className="font-display text-xs font-bold uppercase">{game.shortName}</span>
                   </button>
@@ -224,9 +288,10 @@ export default function CreateTeamPage() {
             <div className="pt-3">
               <button
                 type="submit"
-                className="w-full h-11 rounded-lg bg-primary-brand hover:bg-primary-brand/90 text-foreground font-sans text-xs font-bold uppercase tracking-widest transition-colors flex items-center justify-center cursor-pointer"
+                disabled={isLoading}
+                className="w-full h-11 rounded-lg bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] hover:from-[#EF4444] hover:to-[#991B1B] text-foreground font-sans text-xs font-bold uppercase tracking-widest transition-all active:scale-[0.98] shadow-lg shadow-primary-brand/20 flex items-center justify-center cursor-pointer disabled:opacity-50"
               >
-                Create Squad & Generate Invite Link
+                {isLoading ? "Creating Squad..." : "Create Squad & Generate Invite Link"}
               </button>
             </div>
           </form>

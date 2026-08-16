@@ -1,31 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
-import { configureApiClient, api } from "@/lib/api";
-
-export interface UserProfile {
-  id: string;
-  email: string;
-  displayName: string;
-  role: string;
-  status: string;
-  universityId: string;
-  university: {
-    id: string;
-    name: string;
-    domain: string;
-  };
-  createdAt: string;
-}
-
-interface AuthContextType {
-  user: UserProfile | null;
-  accessToken: string | null;
-  isLoggedIn: boolean;
-  isLoaded: boolean;
-  loginWithToken: (token: string) => Promise<void>;
-  logoutUser: () => Promise<void>;
-}
+import { configureApiClient, authService } from "@/services";
+import { UserProfile, AuthContextType } from "@/types";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -36,76 +13,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  const getToken = useCallback(() => accessToken, [accessToken]);
-
   const clearAuth = useCallback(() => {
     setUser(null);
     setAccessToken(null);
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch {}
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+      } catch {}
+    }
   }, []);
 
-  const fetchProfile = useCallback(async (token: string): Promise<UserProfile | null> => {
+  const fetchProfile = useCallback(async (): Promise<UserProfile | null> => {
     try {
-      const profile = await api.get<UserProfile>("/auth/me");
+      const profile = await authService.getMe();
       return profile;
     } catch {
       return null;
     }
   }, []);
 
-  const loginWithToken = useCallback(async (token: string) => {
-    setAccessToken(token);
-    try {
-      localStorage.setItem(STORAGE_KEY, token);
-    } catch {}
+  const handleTokenRefreshed = useCallback((newToken: string) => {
+    setAccessToken(newToken);
+  }, []);
 
-    configureApiClient(() => token, clearAuth);
+  const loginWithToken = useCallback(async (token?: string) => {
+    if (token) {
+      setAccessToken(token);
+    }
+    configureApiClient(() => token || null, clearAuth, handleTokenRefreshed);
 
-    const profile = await fetchProfile(token);
+    const profile = await fetchProfile();
     if (profile) {
       setUser(profile);
     } else {
       clearAuth();
     }
-  }, [clearAuth, fetchProfile]);
+  }, [clearAuth, fetchProfile, handleTokenRefreshed]);
 
   const logoutUser = useCallback(async () => {
     try {
-      await api.post("/auth/logout", {});
+      await authService.logout();
     } catch {}
     clearAuth();
   }, [clearAuth]);
 
   useEffect(() => {
-    const storedToken = (() => {
-      try {
-        return localStorage.getItem(STORAGE_KEY);
-      } catch {
-        return null;
+    configureApiClient(() => accessToken, clearAuth, handleTokenRefreshed);
+    fetchProfile().then((profile) => {
+      if (profile) {
+        setUser(profile);
+      } else {
+        clearAuth();
       }
-    })();
-
-    if (storedToken) {
-      configureApiClient(() => storedToken, clearAuth);
-      setAccessToken(storedToken);
-      fetchProfile(storedToken).then((profile) => {
-        if (profile) {
-          setUser(profile);
-        } else {
-          clearAuth();
-        }
-        setIsLoaded(true);
-      });
-    } else {
       setIsLoaded(true);
-    }
-  }, [clearAuth, fetchProfile]);
-
-  useEffect(() => {
-    configureApiClient(getToken, clearAuth);
-  }, [getToken, clearAuth]);
+    });
+  }, [accessToken, clearAuth, fetchProfile, handleTokenRefreshed]);
 
   return (
     <AuthContext.Provider

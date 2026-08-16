@@ -2,18 +2,7 @@
 
 import MatchBoxScoreModal from "@/components/MatchBoxScoreModal";
 import { useEffect, useState } from "react";
-
-interface MatchTeam {
-  name: string;
-  score: number;
-  isWinner?: boolean;
-}
-
-interface BracketMatch {
-  id: string;
-  team1: MatchTeam;
-  team2: MatchTeam;
-}
+import { BracketMatch } from "@/types";
 
 interface TournamentBracketModalProps {
   isOpen: boolean;

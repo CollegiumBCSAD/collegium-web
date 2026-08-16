@@ -1,51 +1,112 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, useMemo, Suspense, useCallback } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { getStoredTeams, joinLocalTeam, Team } from "@/lib/teams";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Team, GameId } from "@/types";
 import { GAMES } from "@/lib/games";
+import { teamsService } from "@/services";
 import { useAuth } from "@/context/AuthContext";
 
 function JoinTeamContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const inviteCodeParam = searchParams.get("invite");
   const { user } = useAuth();
 
   const [teams, setTeams] = useState<Team[]>([]);
-  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
+  const [inviteTeam, setInviteTeam] = useState<Team | null>(null);
+  const [userSelectedTeam, setUserSelectedTeam] = useState<Team | null>(null);
+
   const [gameHandle, setGameHandle] = useState("");
   const [preferredRole, setPreferredRole] = useState("");
   const [resultMessage, setResultMessage] = useState<{ success: boolean; isInstant: boolean; message: string } | null>(null);
-  const [alreadyMemberInfo, setAlreadyMemberInfo] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const currentEmail = user?.email || "athlete@umak.edu.ph";
-  const currentName = user?.displayName || "Verified Athlete";
+  const reverseGameTitleMap: Record<string, GameId> = useMemo(() => ({
+    VALORANT: "valo",
+    LOL: "lol",
+    MLBB: "ml",
+    CODM: "codm",
+  }), []);
+
+  interface RawServerTeam {
+    id: string;
+    name: string;
+    gameTitle: string;
+    universityId: string;
+    captainId: string;
+    captainName?: string;
+    inviteCode: string;
+    createdAt: string;
+    university?: { name: string };
+    members?: Array<{
+      id: string;
+      user?: { id?: string; displayName?: string; email?: string };
+      gameHandle: string;
+      preferredRole?: string;
+      status: string;
+      createdAt?: string;
+    }>;
+  }
+
+  const mapServerTeam = useCallback((t: RawServerTeam): Team => ({
+    id: t.id,
+    name: t.name,
+    gameTitle: reverseGameTitleMap[t.gameTitle] || (t.gameTitle as GameId),
+    universityId: t.universityId,
+    universityName: t.university?.name || "Unknown University",
+    captainId: t.captainId,
+    captainName: t.captainName || "Team Captain",
+    inviteCode: t.inviteCode,
+    createdAt: t.createdAt,
+    members: t.members?.map((m) => ({
+      id: m.id,
+      userId: m.user?.id || "",
+      displayName: m.user?.displayName || "",
+      email: m.user?.email || "",
+      gameHandle: m.gameHandle,
+      preferredRole: m.preferredRole,
+      status: m.status as "ACCEPTED" | "PENDING" | "DECLINED",
+      joinedAt: m.createdAt || new Date().toISOString(),
+    })) || [],
+  }), [reverseGameTitleMap]);
 
   useEffect(() => {
-    const loadedTeams = getStoredTeams();
-    setTeams(loadedTeams);
+    teamsService.getTeams()
+      .then((data) => setTeams((data as unknown as RawServerTeam[]).map(mapServerTeam)))
+      .catch(() => setTeams([]));
+  }, [mapServerTeam]);
 
+  useEffect(() => {
     if (inviteCodeParam) {
-      const found = loadedTeams.find((t) => t.inviteCode.toLowerCase() === inviteCodeParam.toLowerCase());
-      if (found) {
-        setSelectedTeam(found);
-        const existing = found.members.find(
-          (m) => m.email.toLowerCase() === currentEmail.toLowerCase()
-        );
-        if (existing) {
-          if (existing.status === "ACCEPTED") {
-            setAlreadyMemberInfo(`You are already an active verified athlete on ${found.name}.`);
-          } else if (existing.status === "PENDING") {
-            setAlreadyMemberInfo(`You already have a pending join request awaiting Captain approval for ${found.name}.`);
-          }
-        }
+      teamsService.getTeamByInviteCode(inviteCodeParam)
+        .then((data) => setInviteTeam(mapServerTeam(data as unknown as RawServerTeam)))
+        .catch(() => setInviteTeam(null));
+    }
+  }, [inviteCodeParam, mapServerTeam]);
+
+  const selectedTeam = userSelectedTeam || inviteTeam;
+
+  const currentEmail = user?.email || "";
+
+  const alreadyMemberInfo = useMemo(() => {
+    if (!selectedTeam) return null;
+    const existing = selectedTeam.members.find(
+      (m) => m.email.toLowerCase() === currentEmail.toLowerCase()
+    );
+    if (existing) {
+      if (existing.status === "ACCEPTED") {
+        return `You are already an active verified athlete on ${selectedTeam.name}.`;
+      } else if (existing.status === "PENDING") {
+        return `You already have a pending join request awaiting Captain approval for ${selectedTeam.name}.`;
       }
     }
-  }, [inviteCodeParam, currentEmail]);
+    return null;
+  }, [selectedTeam, currentEmail]);
 
-  const handleJoinSubmit = (e: React.FormEvent) => {
+  const handleJoinSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -57,23 +118,51 @@ function JoinTeamContent() {
       setError("Please enter your exact in-game handle (Riot ID / MLBB ID).");
       return;
     }
+    if (!user?.id) {
+      setError("You must be logged in to join a team.");
+      return;
+    }
 
-    const res = joinLocalTeam(
-      selectedTeam.id,
-      inviteCodeParam || undefined,
-      currentEmail,
-      currentName,
-      gameHandle.trim(),
-      preferredRole
-    );
+    setIsLoading(true);
+    try {
+      const res = await teamsService.joinTeam(selectedTeam.id, {
+        userId: user.id,
+        inviteCode: inviteCodeParam || undefined,
+        gameHandle: gameHandle.trim(),
+        preferredRole: preferredRole.trim(),
+      });
+      
+      setResultMessage({
+        success: res.success,
+        isInstant: res.status === "ACCEPTED" || !!inviteCodeParam,
+        message: res.message
+      });
+    } catch (err: unknown) {
+      const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
+      setError(errorObj?.response?.data?.message || errorObj?.message || "Failed to join team.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    setResultMessage(res);
+  const handleClose = () => {
+    router.push("/dashboard");
   };
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center px-4 py-12 bg-background">
-      <div className="w-full max-w-xl bg-card-bg border border-raised-panel rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6">
-        <div className="flex border-b border-raised-panel pb-3 gap-2">
+    <div className="flex flex-col flex-1 items-center justify-center px-4 py-12 bg-gradient-to-b md:bg-gradient-to-r from-[#CC0000]/20 from-0% to-[#0A0C10] to-[50%] md:to-[40%]">
+      <div className="w-full max-w-xl bg-card-bg border border-raised-panel rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6 relative">
+        <button
+          type="button"
+          onClick={handleClose}
+          className="absolute top-5 right-5 w-8 h-8 rounded-lg border border-raised-panel bg-background hover:bg-raised-panel text-secondary-text hover:text-foreground flex items-center justify-center transition-colors z-10 cursor-pointer"
+          title="Close window"
+          aria-label="Close window"
+        >
+          ✕
+        </button>
+
+        <div className="flex border-b border-raised-panel pb-3 gap-2 pr-10">
           <Link
             href="/team/create"
             className="flex-1 py-2 rounded-lg bg-background hover:bg-raised-panel text-secondary-text hover:text-foreground text-xs font-sans font-bold uppercase tracking-wider text-center border border-panel-border transition-colors"
@@ -82,7 +171,7 @@ function JoinTeamContent() {
           </Link>
           <Link
             href="/team/join"
-            className="flex-1 py-2 rounded-lg bg-primary-brand text-foreground text-xs font-sans font-bold uppercase tracking-wider text-center"
+            className="flex-1 py-2 rounded-lg bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] text-foreground text-xs font-sans font-bold uppercase tracking-wider text-center shadow-md shadow-primary-brand/20"
           >
             🤝 Join Existing Squad
           </Link>
@@ -124,7 +213,7 @@ function JoinTeamContent() {
                 Go to Dashboard
               </Link>
               <button
-                onClick={() => setAlreadyMemberInfo(null)}
+                onClick={() => setUserSelectedTeam(null)}
                 className="h-11 px-6 rounded-lg border border-raised-panel bg-transparent hover:bg-raised-panel text-secondary-text hover:text-foreground font-sans text-xs font-bold uppercase tracking-wider transition-colors"
               >
                 Browse Other Squads
@@ -184,19 +273,7 @@ function JoinTeamContent() {
                         <button
                           key={t.id}
                           type="button"
-                          onClick={() => {
-                            setSelectedTeam(t);
-                            const existing = t.members.find(
-                              (m) => m.email.toLowerCase() === currentEmail.toLowerCase()
-                            );
-                            if (existing) {
-                              if (existing.status === "ACCEPTED") {
-                                setAlreadyMemberInfo(`You are already an active athlete on ${t.name}.`);
-                              } else if (existing.status === "PENDING") {
-                                setAlreadyMemberInfo(`You already have a pending join request for ${t.name}.`);
-                              }
-                            }
-                          }}
+                          onClick={() => setUserSelectedTeam(t)}
                           className={`w-full p-3 rounded-xl border text-left flex items-center justify-between transition-all ${
                             isSel
                               ? `${game.borderColor} border-2 bg-background`
@@ -204,6 +281,7 @@ function JoinTeamContent() {
                           }`}
                         >
                           <div className="flex items-center gap-3">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={game.image} alt={game.name} className="w-8 h-8 rounded-md object-cover" />
                             <div>
                               <h4 className="font-display text-sm font-bold uppercase text-foreground">{t.name}</h4>
@@ -270,9 +348,10 @@ function JoinTeamContent() {
             <div className="pt-3">
               <button
                 type="submit"
-                className="w-full h-11 rounded-lg bg-primary-brand hover:bg-primary-brand/90 text-foreground font-sans text-xs font-bold uppercase tracking-widest transition-colors flex items-center justify-center cursor-pointer"
+                disabled={isLoading}
+                className="w-full h-11 rounded-lg bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] hover:from-[#EF4444] hover:to-[#991B1B] text-foreground font-sans text-xs font-bold uppercase tracking-widest transition-all active:scale-[0.98] shadow-lg shadow-primary-brand/20 flex items-center justify-center cursor-pointer disabled:opacity-50"
               >
-                {inviteCodeParam ? "Instant Domain Join Roster" : "Submit Join Request to Captain"}
+                {isLoading ? "Submitting Request..." : inviteCodeParam ? "Instant Domain Join Roster" : "Submit Join Request to Captain"}
               </button>
             </div>
           </form>

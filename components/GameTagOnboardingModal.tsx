@@ -64,6 +64,7 @@ export default function GameTagOnboardingModal({
       <div className="w-full max-w-md bg-[#0C0F17] border border-[#272B3A] rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between border-b border-raised-panel pb-4 mb-5">
           <div className="flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={game.image} alt={game.name} className="w-9 h-9 rounded-lg object-cover border border-white/20" />
             <div>
               <span className="text-[10px] font-sans font-extrabold uppercase tracking-widest text-secondary-text block">

@@ -1,19 +1,6 @@
-export type GameId = "valo" | "lol" | "codm" | "ml";
+import { GameId, GameInfo } from "@/types";
 
-export interface GameInfo {
-  id: GameId;
-  name: string;
-  shortName: string;
-  subtitle: string;
-  tagline: string;
-  publisher: string;
-  image: string;
-  accentColor: string;
-  borderColor: string;
-  activeTournaments: number;
-  activeTeams: number;
-  genre: string;
-}
+export type { GameId, GameInfo };
 
 export const GAMES: Record<GameId, GameInfo> = {
   valo: {

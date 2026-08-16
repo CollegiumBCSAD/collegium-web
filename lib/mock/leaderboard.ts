@@ -1,13 +1,6 @@
-export interface LeaderboardEntry {
-  id: string;
-  rank: number;
-  university: string;
-  rating: number;
-  winRate: number;
-  streak: string;
-  game: string;
-  icon?: string;
-}
+import { LeaderboardEntry } from "@/types";
+export type { LeaderboardEntry };
+
 
 export const mockLeaderboards: Record<string, LeaderboardEntry[]> = {
   VALORANT: [

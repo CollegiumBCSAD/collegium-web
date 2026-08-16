@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect } from "react";
+import { MatchBoxScore } from "@/types";
 
 interface MatchBoxScoreModalProps {
   isOpen: boolean;
   onClose: () => void;
   title?: string;
   subtitle?: string;
+  boxScoreData?: MatchBoxScore;
 }
 
 export default function MatchBoxScoreModal({
