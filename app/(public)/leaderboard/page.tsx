@@ -1,14 +1,39 @@
 "use client";
 
-import { mockLeaderboards } from "@/lib/mock/leaderboard";
+import { useState, useEffect } from "react";
+import { mockLeaderboards, LeaderboardEntry } from "@/lib/mock/leaderboard";
 import Link from "next/link";
-import { useState } from "react";
+import { universitiesService } from "@/services";
+import { University } from "@/types";
+
+function mapUniversitiesToLeaderboard(universities: University[]): LeaderboardEntry[] {
+  return universities.map((u, i) => ({
+    id: u.id,
+    rank: i + 1,
+    university: u.name.toUpperCase(),
+    rating: u.glicko2_rating,
+    winRate: u.wins + u.losses > 0 ? Math.round((u.wins / (u.wins + u.losses)) * 100) : 0,
+    streak: u.wins > 0 ? `${Math.min(u.wins, 9)}W` : `${Math.min(u.losses, 9)}L`,
+    game: "ALL GAMES",
+    icon: i === 0 ? "👑" : i === 1 ? "🥈" : i === 2 ? "🥉" : undefined,
+  }));
+}
 
 export default function LeaderboardPage() {
   const games = ["VALORANT", "LEAGUE OF LEGENDS", "MOBILE LEGENDS: BANG BANG", "CALL OF DUTY: MOBILE"];
   const [selectedGame, setSelectedGame] = useState("VALORANT");
+  const [standings, setStandings] = useState<LeaderboardEntry[]>(mockLeaderboards["VALORANT"] || []);
 
-  const standings = mockLeaderboards[selectedGame] || [];
+  useEffect(() => {
+    universitiesService.getUniversities()
+      .then((universities) => {
+        const mapped = mapUniversitiesToLeaderboard(universities);
+        setStandings(mapped.length > 0 ? mapped : (mockLeaderboards[selectedGame] || []));
+      })
+      .catch(() => {
+        setStandings(mockLeaderboards[selectedGame] || []);
+      });
+  }, [selectedGame]);
 
   return (
     <div className="flex flex-col flex-1 bg-gradient-to-b md:bg-gradient-to-r from-[#CC0000]/25 from-0% to-[#0A0C10] to-[50%] md:to-[40%]">
