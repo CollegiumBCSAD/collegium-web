@@ -39,18 +39,22 @@ export default function ScrimsPage() {
 
   const handlePostScrimSubmit = async (data: {
     gameTitle: GameId;
+    teamId?: string;
     hostTeamName: string;
     format: string;
     rankRange: string;
+    mapPreference?: string;
     notes: string;
   }) => {
     const optimistic: ScrimOffer = {
       id: `scrim-${Date.now()}`,
+      teamId: data.teamId,
       hostTeamName: data.hostTeamName,
       universityName: user?.university?.name || "",
       gameTitle: data.gameTitle,
       format: data.format,
       rankRange: data.rankRange,
+      mapPreference: data.mapPreference,
       scheduledAt: new Date(Date.now() + 86400000).toISOString(),
       notes: data.notes,
       status: "OPEN",
@@ -60,10 +64,11 @@ export default function ScrimsPage() {
     // Fire API call (best effort)
     try {
       await scrimsService.createScrim({
-        teamId: "optimistic-team-id", // Not in UI yet
+        teamId: data.teamId || "default-team-id",
         gameTitle: data.gameTitle,
         format: data.format,
         rankRange: data.rankRange,
+        mapPreference: data.mapPreference,
         scheduledAt: optimistic.scheduledAt,
         notes: data.notes,
       });
@@ -77,7 +82,8 @@ export default function ScrimsPage() {
   const handleAcceptScrim = async (id: string) => {
     try {
       await scrimsService.acceptScrim(id, { opponentId: user?.id || "" });
-      const data = await scrimsService.getScrims(selectedGame !== "all" ? selectedGame : undefined); setScrims(data);
+      const data = await scrimsService.getScrims(selectedGame !== "all" ? selectedGame : undefined);
+      setScrims(data);
     } catch {
       setScrims((prev) =>
         prev.map((s) =>
@@ -85,6 +91,17 @@ export default function ScrimsPage() {
         )
       );
     }
+  };
+
+  const handleCancelScrim = async (id: string) => {
+    try {
+      await scrimsService.cancelScrim(id);
+    } catch {
+      // Local fallback
+    }
+    setScrims((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, status: "CANCELLED" as const } : s))
+    );
   };
 
   return (
@@ -127,6 +144,8 @@ export default function ScrimsPage() {
                 key={scrim.id}
                 scrim={scrim}
                 onAccept={handleAcceptScrim}
+                onCancel={handleCancelScrim}
+                isHost={scrim.universityName === user?.university?.name || scrim.hostTeamName.toLowerCase().includes("herons")}
               />
             ))}
           </div>

@@ -7,9 +7,11 @@ import { ScrimOffer } from "@/types";
 interface ScrimCardProps {
   scrim: ScrimOffer;
   onAccept: (id: string) => void;
+  onCancel?: (id: string) => void;
+  isHost?: boolean;
 }
 
-export default function ScrimCard({ scrim, onAccept }: ScrimCardProps) {
+export default function ScrimCard({ scrim, onAccept, onCancel, isHost }: ScrimCardProps) {
   const game = GAMES[scrim.gameTitle];
 
   return (
@@ -27,12 +29,19 @@ export default function ScrimCard({ scrim, onAccept }: ScrimCardProps) {
             </h3>
           </div>
         </div>
-        <span
-          className="text-[10px] font-sans font-bold uppercase px-2.5 py-1 rounded-full text-white"
-          style={{ backgroundColor: game.accentColor }}
-        >
-          {game.shortName}
-        </span>
+        <div className="flex items-center gap-2">
+          {scrim.mapPreference && (
+            <span className="text-[10px] font-sans font-extrabold uppercase px-2 py-0.5 rounded bg-raised-panel text-secondary-text border border-panel-border">
+              🗺️ {scrim.mapPreference}
+            </span>
+          )}
+          <span
+            className="text-[10px] font-sans font-bold uppercase px-2.5 py-1 rounded-full text-white"
+            style={{ backgroundColor: game.accentColor }}
+          >
+            {game.shortName}
+          </span>
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-2 p-3 rounded-xl bg-background border border-panel-border text-center">
@@ -58,11 +67,22 @@ export default function ScrimCard({ scrim, onAccept }: ScrimCardProps) {
         </p>
       )}
 
-      <div className="pt-2 flex items-center justify-between">
-        {scrim.status === "CONFIRMED" ? (
-          <div className="w-full p-2.5 rounded-lg bg-success/10 border border-success/30 text-success text-xs font-sans font-bold text-center">
-            ✓ Match Booked vs {scrim.opponentTeamName}
+      <div className="pt-2 flex items-center justify-between gap-3">
+        {scrim.status === "CANCELLED" ? (
+          <div className="w-full p-2.5 rounded-lg bg-error/10 border border-error/30 text-error text-xs font-sans font-bold text-center">
+            ✕ Scrim Offer Cancelled
           </div>
+        ) : scrim.status === "CONFIRMED" ? (
+          <div className="w-full p-2.5 rounded-lg bg-success/10 border border-success/30 text-success text-xs font-sans font-bold text-center">
+            ✓ Match Booked vs {scrim.opponentTeamName || "Opponent"}
+          </div>
+        ) : isHost && onCancel ? (
+          <button
+            onClick={() => onCancel(scrim.id)}
+            className="w-full h-10 rounded-lg bg-error/10 hover:bg-error/20 text-error border border-error/30 font-sans text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer"
+          >
+            Cancel Offer
+          </button>
         ) : (
           <button
             onClick={() => onAccept(scrim.id)}
