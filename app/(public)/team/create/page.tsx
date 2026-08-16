@@ -4,7 +4,8 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { GAME_LIST, GameId, GAMES } from "@/lib/games";
-import { createLocalTeam, Team } from "@/lib/teams";
+import { Team } from "@/types";
+import { teamsService } from "@/services";
 import { useAuth } from "@/context/AuthContext";
 
 export default function CreateTeamPage() {
@@ -17,8 +18,9 @@ export default function CreateTeamPage() {
   const [createdTeam, setCreatedTeam] = useState<Team | null>(null);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -31,27 +33,56 @@ export default function CreateTeamPage() {
       return;
     }
 
-    const currentEmail = user?.email || "athlete@umak.edu.ph";
-    const currentName = user?.displayName || "Verified Athlete";
-    const currentUni = user?.university?.name || "University of Makati";
-
-    const res = createLocalTeam(
-      teamName.trim(),
-      selectedGame,
-      currentUni,
-      currentEmail,
-      currentName,
-      gameHandle.trim(),
-      preferredRole
-    );
-
-    if (res.error) {
-      setError(res.error);
+    if (!user?.id || !user?.universityId) {
+      setError("You must be logged in with a verified university to create a team.");
       return;
     }
 
-    if (res.team) {
-      setCreatedTeam(res.team);
+    setIsLoading(true);
+    try {
+      const gameTitleMap: Record<string, string> = {
+        valo: "VALORANT",
+        lol: "LOL",
+        ml: "MLBB",
+        codm: "CODM"
+      };
+
+      const res: any = await teamsService.createTeam({
+        name: teamName.trim(),
+        gameTitle: gameTitleMap[selectedGame] as any,
+        universityId: user.universityId,
+        captainId: user.id,
+        gameHandle: gameHandle.trim(),
+        preferredRole: preferredRole.trim()
+      });
+
+      const mappedTeam: Team = {
+        id: res.id,
+        name: res.name,
+        gameTitle: selectedGame,
+        universityId: res.universityId,
+        universityName: res.university?.name || user.university?.name || "Unknown University",
+        captainId: res.captainId,
+        captainName: user.displayName,
+        inviteCode: res.inviteCode,
+        createdAt: res.createdAt,
+        members: (res.members || []).map((m: any) => ({
+          id: m.id,
+          userId: m.user?.id || "",
+          displayName: m.user?.displayName || "",
+          email: m.user?.email || "",
+          gameHandle: m.gameHandle,
+          preferredRole: m.preferredRole,
+          status: m.status as "ACCEPTED" | "PENDING" | "DECLINED",
+          joinedAt: m.createdAt || new Date().toISOString(),
+        })),
+      };
+
+      setCreatedTeam(mappedTeam);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || err?.message || "Failed to create team.");
+    } finally {
+      setIsLoading(false);
     }
   };
 

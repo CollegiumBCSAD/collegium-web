@@ -1,42 +1,20 @@
-import { GameId } from "./games";
+import { teamsService } from "@/services";
+import { GameId, Team, TeamMember, JoinRequest } from "@/types";
 
-export interface TeamMember {
-  id: string;
-  userId: string;
-  displayName: string;
-  email: string;
-  gameHandle: string;
-  preferredRole?: string;
-  status: "ACCEPTED" | "PENDING" | "DECLINED";
-  joinedAt: string;
-}
-
-export interface Team {
-  id: string;
-  name: string;
-  gameTitle: GameId;
-  universityId: string;
-  universityName: string;
-  captainId: string;
-  captainName: string;
-  inviteCode: string;
-  createdAt: string;
-  members: TeamMember[];
-}
-
-export interface JoinRequest {
-  id: string;
-  teamId: string;
-  teamName: string;
-  userId: string;
-  displayName: string;
-  email: string;
-  gameHandle: string;
-  preferredRole?: string;
-  createdAt: string;
-}
+export type { Team, TeamMember, JoinRequest };
 
 const TEAMS_STORAGE_KEY = "collegium_teams_data";
+
+export async function fetchTeamsApi(): Promise<Team[]> {
+  try {
+    const teams = await teamsService.getTeams();
+    if (Array.isArray(teams) && teams.length > 0) {
+      saveStoredTeams(teams);
+      return teams;
+    }
+  } catch {}
+  return getStoredTeams();
+}
 
 export function getStoredTeams(): Team[] {
   if (typeof window === "undefined") return [];

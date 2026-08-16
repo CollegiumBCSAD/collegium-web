@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useMemo, Suspense } from "react";
+import React, { useState, useEffect, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
-import { getStoredTeams, joinLocalTeam, Team } from "@/lib/teams";
+import { Team, GameId } from "@/types";
 import { GAMES } from "@/lib/games";
+import { teamsService } from "@/services";
 import { useAuth } from "@/context/AuthContext";
 
 function JoinTeamContent() {
@@ -13,23 +14,56 @@ function JoinTeamContent() {
   const inviteCodeParam = searchParams.get("invite");
   const { user } = useAuth();
 
-  const teams = useMemo(() => getStoredTeams(), []);
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [inviteTeam, setInviteTeam] = useState<Team | null>(null);
   const [userSelectedTeam, setUserSelectedTeam] = useState<Team | null>(null);
-
-  const inviteTeam = useMemo(() => {
-    if (!inviteCodeParam || teams.length === 0) return null;
-    return teams.find((t) => t.inviteCode.toLowerCase() === inviteCodeParam.toLowerCase()) || null;
-  }, [inviteCodeParam, teams]);
-
-  const selectedTeam = userSelectedTeam || inviteTeam;
 
   const [gameHandle, setGameHandle] = useState("");
   const [preferredRole, setPreferredRole] = useState("");
   const [resultMessage, setResultMessage] = useState<{ success: boolean; isInstant: boolean; message: string } | null>(null);
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const currentEmail = user?.email || "athlete@umak.edu.ph";
-  const currentName = user?.displayName || "Verified Athlete";
+  const reverseGameTitleMap: Record<string, GameId> = {
+    VALORANT: "valo",
+    LOL: "lol",
+    MLBB: "ml",
+    CODM: "codm",
+  };
+
+  const mapServerTeam = (t: any): Team => ({
+    ...t,
+    gameTitle: reverseGameTitleMap[t.gameTitle] || t.gameTitle,
+    universityName: t.university?.name || "Unknown University",
+    members: t.members?.map((m: any) => ({
+      id: m.id,
+      userId: m.user?.id || "",
+      displayName: m.user?.displayName || "",
+      email: m.user?.email || "",
+      gameHandle: m.gameHandle,
+      preferredRole: m.preferredRole,
+      status: m.status as "ACCEPTED" | "PENDING" | "DECLINED",
+      joinedAt: m.createdAt || new Date().toISOString(),
+    })) || [],
+  });
+
+  useEffect(() => {
+    teamsService.getTeams()
+      .then((data: any) => setTeams(data.map(mapServerTeam)))
+      .catch(() => setTeams([]));
+  }, []);
+
+  useEffect(() => {
+    if (inviteCodeParam) {
+      teamsService.getTeamByInviteCode(inviteCodeParam)
+        .then((data: any) => setInviteTeam(mapServerTeam(data)))
+        .catch(() => setInviteTeam(null));
+    }
+  }, [inviteCodeParam]);
+
+  const selectedTeam = userSelectedTeam || inviteTeam;
+
+  const currentEmail = user?.email || "";
 
   const alreadyMemberInfo = useMemo(() => {
     if (!selectedTeam) return null;
@@ -46,7 +80,7 @@ function JoinTeamContent() {
     return null;
   }, [selectedTeam, currentEmail]);
 
-  const handleJoinSubmit = (e: React.FormEvent) => {
+  const handleJoinSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -58,17 +92,30 @@ function JoinTeamContent() {
       setError("Please enter your exact in-game handle (Riot ID / MLBB ID).");
       return;
     }
+    if (!user?.id) {
+      setError("You must be logged in to join a team.");
+      return;
+    }
 
-    const res = joinLocalTeam(
-      selectedTeam.id,
-      inviteCodeParam || undefined,
-      currentEmail,
-      currentName,
-      gameHandle.trim(),
-      preferredRole
-    );
-
-    setResultMessage(res);
+    setIsLoading(true);
+    try {
+      const res = await teamsService.joinTeam(selectedTeam.id, {
+        userId: user.id,
+        inviteCode: inviteCodeParam || undefined,
+        gameHandle: gameHandle.trim(),
+        preferredRole: preferredRole.trim(),
+      });
+      
+      setResultMessage({
+        success: res.success,
+        isInstant: res.status === "ACCEPTED" || !!inviteCodeParam,
+        message: res.message
+      });
+    } catch (err: any) {
+      setError(err?.response?.data?.message || err?.message || "Failed to join team.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleClose = () => {
