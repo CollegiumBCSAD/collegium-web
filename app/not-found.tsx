@@ -26,7 +26,7 @@ export default function NotFoundPage() {
         <div className="pt-2 flex justify-center">
           <Link
             href="/"
-            className="h-11 px-6 rounded-lg bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] hover:from-[#EF4444] hover:to-[#991B1B] text-foreground font-sans text-xs font-bold uppercase tracking-wider transition-all shadow-md shadow-primary-brand/20 flex items-center justify-center"
+            className="h-11 px-6 rounded-lg game-theme-btn font-sans text-xs font-bold uppercase tracking-wider transition-all shadow-md flex items-center justify-center"
           >
             Back to Circuit Home
           </Link>

@@ -47,17 +47,24 @@ body {
 }
 
 .game-theme-bg {
-  background: linear-gradient(180deg, rgba(var(--game-glow-rgb), 0.22) 0%, rgba(10, 12, 16, 1) 45%);
+  background: linear-gradient(90deg, rgba(var(--game-glow-rgb), 0.24) 0%, rgba(10, 12, 16, 1) 45%);
+}
+
+@media (max-width: 768px) {
+  .game-theme-bg {
+    background: linear-gradient(180deg, rgba(var(--game-glow-rgb), 0.24) 0%, rgba(10, 12, 16, 1) 45%);
+  }
 }
 
 .game-theme-btn {
-  background: linear-gradient(90deg, var(--primary-brand) 0%, rgba(var(--game-glow-rgb), 0.8) 100%);
-  color: #FFFFFF;
+  background: linear-gradient(90deg, var(--primary-brand) 0%, rgba(var(--game-glow-rgb), 0.85) 100%);
+  color: var(--game-btn-text, #FFFFFF);
+  font-weight: 700;
   transition: all 0.2s ease-in-out;
 }
 .game-theme-btn:hover {
   filter: brightness(1.15);
-  box-shadow: 0 4px 20px rgba(var(--game-glow-rgb), 0.35);
+  box-shadow: 0 4px 20px rgba(var(--game-glow-rgb), 0.4);
 }
 
 h1, h2, h3, h4, .font-display, .font-oswald {

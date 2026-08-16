@@ -47,12 +47,24 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       document.documentElement.style.setProperty("--color-primary-brand", accent);
 
       let rgb = "229, 58, 76";
-      if (selectedGame === "valo") rgb = "229, 58, 76";
-      else if (selectedGame === "lol") rgb = "0, 163, 255";
-      else if (selectedGame === "codm") rgb = "255, 255, 255";
-      else if (selectedGame === "ml") rgb = "168, 85, 247";
+      let btnText = "#FFFFFF";
+
+      if (selectedGame === "valo") {
+        rgb = "229, 58, 76";
+        btnText = "#FFFFFF";
+      } else if (selectedGame === "lol") {
+        rgb = "0, 163, 255";
+        btnText = "#FFFFFF";
+      } else if (selectedGame === "codm") {
+        rgb = "255, 255, 255";
+        btnText = "#0A0C10";
+      } else if (selectedGame === "ml") {
+        rgb = "168, 85, 247";
+        btnText = "#FFFFFF";
+      }
 
       document.documentElement.style.setProperty("--game-glow-rgb", rgb);
+      document.documentElement.style.setProperty("--game-btn-text", btnText);
     }
   }, [selectedGame]);
 

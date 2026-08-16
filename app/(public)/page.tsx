@@ -26,7 +26,7 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="flex flex-col flex-1 bg-gradient-to-b md:bg-gradient-to-r from-[#CC0000]/20 from-0% to-[#0A0C10] to-[50%] md:to-[40%]">
+    <div className="flex flex-col flex-1 game-theme-bg">
       <section className="mx-auto max-w-[1800px] w-full px-4 sm:px-6 md:px-10 lg:px-16 py-10 sm:py-16 lg:py-20">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16 items-start">
           <div className="lg:col-span-7 flex flex-col items-start text-left">
@@ -37,8 +37,11 @@ export default function LandingPage() {
               </span>
               {selectedGameInfo && (
                 <span
-                  className="text-[10px] font-sans font-bold tracking-widest uppercase px-2.5 py-1 rounded-full text-white flex items-center gap-1.5"
-                  style={{ backgroundColor: selectedGameInfo.accentColor }}
+                  className="text-[10px] font-sans font-bold tracking-widest uppercase px-2.5 py-1 rounded-full flex items-center gap-1.5"
+                  style={{
+                    backgroundColor: selectedGameInfo.accentColor,
+                    color: selectedGameInfo.id === "codm" ? "#0A0C10" : "#FFFFFF",
+                  }}
                 >
                   <span>MAIN:</span>
                   <span>{selectedGameInfo.shortName}</span>
@@ -57,7 +60,7 @@ export default function LandingPage() {
             <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row w-full sm:w-auto gap-3 sm:gap-4">
               <Link
                 href="/tournaments"
-                className="inline-flex h-12 items-center justify-center rounded bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] hover:from-[#EF4444] hover:to-[#991B1B] px-6 text-sm font-bold uppercase tracking-wider text-foreground transition-all active:scale-[0.98] shadow-lg shadow-primary-brand/20 w-full sm:w-auto text-center font-display"
+                className="inline-flex h-12 items-center justify-center rounded game-theme-btn px-6 text-sm font-bold uppercase tracking-wider transition-all active:scale-[0.98] shadow-lg w-full sm:w-auto text-center font-display"
               >
                 Explore Tournaments
               </Link>
