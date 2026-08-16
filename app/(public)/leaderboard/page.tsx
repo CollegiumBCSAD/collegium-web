@@ -6,7 +6,14 @@ import Link from "next/link";
 import { universitiesService } from "@/services";
 import { University } from "@/types";
 
-function mapUniversitiesToLeaderboard(universities: University[]): LeaderboardEntry[] {
+const GAME_TAB_TO_ENUM: Record<string, string> = {
+  "VALORANT": "VALORANT",
+  "LEAGUE OF LEGENDS": "LOL",
+  "MOBILE LEGENDS: BANG BANG": "MLBB",
+  "CALL OF DUTY: MOBILE": "CODM",
+};
+
+function mapUniversitiesToLeaderboard(universities: University[], game: string): LeaderboardEntry[] {
   return universities.map((u, i) => ({
     id: u.id,
     rank: i + 1,
@@ -14,7 +21,7 @@ function mapUniversitiesToLeaderboard(universities: University[]): LeaderboardEn
     rating: u.glicko2_rating,
     winRate: u.wins + u.losses > 0 ? Math.round((u.wins / (u.wins + u.losses)) * 100) : 0,
     streak: u.wins > 0 ? `${Math.min(u.wins, 9)}W` : `${Math.min(u.losses, 9)}L`,
-    game: "ALL GAMES",
+    game,
     icon: i === 0 ? "👑" : i === 1 ? "🥈" : i === 2 ? "🥉" : undefined,
   }));
 }
@@ -25,14 +32,21 @@ export default function LeaderboardPage() {
   const [standings, setStandings] = useState<LeaderboardEntry[]>(mockLeaderboards["VALORANT"] || []);
 
   useEffect(() => {
-    universitiesService.getUniversities()
+    const enumValue = GAME_TAB_TO_ENUM[selectedGame];
+    let cancelled = false;
+
+    universitiesService.getUniversities(enumValue)
       .then((universities) => {
-        const mapped = mapUniversitiesToLeaderboard(universities);
+        if (cancelled) return;
+        const mapped = mapUniversitiesToLeaderboard(universities, selectedGame);
         setStandings(mapped.length > 0 ? mapped : (mockLeaderboards[selectedGame] || []));
       })
       .catch(() => {
+        if (cancelled) return;
         setStandings(mockLeaderboards[selectedGame] || []);
       });
+
+    return () => { cancelled = true; };
   }, [selectedGame]);
 
   return (
