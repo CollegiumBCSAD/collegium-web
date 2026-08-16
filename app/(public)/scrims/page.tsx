@@ -71,13 +71,13 @@ export default function ScrimsPage() {
       // Ignore error for optimistic update
     }
 
-    setTimeout(fetchScrims, 1000);
+    setTimeout(() => scrimsService.getScrims(selectedGame !== "all" ? selectedGame : undefined).then(setScrims), 1000);
   };
 
   const handleAcceptScrim = async (id: string) => {
     try {
       await scrimsService.acceptScrim(id, { opponentId: user?.id || "" });
-      await fetchScrims();
+      const data = await scrimsService.getScrims(selectedGame !== "all" ? selectedGame : undefined); setScrims(data);
     } catch {
       setScrims((prev) =>
         prev.map((s) =>
