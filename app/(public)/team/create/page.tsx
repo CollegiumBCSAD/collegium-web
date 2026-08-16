@@ -40,21 +40,38 @@ export default function CreateTeamPage() {
 
     setIsLoading(true);
     try {
-      const gameTitleMap: Record<string, string> = {
-        valo: "VALORANT",
-        lol: "LOL",
-        ml: "MLBB",
-        codm: "CODM"
+      const gameTitleMap: Record<string, GameId> = {
+        valo: "valo",
+        lol: "lol",
+        ml: "ml",
+        codm: "codm"
       };
+      interface ServerTeamResponse {
+        id: string;
+        name: string;
+        universityId: string;
+        captainId: string;
+        inviteCode: string;
+        createdAt: string;
+        university?: { name: string };
+        members?: Array<{
+          id: string;
+          user?: { id?: string; displayName?: string; email?: string };
+          gameHandle: string;
+          preferredRole?: string;
+          status: string;
+          createdAt?: string;
+        }>;
+      }
 
-      const res: any = await teamsService.createTeam({
+      const res = (await teamsService.createTeam({
         name: teamName.trim(),
-        gameTitle: gameTitleMap[selectedGame] as any,
+        gameTitle: gameTitleMap[selectedGame] as GameId,
         universityId: user.universityId,
         captainId: user.id,
         gameHandle: gameHandle.trim(),
         preferredRole: preferredRole.trim()
-      });
+      })) as unknown as ServerTeamResponse;
 
       const mappedTeam: Team = {
         id: res.id,
@@ -66,7 +83,7 @@ export default function CreateTeamPage() {
         captainName: user.displayName,
         inviteCode: res.inviteCode,
         createdAt: res.createdAt,
-        members: (res.members || []).map((m: any) => ({
+        members: (res.members || []).map((m) => ({
           id: m.id,
           userId: m.user?.id || "",
           displayName: m.user?.displayName || "",
@@ -79,8 +96,9 @@ export default function CreateTeamPage() {
       };
 
       setCreatedTeam(mappedTeam);
-    } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || "Failed to create team.");
+    } catch (err: unknown) {
+      const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
+      setError(errorObj?.response?.data?.message || errorObj?.message || "Failed to create team.");
     } finally {
       setIsLoading(false);
     }
@@ -270,9 +288,10 @@ export default function CreateTeamPage() {
             <div className="pt-3">
               <button
                 type="submit"
-                className="w-full h-11 rounded-lg bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] hover:from-[#EF4444] hover:to-[#991B1B] text-foreground font-sans text-xs font-bold uppercase tracking-widest transition-all active:scale-[0.98] shadow-lg shadow-primary-brand/20 flex items-center justify-center cursor-pointer"
+                disabled={isLoading}
+                className="w-full h-11 rounded-lg bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] hover:from-[#EF4444] hover:to-[#991B1B] text-foreground font-sans text-xs font-bold uppercase tracking-widest transition-all active:scale-[0.98] shadow-lg shadow-primary-brand/20 flex items-center justify-center cursor-pointer disabled:opacity-50"
               >
-                Create Squad & Generate Invite Link
+                {isLoading ? "Creating Squad..." : "Create Squad & Generate Invite Link"}
               </button>
             </div>
           </form>

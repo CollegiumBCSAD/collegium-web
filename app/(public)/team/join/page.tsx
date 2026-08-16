@@ -24,18 +24,44 @@ function JoinTeamContent() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const reverseGameTitleMap: Record<string, GameId> = {
+  const reverseGameTitleMap: Record<string, GameId> = useMemo(() => ({
     VALORANT: "valo",
     LOL: "lol",
     MLBB: "ml",
     CODM: "codm",
-  };
+  }), []);
 
-  const mapServerTeam = (t: any): Team => ({
-    ...t,
-    gameTitle: reverseGameTitleMap[t.gameTitle] || t.gameTitle,
+  interface RawServerTeam {
+    id: string;
+    name: string;
+    gameTitle: string;
+    universityId: string;
+    captainId: string;
+    captainName?: string;
+    inviteCode: string;
+    createdAt: string;
+    university?: { name: string };
+    members?: Array<{
+      id: string;
+      user?: { id?: string; displayName?: string; email?: string };
+      gameHandle: string;
+      preferredRole?: string;
+      status: string;
+      createdAt?: string;
+    }>;
+  }
+
+  const mapServerTeam = useCallback((t: RawServerTeam): Team => ({
+    id: t.id,
+    name: t.name,
+    gameTitle: reverseGameTitleMap[t.gameTitle] || (t.gameTitle as GameId),
+    universityId: t.universityId,
     universityName: t.university?.name || "Unknown University",
-    members: t.members?.map((m: any) => ({
+    captainId: t.captainId,
+    captainName: t.captainName || "Team Captain",
+    inviteCode: t.inviteCode,
+    createdAt: t.createdAt,
+    members: t.members?.map((m) => ({
       id: m.id,
       userId: m.user?.id || "",
       displayName: m.user?.displayName || "",
@@ -45,21 +71,21 @@ function JoinTeamContent() {
       status: m.status as "ACCEPTED" | "PENDING" | "DECLINED",
       joinedAt: m.createdAt || new Date().toISOString(),
     })) || [],
-  });
+  }), [reverseGameTitleMap]);
 
   useEffect(() => {
     teamsService.getTeams()
-      .then((data: any) => setTeams(data.map(mapServerTeam)))
+      .then((data) => setTeams((data as unknown as RawServerTeam[]).map(mapServerTeam)))
       .catch(() => setTeams([]));
-  }, []);
+  }, [mapServerTeam]);
 
   useEffect(() => {
     if (inviteCodeParam) {
       teamsService.getTeamByInviteCode(inviteCodeParam)
-        .then((data: any) => setInviteTeam(mapServerTeam(data)))
+        .then((data) => setInviteTeam(mapServerTeam(data as unknown as RawServerTeam)))
         .catch(() => setInviteTeam(null));
     }
-  }, [inviteCodeParam]);
+  }, [inviteCodeParam, mapServerTeam]);
 
   const selectedTeam = userSelectedTeam || inviteTeam;
 
@@ -111,8 +137,9 @@ function JoinTeamContent() {
         isInstant: res.status === "ACCEPTED" || !!inviteCodeParam,
         message: res.message
       });
-    } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || "Failed to join team.");
+    } catch (err: unknown) {
+      const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
+      setError(errorObj?.response?.data?.message || errorObj?.message || "Failed to join team.");
     } finally {
       setIsLoading(false);
     }
@@ -321,9 +348,10 @@ function JoinTeamContent() {
             <div className="pt-3">
               <button
                 type="submit"
-                className="w-full h-11 rounded-lg bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] hover:from-[#EF4444] hover:to-[#991B1B] text-foreground font-sans text-xs font-bold uppercase tracking-widest transition-all active:scale-[0.98] shadow-lg shadow-primary-brand/20 flex items-center justify-center cursor-pointer"
+                disabled={isLoading}
+                className="w-full h-11 rounded-lg bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] hover:from-[#EF4444] hover:to-[#991B1B] text-foreground font-sans text-xs font-bold uppercase tracking-widest transition-all active:scale-[0.98] shadow-lg shadow-primary-brand/20 flex items-center justify-center cursor-pointer disabled:opacity-50"
               >
-                {inviteCodeParam ? "Instant Domain Join Roster" : "Submit Join Request to Captain"}
+                {isLoading ? "Submitting Request..." : inviteCodeParam ? "Instant Domain Join Roster" : "Submit Join Request to Captain"}
               </button>
             </div>
           </form>
