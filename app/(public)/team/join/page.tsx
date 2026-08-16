@@ -150,7 +150,7 @@ function JoinTeamContent() {
   };
 
   return (
-    <div className="flex flex-col flex-1 items-center justify-center px-4 py-12 bg-gradient-to-b md:bg-gradient-to-r from-[#CC0000]/20 from-0% to-[#0A0C10] to-[50%] md:to-[40%]">
+    <div className="flex flex-col flex-1 items-center justify-center px-4 py-12 game-theme-bg">
       <div className="w-full max-w-xl bg-card-bg border border-raised-panel rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6 relative">
         <button
           type="button"
@@ -171,7 +171,7 @@ function JoinTeamContent() {
           </Link>
           <Link
             href="/team/join"
-            className="flex-1 py-2 rounded-lg bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] text-foreground text-xs font-sans font-bold uppercase tracking-wider text-center shadow-md shadow-primary-brand/20"
+            className="flex-1 py-2 rounded-lg game-theme-btn text-xs font-sans font-bold uppercase tracking-wider text-center shadow-md"
           >
             🤝 Join Existing Squad
           </Link>

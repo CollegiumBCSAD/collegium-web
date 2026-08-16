@@ -85,7 +85,7 @@ export default function UniversityProfilePage() {
   ];
 
   return (
-    <div className="flex flex-col flex-1 bg-gradient-to-b md:bg-gradient-to-r from-[#CC0000]/20 from-0% to-[#0A0C10] to-[50%] md:to-[40%] py-10 px-4 sm:px-6 lg:px-10">
+    <div className="flex flex-col flex-1 game-theme-bg py-10 px-4 sm:px-6 lg:px-10">
       <div className="max-w-6xl mx-auto space-y-8 w-full">
         <div className="p-8 rounded-2xl bg-card-bg border border-raised-panel shadow-2xl space-y-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">

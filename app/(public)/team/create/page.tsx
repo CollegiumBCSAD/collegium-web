@@ -121,7 +121,7 @@ export default function CreateTeamPage() {
   };
 
   return (
-    <div className="flex flex-col flex-1 items-center justify-center px-4 py-12 bg-gradient-to-b md:bg-gradient-to-r from-[#CC0000]/20 from-0% to-[#0A0C10] to-[50%] md:to-[40%]">
+    <div className="flex flex-col flex-1 items-center justify-center px-4 py-12 game-theme-bg">
       <div className="w-full max-w-xl bg-card-bg border border-raised-panel rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6 relative">
         <button
           type="button"

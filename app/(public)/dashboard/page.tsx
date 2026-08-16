@@ -51,7 +51,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex flex-col flex-1 bg-gradient-to-b md:bg-gradient-to-r from-[#CC0000]/20 from-0% to-[#0A0C10] to-[50%] md:to-[40%] py-10 px-4 sm:px-6 lg:px-10">
+    <div className="flex flex-col flex-1 game-theme-bg py-10 px-4 sm:px-6 lg:px-10">
       <div className="max-w-6xl mx-auto space-y-8 w-full">
         {user.status === "PENDING" && (
           <div className="p-4 rounded-2xl bg-secondary-brand/10 border border-secondary-brand/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs font-sans">
@@ -101,7 +101,7 @@ export default function DashboardPage() {
                 <div className="flex justify-center gap-3">
                   <Link
                     href="/team/create"
-                    className="h-10 px-4 rounded-lg bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] hover:from-[#EF4444] hover:to-[#991B1B] text-foreground font-sans text-xs font-bold uppercase tracking-wider flex items-center justify-center shadow-md shadow-primary-brand/20 transition-all active:scale-[0.98]"
+                    className="h-10 px-4 rounded-lg game-theme-btn font-sans text-xs font-bold uppercase tracking-wider flex items-center justify-center shadow-md transition-all active:scale-[0.98]"
                   >
                     Establish Squad
                   </Link>
