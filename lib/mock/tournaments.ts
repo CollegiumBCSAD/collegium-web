@@ -1,20 +1,20 @@
-export interface TeamInMatch {
-  name: string;
-  code: string;
-  score?: number;
-  isWinner?: boolean;
-}
+import {
+  TeamInMatch,
+  Tournament,
+  TournamentMatch,
+  BracketRound,
+  PlayerStats,
+  MatchBoxScore,
+} from "@/types";
 
-export interface Tournament {
-  id: string;
-  title: string;
-  game: string;
-  status: "COMPLETED" | "UPCOMING" | "LIVE";
-  statusText: string;
-  bulletPoints: string[];
-  image?: string;
-  bgGradient: string;
-}
+export type {
+  TeamInMatch,
+  Tournament,
+  TournamentMatch,
+  BracketRound,
+  PlayerStats,
+  MatchBoxScore,
+};
 
 export const mockTournaments: Tournament[] = [
   {
@@ -48,19 +48,6 @@ export const mockTournaments: Tournament[] = [
     bgGradient: "from-[#8E6519] via-[#42300E] to-[#11141C]",
   },
 ];
-
-export interface TournamentMatch {
-  id: string;
-  team1: TeamInMatch;
-  team2: TeamInMatch;
-  status: "COMPLETED" | "LIVE" | "UPCOMING";
-  timeLabel?: string;
-}
-
-export interface BracketRound {
-  name: string;
-  matches: TournamentMatch[];
-}
 
 export const mockBracket: BracketRound[] = [
   {
@@ -122,32 +109,6 @@ export const mockBracket: BracketRound[] = [
     ],
   },
 ];
-
-export interface PlayerStats {
-  name: string;
-  role: string;
-  agent: string;
-  kills: number;
-  deaths: number;
-  assists: number;
-  kda: number;
-  acs: number;
-}
-
-export interface MatchBoxScore {
-  title: string;
-  subtitle: string;
-  team1: {
-    name: string;
-    code: string;
-    players: PlayerStats[];
-  };
-  team2: {
-    name: string;
-    code: string;
-    players: PlayerStats[];
-  };
-}
 
 export const mockBoxScore: MatchBoxScore = {
   title: "MATCH BOX SCORE",
