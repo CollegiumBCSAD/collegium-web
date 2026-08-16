@@ -16,6 +16,7 @@ export default function MatchBoxScoreModal({
   onClose,
   title = "MATCH BOX SCORE",
   subtitle = "VALORANT • GRAND FINALS • ELIMINATION",
+  boxScoreData,
 }: MatchBoxScoreModalProps) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
