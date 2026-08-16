@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { teamsService } from "@/services/teamsService";
 import { getStoredTeams, saveStoredTeams, Team, TeamMember } from "@/lib/teams";
+import { JoinRequest } from "@/types";
 
 export default function CaptainRequestInbox() {
   const [teams, setTeams] = useState<Team[]>(() => getStoredTeams());
@@ -9,13 +11,48 @@ export default function CaptainRequestInbox() {
     const loaded = getStoredTeams();
     return loaded.length > 0 ? loaded[0] : null;
   });
+  const [apiRequests, setApiRequests] = useState<JoinRequest[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!activeTeam) return;
+    let isMounted = true;
+    setLoading(true);
+
+    teamsService
+      .getJoinRequests(activeTeam.id)
+      .then((reqs) => {
+        if (isMounted && Array.isArray(reqs)) {
+          setApiRequests(reqs);
+        }
+      })
+      .catch(() => {
+        // Silent catch for demo/offline fallback to local storage members
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeTeam]);
 
   if (!activeTeam) return null;
 
   const pendingMembers = activeTeam.members.filter((m) => m.status === "PENDING");
   const acceptedMembers = activeTeam.members.filter((m) => m.status === "ACCEPTED");
 
-  const handleDecision = (memberId: string, accept: boolean) => {
+  const handleDecision = async (memberId: string, accept: boolean) => {
+    const status = accept ? "ACCEPTED" : "DECLINED";
+    try {
+      await teamsService.handleJoinRequest(activeTeam.id, memberId, status);
+      setActionMessage(`Request ${accept ? "accepted" : "declined"} successfully.`);
+    } catch {
+      setActionMessage(`Updated request locally.`);
+    }
+
     const updatedTeams = teams.map((t) => {
       if (t.id === activeTeam.id) {
         const updatedMembers = t.members.map((m) => {
@@ -34,6 +71,9 @@ export default function CaptainRequestInbox() {
 
     const newActive = updatedTeams.find((t) => t.id === activeTeam.id) || null;
     setActiveTeam(newActive);
+    setApiRequests((prev) => prev.filter((r) => r.id !== memberId));
+
+    setTimeout(() => setActionMessage(null), 3000);
   };
 
   return (
@@ -55,12 +95,21 @@ export default function CaptainRequestInbox() {
         </div>
       </div>
 
-      <div className="space-y-4">
-        <h4 className="text-xs font-sans font-semibold uppercase tracking-wider text-secondary-text">
-          Pending Roster Join Requests ({pendingMembers.length})
-        </h4>
+      {actionMessage && (
+        <div className="p-3 rounded-lg bg-primary-brand/10 border border-primary-brand/30 text-xs font-sans font-semibold text-primary-brand">
+          {actionMessage}
+        </div>
+      )}
 
-        {pendingMembers.length === 0 ? (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h4 className="text-xs font-sans font-semibold uppercase tracking-wider text-secondary-text">
+            Pending Roster Join Requests ({pendingMembers.length + apiRequests.length})
+          </h4>
+          {loading && <span className="text-[10px] font-sans text-secondary-text animate-pulse">Syncing...</span>}
+        </div>
+
+        {pendingMembers.length === 0 && apiRequests.length === 0 ? (
           <div className="p-6 rounded-xl bg-background/50 border border-panel-border text-center">
             <p className="text-xs font-sans text-secondary-text">
               No pending join requests. Share your team invite link to invite university peers!
