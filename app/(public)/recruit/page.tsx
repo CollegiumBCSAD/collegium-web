@@ -136,9 +136,9 @@ export default function RecruitPage() {
           <div className="flex border border-raised-panel rounded-xl bg-card-bg p-1 w-full sm:w-auto">
             <button
               onClick={() => setActiveTab("LFT")}
-              className={`flex-1 sm:flex-initial px-6 py-2 rounded-lg font-sans text-xs font-bold uppercase tracking-wider transition-all ${
+              className={`flex-1 sm:flex-initial px-6 py-2 rounded-lg font-sans text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
                 activeTab === "LFT"
-                  ? "bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] text-foreground shadow-md shadow-primary-brand/20"
+                  ? "game-theme-btn shadow-md"
                   : "text-secondary-text hover:text-foreground"
               }`}
             >
@@ -146,9 +146,9 @@ export default function RecruitPage() {
             </button>
             <button
               onClick={() => setActiveTab("LFP")}
-              className={`flex-1 sm:flex-initial px-6 py-2 rounded-lg font-sans text-xs font-bold uppercase tracking-wider transition-all ${
+              className={`flex-1 sm:flex-initial px-6 py-2 rounded-lg font-sans text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
                 activeTab === "LFP"
-                  ? "bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] text-foreground shadow-md shadow-primary-brand/20"
+                  ? "game-theme-btn shadow-md"
                   : "text-secondary-text hover:text-foreground"
               }`}
             >
@@ -159,29 +159,35 @@ export default function RecruitPage() {
           <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto">
             <button
               onClick={() => setSelectedGame("all")}
-              className={`px-3 py-1.5 rounded-lg font-sans text-xs font-bold uppercase tracking-wider ${
+              className={`px-3 py-1.5 rounded-lg font-sans text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
                 selectedGame === "all"
-                  ? "bg-raised-panel text-foreground"
+                  ? "game-theme-btn shadow-sm"
                   : "text-secondary-text hover:text-foreground"
               }`}
             >
               All
             </button>
-            {GAME_LIST.map((g) => (
-              <button
-                key={g.id}
-                onClick={() => setSelectedGame(g.id)}
-                className={`px-3 py-1.5 rounded-lg font-sans text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 ${
-                  selectedGame === g.id
-                    ? `${g.borderColor} border bg-card-bg text-foreground`
-                    : "text-secondary-text hover:text-foreground"
-                }`}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={g.image} alt={g.name} className="w-3.5 h-3.5 rounded object-cover" />
-                <span>{g.shortName}</span>
-              </button>
-            ))}
+            {GAME_LIST.map((g) => {
+              const isSelected = selectedGame === g.id;
+              const isCodm = g.id === "codm";
+              return (
+                <button
+                  key={g.id}
+                  onClick={() => setSelectedGame(g.id)}
+                  className={`px-3 py-1.5 rounded-lg font-sans text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
+                    isSelected
+                      ? isCodm
+                        ? "bg-white text-[#0A0C10] font-extrabold shadow-sm"
+                        : `${g.borderColor} border bg-card-bg text-foreground shadow-sm`
+                      : "text-secondary-text hover:text-foreground"
+                  }`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={g.image} alt={g.name} className="w-3.5 h-3.5 rounded object-cover" />
+                  <span>{g.shortName}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 

@@ -83,7 +83,7 @@ export default function LeaderboardPage() {
                 }`}
               >
                 {isActive && (
-                  <span className="h-2 w-2 rounded-full bg-[#E53A4C] inline-block shadow-[0_0_8px_rgba(229,58,76,0.8)]" />
+                  <span className="h-2 w-2 rounded-full bg-primary-brand inline-block" />
                 )}
                 <span>{game}</span>
               </button>
