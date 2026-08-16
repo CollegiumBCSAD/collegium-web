@@ -93,9 +93,10 @@ export default function LeaderboardPage() {
 
         <div className="flex flex-col gap-4 sm:gap-6">
           {standings.map((entry) => (
-            <div
+            <Link
               key={entry.id}
-              className="group relative flex flex-col md:flex-row items-start md:items-center justify-between gap-6 overflow-hidden rounded-xl border border-raised-panel bg-[#0E1119] p-5 sm:p-6 shadow-xl transition-all hover:border-raised-panel/80"
+              href={`/university/${entry.id}`}
+              className="group relative flex flex-col md:flex-row items-start md:items-center justify-between gap-6 overflow-hidden rounded-xl border border-raised-panel bg-[#0E1119] p-5 sm:p-6 shadow-xl transition-all hover:border-primary-brand/50 hover:bg-[#121622] cursor-pointer"
             >
               <div className="flex items-center gap-4 sm:gap-6 shrink-0">
                 <div
@@ -115,7 +116,7 @@ export default function LeaderboardPage() {
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">
                     {entry.icon && <span className="text-sm">{entry.icon}</span>}
-                    <h2 className="font-sans text-sm sm:text-base font-bold tracking-wide text-foreground">
+                    <h2 className="font-sans text-sm sm:text-base font-bold tracking-wide text-foreground group-hover:text-primary-brand transition-colors">
                       {entry.university}
                     </h2>
                   </div>
@@ -163,7 +164,7 @@ export default function LeaderboardPage() {
                   {entry.game}
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>
