@@ -2,10 +2,14 @@
 
 import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useGame } from "@/context/GameContext";
 
 export default function FloatingChatWidget() {
   const { user, isLoggedIn, isLoaded } = useAuth();
+  const { selectedGame } = useGame();
   const [isOpen, setIsOpen] = useState(false);
+
+  const isLightAccent = selectedGame === "codm";
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -99,7 +103,7 @@ export default function FloatingChatWidget() {
                 <div
                   className={`p-3 rounded-xl max-w-[85%] leading-relaxed ${
                     m.isMe
-                      ? "bg-primary-brand text-foreground rounded-tr-none shadow-md"
+                      ? "game-theme-btn rounded-tr-none shadow-md"
                       : "bg-raised-panel text-foreground border border-panel-border rounded-tl-none"
                   }`}
                 >
@@ -120,7 +124,7 @@ export default function FloatingChatWidget() {
             />
             <button
               type="submit"
-              className="h-9 px-4 rounded-lg bg-primary-brand hover:bg-primary-brand/90 text-foreground font-sans text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
+              className="h-9 px-4 rounded-lg game-theme-btn font-sans text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
             >
               Send
             </button>
@@ -132,12 +136,14 @@ export default function FloatingChatWidget() {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-14 h-14 rounded-full bg-primary-brand hover:bg-primary-brand/90 text-foreground shadow-2xl flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer border-2 border-white/20 relative group"
+        className="w-14 h-14 rounded-full game-theme-btn shadow-2xl flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer border-2 border-white/20 relative group"
         title="Athlete Chat"
         aria-label="Open Athlete Chat"
       >
         <svg
-          className="w-7 h-7 text-white fill-current transition-transform group-hover:scale-110"
+          className={`w-7 h-7 fill-current transition-transform group-hover:scale-110 ${
+            isLightAccent ? "text-[#0A0C10]" : "text-white"
+          }`}
           viewBox="0 0 24 24"
         >
           <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z" />
