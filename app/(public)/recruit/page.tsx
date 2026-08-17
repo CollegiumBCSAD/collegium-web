@@ -108,7 +108,7 @@ export default function RecruitPage() {
             onClick={() => setActiveTab("LFT")}
             className={`flex-1 px-6 py-2.5 rounded-lg font-sans text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
               activeTab === "LFT"
-                ? "game-theme-btn shadow-md"
+                ? "bg-white text-black shadow-md font-extrabold"
                 : "text-secondary-text hover:text-foreground"
             }`}
           >
@@ -118,7 +118,7 @@ export default function RecruitPage() {
             onClick={() => setActiveTab("LFP")}
             className={`flex-1 px-6 py-2.5 rounded-lg font-sans text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
               activeTab === "LFP"
-                ? "game-theme-btn shadow-md"
+                ? "bg-white text-black shadow-md font-extrabold"
                 : "text-secondary-text hover:text-foreground"
             }`}
           >
@@ -215,10 +215,10 @@ export default function RecruitPage() {
                   <button
                     type="button"
                     onClick={() => setFormType("LFT")}
-                    className={`py-2 rounded-lg font-sans text-xs font-bold uppercase border ${
+                    className={`py-2 rounded-lg font-sans text-xs font-bold uppercase border cursor-pointer transition-all ${
                       formType === "LFT"
-                        ? "bg-primary-brand text-foreground border-primary-brand"
-                        : "bg-background border-panel-border text-secondary-text"
+                        ? "bg-white text-black border-white font-extrabold shadow"
+                        : "bg-background border-panel-border text-secondary-text hover:text-foreground"
                     }`}
                   >
                     Looking for Team (LFT)
@@ -226,10 +226,10 @@ export default function RecruitPage() {
                   <button
                     type="button"
                     onClick={() => setFormType("LFP")}
-                    className={`py-2 rounded-lg font-sans text-xs font-bold uppercase border ${
+                    className={`py-2 rounded-lg font-sans text-xs font-bold uppercase border cursor-pointer transition-all ${
                       formType === "LFP"
-                        ? "bg-primary-brand text-foreground border-primary-brand"
-                        : "bg-background border-panel-border text-secondary-text"
+                        ? "bg-white text-black border-white font-extrabold shadow"
+                        : "bg-background border-panel-border text-secondary-text hover:text-foreground"
                     }`}
                   >
                     Looking for Players (LFP)
