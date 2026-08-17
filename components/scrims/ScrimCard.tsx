@@ -14,6 +14,7 @@ interface ScrimCardProps {
   onOpenWarRoom?: (scrim: ScrimOffer) => void;
   isHost?: boolean;
   isOpponent?: boolean;
+  isChosenOpponent?: boolean;
 }
 
 export default function ScrimCard({
@@ -26,6 +27,7 @@ export default function ScrimCard({
   onOpenWarRoom,
   isHost,
   isOpponent,
+  isChosenOpponent,
 }: ScrimCardProps) {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const game = getGameInfo(scrim.gameTitle);
@@ -257,7 +259,7 @@ export default function ScrimCard({
             </button>
           )
         ) : isBooked ? (
-          isHost || isOpponent ? (
+          isHost || isChosenOpponent ? (
             <div className="w-full p-3 rounded-xl bg-[#111C18] border-l-2 border-l-[#10B981] border border-[#1C2C25] flex flex-col gap-3">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5 min-w-0">

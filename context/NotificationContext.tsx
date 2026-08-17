@@ -35,7 +35,8 @@ interface NotificationContextType {
     }>,
     isUserHostFn: (scrim: any) => boolean,
     isUserOpponentFn: (scrim: any) => boolean,
-    myTeamNames?: string[]
+    myTeamNames?: string[],
+    myTeamIds?: string[]
   ) => void;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
@@ -118,7 +119,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       }>,
       isUserHostFn: (scrim: any) => boolean,
       isUserOpponentFn: (scrim: any) => boolean,
-      myTeamNames: string[] = []
+      myTeamNames: string[] = [],
+      myTeamIds: string[] = []
     ) => {
       let statusMap: Record<string, string> = {};
       if (typeof window !== "undefined") {
@@ -130,26 +132,50 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
       let mapChanged = false;
 
-      scrims.forEach((scrim) => {
+      scrims.forEach((scrim: any) => {
         const lastStatus = statusMap[scrim.id];
         const isHost = isUserHostFn(scrim);
         const isOpponent = isUserOpponentFn(scrim);
 
+        const lowerMyTeamNames = myTeamNames.map((n) => n.toLowerCase().trim());
+        const scrimOpponentName = (scrim.opponentTeamName || "").toLowerCase().trim();
+        const scrimOpponentId = scrim.opponentTeamId || scrim.opponentId;
+
+        const isChosenOpponent =
+          !isHost &&
+          ((scrimOpponentName && lowerMyTeamNames.includes(scrimOpponentName)) ||
+           (scrimOpponentId && myTeamIds.includes(scrimOpponentId)));
+
         // 1. Challenger Notification ONLY: Host Accepted Scrim Request (status is CONFIRMED & lastStatus was PENDING or not CONFIRMED)
-        // MUST BE isOpponent === true AND isHost === false!
-        if (scrim.status === "CONFIRMED" && isOpponent && !isHost && lastStatus !== "CONFIRMED") {
-          addNotification({
-            type: "ACCEPTED",
-            scrimId: scrim.id,
-            title: "🎉 Scrim Match Request Accepted!",
-            message: `${scrim.hostTeamName} accepted your practice match request!`,
-            hostTeamName: scrim.hostTeamName,
-            opponentTeamName: scrim.opponentTeamName,
-            gameTitle: scrim.gameTitle,
-            scheduledAt: scrim.scheduledAt,
-          });
-          statusMap[scrim.id] = "CONFIRMED";
-          mapChanged = true;
+        // MUST BE the specific chosen opponent!
+        if (scrim.status === "CONFIRMED" && lastStatus !== "CONFIRMED") {
+          if (isChosenOpponent) {
+            addNotification({
+              type: "ACCEPTED",
+              scrimId: scrim.id,
+              title: "🎉 Scrim Match Request Accepted!",
+              message: `${scrim.hostTeamName} accepted your practice match request!`,
+              hostTeamName: scrim.hostTeamName,
+              opponentTeamName: scrim.opponentTeamName,
+              gameTitle: scrim.gameTitle,
+              scheduledAt: scrim.scheduledAt,
+            });
+            statusMap[scrim.id] = "CONFIRMED";
+            mapChanged = true;
+          } else if (isOpponent && !isHost) {
+            addNotification({
+              type: "DECLINED",
+              scrimId: scrim.id,
+              title: "✕ Scrim Request Declined",
+              message: `${scrim.hostTeamName} selected another opponent squad for this scrim.`,
+              hostTeamName: scrim.hostTeamName,
+              opponentTeamName: scrim.opponentTeamName,
+              gameTitle: scrim.gameTitle,
+              scheduledAt: scrim.scheduledAt,
+            });
+            statusMap[scrim.id] = "CONFIRMED";
+            mapChanged = true;
+          }
         }
 
         // 2. Challenger Notification ONLY: Host Declined Scrim Request (status is OPEN & lastStatus was PENDING)

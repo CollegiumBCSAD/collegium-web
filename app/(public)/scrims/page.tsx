@@ -178,6 +178,24 @@ export default function ScrimsPage() {
     [user, myTeams, isUserHost]
   );
 
+  const isUserChosenOpponent = useCallback(
+    (scrim: ScrimOffer) => {
+      if (!user) return false;
+      if (isUserHost(scrim)) return false;
+      const myTeamNames = myTeams.map((t: Team) => t.name.toLowerCase().trim());
+      const myTeamIds = myTeams.map((t: Team) => t.id);
+
+      const opponentName = (scrim.opponentTeamName || "").toLowerCase().trim();
+      const opponentId = scrim.opponentTeamId;
+
+      if (opponentId && (myTeamIds.includes(opponentId) || opponentId === user.id)) return true;
+      if (opponentName && myTeamNames.includes(opponentName)) return true;
+
+      return false;
+    },
+    [user, myTeams, isUserHost]
+  );
+
   useEffect(() => {
     let isMounted = true;
 
@@ -193,7 +211,8 @@ export default function ScrimsPage() {
               list,
               isUserHost,
               isUserOpponent,
-              myTeams.map((t: Team) => t.name)
+              myTeams.map((t: Team) => t.name),
+              myTeams.map((t: Team) => t.id)
             );
           }
         })
@@ -314,7 +333,8 @@ export default function ScrimsPage() {
         data,
         isUserHost,
         isUserOpponent,
-        myTeams.map((t: Team) => t.name)
+        myTeams.map((t: Team) => t.name),
+        myTeams.map((t: Team) => t.id)
       );
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
@@ -360,7 +380,8 @@ export default function ScrimsPage() {
         data,
         isUserHost,
         isUserOpponent,
-        myTeams.map((t: Team) => t.name)
+        myTeams.map((t: Team) => t.name),
+        myTeams.map((t: Team) => t.id)
       );
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
@@ -381,7 +402,8 @@ export default function ScrimsPage() {
         data,
         isUserHost,
         isUserOpponent,
-        myTeams.map((t: Team) => t.name)
+        myTeams.map((t: Team) => t.name),
+        myTeams.map((t: Team) => t.id)
       );
     } catch {
       setScrims((prev) =>
@@ -508,6 +530,7 @@ export default function ScrimsPage() {
                 onOpenWarRoom={(s) => setActiveWarRoomScrim(s)}
                 isHost={isUserHost(scrim)}
                 isOpponent={isUserOpponent(scrim)}
+                isChosenOpponent={isUserChosenOpponent(scrim)}
               />
             ))}
           </div>
