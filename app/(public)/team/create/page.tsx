@@ -40,11 +40,11 @@ export default function CreateTeamPage() {
 
     setIsLoading(true);
     try {
-      const gameTitleMap: Record<string, GameId> = {
-        valo: "valo",
-        lol: "lol",
-        ml: "ml",
-        codm: "codm"
+      const gameTitleMap: Record<string, string> = {
+        valo: "VALORANT",
+        lol: "LOL",
+        ml: "MLBB",
+        codm: "CODM"
       };
       interface ServerTeamResponse {
         id: string;
@@ -66,7 +66,7 @@ export default function CreateTeamPage() {
 
       const res = (await teamsService.createTeam({
         name: teamName.trim(),
-        gameTitle: gameTitleMap[selectedGame] as GameId,
+        gameTitle: (gameTitleMap[selectedGame] || "VALORANT") as unknown as GameId,
         universityId: user.universityId,
         captainId: user.id,
         gameHandle: gameHandle.trim(),
