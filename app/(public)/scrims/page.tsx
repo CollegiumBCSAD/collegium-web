@@ -21,12 +21,13 @@ export default function ScrimsPage() {
       .getScrims(selectedGame !== "all" ? selectedGame : undefined)
       .then((data) => {
         if (isMounted) {
-          setScrims(data);
+          setScrims(Array.isArray(data) ? data : []);
           setIsLoading(false);
         }
       })
       .catch(() => {
         if (isMounted) {
+          setScrims([]);
           setIsLoading(false);
         }
       });
@@ -61,7 +62,6 @@ export default function ScrimsPage() {
     };
     setScrims((prev) => [optimistic, ...prev]);
 
-    // Fire API call (best effort)
     try {
       await scrimsService.createScrim({
         teamId: data.teamId || "default-team-id",
@@ -73,7 +73,7 @@ export default function ScrimsPage() {
         notes: data.notes,
       });
     } catch {
-      // Ignore error for optimistic update
+      // Best effort API sync
     }
 
     setTimeout(() => scrimsService.getScrims(selectedGame !== "all" ? selectedGame : undefined).then(setScrims), 1000);
@@ -97,7 +97,7 @@ export default function ScrimsPage() {
     try {
       await scrimsService.cancelScrim(id);
     } catch {
-      // Local fallback
+      // Local action
     }
     setScrims((prev) =>
       prev.map((s) => (s.id === id ? { ...s, status: "CANCELLED" as const } : s))
@@ -134,8 +134,25 @@ export default function ScrimsPage() {
         />
 
         {isLoading ? (
-          <div className="text-center py-12 text-xs font-sans text-secondary-text">
-            Loading inter-university scrim offers...
+          <div className="flex flex-col items-center justify-center py-16 space-y-4">
+            <div className="w-8 h-8 border-4 border-primary-brand border-t-transparent rounded-full animate-spin" />
+            <p className="text-xs font-sans font-semibold text-secondary-text tracking-wider uppercase">
+              Loading inter-university scrim offers...
+            </p>
+          </div>
+        ) : filteredScrims.length === 0 ? (
+          <div className="flex flex-col items-center justify-center text-center py-16 px-4 max-w-md mx-auto space-y-4 rounded-2xl border border-panel-border bg-card-bg/60 p-8 shadow-2xl backdrop-blur-md">
+            <div className="w-16 h-16 rounded-full bg-raised-panel border border-panel-border flex items-center justify-center text-3xl shadow-inner">
+              ⚔️
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-display text-xl font-bold text-foreground uppercase tracking-wide">
+                NO OPEN SCRIMS FOUND
+              </h3>
+              <p className="font-sans text-xs text-secondary-text leading-relaxed">
+                There are currently no active scrim offers listed for this title. Post a new scrim offer to challenge collegiate opponents!
+              </p>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -145,7 +162,7 @@ export default function ScrimsPage() {
                 scrim={scrim}
                 onAccept={handleAcceptScrim}
                 onCancel={handleCancelScrim}
-                isHost={scrim.universityName === user?.university?.name || scrim.hostTeamName.toLowerCase().includes("herons")}
+                isHost={scrim.universityName === user?.university?.name || Boolean(scrim.hostTeamName?.toLowerCase().includes("herons"))}
               />
             ))}
           </div>

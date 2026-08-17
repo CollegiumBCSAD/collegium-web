@@ -61,6 +61,16 @@ export const GAMES: Record<GameId, GameInfo> = {
   },
 };
 
+export function getGameInfo(gameTitle?: string): GameInfo {
+  if (!gameTitle) return GAMES.valo;
+  const key = gameTitle.toLowerCase();
+  if (key.includes("val") || key === "valorant") return GAMES.valo;
+  if (key === "lol" || key.includes("league")) return GAMES.lol;
+  if (key === "codm" || key.includes("call")) return GAMES.codm;
+  if (key === "ml" || key === "mlbb" || key.includes("mobile")) return GAMES.ml;
+  return GAMES[gameTitle as GameId] || GAMES.valo;
+}
+
 export const GAME_LIST: GameInfo[] = [
   GAMES.valo,
   GAMES.lol,

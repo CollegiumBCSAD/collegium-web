@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { GAME_LIST, GameId, GAMES } from "@/lib/games";
+import { GAME_LIST, GameId, getGameInfo } from "@/lib/games";
 
 interface RecruitPost {
   id: string;
@@ -24,51 +24,7 @@ export default function RecruitPage() {
   const [activeTab, setActiveTab] = useState<"LFT" | "LFP">("LFT");
   const [selectedGame, setSelectedGame] = useState<GameId | "all">("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const [posts, setPosts] = useState<RecruitPost[]>([
-    {
-      id: "post-1",
-      type: "LFT",
-      gameTitle: "valo",
-      title: "Isiah Baldesco",
-      subtitle: "Main Initiator / IGL",
-      universityName: "University of Makati",
-      roles: ["Initiator", "IGL"],
-      rankTier: "Ascendant 3",
-      availability: "Weekdays 6 PM - 11 PM",
-      bio: "Former varsity captain with tournament LAN experience. High comms and vocal caller.",
-      contactHandle: "Heron#UMAK",
-      createdAt: "2026-08-14T10:00:00.000Z",
-    },
-    {
-      id: "post-2",
-      type: "LFP",
-      gameTitle: "valo",
-      title: "UMAK Herons Alpha",
-      subtitle: "Looking for Controller & Duelist",
-      universityName: "University of Makati",
-      roles: ["Controller", "Duelist"],
-      rankTier: "Diamond+",
-      availability: "Mon/Wed/Fri 7 PM Scrims",
-      bio: "Forming active roster for collegiate league circuit. Dedicated coaching & vod reviews.",
-      contactHandle: "Captain#UMAK",
-      createdAt: "2026-08-14T11:30:00.000Z",
-    },
-    {
-      id: "post-3",
-      type: "LFT",
-      gameTitle: "ml",
-      title: "Lance Alvares",
-      subtitle: "Gold Lane Specialist",
-      universityName: "University of Santo Tomas",
-      roles: ["Gold Lane", "Jungler"],
-      rankTier: "Mythic Glory 75★",
-      availability: "Flexible Daily",
-      bio: "Top regional hero power. Looking for serious squad pushing for collegiate championships.",
-      contactHandle: "Lance#UST",
-      createdAt: "2026-08-14T12:15:00.000Z",
-    },
-  ]);
+  const [posts, setPosts] = useState<RecruitPost[]>([]);
 
   const [formType, setFormType] = useState<"LFT" | "LFP">("LFT");
   const [formGame, setFormGame] = useState<GameId>("valo");
@@ -191,58 +147,74 @@ export default function RecruitPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filteredPosts.map((post) => {
-            const game = GAMES[post.gameTitle];
-            return (
-              <div
-                key={post.id}
-                className="p-6 rounded-2xl bg-card-bg border border-raised-panel space-y-4 hover:border-primary-brand/50 transition-all shadow-xl"
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <span className="text-[10px] font-sans font-extrabold uppercase tracking-widest text-secondary-brand block">
-                      {post.universityName}
-                    </span>
-                    <h3 className="font-display text-lg font-bold uppercase text-foreground">
-                      {post.title}
-                    </h3>
-                    <p className="text-xs font-sans text-secondary-text mt-0.5">{post.subtitle}</p>
-                  </div>
-                  <span
-                    className="text-[10px] font-sans font-bold uppercase px-2.5 py-1 rounded-full text-white"
-                    style={{ backgroundColor: game.accentColor }}
-                  >
-                    {game.shortName}
-                  </span>
-                </div>
-
-                <div className="flex flex-wrap gap-1.5">
-                  {post.roles.map((r) => (
+        {filteredPosts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center text-center py-16 px-4 max-w-md mx-auto space-y-4 rounded-2xl border border-panel-border bg-card-bg/60 p-8 shadow-2xl backdrop-blur-md">
+            <div className="w-16 h-16 rounded-full bg-raised-panel border border-panel-border flex items-center justify-center text-3xl shadow-inner">
+              📢
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-display text-xl font-bold text-foreground uppercase tracking-wide">
+                NO RECRUITMENT POSTINGS FOUND
+              </h3>
+              <p className="font-sans text-xs text-secondary-text leading-relaxed">
+                There are currently no active {activeTab} listings for this game. Click &quot;Post LFT / LFP Listing&quot; to create a new recruitment post!
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {filteredPosts.map((post) => {
+              const game = getGameInfo(post.gameTitle);
+              return (
+                <div
+                  key={post.id}
+                  className="p-6 rounded-2xl bg-card-bg border border-raised-panel space-y-4 hover:border-primary-brand/50 transition-all shadow-xl"
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <span className="text-[10px] font-sans font-extrabold uppercase tracking-widest text-secondary-brand block">
+                        {post.universityName}
+                      </span>
+                      <h3 className="font-display text-lg font-bold uppercase text-foreground">
+                        {post.title}
+                      </h3>
+                      <p className="text-xs font-sans text-secondary-text mt-0.5">{post.subtitle}</p>
+                    </div>
                     <span
-                      key={r}
-                      className="text-[10px] font-sans font-bold uppercase px-2.5 py-1 rounded bg-primary-brand/10 text-primary-brand border border-primary-brand/20"
+                      className="text-[10px] font-sans font-bold uppercase px-2.5 py-1 rounded-full text-white"
+                      style={{ backgroundColor: game.accentColor }}
                     >
-                      {r}
+                      {game.shortName}
                     </span>
-                  ))}
-                  <span className="text-[10px] font-sans font-bold uppercase px-2.5 py-1 rounded bg-raised-panel text-foreground">
-                    {post.rankTier}
-                  </span>
-                </div>
+                  </div>
 
-                <p className="text-xs font-sans text-secondary-text leading-relaxed">
-                  &quot;{post.bio}&quot;
-                </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {post.roles.map((r) => (
+                      <span
+                        key={r}
+                        className="text-[10px] font-sans font-bold uppercase px-2.5 py-1 rounded bg-primary-brand/10 text-primary-brand border border-primary-brand/20"
+                      >
+                        {r}
+                      </span>
+                    ))}
+                    <span className="text-[10px] font-sans font-bold uppercase px-2.5 py-1 rounded bg-raised-panel text-foreground">
+                      {post.rankTier}
+                    </span>
+                  </div>
 
-                <div className="pt-2 border-t border-raised-panel flex items-center justify-between text-xs font-sans">
-                  <span className="text-secondary-text">Tag: {post.contactHandle}</span>
-                  <span className="font-bold text-success">{post.availability}</span>
+                  <p className="text-xs font-sans text-secondary-text leading-relaxed">
+                    &quot;{post.bio}&quot;
+                  </p>
+
+                  <div className="pt-2 border-t border-raised-panel flex items-center justify-between text-xs font-sans">
+                    <span className="text-secondary-text">Tag: {post.contactHandle}</span>
+                    <span className="font-bold text-success">{post.availability}</span>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
 
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">

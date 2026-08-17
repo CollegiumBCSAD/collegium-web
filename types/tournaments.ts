@@ -68,3 +68,17 @@ export interface BracketMatch {
   team1: MatchTeam;
   team2: MatchTeam;
 }
+
+export interface TournamentBracketModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  tournamentId?: string;
+  title?: string;
+  subtitle?: string;
+}
+
+export interface MatchCardProps {
+  match: BracketMatch;
+  onViewBoxScore: () => void;
+}
+
