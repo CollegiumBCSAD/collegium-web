@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { GAMES } from "@/lib/games";
+import { getGameInfo } from "@/lib/games";
 import { ScrimOffer } from "@/types";
 
 interface ScrimCardProps {
@@ -12,7 +12,7 @@ interface ScrimCardProps {
 }
 
 export default function ScrimCard({ scrim, onAccept, onCancel, isHost }: ScrimCardProps) {
-  const game = GAMES[scrim.gameTitle];
+  const game = getGameInfo(scrim.gameTitle);
 
   return (
     <div className="p-6 rounded-2xl bg-card-bg border border-raised-panel space-y-4 hover:border-primary-brand/50 transition-all shadow-xl">
