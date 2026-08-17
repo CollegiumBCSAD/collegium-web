@@ -105,10 +105,10 @@ export default function ScrimCard({ scrim, onAccept, onCancel, isHost }: ScrimCa
             ✕ Scrim Offer Cancelled
           </div>
         ) : isBooked ? (
-          <div className="w-full p-3 rounded-xl bg-success/15 border border-success/40 text-success flex items-center justify-between shadow-inner">
-            <div className="flex items-center gap-2.5">
-              <span className="text-xl">📅</span>
-              <div>
+          <div className="w-full p-3 rounded-xl bg-success/15 border border-success/40 text-success flex items-center justify-between shadow-inner gap-3">
+            <div className="flex items-center gap-2.5 flex-1 min-w-0">
+              <span className="text-xl shrink-0">📅</span>
+              <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-sans font-extrabold uppercase tracking-wider block text-success">
                     MATCH BOOKED!
@@ -117,16 +117,25 @@ export default function ScrimCard({ scrim, onAccept, onCancel, isHost }: ScrimCa
                     CONFIRMED
                   </span>
                 </div>
-                <span className="text-xs font-sans font-bold text-foreground block">
+                <span className="text-xs font-sans font-bold text-foreground block truncate">
                   {isHost
                     ? `Opponent: ${scrim.opponentTeamName || "Opponent Squad"}`
                     : `Host: ${scrim.hostTeamName}`}
                 </span>
-                <span className="text-[10px] font-sans font-extrabold text-secondary-text block mt-0.5">
+                <span className="text-[10px] font-sans font-extrabold text-secondary-text block mt-0.5 truncate">
                   ⏰ Scheduled: {new Date(scrim.scheduledAt).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })} at {new Date(scrim.scheduledAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                 </span>
               </div>
             </div>
+            {onCancel && (
+              <button
+                onClick={() => onCancel(scrim.id)}
+                className="h-9 px-3 rounded-lg bg-error/15 hover:bg-error/30 text-error border border-error/40 font-sans text-[11px] font-bold uppercase tracking-wider transition-all active:scale-[0.98] shrink-0 cursor-pointer"
+                title="Cancel this booked scrim match"
+              >
+                Cancel Match
+              </button>
+            )}
           </div>
         ) : isHost && onCancel ? (
           <div className="w-full flex items-center gap-3">
