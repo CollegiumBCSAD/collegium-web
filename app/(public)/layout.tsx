@@ -146,10 +146,9 @@ export default function PublicLayout({
 
   const navItems = [
     { name: "Home", href: "/" },
-    { name: "Scrims", href: "/scrims" },
-    { name: "Recruit", href: "/recruit" },
     { name: "Tournaments", href: "/tournaments" },
     { name: "Rankings", href: "/leaderboard" },
+    { name: "Scrims", href: "/scrims" },
     { name: "News", href: "/community" },
   ];
 
