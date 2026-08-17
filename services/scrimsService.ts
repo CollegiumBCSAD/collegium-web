@@ -85,6 +85,9 @@ export const scrimsService = {
   acceptScrim: (scrimId: string, payload: AcceptScrimPayload): Promise<ScrimOffer> =>
     apiClient.post<ScrimOffer>(`/scrims/${scrimId}/accept`, payload),
 
+  confirmScrim: (scrimId: string): Promise<ScrimOffer> =>
+    apiClient.post<ScrimOffer>(`/scrims/${scrimId}/confirm`, {}),
+
   cancelScrim: (scrimId: string): Promise<ScrimOffer> =>
     apiClient.patch<ScrimOffer>(`/scrims/${scrimId}/cancel`),
 

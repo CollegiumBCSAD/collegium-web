@@ -136,6 +136,25 @@ export default function ScrimsPage() {
     );
   }, [scrims, isUserHost, myTeams]);
 
+  const isUserOpponent = (scrim: ScrimOffer) => {
+    if (!user) return false;
+    const myTeamNames = myTeams.map((t: Team) => t.name.toLowerCase().trim());
+    if (scrim.opponentTeamName && myTeamNames.includes(scrim.opponentTeamName.toLowerCase().trim())) return true;
+    return false;
+  };
+
+  const handleConfirmBooking = async (id: string) => {
+    setScrimError("");
+    try {
+      await scrimsService.confirmScrim(id);
+      const data = await scrimsService.getScrims(activeGame);
+      setScrims(data);
+    } catch (err: unknown) {
+      const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
+      setScrimError(errorObj?.response?.data?.message || errorObj?.message || "Failed to confirm booking.");
+    }
+  };
+
   const handleAcceptScrim = async (id: string) => {
     setScrimError("");
     const targetScrim = scrims.find((s) => s.id === id);
@@ -277,9 +296,11 @@ export default function ScrimsPage() {
                 key={scrim.id}
                 scrim={scrim}
                 onAccept={handleAcceptScrim}
+                onConfirmBooking={handleConfirmBooking}
                 onCancel={handleCancelScrim}
                 onDelete={handleDeleteScrim}
                 isHost={isUserHost(scrim)}
+                isOpponent={isUserOpponent(scrim)}
               />
             ))}
           </div>

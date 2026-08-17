@@ -1,32 +1,50 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { getGameInfo } from "@/lib/games";
 import { ScrimOffer } from "@/types";
 
 interface ScrimCardProps {
   scrim: ScrimOffer;
   onAccept: (id: string) => void;
+  onConfirmBooking?: (id: string) => void;
   onCancel?: (id: string) => void;
   onDelete?: (id: string) => void;
   isHost?: boolean;
+  isOpponent?: boolean;
 }
 
-export default function ScrimCard({ scrim, onAccept, onCancel, onDelete, isHost }: ScrimCardProps) {
+export default function ScrimCard({
+  scrim,
+  onAccept,
+  onConfirmBooking,
+  onCancel,
+  onDelete,
+  isHost,
+  isOpponent,
+}: ScrimCardProps) {
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const game = getGameInfo(scrim.gameTitle);
+
   const isBooked = scrim.status === "CONFIRMED";
+  const isPending = scrim.status === "PENDING";
 
   return (
     <div
       className={`p-6 rounded-2xl bg-card-bg border space-y-4 transition-all shadow-xl relative overflow-hidden ${
         isBooked
           ? "border-success/50 bg-gradient-to-b from-success/5 to-transparent shadow-success/10"
+          : isPending
+          ? "border-warning/50 bg-gradient-to-b from-warning/5 to-transparent shadow-warning/10"
           : "border-raised-panel hover:border-primary-brand/50"
       }`}
     >
       {/* Top Banner Accent for Booked Scrims */}
       {isBooked && (
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-success via-emerald-400 to-success" />
+      )}
+      {isPending && (
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-warning via-amber-400 to-warning" />
       )}
 
       <div className="flex items-start justify-between">
@@ -56,6 +74,10 @@ export default function ScrimCard({ scrim, onAccept, onCancel, onDelete, isHost 
               <span className="w-1.5 h-1.5 rounded-full bg-success animate-ping" />
               🟢 BOOKED
             </span>
+          ) : isPending ? (
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-sans font-extrabold uppercase px-2.5 py-1 rounded-full bg-warning/20 text-warning border border-warning/30 animate-pulse">
+              ⏳ PENDING REQUEST
+            </span>
           ) : scrim.status === "CANCELLED" ? (
             <span className="text-[10px] font-sans font-extrabold uppercase px-2.5 py-1 rounded-full bg-error/20 text-error border border-error/30">
               ✕ CANCELLED
@@ -72,6 +94,18 @@ export default function ScrimCard({ scrim, onAccept, onCancel, onDelete, isHost 
           >
             {game.shortName}
           </span>
+
+          {/* Top-Right Close/Delete X Button */}
+          {isHost && onDelete && (
+            <button
+              onClick={() => setDeleteConfirmOpen(true)}
+              aria-label="Delete Scrim"
+              className="w-7 h-7 rounded-full bg-raised-panel hover:bg-error/20 text-secondary-text hover:text-error flex items-center justify-center text-xs font-bold transition-all cursor-pointer border border-panel-border hover:border-error/40 shrink-0 ml-1"
+              title="Remove/Delete this scrim"
+            >
+              ✕
+            </button>
+          )}
         </div>
       </div>
 
@@ -104,15 +138,81 @@ export default function ScrimCard({ scrim, onAccept, onCancel, onDelete, isHost 
         {scrim.status === "CANCELLED" ? (
           <div className="w-full flex items-center justify-between p-2.5 rounded-lg bg-error/10 border border-error/30 text-error text-xs font-sans font-bold">
             <span>✕ Scrim Offer Cancelled</span>
-            {isHost && onDelete && (
+            {isHost && (
               <button
-                onClick={() => onDelete(scrim.id)}
+                onClick={() => setDeleteConfirmOpen(true)}
                 className="text-[11px] hover:underline font-bold cursor-pointer"
               >
                 Delete
               </button>
             )}
           </div>
+        ) : isPending ? (
+          isHost ? (
+            <div className="w-full p-3 rounded-xl bg-warning/15 border border-warning/40 text-warning space-y-2.5 shadow-inner">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">⏳</span>
+                  <div>
+                    <span className="text-xs font-sans font-extrabold uppercase tracking-wider block text-warning">
+                      INCOMING BOOKING REQUEST!
+                    </span>
+                    <span className="text-xs font-sans font-bold text-foreground">
+                      From: {scrim.opponentTeamName || "Opponent Squad"}
+                    </span>
+                  </div>
+                </div>
+                <span className="text-[10px] font-sans font-extrabold uppercase px-2 py-0.5 rounded bg-warning/20 text-warning border border-warning/30">
+                  AWAITING YOU
+                </span>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-warning/20">
+                {onCancel && (
+                  <button
+                    onClick={() => onCancel(scrim.id)}
+                    className="h-8 px-3 rounded-lg bg-error/20 hover:bg-error/30 text-error border border-error/40 font-sans text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer"
+                  >
+                    ✕ Decline Booking
+                  </button>
+                )}
+                {onConfirmBooking && (
+                  <button
+                    onClick={() => onConfirmBooking(scrim.id)}
+                    className="h-8 px-4 rounded-lg bg-success hover:bg-success/90 text-white font-sans text-[11px] font-bold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer shadow-md shadow-success/20"
+                  >
+                    ✓ Accept Booking
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : isOpponent ? (
+            <div className="w-full p-3 rounded-xl bg-warning/15 border border-warning/40 text-warning flex items-center justify-between gap-3 shadow-inner">
+              <div className="flex items-center gap-2">
+                <span className="text-base">⌛</span>
+                <div>
+                  <span className="text-xs font-sans font-extrabold uppercase tracking-wider block text-warning">
+                    BOOKING REQUEST SENT
+                  </span>
+                  <span className="text-[11px] font-sans text-secondary-text">
+                    Sent to {scrim.hostTeamName}. Awaiting Captain Approval.
+                  </span>
+                </div>
+              </div>
+              {onCancel && (
+                <button
+                  onClick={() => onCancel(scrim.id)}
+                  className="h-8 px-3 rounded-lg bg-error/20 hover:bg-error/30 text-error border border-error/40 font-sans text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer shrink-0"
+                >
+                  Cancel Request
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="w-full p-2.5 rounded-lg bg-warning/10 border border-warning/30 text-warning text-xs font-sans font-bold text-center">
+              ⏳ Booking request pending host approval
+            </div>
+          )
         ) : isBooked ? (
           <div className="w-full p-3 rounded-xl bg-success/15 border border-success/40 text-success flex items-center justify-between shadow-inner gap-3">
             <div className="flex items-center gap-2.5 flex-1 min-w-0">
@@ -146,15 +246,6 @@ export default function ScrimCard({ scrim, onAccept, onCancel, onDelete, isHost 
                   Unbook
                 </button>
               )}
-              {isHost && onDelete && (
-                <button
-                  onClick={() => onDelete(scrim.id)}
-                  className="h-9 px-3 rounded-lg bg-error/15 hover:bg-error/30 text-error border border-error/40 font-sans text-[11px] font-bold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer"
-                  title="Delete scrim post permanently"
-                >
-                  Delete
-                </button>
-              )}
             </div>
           </div>
         ) : isHost ? (
@@ -162,16 +253,6 @@ export default function ScrimCard({ scrim, onAccept, onCancel, onDelete, isHost 
             <span className="text-xs font-sans text-secondary-brand font-semibold italic">
               ⚡ Live on Scrims Board for challengers
             </span>
-            <div className="flex items-center gap-2">
-              {onDelete && (
-                <button
-                  onClick={() => onDelete(scrim.id)}
-                  className="h-10 px-4 rounded-lg bg-error/10 hover:bg-error/20 text-error border border-error/30 font-sans text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer"
-                >
-                  🗑️ Delete Scrim
-                </button>
-              )}
-            </div>
           </div>
         ) : (
           <button
@@ -183,6 +264,49 @@ export default function ScrimCard({ scrim, onAccept, onCancel, onDelete, isHost 
           </button>
         )}
       </div>
+
+      {/* Delete Confirmation Pop-Up Modal */}
+      {deleteConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-sm bg-card-bg border border-raised-panel rounded-2xl p-6 shadow-2xl space-y-4 text-left">
+            <div className="flex items-center gap-3 border-b border-raised-panel pb-3">
+              <div className="w-9 h-9 rounded-full bg-error/20 text-error flex items-center justify-center text-lg font-bold">
+                🗑️
+              </div>
+              <div>
+                <h3 className="font-display text-base font-bold uppercase text-foreground">
+                  Remove/Delete Scrim?
+                </h3>
+                <span className="text-[11px] font-sans text-secondary-text">
+                  Permanently delete this scrim offer
+                </span>
+              </div>
+            </div>
+
+            <p className="font-sans text-xs text-secondary-text leading-relaxed">
+              Remove/delete this scrim? This action will permanently remove the post from the collegiate board.
+            </p>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                onClick={() => setDeleteConfirmOpen(false)}
+                className="h-9 px-4 rounded-lg bg-raised-panel hover:bg-raised-panel/80 text-secondary-text font-sans text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setDeleteConfirmOpen(false);
+                  if (onDelete) onDelete(scrim.id);
+                }}
+                className="h-9 px-4 rounded-lg bg-error hover:bg-error/90 text-white font-sans text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-error/20"
+              >
+                Delete Scrim
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
