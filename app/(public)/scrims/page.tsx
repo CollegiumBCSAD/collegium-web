@@ -13,7 +13,7 @@ import PostScrimModal from "@/components/scrims/PostScrimModal";
 export default function ScrimsPage() {
   const { user } = useAuth();
   const { selectedGame: globalGame, selectedGameInfo } = useGame();
-  const { addNotification } = useNotifications();
+  const { addNotification, syncScrimState } = useNotifications();
   const activeGame: GameId = globalGame || "valo";
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -24,28 +24,6 @@ export default function ScrimsPage() {
   useEffect(() => {
     fetchTeamsApi().then((teams) => setUserTeams(teams));
   }, []);
-
-  useEffect(() => {
-    let isMounted = true;
-    scrimsService
-      .getScrims(activeGame)
-      .then((data) => {
-        if (isMounted) {
-          setScrims(Array.isArray(data) ? data : []);
-          setIsLoading(false);
-        }
-      })
-      .catch(() => {
-        if (isMounted) {
-          setScrims([]);
-          setIsLoading(false);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [activeGame]);
 
   const myTeams = useMemo(() => {
     if (!user) return [];
@@ -65,6 +43,42 @@ export default function ScrimsPage() {
       )
     );
   }, [user, userTeams]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchLatest = () => {
+      scrimsService
+        .getScrims(activeGame)
+        .then((data) => {
+          if (isMounted) {
+            const list = Array.isArray(data) ? data : [];
+            setScrims(list);
+            setIsLoading(false);
+            if (myTeams.length > 0) {
+              syncScrimState(
+                list,
+                myTeams.map((t: Team) => t.name)
+              );
+            }
+          }
+        })
+        .catch(() => {
+          if (isMounted) {
+            setScrims([]);
+            setIsLoading(false);
+          }
+        });
+    };
+
+    fetchLatest();
+    const interval = setInterval(fetchLatest, 4000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [activeGame, myTeams, syncScrimState]);
 
   const isUserHost = useCallback(
     (scrim: ScrimOffer) => {

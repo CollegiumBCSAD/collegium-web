@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 
 export interface ScrimNotification {
   id: string;
@@ -22,6 +22,17 @@ interface NotificationContextType {
   unreadCount: number;
   toastNotifications: ScrimNotification[];
   addNotification: (notification: Omit<ScrimNotification, "id" | "timestamp" | "read">) => void;
+  syncScrimState: (
+    scrims: Array<{
+      id: string;
+      status: string;
+      hostTeamName: string;
+      opponentTeamName?: string;
+      gameTitle?: string;
+      scheduledAt?: string;
+    }>,
+    myTeamNames: string[]
+  ) => void;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
   dismissToast: (id: string) => void;
@@ -34,6 +45,9 @@ const NOTIFICATIONS_STORAGE_KEY = "collegium_scrim_notifications_v1";
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const [notifications, setNotifications] = useState<ScrimNotification[]>([]);
+  const scrimStateCache = useRef<Map<string, { status: string; opponentTeamName?: string; hostTeamName: string }>>(
+    new Map()
+  );
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -84,6 +98,99 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     []
   );
 
+  const syncScrimState = useCallback(
+    (
+      scrims: Array<{
+        id: string;
+        status: string;
+        hostTeamName: string;
+        opponentTeamName?: string;
+        gameTitle?: string;
+        scheduledAt?: string;
+      }>,
+      myTeamNames: string[]
+    ) => {
+      const normalizedMyTeams = myTeamNames.map((t) => t.toLowerCase().trim());
+
+      scrims.forEach((scrim) => {
+        const prev = scrimStateCache.current.get(scrim.id);
+
+        if (prev) {
+          const isMyOpponent =
+            scrim.opponentTeamName &&
+            normalizedMyTeams.includes(scrim.opponentTeamName.toLowerCase().trim());
+          const isMyHost =
+            scrim.hostTeamName &&
+            normalizedMyTeams.includes(scrim.hostTeamName.toLowerCase().trim());
+
+          // 1. Challenger Notification: Host Accepted Scrim Request (PENDING -> CONFIRMED)
+          if (prev.status === "PENDING" && scrim.status === "CONFIRMED" && isMyOpponent) {
+            addNotification({
+              type: "ACCEPTED",
+              scrimId: scrim.id,
+              title: "🎉 Scrim Match Request Accepted!",
+              message: `${scrim.hostTeamName} accepted your practice match request!`,
+              hostTeamName: scrim.hostTeamName,
+              opponentTeamName: scrim.opponentTeamName,
+              gameTitle: scrim.gameTitle,
+              scheduledAt: scrim.scheduledAt,
+            });
+          }
+
+          // 2. Challenger Notification: Host Declined Scrim Request (PENDING -> OPEN)
+          if (prev.status === "PENDING" && scrim.status === "OPEN" && isMyOpponent) {
+            addNotification({
+              type: "DECLINED",
+              scrimId: scrim.id,
+              title: "✕ Scrim Request Declined",
+              message: `${scrim.hostTeamName} declined your practice match request. The offer is re-opened on the board.`,
+              hostTeamName: scrim.hostTeamName,
+              opponentTeamName: scrim.opponentTeamName,
+              gameTitle: scrim.gameTitle,
+              scheduledAt: scrim.scheduledAt,
+            });
+          }
+
+          // 3. Challenger Notification: Host Unbooked Match (CONFIRMED -> OPEN)
+          if (prev.status === "CONFIRMED" && scrim.status === "OPEN" && isMyOpponent) {
+            addNotification({
+              type: "UNBOOKED",
+              scrimId: scrim.id,
+              title: "⚠️ Scrim Match Cancelled",
+              message: `${scrim.hostTeamName} unbooked the scheduled practice match.`,
+              hostTeamName: scrim.hostTeamName,
+              opponentTeamName: scrim.opponentTeamName,
+              gameTitle: scrim.gameTitle,
+              scheduledAt: scrim.scheduledAt,
+            });
+          }
+
+          // 4. Host Notification: Opponent Sent Request (OPEN -> PENDING)
+          if (prev.status === "OPEN" && scrim.status === "PENDING" && isMyHost) {
+            addNotification({
+              type: "ACCEPTED",
+              scrimId: scrim.id,
+              title: "⏳ Incoming Scrim Request!",
+              message: `${scrim.opponentTeamName || "An opponent squad"} requested to book your scrim offer!`,
+              hostTeamName: scrim.hostTeamName,
+              opponentTeamName: scrim.opponentTeamName,
+              gameTitle: scrim.gameTitle,
+              scheduledAt: scrim.scheduledAt,
+            });
+          }
+        }
+
+        // Cache current state
+        scrimStateCache.current.set(scrim.id, {
+          status: scrim.status,
+          opponentTeamName: scrim.opponentTeamName,
+          hostTeamName: scrim.hostTeamName,
+        });
+      });
+    },
+    [addNotification]
+  );
+
   const markAsRead = useCallback(
     (id: string) => {
       const updated = notifications.map((n) =>
@@ -123,6 +230,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         unreadCount,
         toastNotifications,
         addNotification,
+        syncScrimState,
         markAsRead,
         markAllAsRead,
         dismissToast,
