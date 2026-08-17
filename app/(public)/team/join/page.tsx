@@ -152,29 +152,31 @@ function JoinTeamContent() {
   return (
     <div className="flex flex-col flex-1 items-center justify-center px-4 py-12 game-theme-bg">
       <div className="w-full max-w-xl bg-card-bg border border-raised-panel rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6 relative min-h-[540px] flex flex-col justify-between">
-        <button
-          type="button"
-          onClick={handleClose}
-          className="absolute top-5 right-5 w-8 h-8 rounded-lg border border-raised-panel bg-background hover:bg-raised-panel text-secondary-text hover:text-foreground flex items-center justify-center transition-colors z-10 cursor-pointer"
-          title="Close window"
-          aria-label="Close window"
-        >
-          ✕
-        </button>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex-1 flex border border-panel-border rounded-xl bg-background p-1 gap-2">
+            <Link
+              href="/team/create"
+              className="flex-1 h-10 rounded-lg bg-transparent hover:bg-raised-panel text-secondary-text hover:text-foreground text-xs font-sans font-bold uppercase tracking-wider flex items-center justify-center text-center transition-colors"
+            >
+              ➕ Create a Squad
+            </Link>
+            <Link
+              href="/team/join"
+              className="flex-1 h-10 rounded-lg bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] text-foreground text-xs font-sans font-bold uppercase tracking-wider flex items-center justify-center text-center shadow-md shadow-primary-brand/20"
+            >
+              🤝 Join Existing Squad
+            </Link>
+          </div>
 
-        <div className="flex border border-panel-border rounded-xl bg-background p-1 gap-2 pr-10">
-          <Link
-            href="/team/create"
-            className="flex-1 h-10 rounded-lg bg-transparent hover:bg-raised-panel text-secondary-text hover:text-foreground text-xs font-sans font-bold uppercase tracking-wider flex items-center justify-center text-center transition-colors"
+          <button
+            type="button"
+            onClick={handleClose}
+            className="w-10 h-10 shrink-0 rounded-xl border border-panel-border bg-background hover:bg-raised-panel text-secondary-text hover:text-foreground flex items-center justify-center transition-colors cursor-pointer text-sm"
+            title="Close window"
+            aria-label="Close window"
           >
-            ➕ Create a Squad
-          </Link>
-          <Link
-            href="/team/join"
-            className="flex-1 h-10 rounded-lg bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] text-foreground text-xs font-sans font-bold uppercase tracking-wider flex items-center justify-center text-center shadow-md shadow-primary-brand/20"
-          >
-            🤝 Join Existing Squad
-          </Link>
+            ✕
+          </button>
         </div>
 
         <div className="border-b border-raised-panel pb-4">
