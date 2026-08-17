@@ -169,22 +169,13 @@ export default function ScrimsPage() {
 
   const handleConfirmBooking = async (id: string) => {
     setScrimError("");
-    const targetScrim = scrims.find((s) => s.id === id);
     try {
       await scrimsService.confirmScrim(id);
       const data = await scrimsService.getScrims(activeGame);
       setScrims(data);
-
-      addNotification({
-        type: "ACCEPTED",
-        scrimId: id,
-        title: "🎉 Scrim Match Request Accepted!",
-        message: `${targetScrim?.hostTeamName || "Host Team"} accepted the practice match request for ${selectedGameInfo?.name || "Valorant"}!`,
-        hostTeamName: targetScrim?.hostTeamName || "Host Squad",
-        opponentTeamName: targetScrim?.opponentTeamName,
-        gameTitle: activeGame,
-        scheduledAt: targetScrim?.scheduledAt,
-      });
+      if (myTeams.length > 0) {
+        syncScrimState(data, myTeams.map((t: Team) => t.name));
+      }
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
       setScrimError(errorObj?.response?.data?.message || errorObj?.message || "Failed to confirm booking.");
@@ -211,6 +202,9 @@ export default function ScrimsPage() {
       await scrimsService.acceptScrim(id, { opponentId: opponentTeamId });
       const data = await scrimsService.getScrims(activeGame);
       setScrims(data);
+      if (myTeams.length > 0) {
+        syncScrimState(data, myTeams.map((t: Team) => t.name));
+      }
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
       setScrimError(errorObj?.response?.data?.message || errorObj?.message || "Failed to book scrim match.");
@@ -218,34 +212,12 @@ export default function ScrimsPage() {
   };
 
   const handleCancelScrim = async (id: string) => {
-    const targetScrim = scrims.find((s) => s.id === id);
     try {
       await scrimsService.cancelScrim(id);
       const data = await scrimsService.getScrims(activeGame);
       setScrims(data);
-
-      if (targetScrim?.status === "PENDING") {
-        addNotification({
-          type: "DECLINED",
-          scrimId: id,
-          title: "✕ Scrim Request Declined",
-          message: `${targetScrim.hostTeamName} declined the practice match request. The offer is re-opened on the board.`,
-          hostTeamName: targetScrim.hostTeamName,
-          opponentTeamName: targetScrim.opponentTeamName,
-          gameTitle: activeGame,
-          scheduledAt: targetScrim.scheduledAt,
-        });
-      } else if (targetScrim?.status === "CONFIRMED") {
-        addNotification({
-          type: "UNBOOKED",
-          scrimId: id,
-          title: "⚠️ Scrim Match Cancelled",
-          message: `${targetScrim.hostTeamName} unbooked the scheduled practice match.`,
-          hostTeamName: targetScrim.hostTeamName,
-          opponentTeamName: targetScrim.opponentTeamName,
-          gameTitle: activeGame,
-          scheduledAt: targetScrim.scheduledAt,
-        });
+      if (myTeams.length > 0) {
+        syncScrimState(data, myTeams.map((t: Team) => t.name));
       }
     } catch {
       setScrims((prev) =>
