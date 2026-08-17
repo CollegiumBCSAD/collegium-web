@@ -50,6 +50,45 @@ const hasUserRequestedScrim = (scrimId: string, myTeamIds: string[], userId: str
   return list.some((id) => myTeamIds.includes(id) || id === userId);
 };
 
+interface PendingRequestItem {
+  teamId: string;
+  teamName: string;
+  universityName?: string;
+  requestedAt?: string;
+}
+
+const getPendingScrimRequestsMap = (): Record<string, PendingRequestItem[]> => {
+  if (typeof window === "undefined") return {};
+  try {
+    return JSON.parse(localStorage.getItem("collegium_scrim_requests_map") || "{}");
+  } catch {
+    return {};
+  }
+};
+
+const addPendingScrimRequest = (scrimId: string, req: { teamId: string; teamName: string; universityName?: string }) => {
+  if (typeof window === "undefined") return;
+  const current = getPendingScrimRequestsMap();
+  const list = current[scrimId] || [];
+  if (!list.some((item) => item.teamId === req.teamId)) {
+    list.push({ ...req, requestedAt: new Date().toISOString() });
+  }
+  current[scrimId] = list;
+  localStorage.setItem("collegium_scrim_requests_map", JSON.stringify(current));
+};
+
+const removePendingScrimRequest = (scrimId: string, teamId?: string) => {
+  if (typeof window === "undefined") return;
+  const current = getPendingScrimRequestsMap();
+  if (teamId && current[scrimId]) {
+    current[scrimId] = current[scrimId].filter((item) => item.teamId !== teamId);
+    if (current[scrimId].length === 0) delete current[scrimId];
+  } else {
+    delete current[scrimId];
+  }
+  localStorage.setItem("collegium_scrim_requests_map", JSON.stringify(current));
+};
+
 export default function ScrimsPage() {
   const { user } = useAuth();
   const { selectedGame: globalGame, selectedGameInfo } = useGame();
@@ -190,6 +229,29 @@ export default function ScrimsPage() {
     });
   }, [scrims, activeGame, isUserHost]);
 
+  const enrichedScrims = useMemo(() => {
+    const map = getPendingScrimRequestsMap();
+    return filteredScrims.map((s) => {
+      const serverReqs = Array.isArray(s.pendingRequests) ? s.pendingRequests : [];
+      const localReqs = map[s.id] || [];
+      const opponentReq = s.opponentTeamName
+        ? [{ teamId: s.opponentTeamId || "op-id", teamName: s.opponentTeamName }]
+        : [];
+
+      const merged = [...serverReqs];
+      [...localReqs, ...opponentReq].forEach((r) => {
+        if (!merged.some((m) => m.teamId === r.teamId)) {
+          merged.push(r);
+        }
+      });
+
+      return {
+        ...s,
+        pendingRequests: merged,
+      };
+    });
+  }, [filteredScrims]);
+
   const handlePostScrimSubmit = async (data: {
     gameTitle: GameId;
     teamId?: string;
@@ -260,6 +322,14 @@ export default function ScrimsPage() {
     }
   };
 
+  const handleDeclineRequest = (scrimId: string, opponentId?: string) => {
+    removePendingScrimRequest(scrimId, opponentId);
+    if (opponentId) {
+      removeMyRequestedScrim(scrimId, opponentId);
+    }
+    scrimsService.getScrims(activeGame).then(setScrims);
+  };
+
   const handleAcceptScrim = async (id: string) => {
     setScrimError("");
     const targetScrim = scrims.find((s) => s.id === id);
@@ -276,6 +346,11 @@ export default function ScrimsPage() {
     }
 
     addMyRequestedScrim(id, myTeam.id);
+    addPendingScrimRequest(id, {
+      teamId: myTeam.id,
+      teamName: myTeam.name,
+      universityName: myTeam.universityName || user?.university?.name
+    });
 
     try {
       await scrimsService.acceptScrim(id, { opponentId: myTeam.id });
@@ -296,6 +371,7 @@ export default function ScrimsPage() {
   const handleCancelScrim = async (id: string) => {
     const myTeam = myTeams.find((t: Team) => t.gameTitle === activeGame) || myTeams[0];
     removeMyRequestedScrim(id, myTeam?.id);
+    removePendingScrimRequest(id, myTeam?.id);
 
     try {
       await scrimsService.cancelScrim(id);
@@ -404,7 +480,7 @@ export default function ScrimsPage() {
               Loading {selectedGameInfo?.shortName || "esports"} scrim offers...
             </p>
           </div>
-        ) : filteredScrims.length === 0 ? (
+        ) : enrichedScrims.length === 0 ? (
           <div className="flex flex-col items-center justify-center text-center py-16 px-4 max-w-md mx-auto space-y-4 rounded-2xl border border-panel-border bg-card-bg/60 p-8 shadow-2xl backdrop-blur-md">
             <div className="w-16 h-16 rounded-full bg-raised-panel border border-panel-border flex items-center justify-center text-3xl shadow-inner">
               ⚔️
@@ -420,12 +496,13 @@ export default function ScrimsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredScrims.map((scrim) => (
+            {enrichedScrims.map((scrim) => (
               <ScrimCard
                 key={scrim.id}
                 scrim={scrim}
                 onAccept={handleAcceptScrim}
                 onConfirmBooking={handleConfirmBooking}
+                onDeclineRequest={handleDeclineRequest}
                 onCancel={handleCancelScrim}
                 onDelete={handleDeleteScrim}
                 onOpenWarRoom={(s) => setActiveWarRoomScrim(s)}

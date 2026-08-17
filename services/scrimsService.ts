@@ -59,6 +59,9 @@ function parseServerScrimsResponse(data: unknown): ScrimOffer[] {
       status: (item.status as ScrimOffer["status"]) || "OPEN",
       opponentTeamName: (opponent.name as string) || (item.opponentTeamName as string),
       opponentTeamId: (opponent.id as string) || (item.opponentId as string),
+      pendingRequests: Array.isArray(item.pendingRequests)
+        ? (item.pendingRequests as ScrimOffer["pendingRequests"])
+        : undefined,
     };
   });
 }

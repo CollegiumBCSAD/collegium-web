@@ -16,4 +16,10 @@ export interface ScrimOffer {
   status: ScrimStatus;
   opponentTeamName?: string;
   opponentTeamId?: string;
+  pendingRequests?: Array<{
+    teamId: string;
+    teamName: string;
+    universityName?: string;
+    requestedAt?: string;
+  }>;
 }

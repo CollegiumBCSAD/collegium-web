@@ -8,6 +8,7 @@ interface ScrimCardProps {
   scrim: ScrimOffer;
   onAccept: (id: string) => void;
   onConfirmBooking?: (id: string, selectedOpponentId?: string) => void;
+  onDeclineRequest?: (id: string, opponentId?: string) => void;
   onCancel?: (id: string) => void;
   onDelete?: (id: string) => void;
   onOpenWarRoom?: (scrim: ScrimOffer) => void;
@@ -19,6 +20,7 @@ export default function ScrimCard({
   scrim,
   onAccept,
   onConfirmBooking,
+  onDeclineRequest,
   onCancel,
   onDelete,
   onOpenWarRoom,
@@ -31,6 +33,12 @@ export default function ScrimCard({
   const isBooked = scrim.status === "CONFIRMED";
   const isPending = scrim.status === "PENDING";
   const isCancelled = scrim.status === "CANCELLED";
+
+  const pendingList = scrim.pendingRequests && scrim.pendingRequests.length > 0
+    ? scrim.pendingRequests
+    : scrim.opponentTeamName
+    ? [{ teamId: scrim.opponentTeamId || "op-id", teamName: scrim.opponentTeamName }]
+    : [{ teamId: "op-default", teamName: "Challenger Squad" }];
 
   return (
     <div
@@ -168,38 +176,53 @@ export default function ScrimCard({
           </div>
         ) : isPending ? (
           isHost ? (
-            <div className="w-full p-3 rounded-xl bg-[#181C28] border-l-2 border-l-[#F59E0B] border border-[#272E3F] space-y-2.5">
+            <div className="w-full p-3 rounded-xl bg-[#181C28] border border-[#272E3F] space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-sm">⏳</span>
                   <div>
                     <span className="text-[11px] font-sans font-bold uppercase tracking-wider block text-[#FBBF24]">
-                      INCOMING SCRIM REQUEST
+                      INCOMING SCRIM REQUESTS ({pendingList.length})
                     </span>
-                    <span className="text-xs font-sans font-semibold text-[#E2E8F0]">
-                      From: {scrim.opponentTeamName || "Opponent Squad"}
+                    <span className="text-[10px] font-sans text-[#94A3B8]">
+                      Select a team to accept
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#252C3D]">
-                {onCancel && (
-                  <button
-                    onClick={() => onCancel(scrim.id)}
-                    className="h-8 px-3 rounded-lg bg-[#1E2330] hover:bg-[#2A3142] text-[#94A3B8] hover:text-[#F87171] border border-[#2B3245] font-sans text-[11px] font-semibold uppercase tracking-wider transition-all cursor-pointer"
+              <div className="space-y-2 max-h-48 overflow-y-auto pr-0.5">
+                {pendingList.map((req) => (
+                  <div
+                    key={req.teamId}
+                    className="p-2.5 rounded-lg bg-[#11141C] border border-[#232938] flex items-center justify-between gap-3"
                   >
-                    ✕ Decline
-                  </button>
-                )}
-                {onConfirmBooking && (
-                  <button
-                    onClick={() => onConfirmBooking(scrim.id)}
-                    className="h-8 px-4 rounded-lg bg-[#10B981] hover:bg-[#059669] text-white font-sans text-[11px] font-bold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer shadow-md shadow-emerald-950/40"
-                  >
-                    ✓ Accept Request
-                  </button>
-                )}
+                    <div className="min-w-0">
+                      <span className="text-xs font-sans font-bold text-[#F8FAFC] block truncate">
+                        {req.teamName}
+                      </span>
+                      {req.universityName && (
+                        <span className="text-[10px] font-sans text-[#94A3B8] block truncate">
+                          {req.universityName}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        onClick={() => onDeclineRequest ? onDeclineRequest(scrim.id, req.teamId) : onCancel && onCancel(scrim.id)}
+                        className="h-7 px-2.5 rounded bg-[#1E2330] hover:bg-[#2A3142] text-[#94A3B8] hover:text-[#F87171] border border-[#2B3245] font-sans text-[10px] font-bold uppercase transition-all cursor-pointer"
+                      >
+                        ✕ Decline
+                      </button>
+                      <button
+                        onClick={() => onConfirmBooking && onConfirmBooking(scrim.id, req.teamId)}
+                        className="h-7 px-3 rounded bg-[#10B981] hover:bg-[#059669] text-white font-sans text-[10px] font-bold uppercase transition-all cursor-pointer shadow-md shadow-emerald-950/40"
+                      >
+                        ✓ Accept Request
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           ) : isOpponent ? (
