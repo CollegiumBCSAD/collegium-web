@@ -14,6 +14,13 @@ interface GameRatingDetail {
   accent: string;
 }
 
+const GAME_DISPLAY: Record<string, { label: string; accent: string }> = {
+  VALORANT: { label: "VALORANT", accent: "#E53A4C" },
+  LOL: { label: "League of Legends", accent: "#00A3FF" },
+  MLBB: { label: "Mobile Legends: BB", accent: "#A855F7" },
+  CODM: { label: "Call of Duty: Mobile", accent: "#E5B800" },
+};
+
 export default function UniversityProfilePage() {
   const params = useParams();
   const universityId = params?.id as string;
@@ -74,15 +81,21 @@ export default function UniversityProfilePage() {
     );
   }
 
-  const totalMatches = university.wins + university.losses;
-  const winRate = totalMatches > 0 ? Math.round((university.wins / totalMatches) * 100) : 0;
+  const gameRatings: GameRatingDetail[] = (university.gameRatings ?? []).map((g) => {
+    const display = GAME_DISPLAY[g.gameTitle] ?? { label: g.gameTitle, accent: "#8A8F98" };
+    return {
+      gameTitle: display.label,
+      rating: Math.round(g.glicko2_rating),
+      wins: g.wins,
+      losses: g.losses,
+      accent: display.accent,
+    };
+  });
 
-  const gameRatings: GameRatingDetail[] = [
-    { gameTitle: "VALORANT", rating: Math.round(university.glicko2_rating + 40), wins: 18, losses: 4, accent: "#E53A4C" },
-    { gameTitle: "League of Legends", rating: Math.round(university.glicko2_rating - 25), wins: 12, losses: 3, accent: "#00A3FF" },
-    { gameTitle: "Mobile Legends: BB", rating: Math.round(university.glicko2_rating + 10), wins: 8, losses: 2, accent: "#A855F7" },
-    { gameTitle: "Call of Duty: Mobile", rating: Math.round(university.glicko2_rating - 50), wins: 4, losses: 1, accent: "#E5B800" },
-  ];
+  const totalWins = gameRatings.reduce((sum, g) => sum + g.wins, 0);
+  const totalLosses = gameRatings.reduce((sum, g) => sum + g.losses, 0);
+  const totalMatches = totalWins + totalLosses;
+  const winRate = totalMatches > 0 ? Math.round((totalWins / totalMatches) * 100) : 0;
 
   return (
     <div className="flex flex-col flex-1 game-theme-bg py-10 px-4 sm:px-6 lg:px-10">
@@ -114,7 +127,7 @@ export default function UniversityProfilePage() {
               <div className="h-8 w-px bg-panel-border" />
               <div className="text-center px-3">
                 <span className="text-[10px] font-sans text-secondary-text uppercase block">Record</span>
-                <span className="font-sans text-xs font-bold text-foreground">{university.wins}W - {university.losses}L</span>
+                <span className="font-sans text-xs font-bold text-foreground">{totalWins}W - {totalLosses}L</span>
               </div>
             </div>
           </div>
@@ -124,29 +137,35 @@ export default function UniversityProfilePage() {
           <h2 className="font-display text-xl font-bold uppercase tracking-wider text-foreground">
             Per-Game Title Ratings & Stats
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {gameRatings.map((g) => (
-              <div key={g.gameTitle} className="p-5 rounded-2xl bg-card-bg border border-raised-panel space-y-3 relative overflow-hidden">
-                <div className="w-1.5 h-full absolute left-0 top-0" style={{ backgroundColor: g.accent }} />
-                <span className="text-[10px] font-sans font-extrabold uppercase tracking-widest text-secondary-text block">
-                  {g.gameTitle}
-                </span>
-                <div className="flex items-baseline justify-between">
-                  <span className="font-display text-2xl font-bold text-foreground">{g.rating}</span>
-                  <span className="text-xs font-sans font-bold text-success">{g.wins}W - {g.losses}L</span>
+          {gameRatings.length === 0 ? (
+            <p className="text-xs font-sans text-secondary-text">
+              No verified matches recorded for {university.name} yet.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {gameRatings.map((g) => (
+                <div key={g.gameTitle} className="p-5 rounded-2xl bg-card-bg border border-raised-panel space-y-3 relative overflow-hidden">
+                  <div className="w-1.5 h-full absolute left-0 top-0" style={{ backgroundColor: g.accent }} />
+                  <span className="text-[10px] font-sans font-extrabold uppercase tracking-widest text-secondary-text block">
+                    {g.gameTitle}
+                  </span>
+                  <div className="flex items-baseline justify-between">
+                    <span className="font-display text-2xl font-bold text-foreground">{g.rating}</span>
+                    <span className="text-xs font-sans font-bold text-success">{g.wins}W - {g.losses}L</span>
+                  </div>
+                  <div className="w-full bg-background h-1.5 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        backgroundColor: g.accent,
+                        width: `${g.wins + g.losses > 0 ? Math.round((g.wins / (g.wins + g.losses)) * 100) : 0}%`,
+                      }}
+                    />
+                  </div>
                 </div>
-                <div className="w-full bg-background h-1.5 rounded-full overflow-hidden">
-                  <div
-                    className="h-full rounded-full"
-                    style={{
-                      backgroundColor: g.accent,
-                      width: `${Math.round((g.wins / (g.wins + g.losses)) * 100)}%`,
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="p-6 rounded-2xl bg-card-bg border border-raised-panel space-y-4">
