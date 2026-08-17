@@ -155,7 +155,7 @@ export default function ScrimCard({
                   <span className="text-base">⏳</span>
                   <div>
                     <span className="text-xs font-sans font-extrabold uppercase tracking-wider block text-warning">
-                      INCOMING BOOKING REQUEST!
+                      INCOMING SCRIM REQUEST!
                     </span>
                     <span className="text-xs font-sans font-bold text-foreground">
                       From: {scrim.opponentTeamName || "Opponent Squad"}
@@ -173,7 +173,7 @@ export default function ScrimCard({
                     onClick={() => onCancel(scrim.id)}
                     className="h-8 px-3 rounded-lg bg-error/20 hover:bg-error/30 text-error border border-error/40 font-sans text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer"
                   >
-                    ✕ Decline Booking
+                    ✕ Decline Request
                   </button>
                 )}
                 {onConfirmBooking && (
@@ -181,7 +181,7 @@ export default function ScrimCard({
                     onClick={() => onConfirmBooking(scrim.id)}
                     className="h-8 px-4 rounded-lg bg-success hover:bg-success/90 text-white font-sans text-[11px] font-bold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer shadow-md shadow-success/20"
                   >
-                    ✓ Accept Booking
+                    ✓ Accept Request
                   </button>
                 )}
               </div>
@@ -192,7 +192,7 @@ export default function ScrimCard({
                 <span className="text-base">⌛</span>
                 <div>
                   <span className="text-xs font-sans font-extrabold uppercase tracking-wider block text-warning">
-                    BOOKING REQUEST SENT
+                    SCRIM REQUEST SENT
                   </span>
                   <span className="text-[11px] font-sans text-secondary-text">
                     Sent to {scrim.hostTeamName}. Awaiting Captain Approval.
@@ -210,7 +210,7 @@ export default function ScrimCard({
             </div>
           ) : (
             <div className="w-full p-2.5 rounded-lg bg-warning/10 border border-warning/30 text-warning text-xs font-sans font-bold text-center">
-              ⏳ Booking request pending host approval
+              ⏳ Scrim request pending host approval
             </div>
           )
         ) : isBooked ? (
@@ -260,7 +260,7 @@ export default function ScrimCard({
             className="w-full h-10 rounded-lg bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] hover:from-[#EF4444] hover:to-[#991B1B] text-foreground font-sans text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer shadow-md shadow-primary-brand/20 flex items-center justify-center gap-2"
           >
             <span>⚔️</span>
-            <span>Book Scrim Match</span>
+            <span>Request Scrim</span>
           </button>
         )}
       </div>
