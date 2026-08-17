@@ -10,6 +10,7 @@ import { getStoredTeams, fetchTeamsApi, Team } from "@/lib/teams";
 import ScrimCard from "@/components/scrims/ScrimCard";
 import PostScrimModal from "@/components/scrims/PostScrimModal";
 import ScrimWarRoomModal from "@/components/scrims/ScrimWarRoomModal";
+import NoSquadModal from "@/components/scrims/NoSquadModal";
 
 export default function ScrimsPage() {
   const { user } = useAuth();
@@ -18,6 +19,7 @@ export default function ScrimsPage() {
   const activeGame: GameId = globalGame || "valo";
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isNoSquadModalOpen, setIsNoSquadModalOpen] = useState(false);
   const [activeWarRoomScrim, setActiveWarRoomScrim] = useState<ScrimOffer | null>(null);
   const [scrims, setScrims] = useState<ScrimOffer[]>([]);
   const [userTeams, setUserTeams] = useState<Team[]>(() => getStoredTeams());
@@ -207,15 +209,14 @@ export default function ScrimsPage() {
     }
 
     const myTeam = myTeams.find((t: Team) => t.gameTitle === activeGame) || myTeams[0];
-    const opponentTeamId = myTeam?.id || user?.id || "";
 
-    if (!opponentTeamId) {
-      setScrimError("Please log in and join a university squad before booking scrim matches.");
+    if (!myTeam) {
+      setIsNoSquadModalOpen(true);
       return;
     }
 
     try {
-      await scrimsService.acceptScrim(id, { opponentId: opponentTeamId });
+      await scrimsService.acceptScrim(id, { opponentId: myTeam.id });
       const data = await scrimsService.getScrims(activeGame);
       setScrims(data);
       syncScrimState(
@@ -286,7 +287,13 @@ export default function ScrimsPage() {
           </div>
 
           <button
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => {
+              if (myTeams.length === 0) {
+                setIsNoSquadModalOpen(true);
+              } else {
+                setIsModalOpen(true);
+              }
+            }}
             className="h-11 px-6 rounded-lg game-theme-btn font-sans text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] flex items-center justify-center cursor-pointer shadow-lg"
           >
             ⚔️ Post Scrim Offer
@@ -297,7 +304,9 @@ export default function ScrimsPage() {
           <div className="p-5 rounded-2xl bg-gradient-to-r from-success/20 via-emerald-950/40 to-success/10 border border-success/50 shadow-xl space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <span className="text-2xl">🎉</span>
+                <div className="w-10 h-10 rounded-xl bg-success/20 border border-success/40 flex items-center justify-center text-xl">
+                  🏆
+                </div>
                 <div>
                   <h3 className="font-display text-sm font-bold uppercase tracking-wider text-foreground">
                     You Have {bookedScrims.length} Booked Practice Scrim{bookedScrims.length > 1 ? "s" : ""}!
@@ -373,6 +382,12 @@ export default function ScrimsPage() {
           isOpen={!!activeWarRoomScrim}
           onClose={() => setActiveWarRoomScrim(null)}
           isHost={activeWarRoomScrim ? isUserHost(activeWarRoomScrim) : false}
+        />
+
+        <NoSquadModal
+          isOpen={isNoSquadModalOpen}
+          onClose={() => setIsNoSquadModalOpen(false)}
+          gameTitle={activeGame}
         />
       </div>
     </div>
