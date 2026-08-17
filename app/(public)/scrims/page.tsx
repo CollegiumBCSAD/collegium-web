@@ -2,15 +2,17 @@
 
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useGame } from "@/context/GameContext";
 import { GameId, ScrimOffer } from "@/types";
 import { scrimsService } from "@/services";
-import ScrimFilterBar from "@/components/scrims/ScrimFilterBar";
 import ScrimCard from "@/components/scrims/ScrimCard";
 import PostScrimModal from "@/components/scrims/PostScrimModal";
 
 export default function ScrimsPage() {
   const { user } = useAuth();
-  const [selectedGame, setSelectedGame] = useState<GameId | "all">("all");
+  const { selectedGame: globalGame, selectedGameInfo } = useGame();
+  const activeGame: GameId = globalGame || "valo";
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [scrims, setScrims] = useState<ScrimOffer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -18,7 +20,7 @@ export default function ScrimsPage() {
   useEffect(() => {
     let isMounted = true;
     scrimsService
-      .getScrims(selectedGame !== "all" ? selectedGame : undefined)
+      .getScrims(activeGame)
       .then((data) => {
         if (isMounted) {
           setScrims(Array.isArray(data) ? data : []);
@@ -34,9 +36,17 @@ export default function ScrimsPage() {
     return () => {
       isMounted = false;
     };
-  }, [selectedGame]);
+  }, [activeGame]);
 
-  const filteredScrims = scrims;
+  const filteredScrims = scrims.filter((s) => {
+    if (!s.gameTitle) return true;
+    const title = s.gameTitle.toLowerCase();
+    if (activeGame === "valo") return title.includes("val");
+    if (activeGame === "lol") return title.includes("lol") || title.includes("league");
+    if (activeGame === "codm") return title.includes("cod") || title.includes("call");
+    if (activeGame === "ml") return title.includes("ml") || title.includes("mobile");
+    return true;
+  });
 
   const handlePostScrimSubmit = async (data: {
     gameTitle: GameId;
@@ -76,13 +86,13 @@ export default function ScrimsPage() {
       // Best effort API sync
     }
 
-    setTimeout(() => scrimsService.getScrims(selectedGame !== "all" ? selectedGame : undefined).then(setScrims), 1000);
+    setTimeout(() => scrimsService.getScrims(activeGame).then(setScrims), 1000);
   };
 
   const handleAcceptScrim = async (id: string) => {
     try {
       await scrimsService.acceptScrim(id, { opponentId: user?.id || "" });
-      const data = await scrimsService.getScrims(selectedGame !== "all" ? selectedGame : undefined);
+      const data = await scrimsService.getScrims(activeGame);
       setScrims(data);
     } catch {
       setScrims((prev) =>
@@ -109,14 +119,24 @@ export default function ScrimsPage() {
       <div className="max-w-6xl mx-auto space-y-8 w-full">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-raised-panel pb-6">
           <div>
-            <span className="text-xs font-sans font-extrabold uppercase tracking-widest text-secondary-brand block mb-1">
-              Gankster-Style Scrim Finder
-            </span>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xs font-sans font-extrabold uppercase tracking-widest text-secondary-brand">
+                Gankster-Style Scrim Finder
+              </span>
+              {selectedGameInfo && (
+                <span
+                  className="text-[10px] font-sans font-bold tracking-widest uppercase px-2.5 py-0.5 rounded-full text-white"
+                  style={{ backgroundColor: selectedGameInfo.accentColor, color: selectedGameInfo.id === "codm" ? "#0A0C10" : "#FFFFFF" }}
+                >
+                  {selectedGameInfo.shortName}
+                </span>
+              )}
+            </div>
             <h1 className="font-display text-3xl font-bold uppercase tracking-wider text-foreground">
               Inter-University Scrim Board
             </h1>
             <p className="font-sans text-xs text-secondary-text mt-1">
-              Find verified collegiate opponents for practice matches and tournament warm-ups
+              Find verified collegiate opponents for {selectedGameInfo?.name || "Valorant"} practice matches and tournament warm-ups
             </p>
           </div>
 
@@ -128,16 +148,11 @@ export default function ScrimsPage() {
           </button>
         </div>
 
-        <ScrimFilterBar
-          selectedGame={selectedGame}
-          onSelectGame={setSelectedGame}
-        />
-
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-16 space-y-4">
             <div className="w-8 h-8 border-4 border-primary-brand border-t-transparent rounded-full animate-spin" />
             <p className="text-xs font-sans font-semibold text-secondary-text tracking-wider uppercase">
-              Loading inter-university scrim offers...
+              Loading {selectedGameInfo?.shortName || "esports"} scrim offers...
             </p>
           </div>
         ) : filteredScrims.length === 0 ? (
@@ -147,10 +162,10 @@ export default function ScrimsPage() {
             </div>
             <div className="space-y-1">
               <h3 className="font-display text-xl font-bold text-foreground uppercase tracking-wide">
-                NO OPEN SCRIMS FOUND
+                NO OPEN SCRIMS FOUND FOR {selectedGameInfo?.shortName || "THIS TITLE"}
               </h3>
               <p className="font-sans text-xs text-secondary-text leading-relaxed">
-                There are currently no active scrim offers listed for this title. Post a new scrim offer to challenge collegiate opponents!
+                There are currently no active scrim offers listed for {selectedGameInfo?.name || "this game"}. Click &quot;Post Scrim Offer&quot; to challenge collegiate opponents!
               </p>
             </div>
           </div>

@@ -3,14 +3,22 @@
 import { useState, useEffect } from "react";
 import { mockLeaderboards, LeaderboardEntry } from "@/lib/mock/leaderboard";
 import Link from "next/link";
+import { useGame } from "@/context/GameContext";
 import { universitiesService } from "@/services";
 import { University } from "@/types";
 
-const GAME_TAB_TO_ENUM: Record<string, string> = {
-  "VALORANT": "VALORANT",
-  "LEAGUE OF LEGENDS": "LOL",
-  "MOBILE LEGENDS: BANG BANG": "MLBB",
-  "CALL OF DUTY: MOBILE": "CODM",
+const GAME_ID_TO_DISPLAY: Record<string, string> = {
+  valo: "VALORANT",
+  lol: "LEAGUE OF LEGENDS",
+  ml: "MOBILE LEGENDS: BANG BANG",
+  codm: "CALL OF DUTY: MOBILE",
+};
+
+const GAME_ID_TO_ENUM: Record<string, string> = {
+  valo: "VALORANT",
+  lol: "LOL",
+  ml: "MLBB",
+  codm: "CODM",
 };
 
 function mapUniversitiesToLeaderboard(universities: University[], game: string): LeaderboardEntry[] {
@@ -27,38 +35,50 @@ function mapUniversitiesToLeaderboard(universities: University[], game: string):
 }
 
 export default function LeaderboardPage() {
-  const games = ["VALORANT", "LEAGUE OF LEGENDS", "MOBILE LEGENDS: BANG BANG", "CALL OF DUTY: MOBILE"];
-  const [selectedGame, setSelectedGame] = useState("VALORANT");
-  const [standings, setStandings] = useState<LeaderboardEntry[]>(mockLeaderboards["VALORANT"] || []);
+  const { selectedGame: globalGame, selectedGameInfo } = useGame();
+  const activeGame = globalGame || "valo";
+  const gameDisplayName = GAME_ID_TO_DISPLAY[activeGame] || "VALORANT";
+  const enumValue = GAME_ID_TO_ENUM[activeGame] || "VALORANT";
+
+  const [standings, setStandings] = useState<LeaderboardEntry[]>(mockLeaderboards[gameDisplayName] || []);
 
   useEffect(() => {
-    const enumValue = GAME_TAB_TO_ENUM[selectedGame];
     let cancelled = false;
 
     universitiesService.getUniversities(enumValue)
       .then((universities) => {
         if (cancelled) return;
-        const mapped = mapUniversitiesToLeaderboard(universities, selectedGame);
-        setStandings(mapped.length > 0 ? mapped : (mockLeaderboards[selectedGame] || []));
+        const mapped = mapUniversitiesToLeaderboard(universities, gameDisplayName);
+        setStandings(mapped.length > 0 ? mapped : (mockLeaderboards[gameDisplayName] || []));
       })
       .catch(() => {
         if (cancelled) return;
-        setStandings(mockLeaderboards[selectedGame] || []);
+        setStandings(mockLeaderboards[gameDisplayName] || []);
       });
 
     return () => { cancelled = true; };
-  }, [selectedGame]);
+  }, [activeGame, gameDisplayName, enumValue]);
 
   return (
     <div className="flex flex-col flex-1 game-theme-bg">
       <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 md:px-10 lg:px-16 py-8 sm:py-12 lg:py-16">
         <div className="border-t border-raised-panel/50 pt-8 mb-8 sm:mb-10 flex items-start justify-between">
           <div>
-            <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-foreground uppercase">
-              RANKINGS PREVIEW
-            </h1>
-            <p className="font-sans text-xs sm:text-sm text-primary-brand mt-1 font-normal tracking-tight">
-              Top universities shaping the circuit.
+            <div className="flex items-center gap-2 mb-1">
+              <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-foreground uppercase">
+                RANKINGS PREVIEW
+              </h1>
+              {selectedGameInfo && (
+                <span
+                  className="text-xs font-sans font-bold tracking-widest uppercase px-3 py-1 rounded-full text-white"
+                  style={{ backgroundColor: selectedGameInfo.accentColor, color: selectedGameInfo.id === "codm" ? "#0A0C10" : "#FFFFFF" }}
+                >
+                  {selectedGameInfo.shortName}
+                </span>
+              )}
+            </div>
+            <p className="font-sans text-xs sm:text-sm text-secondary-text font-normal tracking-tight">
+              Top universities shaping the circuit in {selectedGameInfo?.name || "Valorant"}.
             </p>
           </div>
           <Link
@@ -67,28 +87,6 @@ export default function LeaderboardPage() {
           >
             View Full Rankings
           </Link>
-        </div>
-
-        <div className="flex flex-wrap gap-3 border-b border-raised-panel/50 pb-6 mb-8">
-          {games.map((game) => {
-            const isActive = selectedGame === game;
-            return (
-              <button
-                key={game}
-                onClick={() => setSelectedGame(game)}
-                className={`flex items-center gap-2.5 px-5 py-2.5 rounded-full font-sans text-xs sm:text-sm font-bold tracking-wider uppercase transition-all cursor-pointer ${
-                  isActive
-                    ? "border border-raised-panel bg-[#141824] text-foreground shadow-lg"
-                    : "border border-transparent bg-transparent text-secondary-text hover:text-foreground hover:bg-[#141824]/40"
-                }`}
-              >
-                {isActive && (
-                  <span className="h-2 w-2 rounded-full bg-primary-brand inline-block" />
-                )}
-                <span>{game}</span>
-              </button>
-            );
-          })}
         </div>
 
         <div className="flex flex-col gap-4 sm:gap-6">
@@ -100,15 +98,14 @@ export default function LeaderboardPage() {
             >
               <div className="flex items-center gap-4 sm:gap-6 shrink-0">
                 <div
-                  className={`h-12 w-12 sm:h-14 sm:w-14 rounded-full flex items-center justify-center font-display text-lg sm:text-xl font-bold shrink-0 shadow-md ${
-                    entry.rank === 1
+                  className={`h-12 w-12 sm:h-14 sm:w-14 rounded-full flex items-center justify-center font-display text-lg sm:text-xl font-bold shrink-0 shadow-md ${entry.rank === 1
                       ? "bg-[#F2B705] text-[#0A0C10]"
                       : entry.rank === 2
-                      ? "bg-[#EDEEF2] text-[#0A0C10]"
-                      : entry.rank === 3
-                      ? "bg-[#E57C23] text-white"
-                      : "bg-[#161A26] text-foreground border border-[#262B3B]"
-                  }`}
+                        ? "bg-[#EDEEF2] text-[#0A0C10]"
+                        : entry.rank === 3
+                          ? "bg-[#E57C23] text-white"
+                          : "bg-[#161A26] text-foreground border border-[#262B3B]"
+                    }`}
                 >
                   {entry.rank}
                 </div>
@@ -152,9 +149,8 @@ export default function LeaderboardPage() {
                     STREAK
                   </span>
                   <span
-                    className={`font-sans text-sm sm:text-base font-bold mt-0.5 ${
-                      entry.streak.includes("W") ? "text-[#2FD97A]" : "text-[#E53A4C]"
-                    }`}
+                    className={`font-sans text-sm sm:text-base font-bold mt-0.5 ${entry.streak.includes("W") ? "text-[#2FD97A]" : "text-[#E53A4C]"
+                      }`}
                   >
                     {entry.streak}
                   </span>
@@ -171,4 +167,3 @@ export default function LeaderboardPage() {
     </div>
   );
 }
-

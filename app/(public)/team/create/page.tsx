@@ -122,7 +122,7 @@ export default function CreateTeamPage() {
 
   return (
     <div className="flex flex-col flex-1 items-center justify-center px-4 py-12 game-theme-bg">
-      <div className="w-full max-w-xl bg-card-bg border border-raised-panel rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6 relative">
+      <div className="w-full max-w-xl bg-card-bg border border-raised-panel rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6 relative min-h-[540px] flex flex-col justify-between">
         <button
           type="button"
           onClick={handleClose}
@@ -133,16 +133,16 @@ export default function CreateTeamPage() {
           ✕
         </button>
 
-        <div className="flex border-b border-raised-panel pb-3 gap-2 pr-10">
+        <div className="flex border border-panel-border rounded-xl bg-background p-1 gap-2 pr-10">
           <Link
             href="/team/create"
-            className="flex-1 py-2 rounded-lg bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] text-foreground text-xs font-sans font-bold uppercase tracking-wider text-center shadow-md shadow-primary-brand/20"
+            className="flex-1 h-10 rounded-lg bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] text-foreground text-xs font-sans font-bold uppercase tracking-wider flex items-center justify-center text-center shadow-md shadow-primary-brand/20"
           >
             ➕ Create a Squad
           </Link>
           <Link
             href="/team/join"
-            className="flex-1 py-2 rounded-lg bg-background hover:bg-raised-panel text-secondary-text hover:text-foreground text-xs font-sans font-bold uppercase tracking-wider text-center border border-panel-border transition-colors"
+            className="flex-1 h-10 rounded-lg bg-transparent hover:bg-raised-panel text-secondary-text hover:text-foreground text-xs font-sans font-bold uppercase tracking-wider flex items-center justify-center text-center transition-colors"
           >
             🤝 Join Existing Squad
           </Link>
@@ -230,11 +230,10 @@ export default function CreateTeamPage() {
                     key={game.id}
                     type="button"
                     onClick={() => setSelectedGame(game.id)}
-                    className={`p-2.5 rounded-xl border text-left flex flex-col items-center justify-center transition-all ${
-                      selectedGame === game.id
+                    className={`p-2.5 rounded-xl border text-left flex flex-col items-center justify-center transition-all ${selectedGame === game.id
                         ? `${game.borderColor} border-2 bg-card-bg`
                         : "border-panel-border bg-background opacity-70 hover:opacity-100"
-                    }`}
+                      }`}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={game.image} alt={game.name} className="w-8 h-8 rounded-md object-cover mb-1" />

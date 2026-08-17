@@ -41,18 +41,7 @@ export default function UniversityProfilePage() {
       })
       .catch(() => {
         if (isMounted) {
-          // Mock fallback for university profile display
-          setUniversity({
-            id: universityId,
-            name: "University of Makati",
-            domain: "umak.edu.ph",
-            glicko2_rating: 1850.5,
-            glicko2_rd: 45,
-            glicko2_sigma: 0.06,
-            wins: 42,
-            losses: 10,
-            createdAt: new Date().toISOString(),
-          });
+          setUniversity(null);
           setLoading(false);
         }
       });
@@ -72,30 +61,29 @@ export default function UniversityProfilePage() {
 
   if (!university) {
     return (
-      <div className="min-h-[85vh] flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-[85vh] flex flex-col items-center justify-center p-6 text-center space-y-4">
         <h2 className="font-display text-2xl font-bold uppercase text-foreground">University Not Found</h2>
-        <Link href="/leaderboard" className="mt-4 text-xs font-sans text-primary-brand hover:underline">
+        <p className="text-xs font-sans text-secondary-text max-w-sm">
+          No collegiate profile exists for this university ID.
+        </p>
+        <Link href="/leaderboard" className="text-xs font-sans font-bold text-primary-brand hover:underline">
           Return to Rankings
         </Link>
       </div>
     );
   }
 
-  const gameRatings: GameRatingDetail[] = (university.gameRatings ?? []).map((g) => {
-    const display = GAME_DISPLAY[g.gameTitle] ?? { label: g.gameTitle, accent: "#8A8F98" };
-    return {
-      gameTitle: display.label,
-      rating: Math.round(g.glicko2_rating),
-      wins: g.wins,
-      losses: g.losses,
-      accent: display.accent,
-    };
-  });
+  const wins = university.wins || 0;
+  const losses = university.losses || 0;
+  const totalMatches = wins + losses;
+  const winRate = totalMatches > 0 ? Math.round((wins / totalMatches) * 100) : 0;
 
-  const totalWins = gameRatings.reduce((sum, g) => sum + g.wins, 0);
-  const totalLosses = gameRatings.reduce((sum, g) => sum + g.losses, 0);
-  const totalMatches = totalWins + totalLosses;
-  const winRate = totalMatches > 0 ? Math.round((totalWins / totalMatches) * 100) : 0;
+  const gameRatings: GameRatingDetail[] = [
+    { gameTitle: "VALORANT", rating: Math.round(university.glicko2_rating), wins, losses, accent: "#E53A4C" },
+    { gameTitle: "League of Legends", rating: Math.round(university.glicko2_rating), wins, losses, accent: "#00A3FF" },
+    { gameTitle: "Mobile Legends: BB", rating: Math.round(university.glicko2_rating), wins, losses, accent: "#A855F7" },
+    { gameTitle: "Call of Duty: Mobile", rating: Math.round(university.glicko2_rating), wins, losses, accent: "#E5B800" },
+  ];
 
   return (
     <div className="flex flex-col flex-1 game-theme-bg py-10 px-4 sm:px-6 lg:px-10">
@@ -127,7 +115,7 @@ export default function UniversityProfilePage() {
               <div className="h-8 w-px bg-panel-border" />
               <div className="text-center px-3">
                 <span className="text-[10px] font-sans text-secondary-text uppercase block">Record</span>
-                <span className="font-sans text-xs font-bold text-foreground">{totalWins}W - {totalLosses}L</span>
+                <span className="font-sans text-xs font-bold text-foreground">{wins}W - {losses}L</span>
               </div>
             </div>
           </div>
@@ -137,13 +125,11 @@ export default function UniversityProfilePage() {
           <h2 className="font-display text-xl font-bold uppercase tracking-wider text-foreground">
             Per-Game Title Ratings & Stats
           </h2>
-          {gameRatings.length === 0 ? (
-            <p className="text-xs font-sans text-secondary-text">
-              No verified matches recorded for {university.name} yet.
-            </p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {gameRatings.map((g) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {gameRatings.map((g) => {
+              const gameTotal = g.wins + g.losses;
+              const gameWinRate = gameTotal > 0 ? Math.round((g.wins / gameTotal) * 100) : 0;
+              return (
                 <div key={g.gameTitle} className="p-5 rounded-2xl bg-card-bg border border-raised-panel space-y-3 relative overflow-hidden">
                   <div className="w-1.5 h-full absolute left-0 top-0" style={{ backgroundColor: g.accent }} />
                   <span className="text-[10px] font-sans font-extrabold uppercase tracking-widest text-secondary-text block">
@@ -155,17 +141,17 @@ export default function UniversityProfilePage() {
                   </div>
                   <div className="w-full bg-background h-1.5 rounded-full overflow-hidden">
                     <div
-                      className="h-full rounded-full"
+                      className="h-full rounded-full transition-all duration-300"
                       style={{
                         backgroundColor: g.accent,
-                        width: `${g.wins + g.losses > 0 ? Math.round((g.wins / (g.wins + g.losses)) * 100) : 0}%`,
+                        width: `${gameWinRate}%`,
                       }}
                     />
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+              );
+            })}
+          </div>
         </div>
 
         <div className="p-6 rounded-2xl bg-card-bg border border-raised-panel space-y-4">

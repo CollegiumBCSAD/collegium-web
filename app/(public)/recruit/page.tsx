@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useGame } from "@/context/GameContext";
 import { GAME_LIST, GameId, getGameInfo } from "@/lib/games";
 
 interface RecruitPost {
@@ -21,13 +22,15 @@ interface RecruitPost {
 
 export default function RecruitPage() {
   const { user } = useAuth();
+  const { selectedGame: globalGame, selectedGameInfo } = useGame();
+  const activeGame: GameId = globalGame || "valo";
+
   const [activeTab, setActiveTab] = useState<"LFT" | "LFP">("LFT");
-  const [selectedGame, setSelectedGame] = useState<GameId | "all">("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [posts, setPosts] = useState<RecruitPost[]>([]);
 
   const [formType, setFormType] = useState<"LFT" | "LFP">("LFT");
-  const [formGame, setFormGame] = useState<GameId>("valo");
+  const [formGame, setFormGame] = useState<GameId>(activeGame);
   const [formTitle, setFormTitle] = useState("");
   const [formRoles, setFormRoles] = useState("");
   const [formRank, setFormRank] = useState("Ascendant");
@@ -35,9 +38,11 @@ export default function RecruitPage() {
   const [formBio, setFormBio] = useState("");
   const [formContact, setFormContact] = useState("");
 
-  const filteredPosts = posts.filter(
-    (p) => p.type === activeTab && (selectedGame === "all" || p.gameTitle === selectedGame)
-  );
+  const filteredPosts = posts.filter((p) => {
+    if (p.type !== activeTab) return false;
+    const info = getGameInfo(p.gameTitle);
+    return info.id === activeGame;
+  });
 
   const handleCreatePost = (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,14 +74,24 @@ export default function RecruitPage() {
       <div className="max-w-6xl mx-auto space-y-8 w-full">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-raised-panel pb-6">
           <div>
-            <span className="text-xs font-sans font-extrabold uppercase tracking-widest text-secondary-brand block mb-1">
-              Gankster-Style Recruitment Hub
-            </span>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xs font-sans font-extrabold uppercase tracking-widest text-secondary-brand">
+                Gankster-Style Recruitment Hub
+              </span>
+              {selectedGameInfo && (
+                <span
+                  className="text-[10px] font-sans font-bold tracking-widest uppercase px-2.5 py-0.5 rounded-full text-white"
+                  style={{ backgroundColor: selectedGameInfo.accentColor, color: selectedGameInfo.id === "codm" ? "#0A0C10" : "#FFFFFF" }}
+                >
+                  {selectedGameInfo.shortName}
+                </span>
+              )}
+            </div>
             <h1 className="font-display text-3xl font-bold uppercase tracking-wider text-foreground">
               Collegiate LFT / LFP Board
             </h1>
             <p className="font-sans text-xs text-secondary-text mt-1">
-              Connect with free-agent collegiate athletes and active university squads looking to complete their rosters
+              Connect with free-agent collegiate athletes and active university squads looking to complete their rosters in {selectedGameInfo?.name || "Valorant"}
             </p>
           </div>
 
@@ -88,63 +103,27 @@ export default function RecruitPage() {
           </button>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex border border-raised-panel rounded-xl bg-card-bg p-1 w-full sm:w-auto">
-            <button
-              onClick={() => setActiveTab("LFT")}
-              className={`flex-1 sm:flex-initial px-6 py-2 rounded-lg font-sans text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
-                activeTab === "LFT"
-                  ? "game-theme-btn shadow-md"
-                  : "text-secondary-text hover:text-foreground"
-              }`}
-            >
-              🙋 Looking for Team (LFT)
-            </button>
-            <button
-              onClick={() => setActiveTab("LFP")}
-              className={`flex-1 sm:flex-initial px-6 py-2 rounded-lg font-sans text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
-                activeTab === "LFP"
-                  ? "game-theme-btn shadow-md"
-                  : "text-secondary-text hover:text-foreground"
-              }`}
-            >
-              🎯 Looking for Players (LFP)
-            </button>
-          </div>
-
-          <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto">
-            <button
-              onClick={() => setSelectedGame("all")}
-              className={`px-3 py-1.5 rounded-lg font-sans text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
-                selectedGame === "all"
-                  ? "game-theme-btn shadow-sm"
-                  : "text-secondary-text hover:text-foreground"
-              }`}
-            >
-              All
-            </button>
-            {GAME_LIST.map((g) => {
-              const isSelected = selectedGame === g.id;
-              const isCodm = g.id === "codm";
-              return (
-                <button
-                  key={g.id}
-                  onClick={() => setSelectedGame(g.id)}
-                  className={`px-3 py-1.5 rounded-lg font-sans text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
-                    isSelected
-                      ? isCodm
-                        ? "bg-white text-[#0A0C10] font-extrabold shadow-sm"
-                        : `${g.borderColor} border bg-card-bg text-foreground shadow-sm`
-                      : "text-secondary-text hover:text-foreground"
-                  }`}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={g.image} alt={g.name} className="w-3.5 h-3.5 rounded object-cover" />
-                  <span>{g.shortName}</span>
-                </button>
-              );
-            })}
-          </div>
+        <div className="flex border border-raised-panel rounded-xl bg-card-bg p-1 max-w-md">
+          <button
+            onClick={() => setActiveTab("LFT")}
+            className={`flex-1 px-6 py-2.5 rounded-lg font-sans text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+              activeTab === "LFT"
+                ? "bg-white text-black shadow-md font-extrabold"
+                : "text-secondary-text hover:text-foreground"
+            }`}
+          >
+            🙋 Looking for Team (LFT)
+          </button>
+          <button
+            onClick={() => setActiveTab("LFP")}
+            className={`flex-1 px-6 py-2.5 rounded-lg font-sans text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+              activeTab === "LFP"
+                ? "bg-white text-black shadow-md font-extrabold"
+                : "text-secondary-text hover:text-foreground"
+            }`}
+          >
+            🎯 Looking for Players (LFP)
+          </button>
         </div>
 
         {filteredPosts.length === 0 ? (
@@ -154,10 +133,10 @@ export default function RecruitPage() {
             </div>
             <div className="space-y-1">
               <h3 className="font-display text-xl font-bold text-foreground uppercase tracking-wide">
-                NO RECRUITMENT POSTINGS FOUND
+                NO RECRUITMENT POSTINGS FOUND FOR {selectedGameInfo?.shortName || "THIS TITLE"}
               </h3>
               <p className="font-sans text-xs text-secondary-text leading-relaxed">
-                There are currently no active {activeTab} listings for this game. Click &quot;Post LFT / LFP Listing&quot; to create a new recruitment post!
+                There are currently no active {activeTab} listings for {selectedGameInfo?.name || "this game"}. Click &quot;Post LFT / LFP Listing&quot; to create a new recruitment post!
               </p>
             </div>
           </div>
@@ -236,10 +215,10 @@ export default function RecruitPage() {
                   <button
                     type="button"
                     onClick={() => setFormType("LFT")}
-                    className={`py-2 rounded-lg font-sans text-xs font-bold uppercase border ${
+                    className={`py-2 rounded-lg font-sans text-xs font-bold uppercase border cursor-pointer transition-all ${
                       formType === "LFT"
-                        ? "bg-primary-brand text-foreground border-primary-brand"
-                        : "bg-background border-panel-border text-secondary-text"
+                        ? "bg-white text-black border-white font-extrabold shadow"
+                        : "bg-background border-panel-border text-secondary-text hover:text-foreground"
                     }`}
                   >
                     Looking for Team (LFT)
@@ -247,10 +226,10 @@ export default function RecruitPage() {
                   <button
                     type="button"
                     onClick={() => setFormType("LFP")}
-                    className={`py-2 rounded-lg font-sans text-xs font-bold uppercase border ${
+                    className={`py-2 rounded-lg font-sans text-xs font-bold uppercase border cursor-pointer transition-all ${
                       formType === "LFP"
-                        ? "bg-primary-brand text-foreground border-primary-brand"
-                        : "bg-background border-panel-border text-secondary-text"
+                        ? "bg-white text-black border-white font-extrabold shadow"
+                        : "bg-background border-panel-border text-secondary-text hover:text-foreground"
                     }`}
                   >
                     Looking for Players (LFP)

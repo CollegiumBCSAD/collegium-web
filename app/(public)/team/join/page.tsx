@@ -131,7 +131,7 @@ function JoinTeamContent() {
         gameHandle: gameHandle.trim(),
         preferredRole: preferredRole.trim(),
       });
-      
+
       setResultMessage({
         success: res.success,
         isInstant: res.status === "ACCEPTED" || !!inviteCodeParam,
@@ -151,7 +151,7 @@ function JoinTeamContent() {
 
   return (
     <div className="flex flex-col flex-1 items-center justify-center px-4 py-12 game-theme-bg">
-      <div className="w-full max-w-xl bg-card-bg border border-raised-panel rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6 relative">
+      <div className="w-full max-w-xl bg-card-bg border border-raised-panel rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6 relative min-h-[540px] flex flex-col justify-between">
         <button
           type="button"
           onClick={handleClose}
@@ -162,16 +162,16 @@ function JoinTeamContent() {
           ✕
         </button>
 
-        <div className="flex border-b border-raised-panel pb-3 gap-2 pr-10">
+        <div className="flex border border-panel-border rounded-xl bg-background p-1 gap-2 pr-10">
           <Link
             href="/team/create"
-            className="flex-1 py-2 rounded-lg bg-background hover:bg-raised-panel text-secondary-text hover:text-foreground text-xs font-sans font-bold uppercase tracking-wider text-center border border-panel-border transition-colors"
+            className="flex-1 h-10 rounded-lg bg-transparent hover:bg-raised-panel text-secondary-text hover:text-foreground text-xs font-sans font-bold uppercase tracking-wider flex items-center justify-center text-center transition-colors"
           >
             ➕ Create a Squad
           </Link>
           <Link
             href="/team/join"
-            className="flex-1 py-2 rounded-lg game-theme-btn text-xs font-sans font-bold uppercase tracking-wider text-center shadow-md"
+            className="flex-1 h-10 rounded-lg bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] text-foreground text-xs font-sans font-bold uppercase tracking-wider flex items-center justify-center text-center shadow-md shadow-primary-brand/20"
           >
             🤝 Join Existing Squad
           </Link>
@@ -274,11 +274,10 @@ function JoinTeamContent() {
                           key={t.id}
                           type="button"
                           onClick={() => setUserSelectedTeam(t)}
-                          className={`w-full p-3 rounded-xl border text-left flex items-center justify-between transition-all ${
-                            isSel
+                          className={`w-full p-3 rounded-xl border text-left flex items-center justify-between transition-all ${isSel
                               ? `${game.borderColor} border-2 bg-background`
                               : "border-panel-border bg-background/50 hover:bg-background"
-                          }`}
+                            }`}
                         >
                           <div className="flex items-center gap-3">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
