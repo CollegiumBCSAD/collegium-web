@@ -38,15 +38,19 @@ export const teamsService = {
     return apiClient.post<{ success: boolean; message: string; status?: string }>(`/teams/${teamId}/join`, dto);
   },
 
-  getJoinRequests: (teamId: string): Promise<JoinRequest[]> => {
-    return apiClient.get<JoinRequest[]>(`/teams/${teamId}/requests`);
+  getJoinRequests: (teamId: string, captainId: string): Promise<JoinRequest[]> => {
+    return apiClient.get<JoinRequest[]>(`/teams/${teamId}/requests?captainId=${captainId}`);
   },
 
   handleJoinRequest: (
     teamId: string,
     requestId: string,
+    captainId: string,
     status: "ACCEPTED" | "DECLINED"
   ): Promise<{ success: boolean; message: string }> => {
-    return apiClient.patch<{ success: boolean; message: string }>(`/teams/${teamId}/requests/${requestId}`, { status });
+    return apiClient.patch<{ success: boolean; message: string }>(`/teams/${teamId}/requests/${requestId}`, {
+      captainId,
+      accept: status === "ACCEPTED",
+    });
   },
 };

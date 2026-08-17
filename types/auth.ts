@@ -24,16 +24,27 @@ export interface AuthContextType {
   logoutUser: () => Promise<void>;
 }
 
+export interface UniversityGameRating {
+  id: string;
+  gameTitle: string;
+  glicko2_rating: number;
+  glicko2_rd: number;
+  glicko2_sigma: number;
+  wins: number;
+  losses: number;
+}
+
 export interface University {
   id: string;
   name: string;
   domain: string;
   glicko2_rating: number;
   glicko2_rd: number;
-  glicko2_vol: number;
+  glicko2_sigma: number;
   wins: number;
   losses: number;
   createdAt: string;
+  gameRatings?: UniversityGameRating[];
 }
 
 export interface LeaderboardEntry {

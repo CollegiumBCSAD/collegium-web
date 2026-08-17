@@ -1,5 +1,62 @@
 import { apiClient } from "./apiClient";
-import { Tournament, BracketRound, MatchBoxScore } from "@/types";
+import { Tournament, TournamentStatus, BracketRound, MatchBoxScore } from "@/types";
+
+const GAME_DISPLAY: Record<string, { label: string; gradient: string }> = {
+  VALORANT: { label: "VALORANT", gradient: "from-[#8E2632] via-[#48161D] to-[#11141C]" },
+  LOL: { label: "LEAGUE OF LEGENDS", gradient: "from-[#233568] via-[#141C38] to-[#11141C]" },
+  CODM: { label: "CALL OF DUTY: MOBILE", gradient: "from-[#8E6519] via-[#42300E] to-[#11141C]" },
+  MLBB: { label: "MOBILE LEGENDS: BANG BANG", gradient: "from-[#5B2E8E] via-[#2A1642] to-[#11141C]" },
+};
+
+const STATUS_DISPLAY: Record<string, TournamentStatus> = {
+  UPCOMING: "UPCOMING",
+  ONGOING: "LIVE",
+  COMPLETED: "COMPLETED",
+};
+
+function parseServerTournamentsResponse(data: unknown): Tournament[] {
+  if (!Array.isArray(data)) {
+    return [];
+  }
+
+  return data.map((raw, idx) => {
+    const t = raw as {
+      id?: string;
+      name?: string;
+      status?: string;
+      matches?: Array<{ title?: string }>;
+      universities?: Array<{ id?: string }>;
+    };
+
+    const matches = t.matches ?? [];
+    const universities = t.universities ?? [];
+    const gameTitle = matches[0]?.title ?? "VALORANT";
+    const gameDisplay = GAME_DISPLAY[gameTitle] ?? GAME_DISPLAY.VALORANT;
+    const status = STATUS_DISPLAY[t.status ?? "UPCOMING"] ?? "UPCOMING";
+
+    const statusText =
+      status === "COMPLETED"
+        ? "Final standings published"
+        : status === "LIVE"
+          ? "Bracket in progress"
+          : `${universities.length} universities registered`;
+
+    const bulletPoints = [`${universities.length} participating universities`];
+    if (matches.length > 0) {
+      bulletPoints.push(`${matches.length} matches played`);
+    }
+
+    return {
+      id: t.id ?? `tournament-${idx}`,
+      title: t.name ?? "Untitled Tournament",
+      game: gameDisplay.label,
+      status,
+      statusText,
+      bulletPoints,
+      bgGradient: gameDisplay.gradient,
+    };
+  });
+}
 
 function parseServerBracketResponse(data: unknown): BracketRound[] {
   if (Array.isArray(data) && data.length > 0) {
@@ -109,8 +166,9 @@ function parseServerBracketResponse(data: unknown): BracketRound[] {
 }
 
 export const tournamentsService = {
-  getTournaments: (): Promise<Tournament[]> => {
-    return apiClient.get<Tournament[]>("/tournaments");
+  getTournaments: async (): Promise<Tournament[]> => {
+    const response = await apiClient.get<unknown>("/tournaments");
+    return parseServerTournamentsResponse(response);
   },
 
   getBracket: async (tournamentId: string): Promise<BracketRound[]> => {
