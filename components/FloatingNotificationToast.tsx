@@ -17,6 +17,8 @@ export default function FloatingNotificationToast() {
     switch (type) {
       case "ACCEPTED":
         return "border-[#10B981] bg-gradient-to-r from-[#0F221B] to-[#11141C]";
+      case "PENDING_REQUEST":
+        return "border-[#3B82F6] bg-gradient-to-r from-[#172554] to-[#11141C]";
       case "DECLINED":
         return "border-[#F59E0B] bg-gradient-to-r from-[#221B10] to-[#11141C]";
       case "UNBOOKED":
@@ -30,6 +32,8 @@ export default function FloatingNotificationToast() {
     switch (type) {
       case "ACCEPTED":
         return "🏆";
+      case "PENDING_REQUEST":
+        return "⏳";
       case "DECLINED":
         return "ℹ️";
       case "UNBOOKED":

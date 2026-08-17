@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 
 export interface ScrimNotification {
   id: string;
-  type: "ACCEPTED" | "DECLINED" | "UNBOOKED";
+  type: "ACCEPTED" | "DECLINED" | "UNBOOKED" | "PENDING_REQUEST";
   scrimId: string;
   title: string;
   message: string;
@@ -45,8 +45,8 @@ interface NotificationContextType {
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
-const NOTIFICATIONS_STORAGE_KEY = "collegium_scrim_notifications_v3";
-const STATUS_MAP_STORAGE_KEY = "collegium_scrim_status_map_v3";
+const NOTIFICATIONS_STORAGE_KEY = "collegium_scrim_notifications_v4";
+const STATUS_MAP_STORAGE_KEY = "collegium_scrim_status_map_v4";
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const [notifications, setNotifications] = useState<ScrimNotification[]>([]);
@@ -98,6 +98,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         return updated;
       });
 
+      // ONLY open the celebration popup window when a Host ACCEPTS a scrim request!
       if (item.type === "ACCEPTED") {
         setActiveConfirmedModal(newNotif);
       }
@@ -184,9 +185,10 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         }
 
         // 4. Host Notification ONLY: Opponent Sent Request (status is PENDING & lastStatus !== PENDING)
+        // Uses PENDING_REQUEST type so it NEVER triggers a popup modal on screen!
         if (scrim.status === "PENDING" && isHost && lastStatus !== "PENDING") {
           addNotification({
-            type: "ACCEPTED",
+            type: "PENDING_REQUEST",
             scrimId: scrim.id,
             title: "⏳ Incoming Scrim Request!",
             message: `${scrim.opponentTeamName || "An opponent squad"} requested to book your scrim offer!`,
