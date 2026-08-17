@@ -70,9 +70,6 @@ export default function ScrimsPage() {
 
       if (scrim.opponentTeamId && (myTeamIds.includes(scrim.opponentTeamId) || scrim.opponentTeamId === user.id)) return true;
       if (scrim.opponentTeamName && myTeamNames.includes(scrim.opponentTeamName.toLowerCase().trim())) return true;
-      
-      // Fallback: If status is CONFIRMED or PENDING, and user is not host, this user is the challenger!
-      if (scrim.status === "CONFIRMED" || scrim.status === "PENDING") return true;
 
       return false;
     },

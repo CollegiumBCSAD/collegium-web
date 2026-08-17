@@ -220,7 +220,7 @@ export default function ScrimCard({
             </div>
           ) : (
             <div className="w-full p-2.5 rounded-lg bg-[#181C28] border border-[#272E3F] text-[#FBBF24] text-xs font-sans font-medium text-center">
-              ⏳ Scrim request pending host approval
+              ⏳ Scrim request pending host approval {scrim.opponentTeamName ? `(by ${scrim.opponentTeamName})` : ""}
             </div>
           )
         ) : isBooked ? (
