@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { getStoredTeams, fetchTeamsApi, Team } from "@/lib/teams";
+import { teamsService } from "@/services/teamsService";
 import { GAMES } from "@/lib/games";
 import AthleteProfileBanner from "@/components/dashboard/AthleteProfileBanner";
 import TeamRosterCard from "@/components/dashboard/TeamRosterCard";
@@ -16,11 +17,21 @@ export default function DashboardPage() {
   const { user, isLoggedIn, isLoaded } = useAuth();
   const [allTeams, setAllTeams] = useState<Team[]>(() => getStoredTeams());
 
+  const refreshTeams = () => {
+    fetchTeamsApi().then((teams) => setAllTeams(teams));
+  };
+
   useEffect(() => {
-    fetchTeamsApi().then((teams) => {
-      setAllTeams(teams);
-    });
+    refreshTeams();
   }, []);
+
+  const handleCancelPendingRequest = async (teamId: string) => {
+    if (!user) return;
+    try {
+      await teamsService.leaveTeam(teamId, user.id);
+      refreshTeams();
+    } catch {}
+  };
 
   const userTeams = useMemo(() => {
     if (!user) return [];
@@ -139,9 +150,18 @@ export default function DashboardPage() {
                         <span className="text-[10px] font-sans text-secondary-text">Captain: {t.captainName}</span>
                       </div>
                     </div>
-                    <span className="text-[10px] font-sans font-bold text-secondary-brand uppercase bg-secondary-brand/10 px-2.5 py-1 rounded border border-secondary-brand/20">
-                      PENDING
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-sans font-bold text-secondary-brand uppercase bg-secondary-brand/10 px-2 py-0.5 rounded border border-secondary-brand/20">
+                        PENDING
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleCancelPendingRequest(t.id)}
+                        className="text-[10px] font-sans font-bold text-error hover:underline px-2 py-0.5 rounded bg-error/10 border border-error/20 cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -183,7 +203,7 @@ export default function DashboardPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {userTeams.map((t) => (
-                  <TeamRosterCard key={t.id} team={t} />
+                  <TeamRosterCard key={t.id} team={t} onRosterUpdated={refreshTeams} />
                 ))}
               </div>
             )}

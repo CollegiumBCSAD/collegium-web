@@ -53,4 +53,8 @@ export const teamsService = {
       accept: status === "ACCEPTED",
     });
   },
+
+  leaveTeam: (teamId: string, userId: string): Promise<{ success: boolean; message: string }> => {
+    return apiClient.post<{ success: boolean; message: string }>(`/teams/${teamId}/leave`, { userId });
+  },
 };

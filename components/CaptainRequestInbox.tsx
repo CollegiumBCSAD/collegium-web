@@ -1,21 +1,47 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { teamsService } from "@/services/teamsService";
-import { getStoredTeams, saveStoredTeams, Team, TeamMember } from "@/lib/teams";
+import { fetchTeamsApi, saveStoredTeams, Team, TeamMember } from "@/lib/teams";
 import { JoinRequest } from "@/types";
 import { useAuth } from "@/context/AuthContext";
 
 export default function CaptainRequestInbox() {
   const { user } = useAuth();
-  const [teams, setTeams] = useState<Team[]>(() => getStoredTeams());
-  const [activeTeam, setActiveTeam] = useState<Team | null>(() => {
-    const loaded = getStoredTeams();
-    return loaded.length > 0 ? loaded[0] : null;
-  });
+  const [teams, setTeams] = useState<Team[]>([]);
   const [apiRequests, setApiRequests] = useState<JoinRequest[]>([]);
-  const [loading, setLoading] = useState(() => !!activeTeam);
+  const [loading, setLoading] = useState(true);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchTeamsApi().then((data) => {
+      setTeams(data);
+      setLoading(false);
+    });
+  }, []);
+
+  const captainTeams = useMemo(() => {
+    if (!user) return [];
+    const myId = user.id;
+    const myName = user.displayName ? user.displayName.toLowerCase().trim() : "";
+
+    return teams.filter(
+      (t) =>
+        (myId && t.captainId === myId) ||
+        (myName && t.captainName && t.captainName.toLowerCase().trim() === myName)
+    );
+  }, [user, teams]);
+
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+
+  const activeTeam = useMemo(() => {
+    if (captainTeams.length === 0) return null;
+    if (selectedTeamId) {
+      const found = captainTeams.find((t) => t.id === selectedTeamId);
+      if (found) return found;
+    }
+    return captainTeams[0];
+  }, [captainTeams, selectedTeamId]);
 
   useEffect(() => {
     if (!activeTeam || !user) return;
@@ -68,10 +94,10 @@ export default function CaptainRequestInbox() {
 
     setTeams(updatedTeams);
     saveStoredTeams(updatedTeams);
-
-    const newActive = updatedTeams.find((t) => t.id === activeTeam.id) || null;
-    setActiveTeam(newActive);
     setApiRequests((prev) => prev.filter((r) => r.id !== memberId));
+
+    // Refetch latest live teams from server
+    fetchTeamsApi().then((fresh) => setTeams(fresh));
 
     setTimeout(() => setActionMessage(null), 3000);
   };
@@ -87,6 +113,25 @@ export default function CaptainRequestInbox() {
             {activeTeam.name} Inbox
           </h3>
         </div>
+
+        {captainTeams.length > 1 && (
+          <div className="flex items-center gap-2">
+            {captainTeams.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setSelectedTeamId(t.id)}
+                className={`px-3 py-1 rounded text-xs font-sans font-bold uppercase ${
+                  t.id === activeTeam.id
+                    ? "bg-primary-brand text-white"
+                    : "bg-background text-secondary-text border border-panel-border"
+                }`}
+              >
+                {t.name}
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="flex items-center gap-2">
           <span className="text-xs font-sans text-secondary-text">Active Roster:</span>
           <span className="text-xs font-display font-bold text-foreground bg-background px-2.5 py-1 rounded border border-panel-border">

@@ -7,9 +7,10 @@ import RosterDetailsModal from "./RosterDetailsModal";
 
 interface TeamRosterCardProps {
   team: Team;
+  onRosterUpdated?: () => void;
 }
 
-export default function TeamRosterCard({ team }: TeamRosterCardProps) {
+export default function TeamRosterCard({ team, onRosterUpdated }: TeamRosterCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const game = GAMES[team.gameTitle] || GAMES.valo;
 
@@ -53,6 +54,7 @@ export default function TeamRosterCard({ team }: TeamRosterCardProps) {
         team={team}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        onRosterUpdated={onRosterUpdated}
       />
     </>
   );

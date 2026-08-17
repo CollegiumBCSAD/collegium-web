@@ -3,19 +3,25 @@
 import React, { useState } from "react";
 import { Team } from "@/types";
 import { GAMES } from "@/lib/games";
+import { useAuth } from "@/context/AuthContext";
+import { teamsService } from "@/services/teamsService";
 
 interface RosterDetailsModalProps {
   team: Team | null;
   isOpen: boolean;
   onClose: () => void;
+  onRosterUpdated?: () => void;
 }
 
-export default function RosterDetailsModal({ team, isOpen, onClose }: RosterDetailsModalProps) {
+export default function RosterDetailsModal({ team, isOpen, onClose, onRosterUpdated }: RosterDetailsModalProps) {
+  const { user } = useAuth();
   const [copied, setCopied] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
+  const [leaveError, setLeaveError] = useState("");
 
   if (!isOpen || !team) return null;
 
-  const game = GAMES[team.gameTitle];
+  const game = GAMES[team.gameTitle] || GAMES.valo;
 
   const getInviteUrl = () => {
     if (typeof window === "undefined") return "";
@@ -27,6 +33,34 @@ export default function RosterDetailsModal({ team, isOpen, onClose }: RosterDeta
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const handleLeaveTeam = async () => {
+    if (!user || !team) return;
+    setIsLeaving(true);
+    setLeaveError("");
+    try {
+      await teamsService.leaveTeam(team.id, user.id);
+      onClose();
+      if (onRosterUpdated) {
+        onRosterUpdated();
+      } else if (typeof window !== "undefined") {
+        window.location.reload();
+      }
+    } catch (err: unknown) {
+      const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
+      setLeaveError(errorObj?.response?.data?.message || errorObj?.message || "Failed to leave squad.");
+    } finally {
+      setIsLeaving(false);
+    }
+  };
+
+  const isMember = user && team.members.some(
+    (m) =>
+      (user.id && m.userId === user.id) ||
+      (user.email && m.email && m.email.toLowerCase() === user.email.toLowerCase()) ||
+      (user.displayName && m.displayName && m.displayName.toLowerCase() === user.displayName.toLowerCase()) ||
+      (user.id && team.captainId === user.id)
+  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
@@ -146,6 +180,26 @@ export default function RosterDetailsModal({ team, isOpen, onClose }: RosterDeta
             </button>
           </div>
         </div>
+
+        {leaveError && (
+          <div className="p-3 rounded-lg bg-error/10 border border-error/30 text-error text-xs font-sans">
+            {leaveError}
+          </div>
+        )}
+
+        {isMember && (
+          <div className="pt-3 border-t border-raised-panel flex items-center justify-between">
+            <span className="text-xs font-sans text-secondary-text">Need to exit this squad?</span>
+            <button
+              type="button"
+              onClick={handleLeaveTeam}
+              disabled={isLeaving}
+              className="h-9 px-4 rounded-lg bg-error/10 hover:bg-error/20 text-error border border-error/30 text-xs font-sans font-bold uppercase tracking-wider transition-colors cursor-pointer disabled:opacity-50"
+            >
+              {isLeaving ? "Leaving Roster..." : "Leave Squad Roster"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
