@@ -140,7 +140,7 @@ export default function RosterDetailsModal({ team, isOpen, onClose }: RosterDeta
             <button
               type="button"
               onClick={copyInviteLink}
-              className="h-10 px-4 rounded-lg bg-primary-brand hover:bg-primary-brand/90 text-foreground font-sans text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer shrink-0"
+              className="h-10 px-4 rounded-lg bg-primary-brand hover:bg-primary-brand/90 text-foreground font-sans text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer shrink-0 font-bold"
             >
               {copied ? "Copied! ✓" : "Copy Link"}
             </button>
