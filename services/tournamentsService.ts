@@ -1,6 +1,5 @@
 import { apiClient } from "./apiClient";
 import { Tournament, BracketRound, MatchBoxScore } from "@/types";
-import { mockBracket } from "@/lib/mock/tournaments";
 
 function parseServerBracketResponse(data: unknown): BracketRound[] {
   if (Array.isArray(data) && data.length > 0) {
@@ -39,14 +38,14 @@ function parseServerBracketResponse(data: unknown): BracketRound[] {
           matches: qf.map((m, idx) => ({
             id: m.id || `qf-${idx}`,
             team1: {
-              name: (m.winnerId && universitiesMap.get(m.winnerId)) || "University of Makati",
-              code: "UMK",
-              score: m.isVerified ? 2 : 1,
-              isWinner: m.isVerified ?? true,
+              name: (m.winnerId && universitiesMap.get(m.winnerId)) || "TBD",
+              code: "T1",
+              score: m.isVerified ? 1 : 0,
+              isWinner: m.isVerified,
             },
             team2: {
-              name: (m.loserId && universitiesMap.get(m.loserId)) || "FEU Tamaraws",
-              code: "FEU",
+              name: (m.loserId && universitiesMap.get(m.loserId)) || "TBD",
+              code: "T2",
               score: 0,
               isWinner: false,
             },
@@ -63,14 +62,14 @@ function parseServerBracketResponse(data: unknown): BracketRound[] {
           matches: sf.map((m, idx) => ({
             id: m.id || `sf-${idx}`,
             team1: {
-              name: (m.winnerId && universitiesMap.get(m.winnerId)) || "University of Makati",
-              code: "UMK",
-              score: m.isVerified ? 2 : 1,
-              isWinner: m.isVerified ?? true,
+              name: (m.winnerId && universitiesMap.get(m.winnerId)) || "TBD",
+              code: "T1",
+              score: m.isVerified ? 1 : 0,
+              isWinner: m.isVerified,
             },
             team2: {
-              name: (m.loserId && universitiesMap.get(m.loserId)) || "Mapúa Marauders",
-              code: "MU",
+              name: (m.loserId && universitiesMap.get(m.loserId)) || "TBD",
+              code: "T2",
               score: 0,
               isWinner: false,
             },
@@ -86,14 +85,14 @@ function parseServerBracketResponse(data: unknown): BracketRound[] {
           matches: gf.map((m, idx) => ({
             id: m.id || `gf-${idx}`,
             team1: {
-              name: (m.winnerId && universitiesMap.get(m.winnerId)) || "University of Makati",
-              code: "UMK",
-              score: m.isVerified ? 2 : 1,
-              isWinner: m.isVerified ?? true,
+              name: (m.winnerId && universitiesMap.get(m.winnerId)) || "TBD",
+              code: "T1",
+              score: m.isVerified ? 1 : 0,
+              isWinner: m.isVerified,
             },
             team2: {
-              name: (m.loserId && universitiesMap.get(m.loserId)) || "DLSU Green Archers",
-              code: "DLSU",
+              name: (m.loserId && universitiesMap.get(m.loserId)) || "TBD",
+              code: "T2",
               score: 0,
               isWinner: false,
             },
@@ -117,11 +116,9 @@ export const tournamentsService = {
   getBracket: async (tournamentId: string): Promise<BracketRound[]> => {
     try {
       const response = await apiClient.get<unknown>(`/tournaments/${tournamentId}/bracket`);
-      const parsed = parseServerBracketResponse(response);
-      if (parsed.length > 0) return parsed;
-      return mockBracket;
+      return parseServerBracketResponse(response);
     } catch {
-      return mockBracket;
+      return [];
     }
   },
 

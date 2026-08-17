@@ -6,54 +6,48 @@ import MatchCard from "@/components/tournaments/MatchCard";
 import { BracketMatch, BracketRound, TournamentBracketModalProps } from "@/types";
 import { tournamentsService } from "@/services/tournamentsService";
 
-const defaultRounds: BracketRound[] = [
-  {
-    name: "QUARTERFINALS",
-    matches: [
-      { id: "qf1", team1: { name: "UMak", code: "UMK", score: 1, isWinner: true }, team2: { name: "FEU Tamaraws", code: "FEU", score: 0 }, status: "COMPLETED" },
-      { id: "qf2", team1: { name: "Ateneo Eagles", code: "ADMU", score: 1, isWinner: true }, team2: { name: "Mapúa Marauders", code: "MU", score: 0 }, status: "COMPLETED" },
-      { id: "qf3", team1: { name: "UP Fighting", code: "UP", score: 1, isWinner: true }, team2: { name: "Polytechnic", code: "PUP", score: 0 }, status: "COMPLETED" },
-      { id: "qf4", team1: { name: "UST Growlers", code: "UST", score: 1, isWinner: true }, team2: { name: "Adamson Falcons", code: "AdU", score: 0 }, status: "COMPLETED" },
-    ],
-  },
-  {
-    name: "SEMIFINALS",
-    matches: [
-      { id: "sf1", team1: { name: "UMak", code: "UMK", score: 1, isWinner: true }, team2: { name: "Mapúa Marauders", code: "MU", score: 0 }, status: "COMPLETED" },
-      { id: "sf2", team1: { name: "UP Fighting", code: "UP", score: 1, isWinner: true }, team2: { name: "Adamson Falcons", code: "AdU", score: 0 }, status: "COMPLETED" },
-    ],
-  },
-  {
-    name: "GRAND FINALS",
-    matches: [
-      { id: "gf1", team1: { name: "UMak", code: "UMK", score: 1, isWinner: true }, team2: { name: "UP Fighting", code: "UP", score: 0 }, status: "COMPLETED" },
-    ],
-  },
-];
-
 export default function TournamentBracketModal({
   isOpen,
   onClose,
   tournamentId,
   title = "TOURNAMENT BRACKET",
-  subtitle = "SINGLE ELIMINATION • 8 TEAMS",
+  subtitle = "SINGLE ELIMINATION",
 }: TournamentBracketModalProps) {
   const [activeBoxScore, setActiveBoxScore] = useState<BracketMatch | null>(null);
-  const [dynamicRounds, setDynamicRounds] = useState<BracketRound[]>([]);
+  const [rounds, setRounds] = useState<BracketRound[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    if (!isOpen || !tournamentId) return;
+    if (!isOpen) return;
     let isMounted = true;
-    tournamentsService
-      .getBracket(tournamentId)
-      .then((rounds) => {
-        if (isMounted && Array.isArray(rounds) && rounds.length > 0) {
-          setDynamicRounds(rounds);
+
+    async function loadBracketData() {
+      if (!tournamentId) {
+        if (isMounted) {
+          setRounds([]);
+          setIsLoading(false);
         }
-      })
-      .catch(() => {
-        // Fallback to default static rounds on API error
-      });
+        return;
+      }
+
+      try {
+        const data = await tournamentsService.getBracket(tournamentId);
+        if (isMounted) {
+          setRounds(data || []);
+        }
+      } catch {
+        if (isMounted) {
+          setRounds([]);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadBracketData();
+
     return () => {
       isMounted = false;
     };
@@ -75,14 +69,12 @@ export default function TournamentBracketModal({
 
   if (!isOpen) return null;
 
-  const displayRounds = dynamicRounds.length > 0 ? dynamicRounds : defaultRounds;
-
-  const normalizedRounds = displayRounds.map((round, rIdx) => ({
+  const normalizedRounds = rounds.map((round, rIdx) => ({
     name:
       round.name ||
-      (rIdx === displayRounds.length - 1
+      (rIdx === rounds.length - 1
         ? "GRAND FINALS"
-        : rIdx === displayRounds.length - 2
+        : rIdx === rounds.length - 2
         ? "SEMIFINALS"
         : `ROUND ${rIdx + 1}`),
     matches: round.matches.map((m) => ({
@@ -111,7 +103,7 @@ export default function TournamentBracketModal({
       : lastMatch.team1.name
     : "TBD";
 
-  const totalCols = normalizedRounds.length + 1;
+  const totalCols = normalizedRounds.length > 0 ? normalizedRounds.length + 1 : 1;
 
   return (
     <>
@@ -139,40 +131,68 @@ export default function TournamentBracketModal({
             </button>
           </div>
 
-          <div className="flex-1 overflow-x-auto p-6 sm:p-8">
-            <div className="min-w-[960px] mx-auto">
-              <div
-                className="grid gap-8 mb-6 text-xs sm:text-sm font-bold tracking-wide text-foreground uppercase text-left pl-1"
-                style={{ gridTemplateColumns: `repeat(${totalCols}, minmax(0, 1fr))` }}
-              >
-                {normalizedRounds.map((r, i) => (
-                  <div key={i}>{r.name}</div>
-                ))}
-                <div>CHAMPION</div>
+          <div className="flex-1 overflow-x-auto p-6 sm:p-8 flex flex-col justify-center min-h-[400px]">
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center py-16 space-y-4">
+                <div className="w-10 h-10 border-4 border-primary-brand border-t-transparent rounded-full animate-spin" />
+                <p className="font-sans text-xs font-semibold text-secondary-text tracking-wider uppercase">
+                  Loading Tournament Bracket...
+                </p>
               </div>
+            ) : normalizedRounds.length === 0 ? (
+              <div className="flex flex-col items-center justify-center text-center py-16 px-4 max-w-md mx-auto space-y-4 rounded-xl border border-panel-border bg-card-bg/60 p-8 shadow-xl">
+                <div className="w-16 h-16 rounded-full bg-raised-panel border border-panel-border flex items-center justify-center text-3xl shadow-inner">
+                  ⚔️
+                </div>
+                <div className="space-y-1">
+                  <h3 className="font-display text-xl font-bold text-foreground uppercase tracking-wide">
+                    NO BRACKET GENERATED YET
+                  </h3>
+                  <p className="font-sans text-xs text-secondary-text leading-relaxed">
+                    Tournament pairings have not been released yet. Brackets will appear here dynamically once registration closes and match seeds are generated.
+                  </p>
+                </div>
+                <div className="pt-2">
+                  <span className="inline-block font-sans text-[11px] font-bold tracking-widest text-primary-brand bg-primary-brand/10 border border-primary-brand/30 px-3 py-1 rounded-full uppercase">
+                    REGISTRATION OPEN
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="min-w-[960px] mx-auto">
+                <div
+                  className="grid gap-8 mb-6 text-xs sm:text-sm font-bold tracking-wide text-foreground uppercase text-left pl-1"
+                  style={{ gridTemplateColumns: `repeat(${totalCols}, minmax(0, 1fr))` }}
+                >
+                  {normalizedRounds.map((r, i) => (
+                    <div key={i}>{r.name}</div>
+                  ))}
+                  <div>CHAMPION</div>
+                </div>
 
-              <div
-                className="grid gap-8 items-center relative min-h-[480px]"
-                style={{ gridTemplateColumns: `repeat(${totalCols}, minmax(0, 1fr))` }}
-              >
-                {normalizedRounds.map((round, rIdx) => (
-                  <div key={rIdx} className="flex flex-col justify-around h-full gap-4 py-2 z-10">
-                    {round.matches.map((m) => (
-                      <MatchCard key={m.id} match={m} onViewBoxScore={() => setActiveBoxScore(m)} />
-                    ))}
-                  </div>
-                ))}
+                <div
+                  className="grid gap-8 items-center relative min-h-[480px]"
+                  style={{ gridTemplateColumns: `repeat(${totalCols}, minmax(0, 1fr))` }}
+                >
+                  {normalizedRounds.map((round, rIdx) => (
+                    <div key={rIdx} className="flex flex-col justify-around h-full gap-4 py-2 z-10">
+                      {round.matches.map((m) => (
+                        <MatchCard key={m.id} match={m} onViewBoxScore={() => setActiveBoxScore(m)} />
+                      ))}
+                    </div>
+                  ))}
 
-                <div className="flex items-center justify-start z-10">
-                  <div className="flex items-center gap-2.5 rounded-lg border-2 border-secondary-brand bg-card-bg px-4 py-3 shadow-xl">
-                    <span className="text-base">👑</span>
-                    <span className="font-sans text-xs sm:text-sm font-bold text-foreground">
-                      {champion}
-                    </span>
+                  <div className="flex items-center justify-start z-10">
+                    <div className="flex items-center gap-2.5 rounded-lg border-2 border-secondary-brand bg-card-bg px-4 py-3 shadow-xl">
+                      <span className="text-base">👑</span>
+                      <span className="font-sans text-xs sm:text-sm font-bold text-foreground">
+                        {champion}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
