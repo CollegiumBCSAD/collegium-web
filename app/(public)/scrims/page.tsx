@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useGame } from "@/context/GameContext";
 import { GameId, ScrimOffer } from "@/types";
@@ -45,16 +45,6 @@ export default function ScrimsPage() {
     };
   }, [activeGame]);
 
-  const filteredScrims = scrims.filter((s) => {
-    if (!s.gameTitle) return true;
-    const title = s.gameTitle.toLowerCase();
-    if (activeGame === "valo") return title.includes("val");
-    if (activeGame === "lol") return title.includes("lol") || title.includes("league");
-    if (activeGame === "codm") return title.includes("cod") || title.includes("call");
-    if (activeGame === "ml") return title.includes("ml") || title.includes("mobile");
-    return true;
-  });
-
   const myTeams = useMemo(() => {
     if (!user) return [];
     const myId = user.id;
@@ -73,6 +63,34 @@ export default function ScrimsPage() {
       )
     );
   }, [user, userTeams]);
+
+  const isUserHost = useCallback(
+    (scrim: ScrimOffer) => {
+      if (!user) return false;
+      const myTeamIds = myTeams.map((t: Team) => t.id);
+      const myTeamNames = myTeams.map((t: Team) => t.name.toLowerCase().trim());
+
+      if (scrim.teamId && myTeamIds.includes(scrim.teamId)) return true;
+      if (scrim.hostTeamName && myTeamNames.includes(scrim.hostTeamName.toLowerCase().trim())) return true;
+      return false;
+    },
+    [user, myTeams]
+  );
+
+  const filteredScrims = useMemo(() => {
+    return scrims.filter((s) => {
+      // Cancelled scrims are only visible to the host captain who posted them
+      if (s.status === "CANCELLED" && !isUserHost(s)) return false;
+
+      if (!s.gameTitle) return true;
+      const title = s.gameTitle.toLowerCase();
+      if (activeGame === "valo") return title.includes("val");
+      if (activeGame === "lol") return title.includes("lol") || title.includes("league");
+      if (activeGame === "codm") return title.includes("cod") || title.includes("call");
+      if (activeGame === "ml") return title.includes("ml") || title.includes("mobile");
+      return true;
+    });
+  }, [scrims, activeGame, isUserHost]);
 
   const handlePostScrimSubmit = async (data: {
     gameTitle: GameId;
@@ -119,16 +137,6 @@ export default function ScrimsPage() {
   };
 
   const [scrimError, setScrimError] = useState("");
-
-  const isUserHost = (scrim: ScrimOffer) => {
-    if (!user) return false;
-    const myTeamIds = myTeams.map((t: Team) => t.id);
-    const myTeamNames = myTeams.map((t: Team) => t.name.toLowerCase().trim());
-
-    if (scrim.teamId && myTeamIds.includes(scrim.teamId)) return true;
-    if (scrim.hostTeamName && myTeamNames.includes(scrim.hostTeamName.toLowerCase().trim())) return true;
-    return false;
-  };
 
   const bookedScrims = useMemo(() => {
     return scrims.filter(
