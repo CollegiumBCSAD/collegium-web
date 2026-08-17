@@ -130,19 +130,25 @@ export default function ScrimsPage() {
     return false;
   };
 
+  const bookedScrims = useMemo(() => {
+    return scrims.filter(
+      (s) => s.status === "CONFIRMED" && (isUserHost(s) || (s.opponentTeamName && myTeams.some((t: Team) => t.name === s.opponentTeamName)))
+    );
+  }, [scrims, isUserHost, myTeams]);
+
   const handleAcceptScrim = async (id: string) => {
     setScrimError("");
     const targetScrim = scrims.find((s) => s.id === id);
     if (targetScrim && isUserHost(targetScrim)) {
-      setScrimError("You cannot accept a scrim offer posted by your own team.");
+      setScrimError("You cannot book a scrim offer posted by your own team.");
       return;
     }
 
-    const myTeam = myTeams.find((t) => t.gameTitle === activeGame) || myTeams[0];
+    const myTeam = myTeams.find((t: Team) => t.gameTitle === activeGame) || myTeams[0];
     const opponentTeamId = myTeam?.id || user?.id || "";
 
     if (!opponentTeamId) {
-      setScrimError("Please log in and join a university squad before accepting scrim offers.");
+      setScrimError("Please log in and join a university squad before booking scrim matches.");
       return;
     }
 
@@ -152,7 +158,7 @@ export default function ScrimsPage() {
       setScrims(data);
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
-      setScrimError(errorObj?.response?.data?.message || errorObj?.message || "Failed to accept scrim offer.");
+      setScrimError(errorObj?.response?.data?.message || errorObj?.message || "Failed to book scrim match.");
     }
   };
 
@@ -200,6 +206,27 @@ export default function ScrimsPage() {
             ⚔️ Post Scrim Offer
           </button>
         </div>
+
+        {bookedScrims.length > 0 && (
+          <div className="p-5 rounded-2xl bg-gradient-to-r from-success/20 via-emerald-950/40 to-success/10 border border-success/50 shadow-xl space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">🎉</span>
+                <div>
+                  <h3 className="font-display text-sm font-bold uppercase tracking-wider text-foreground">
+                    You Have {bookedScrims.length} Booked Practice Scrim{bookedScrims.length > 1 ? "s" : ""}!
+                  </h3>
+                  <p className="text-xs font-sans text-secondary-text">
+                    An opponent has booked your practice scrim match offer. Prepare your 5-man varsity squad!
+                  </p>
+                </div>
+              </div>
+              <span className="text-xs font-sans font-bold px-3 py-1 rounded-full bg-success/20 text-success border border-success/40 uppercase tracking-wider">
+                🟢 MATCH BOOKED
+              </span>
+            </div>
+          </div>
+        )}
 
         {scrimError && (
           <div className="p-4 rounded-xl bg-error/10 border border-error/30 text-error text-xs font-sans font-semibold flex items-center justify-between">
