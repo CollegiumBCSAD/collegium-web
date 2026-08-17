@@ -33,17 +33,14 @@ export default function ScrimsPage() {
     if (!user) return [];
     const myId = user.id;
     const myEmail = user.email ? user.email.toLowerCase().trim() : "";
-    const myName = user.displayName ? user.displayName.toLowerCase().trim() : "";
 
     return userTeams.filter((t: Team) =>
       (myId && t.captainId === myId) ||
-      (myName && t.captainName && t.captainName.toLowerCase().trim() === myName) ||
       t.members.some(
         (m) =>
           m.status === "ACCEPTED" &&
           ((myId && m.userId === myId) ||
-           (myEmail && m.email && m.email.toLowerCase().trim() === myEmail) ||
-           (myName && m.displayName && m.displayName.toLowerCase().trim() === myName))
+           (myEmail && m.email && m.email.toLowerCase().trim() === myEmail))
       )
     );
   }, [user, userTeams]);
@@ -54,8 +51,14 @@ export default function ScrimsPage() {
       const myTeamIds = myTeams.map((t: Team) => t.id);
       const myTeamNames = myTeams.map((t: Team) => t.name.toLowerCase().trim());
 
-      if (scrim.teamId && myTeamIds.includes(scrim.teamId)) return true;
-      if (scrim.hostTeamName && myTeamNames.includes(scrim.hostTeamName.toLowerCase().trim())) return true;
+      if (scrim.teamId && (scrim.teamId === user.id || myTeamIds.includes(scrim.teamId))) return true;
+      if (
+        scrim.hostTeamName &&
+        scrim.hostTeamName !== "Varsity Squad" &&
+        myTeamNames.includes(scrim.hostTeamName.toLowerCase().trim())
+      ) {
+        return true;
+      }
       return false;
     },
     [user, myTeams]
