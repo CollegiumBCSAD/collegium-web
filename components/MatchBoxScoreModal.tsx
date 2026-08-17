@@ -16,6 +16,7 @@ export default function MatchBoxScoreModal({
   onClose,
   title = "MATCH BOX SCORE",
   subtitle = "VALORANT • GRAND FINALS • ELIMINATION",
+  boxScoreData,
 }: MatchBoxScoreModalProps) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -33,31 +34,61 @@ export default function MatchBoxScoreModal({
 
   if (!isOpen) return null;
 
-  const team1 = {
-    name: "UMak",
-    score: 1,
-    result: "WIN",
-    players: [
-      { name: "Dyeel", roleAgent: "Duelist / Reyna", k: 28, d: 15, a: 7, kda: "2.33", acs: 332 },
-      { name: "rinkinn", roleAgent: "Flex / Jett", k: 21, d: 14, a: 12, kda: "2.36", acs: 268 },
-      { name: "Ychann", roleAgent: "Initiator / Sova", k: 18, d: 13, a: 16, kda: "2.62", acs: 248 },
-      { name: "kcee", roleAgent: "Sentinel / Killjoy", k: 14, d: 11, a: 10, kda: "2.18", acs: 208 },
-      { name: "LEB", roleAgent: "Controller / Omen", k: 20, d: 14, a: 8, kda: "2.01", acs: 242 },
-    ],
-  };
+  const team1 = boxScoreData
+    ? {
+        name: boxScoreData.team1.name,
+        score: 1,
+        result: "WIN",
+        players: boxScoreData.team1.players.map((p) => ({
+          name: p.name,
+          roleAgent: `${p.role || "Flex"} / ${p.agent || "Agent"}`,
+          k: p.kills,
+          d: p.deaths,
+          a: p.assists,
+          kda: (p.kda || ((p.kills + p.assists) / Math.max(1, p.deaths))).toFixed(2),
+          acs: p.acs || 200,
+        })),
+      }
+    : {
+        name: "UMak",
+        score: 1,
+        result: "WIN",
+        players: [
+          { name: "Dyeel", roleAgent: "Duelist / Reyna", k: 28, d: 15, a: 7, kda: "2.33", acs: 332 },
+          { name: "rinkinn", roleAgent: "Flex / Jett", k: 21, d: 14, a: 12, kda: "2.36", acs: 268 },
+          { name: "Ychann", roleAgent: "Initiator / Sova", k: 18, d: 13, a: 16, kda: "2.62", acs: 248 },
+          { name: "kcee", roleAgent: "Sentinel / Killjoy", k: 14, d: 11, a: 10, kda: "2.18", acs: 208 },
+          { name: "LEB", roleAgent: "Controller / Omen", k: 20, d: 14, a: 8, kda: "2.01", acs: 242 },
+        ],
+      };
 
-  const team2 = {
-    name: "UP Fighting",
-    score: 0,
-    result: "LOSS",
-    players: [
-      { name: "Striker", roleAgent: "Duelist / Jett", k: 25, d: 18, a: 5, kda: "1.67", acs: 295 },
-      { name: "Bulldog", roleAgent: "Controller / Astra", k: 17, d: 17, a: 9, kda: "1.53", acs: 218 },
-      { name: "Phantom", roleAgent: "Initiator / Skye", k: 15, d: 16, a: 13, kda: "1.75", acs: 205 },
-      { name: "Saber", roleAgent: "Sentinel / Chamber", k: 12, d: 15, a: 11, kda: "1.53", acs: 182 },
-      { name: "Vortex", roleAgent: "Flex / Neon", k: 18, d: 19, a: 6, kda: "1.26", acs: 215 },
-    ],
-  };
+  const team2 = boxScoreData
+    ? {
+        name: boxScoreData.team2.name,
+        score: 0,
+        result: "LOSS",
+        players: boxScoreData.team2.players.map((p) => ({
+          name: p.name,
+          roleAgent: `${p.role || "Flex"} / ${p.agent || "Agent"}`,
+          k: p.kills,
+          d: p.deaths,
+          a: p.assists,
+          kda: (p.kda || ((p.kills + p.assists) / Math.max(1, p.deaths))).toFixed(2),
+          acs: p.acs || 180,
+        })),
+      }
+    : {
+        name: "UP Fighting",
+        score: 0,
+        result: "LOSS",
+        players: [
+          { name: "Striker", roleAgent: "Duelist / Jett", k: 25, d: 18, a: 5, kda: "1.67", acs: 295 },
+          { name: "Bulldog", roleAgent: "Controller / Astra", k: 17, d: 17, a: 9, kda: "1.53", acs: 218 },
+          { name: "Phantom", roleAgent: "Initiator / Skye", k: 15, d: 16, a: 13, kda: "1.75", acs: 205 },
+          { name: "Saber", roleAgent: "Sentinel / Chamber", k: 12, d: 15, a: 11, kda: "1.53", acs: 182 },
+          { name: "Vortex", roleAgent: "Flex / Neon", k: 18, d: 19, a: 6, kda: "1.26", acs: 215 },
+        ],
+      };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 md:p-10 bg-black/80 backdrop-blur-md">

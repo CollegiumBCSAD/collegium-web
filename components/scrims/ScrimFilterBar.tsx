@@ -19,27 +19,33 @@ export default function ScrimFilterBar({
         onClick={() => onSelectGame("all")}
         className={`px-4 py-2 rounded-lg font-sans text-xs font-bold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
           selectedGame === "all"
-            ? "bg-primary-brand text-foreground"
+            ? "game-theme-btn shadow-md"
             : "bg-card-bg border border-raised-panel text-secondary-text hover:text-foreground"
         }`}
       >
         All Titles
       </button>
-      {GAME_LIST.map((game) => (
-        <button
-          key={game.id}
-          onClick={() => onSelectGame(game.id)}
-          className={`px-4 py-2 rounded-lg font-sans text-xs font-bold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
-            selectedGame === game.id
-              ? `${game.borderColor} border-2 bg-card-bg text-foreground`
-              : "bg-card-bg border border-raised-panel text-secondary-text hover:text-foreground"
-          }`}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={game.image} alt={game.name} className="w-4 h-4 rounded object-cover" />
-          <span>{game.shortName}</span>
-        </button>
-      ))}
+      {GAME_LIST.map((game) => {
+        const isSelected = selectedGame === game.id;
+        const isCodm = game.id === "codm";
+        return (
+          <button
+            key={game.id}
+            onClick={() => onSelectGame(game.id)}
+            className={`px-4 py-2 rounded-lg font-sans text-xs font-bold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
+              isSelected
+                ? isCodm
+                  ? "bg-white text-[#0A0C10] font-extrabold shadow-md"
+                  : `${game.borderColor} border-2 bg-card-bg text-foreground shadow-md`
+                : "bg-card-bg border border-raised-panel text-secondary-text hover:text-foreground"
+            }`}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={game.image} alt={game.name} className="w-4 h-4 rounded object-cover" />
+            <span>{game.shortName}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }

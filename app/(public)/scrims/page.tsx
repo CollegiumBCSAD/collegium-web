@@ -39,18 +39,22 @@ export default function ScrimsPage() {
 
   const handlePostScrimSubmit = async (data: {
     gameTitle: GameId;
+    teamId?: string;
     hostTeamName: string;
     format: string;
     rankRange: string;
+    mapPreference?: string;
     notes: string;
   }) => {
     const optimistic: ScrimOffer = {
       id: `scrim-${Date.now()}`,
+      teamId: data.teamId,
       hostTeamName: data.hostTeamName,
       universityName: user?.university?.name || "",
       gameTitle: data.gameTitle,
       format: data.format,
       rankRange: data.rankRange,
+      mapPreference: data.mapPreference,
       scheduledAt: new Date(Date.now() + 86400000).toISOString(),
       notes: data.notes,
       status: "OPEN",
@@ -60,10 +64,11 @@ export default function ScrimsPage() {
     // Fire API call (best effort)
     try {
       await scrimsService.createScrim({
-        teamId: "optimistic-team-id", // Not in UI yet
+        teamId: data.teamId || "default-team-id",
         gameTitle: data.gameTitle,
         format: data.format,
         rankRange: data.rankRange,
+        mapPreference: data.mapPreference,
         scheduledAt: optimistic.scheduledAt,
         notes: data.notes,
       });
@@ -77,7 +82,8 @@ export default function ScrimsPage() {
   const handleAcceptScrim = async (id: string) => {
     try {
       await scrimsService.acceptScrim(id, { opponentId: user?.id || "" });
-      const data = await scrimsService.getScrims(selectedGame !== "all" ? selectedGame : undefined); setScrims(data);
+      const data = await scrimsService.getScrims(selectedGame !== "all" ? selectedGame : undefined);
+      setScrims(data);
     } catch {
       setScrims((prev) =>
         prev.map((s) =>
@@ -87,8 +93,19 @@ export default function ScrimsPage() {
     }
   };
 
+  const handleCancelScrim = async (id: string) => {
+    try {
+      await scrimsService.cancelScrim(id);
+    } catch {
+      // Local fallback
+    }
+    setScrims((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, status: "CANCELLED" as const } : s))
+    );
+  };
+
   return (
-    <div className="flex flex-col flex-1 bg-gradient-to-b md:bg-gradient-to-r from-[#CC0000]/20 from-0% to-[#0A0C10] to-[50%] md:to-[40%] py-10 px-4 sm:px-6 lg:px-10">
+    <div className="flex flex-col flex-1 game-theme-bg py-10 px-4 sm:px-6 lg:px-10">
       <div className="max-w-6xl mx-auto space-y-8 w-full">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-raised-panel pb-6">
           <div>
@@ -105,7 +122,7 @@ export default function ScrimsPage() {
 
           <button
             onClick={() => setIsModalOpen(true)}
-            className="h-11 px-6 rounded-lg bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] hover:from-[#EF4444] hover:to-[#991B1B] text-foreground font-sans text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] flex items-center justify-center cursor-pointer shadow-lg shadow-primary-brand/20"
+            className="h-11 px-6 rounded-lg game-theme-btn font-sans text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] flex items-center justify-center cursor-pointer shadow-lg"
           >
             ⚔️ Post Scrim Offer
           </button>
@@ -127,6 +144,8 @@ export default function ScrimsPage() {
                 key={scrim.id}
                 scrim={scrim}
                 onAccept={handleAcceptScrim}
+                onCancel={handleCancelScrim}
+                isHost={scrim.universityName === user?.university?.name || scrim.hostTeamName.toLowerCase().includes("herons")}
               />
             ))}
           </div>

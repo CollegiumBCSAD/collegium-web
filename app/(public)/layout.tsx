@@ -125,7 +125,7 @@ function HeaderAuthControls() {
       </Link>
       <Link
         href="/register"
-        className="inline-flex h-10 items-center justify-center rounded-full bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] hover:from-[#EF4444] hover:to-[#991B1B] px-5 text-sm font-bold text-foreground transition-all active:scale-[0.98] shadow-md shadow-primary-brand/20"
+        className="inline-flex h-10 items-center justify-center rounded-full game-theme-btn px-5 text-sm font-bold transition-all active:scale-[0.98] shadow-md"
       >
         Sign Up
       </Link>

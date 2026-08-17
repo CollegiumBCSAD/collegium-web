@@ -2,11 +2,13 @@
 
 import MatchBoxScoreModal from "@/components/MatchBoxScoreModal";
 import { useEffect, useState } from "react";
-import { BracketMatch } from "@/types";
+import { BracketMatch, BracketRound } from "@/types";
+import { tournamentsService } from "@/services/tournamentsService";
 
 interface TournamentBracketModalProps {
   isOpen: boolean;
   onClose: () => void;
+  tournamentId?: string;
   title?: string;
   subtitle?: string;
 }
@@ -14,10 +16,30 @@ interface TournamentBracketModalProps {
 export default function TournamentBracketModal({
   isOpen,
   onClose,
+  tournamentId,
   title = "TOURNAMENT BRACKET",
   subtitle = "SINGLE ELIMINATION • 8 TEAMS",
 }: TournamentBracketModalProps) {
   const [activeBoxScore, setActiveBoxScore] = useState<BracketMatch | null>(null);
+  const [dynamicRounds, setDynamicRounds] = useState<BracketRound[]>([]);
+
+  useEffect(() => {
+    if (!isOpen || !tournamentId) return;
+    let isMounted = true;
+    tournamentsService
+      .getBracket(tournamentId)
+      .then((rounds) => {
+        if (isMounted && Array.isArray(rounds)) {
+          setDynamicRounds(rounds);
+        }
+      })
+      .catch(() => {
+        // Fallback to static bracket nodes on API error
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen, tournamentId]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -35,7 +57,7 @@ export default function TournamentBracketModal({
 
   if (!isOpen) return null;
 
-  const qfMatches: BracketMatch[] = [
+  const defaultQf: BracketMatch[] = [
     {
       id: "qf1",
       team1: { name: "UMak", score: 1, isWinner: true },
@@ -58,26 +80,57 @@ export default function TournamentBracketModal({
     },
   ];
 
-  const sfMatches: BracketMatch[] = [
-    {
-      id: "sf1",
-      team1: { name: "UMak", score: 1, isWinner: true },
-      team2: { name: "Mapúa Marauders", score: 0 },
-    },
-    {
-      id: "sf2",
-      team1: { name: "UP Fighting", score: 1, isWinner: true },
-      team2: { name: "Adamson Falcons", score: 0 },
-    },
-  ];
+  const qfMatches: BracketMatch[] =
+    dynamicRounds.length > 0 && dynamicRounds[0]?.matches
+      ? dynamicRounds[0].matches.map((m) => ({
+          id: m.id,
+          team1: { name: m.team1.name, score: m.team1.score || 0, isWinner: m.team1.isWinner },
+          team2: { name: m.team2.name, score: m.team2.score || 0, isWinner: m.team2.isWinner },
+        }))
+      : defaultQf;
 
-  const gfMatch: BracketMatch = {
-    id: "gf1",
-    team1: { name: "UMak", score: 1, isWinner: true },
-    team2: { name: "UP Fighting", score: 0 },
-  };
+  const sfMatches: BracketMatch[] =
+    dynamicRounds.length > 1 && dynamicRounds[1]?.matches
+      ? dynamicRounds[1].matches.map((m) => ({
+          id: m.id,
+          team1: { name: m.team1.name, score: m.team1.score || 0, isWinner: m.team1.isWinner },
+          team2: { name: m.team2.name, score: m.team2.score || 0, isWinner: m.team2.isWinner },
+        }))
+      : [
+          {
+            id: "sf1",
+            team1: { name: "UMak", score: 1, isWinner: true },
+            team2: { name: "Mapúa Marauders", score: 0 },
+          },
+          {
+            id: "sf2",
+            team1: { name: "UP Fighting", score: 1, isWinner: true },
+            team2: { name: "Adamson Falcons", score: 0 },
+          },
+        ];
 
-  const champion = "University Of Makati";
+  const gfMatch: BracketMatch =
+    dynamicRounds.length > 2 && dynamicRounds[2]?.matches?.[0]
+      ? {
+          id: dynamicRounds[2].matches[0].id,
+          team1: {
+            name: dynamicRounds[2].matches[0].team1.name,
+            score: dynamicRounds[2].matches[0].team1.score || 0,
+            isWinner: dynamicRounds[2].matches[0].team1.isWinner,
+          },
+          team2: {
+            name: dynamicRounds[2].matches[0].team2.name,
+            score: dynamicRounds[2].matches[0].team2.score || 0,
+            isWinner: dynamicRounds[2].matches[0].team2.isWinner,
+          },
+        }
+      : {
+          id: "gf1",
+          team1: { name: "UMak", score: 1, isWinner: true },
+          team2: { name: "UP Fighting", score: 0 },
+        };
+
+  const champion = gfMatch.team1.isWinner ? gfMatch.team1.name : gfMatch.team2.name;
 
   return (
     <>
@@ -97,7 +150,7 @@ export default function TournamentBracketModal({
             <button
               onClick={onClose}
               aria-label="Close Modal"
-              className="flex h-9 w-9 items-center justify-center rounded-lg bg-card-bg text-foreground transition-colors hover:text-foreground hover:bg-raised-panel"
+              className="flex h-9 w-9 items-center justify-center rounded-lg bg-card-bg text-foreground transition-colors hover:text-foreground hover:bg-raised-panel cursor-pointer"
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -156,7 +209,7 @@ export default function TournamentBracketModal({
         isOpen={!!activeBoxScore}
         onClose={() => setActiveBoxScore(null)}
         title="MATCH BOX SCORE"
-        subtitle="VALORANT • GRAND FINALS • ELIMINATION"
+        subtitle={`${activeBoxScore?.team1.name} vs ${activeBoxScore?.team2.name} • TOURNAMENT MATCH`}
       />
     </>
   );

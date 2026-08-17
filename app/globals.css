@@ -5,6 +5,7 @@
   --background: #0A0C10;
   --foreground: #EDEEF2;
   --primary-brand: #E53A4C;
+  --game-glow-rgb: 229, 58, 76;
   --secondary-brand: #F2B705;
   --accent: #8B5CF6;
   --card-bg: #121520;
@@ -22,7 +23,7 @@
 @theme inline {
   --color-background: #0A0C10;
   --color-foreground: #EDEEF2;
-  --color-primary-brand: #E53A4C;
+  --color-primary-brand: var(--primary-brand);
   --color-secondary-brand: #F2B705;
   --color-accent: #8B5CF6;
   --color-card-bg: #121520;
@@ -43,6 +44,27 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+.game-theme-bg {
+  background: linear-gradient(90deg, rgba(var(--game-glow-rgb), 0.24) 0%, rgba(10, 12, 16, 1) 45%);
+}
+
+@media (max-width: 768px) {
+  .game-theme-bg {
+    background: linear-gradient(180deg, rgba(var(--game-glow-rgb), 0.24) 0%, rgba(10, 12, 16, 1) 45%);
+  }
+}
+
+.game-theme-btn {
+  background: linear-gradient(90deg, var(--primary-brand) 0%, rgba(var(--game-glow-rgb), 0.85) 100%);
+  color: var(--game-btn-text, #FFFFFF);
+  font-weight: 700;
+  transition: all 0.2s ease-in-out;
+}
+.game-theme-btn:hover {
+  filter: brightness(1.15);
+  box-shadow: 0 4px 20px rgba(var(--game-glow-rgb), 0.4);
 }
 
 h1, h2, h3, h4, .font-display, .font-oswald {
