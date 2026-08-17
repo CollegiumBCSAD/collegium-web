@@ -165,12 +165,15 @@ export default function ScrimsPage() {
   const handleCancelScrim = async (id: string) => {
     try {
       await scrimsService.cancelScrim(id);
+      const data = await scrimsService.getScrims(activeGame);
+      setScrims(data);
     } catch {
-      // Local action
+      setScrims((prev) =>
+        prev.map((s) =>
+          s.id === id ? { ...s, status: "OPEN" as const, opponentTeamName: undefined } : s
+        )
+      );
     }
-    setScrims((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, status: "CANCELLED" as const } : s))
-    );
   };
 
   return (
