@@ -15,6 +15,28 @@ export interface AcceptScrimPayload {
   opponentId: string;
 }
 
+const gameTitleToEnum: Record<string, string> = {
+  valo: "VALORANT",
+  lol: "LOL",
+  ml: "MLBB",
+  codm: "CODM",
+  VALORANT: "VALORANT",
+  LOL: "LOL",
+  MLBB: "MLBB",
+  CODM: "CODM",
+};
+
+const reverseGameTitleMap: Record<string, GameId> = {
+  VALORANT: "valo",
+  LOL: "lol",
+  MLBB: "ml",
+  CODM: "codm",
+  valo: "valo",
+  lol: "lol",
+  ml: "ml",
+  codm: "codm",
+};
+
 function parseServerScrimsResponse(data: unknown): ScrimOffer[] {
   if (!Array.isArray(data)) return [];
   return data.map((raw: unknown) => {
@@ -28,7 +50,7 @@ function parseServerScrimsResponse(data: unknown): ScrimOffer[] {
       teamId: item.teamId as string,
       hostTeamName: (team.name as string) || (item.hostTeamName as string) || "Varsity Squad",
       universityName: (university.name as string) || (item.universityName as string) || "Collegiate Varsity",
-      gameTitle: (item.gameTitle as GameId) || "valo",
+      gameTitle: reverseGameTitleMap[item.gameTitle as string] || (item.gameTitle as GameId) || "valo",
       format: (item.format as string) || "BO3",
       rankRange: (item.rankRange as string) || "Unranked+",
       mapPreference: item.mapPreference as string,
@@ -43,7 +65,8 @@ function parseServerScrimsResponse(data: unknown): ScrimOffer[] {
 export const scrimsService = {
   getScrims: async (gameTitle?: GameId): Promise<ScrimOffer[]> => {
     try {
-      const query = gameTitle ? `?gameTitle=${gameTitle}` : "";
+      const enumGame = gameTitle ? gameTitleToEnum[gameTitle] : undefined;
+      const query = enumGame ? `?gameTitle=${enumGame}` : "";
       const response = await apiClient.get<unknown>(`/scrims${query}`);
       return parseServerScrimsResponse(response);
     } catch {
@@ -51,8 +74,13 @@ export const scrimsService = {
     }
   },
 
-  createScrim: (payload: CreateScrimPayload): Promise<ScrimOffer> =>
-    apiClient.post<ScrimOffer>("/scrims", payload),
+  createScrim: (payload: CreateScrimPayload): Promise<ScrimOffer> => {
+    const mappedPayload = {
+      ...payload,
+      gameTitle: (gameTitleToEnum[payload.gameTitle] || "VALORANT") as unknown as GameId,
+    };
+    return apiClient.post<ScrimOffer>("/scrims", mappedPayload);
+  },
 
   acceptScrim: (scrimId: string, payload: AcceptScrimPayload): Promise<ScrimOffer> =>
     apiClient.post<ScrimOffer>(`/scrims/${scrimId}/accept`, payload),

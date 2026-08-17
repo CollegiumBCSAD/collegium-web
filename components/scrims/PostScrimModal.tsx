@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { GAME_LIST } from "@/lib/games";
 import { GameId } from "@/types";
-import { getStoredTeams, Team } from "@/lib/teams";
+import { getStoredTeams, fetchTeamsApi, Team } from "@/lib/teams";
 
 interface PostScrimModalProps {
   isOpen: boolean;
@@ -37,7 +37,7 @@ export default function PostScrimModal({
   onClose,
   onSubmit,
 }: PostScrimModalProps) {
-  const [userTeams] = useState<Team[]>(() => getStoredTeams());
+  const [userTeams, setUserTeams] = useState<Team[]>(() => getStoredTeams());
   const [formGame, setFormGame] = useState<GameId>("valo");
   const [selectedTeamId, setSelectedTeamId] = useState<string>(() => (userTeams.length > 0 ? userTeams[0].id : ""));
   const [formTeamName, setFormTeamName] = useState<string>(() => (userTeams.length > 0 ? userTeams[0].name : ""));
@@ -45,6 +45,16 @@ export default function PostScrimModal({
   const [formRank, setFormRank] = useState("Ascendant+");
   const [formMap, setFormMap] = useState("Ascent");
   const [formNotes, setFormNotes] = useState("");
+
+  useEffect(() => {
+    fetchTeamsApi().then((teams) => {
+      setUserTeams(teams);
+      if (teams.length > 0) {
+        setSelectedTeamId((prev) => prev || teams[0].id);
+        setFormTeamName((prev) => prev || teams[0].name);
+      }
+    });
+  }, []);
 
   // Modal lifecycle listeners
   useEffect(() => {
