@@ -87,9 +87,15 @@ export default function ScrimCard({
                 BOOKED
               </span>
             ) : isPending ? (
-              <span className="inline-flex items-center gap-1.5 text-[10px] font-sans font-bold uppercase px-2.5 py-0.5 rounded-full bg-[#282115] text-[#FBBF24] border border-[#F59E0B]/30">
-                ⏳ PENDING
-              </span>
+              isHost || isOpponent ? (
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-sans font-bold uppercase px-2.5 py-0.5 rounded-full bg-[#282115] text-[#FBBF24] border border-[#F59E0B]/30">
+                  ⏳ PENDING
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-sans font-bold uppercase px-2.5 py-0.5 rounded-full bg-[#12241D] text-[#34D399] border border-[#10B981]/30">
+                  🔒 BOOKED
+                </span>
+              )
             ) : isCancelled ? (
               <span className="text-[10px] font-sans font-bold uppercase px-2.5 py-0.5 rounded-full bg-[#2A181A] text-[#F87171] border border-[#EF4444]/30">
                 ✕ CANCELLED
@@ -219,8 +225,16 @@ export default function ScrimCard({
               )}
             </div>
           ) : (
-            <div className="w-full p-2.5 rounded-lg bg-[#181C28] border border-[#272E3F] text-[#FBBF24] text-xs font-sans font-medium text-center">
-              ⏳ Scrim request pending host approval {scrim.opponentTeamName ? `(by ${scrim.opponentTeamName})` : ""}
+            <div className="w-full p-3 rounded-xl bg-[#111622] border border-[#1E2538] flex items-center justify-between gap-3 text-xs font-sans">
+              <div className="flex items-center gap-2 text-[#94A3B8]">
+                <span>🔒</span>
+                <span className="font-bold uppercase tracking-wider text-[#CBD5E1]">
+                  SCRIM MATCH BOOKED (UNAVAILABLE)
+                </span>
+              </div>
+              <span className="px-2.5 py-1 rounded bg-[#10B981]/15 text-[#34D399] border border-[#10B981]/30 text-[10px] font-bold uppercase">
+                BOOKED
+              </span>
             </div>
           )
         ) : isBooked ? (
