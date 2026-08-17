@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import TournamentBracketModal from "@/components/TournamentBracketModal";
+import TournamentBracketModal from "@/components/tournaments/TournamentBracketModal";
 import TournamentCard from "@/components/tournaments/TournamentCard";
 import { mockTournaments } from "@/lib/mock/tournaments";
 import { Tournament } from "@/types";
@@ -56,7 +56,8 @@ export default function TournamentsPage() {
       <TournamentBracketModal
         isOpen={!!selectedTournament}
         onClose={() => setSelectedTournament(null)}
-        title="TOURNAMENT BRACKET"
+        tournamentId={selectedTournament?.id}
+        title={selectedTournament?.title ? `${selectedTournament.title} BRACKET` : "TOURNAMENT BRACKET"}
         subtitle="SINGLE ELIMINATION • 8 TEAMS"
       />
     </div>
