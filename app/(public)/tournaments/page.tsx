@@ -47,7 +47,7 @@ export default function TournamentsPage() {
             <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-foreground uppercase">
               TOURNAMENTS
             </h1>
-            <p className="font-sans text-xs sm:text-sm text-primary-brand mt-1 font-normal tracking-tight">
+            <p className="font-sans text-xs sm:text-sm text-secondary-text mt-1 font-normal tracking-tight">
               Fresh brackets and high-stakes events.
             </p>
           </div>

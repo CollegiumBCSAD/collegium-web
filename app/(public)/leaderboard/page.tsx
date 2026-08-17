@@ -77,7 +77,7 @@ export default function LeaderboardPage() {
                 </span>
               )}
             </div>
-            <p className="font-sans text-xs sm:text-sm text-primary-brand font-normal tracking-tight">
+            <p className="font-sans text-xs sm:text-sm text-secondary-text font-normal tracking-tight">
               Top universities shaping the circuit in {selectedGameInfo?.name || "Valorant"}.
             </p>
           </div>
@@ -98,15 +98,14 @@ export default function LeaderboardPage() {
             >
               <div className="flex items-center gap-4 sm:gap-6 shrink-0">
                 <div
-                  className={`h-12 w-12 sm:h-14 sm:w-14 rounded-full flex items-center justify-center font-display text-lg sm:text-xl font-bold shrink-0 shadow-md ${
-                    entry.rank === 1
+                  className={`h-12 w-12 sm:h-14 sm:w-14 rounded-full flex items-center justify-center font-display text-lg sm:text-xl font-bold shrink-0 shadow-md ${entry.rank === 1
                       ? "bg-[#F2B705] text-[#0A0C10]"
                       : entry.rank === 2
-                      ? "bg-[#EDEEF2] text-[#0A0C10]"
-                      : entry.rank === 3
-                      ? "bg-[#E57C23] text-white"
-                      : "bg-[#161A26] text-foreground border border-[#262B3B]"
-                  }`}
+                        ? "bg-[#EDEEF2] text-[#0A0C10]"
+                        : entry.rank === 3
+                          ? "bg-[#E57C23] text-white"
+                          : "bg-[#161A26] text-foreground border border-[#262B3B]"
+                    }`}
                 >
                   {entry.rank}
                 </div>
@@ -150,9 +149,8 @@ export default function LeaderboardPage() {
                     STREAK
                   </span>
                   <span
-                    className={`font-sans text-sm sm:text-base font-bold mt-0.5 ${
-                      entry.streak.includes("W") ? "text-[#2FD97A]" : "text-[#E53A4C]"
-                    }`}
+                    className={`font-sans text-sm sm:text-base font-bold mt-0.5 ${entry.streak.includes("W") ? "text-[#2FD97A]" : "text-[#E53A4C]"
+                      }`}
                   >
                     {entry.streak}
                   </span>

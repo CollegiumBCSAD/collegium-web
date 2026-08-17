@@ -9,7 +9,7 @@ export default function CommunityPage() {
           <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-foreground uppercase">
             LATEST NEWS
           </h1>
-          <p className="font-sans text-xs sm:text-sm text-primary-brand mt-1 font-normal tracking-tight">
+          <p className="font-sans text-xs sm:text-sm text-secondary-text mt-1 font-normal tracking-tight">
             Stay ahead of the collegiate scene.
           </p>
         </div>
