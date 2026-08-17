@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { ScrimOffer } from "@/types";
 import { useAuth } from "@/context/AuthContext";
 
+import { scrimsService } from "@/services";
+
 interface ChatMessage {
   id: string;
   senderName: string;
@@ -20,6 +22,18 @@ interface ScrimWarRoomModalProps {
   isHost: boolean;
 }
 
+function getDeterministicLobbyCode(scrimId: string, hostName: string, opponentName?: string): string {
+  const cleanHost = hostName.replace(/[^a-zA-Z]/g, "").substring(0, 4).toUpperCase() || "HOST";
+  const cleanOpp = (opponentName || "OPP").replace(/[^a-zA-Z]/g, "").substring(0, 4).toUpperCase();
+  let hash = 0;
+  for (let i = 0; i < scrimId.length; i++) {
+    hash = (hash << 5) - hash + scrimId.charCodeAt(i);
+    hash |= 0;
+  }
+  const codeNum = Math.abs(hash % 9000) + 1000;
+  return `${cleanHost}-${cleanOpp}-${codeNum}`;
+}
+
 export default function ScrimWarRoomModal({
   scrim,
   isOpen,
@@ -33,43 +47,103 @@ export default function ScrimWarRoomModal({
   const [isCopied, setIsCopied] = useState(false);
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
-  // Generate or load room ID / lobby code
+  // Deterministic lobby code shared across ALL players & windows
   useEffect(() => {
     if (!scrim) return;
-    const codeKey = `collegium_warroom_code_${scrim.id}`;
-    let code = localStorage.getItem(codeKey);
-    if (!code) {
-      const cleanHost = scrim.hostTeamName.replace(/\s+/g, "").substring(0, 4).toUpperCase();
-      const cleanOpp = (scrim.opponentTeamName || "OPP").replace(/\s+/g, "").substring(0, 4).toUpperCase();
-      code = `${cleanHost}-${cleanOpp}-${Math.floor(1000 + Math.random() * 9000)}`;
-      localStorage.setItem(codeKey, code);
-    }
+    const code = getDeterministicLobbyCode(scrim.id, scrim.hostTeamName, scrim.opponentTeamName);
     setLobbyCode(code);
   }, [scrim]);
 
-  // Load chat messages
+  // Load and poll real-time chat messages from backend + localStorage fallback
   useEffect(() => {
-    if (!scrim) return;
+    if (!isOpen || !scrim) return;
+
+    let isMounted = true;
     const storageKey = `collegium_warroom_chat_${scrim.id}`;
-    const stored = localStorage.getItem(storageKey);
-    if (stored) {
+
+    const systemMsg: ChatMessage = {
+      id: `sys-${scrim.id}`,
+      senderName: "SYSTEM ANNOUNCER",
+      teamName: "COLLEGIUM SYSTEM",
+      isHostTeam: true,
+      message: `🎮 WAR ROOM UNLOCKED! ${scrim.hostTeamName} vs ${scrim.opponentTeamName || "Challenger Squad"}. Use this space to exchange custom lobby IDs and coordinate game servers.`,
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    };
+
+    const fetchChat = async () => {
+      let serverMsgs: any[] = [];
       try {
-        setMessages(JSON.parse(stored));
+        serverMsgs = await scrimsService.getScrimChat(scrim.id);
       } catch {}
-    } else {
-      // System seed message
-      const initial: ChatMessage = {
-        id: `sys-${Date.now()}`,
-        senderName: "SYSTEM ANNOUNCER",
-        teamName: "COLLEGIUM SYSTEM",
-        isHostTeam: true,
-        message: `🎮 WAR ROOM UNLOCKED! ${scrim.hostTeamName} vs ${scrim.opponentTeamName || "Challenger Squad"}. Use this space to exchange custom lobby IDs and coordinate game servers.`,
-        timestamp: new Date().toISOString(),
+
+      let localMsgs: ChatMessage[] = [];
+      try {
+        const stored = localStorage.getItem(storageKey);
+        if (stored) localMsgs = JSON.parse(stored);
+      } catch {}
+
+      if (!isMounted) return;
+
+      const merged: ChatMessage[] = [systemMsg];
+      const seenIds = new Set<string>([systemMsg.id]);
+
+      // Add local messages
+      localMsgs.forEach((m) => {
+        if (!seenIds.has(m.id)) {
+          seenIds.add(m.id);
+          merged.push(m);
+        }
+      });
+
+      // Add server messages
+      if (Array.isArray(serverMsgs)) {
+        serverMsgs.forEach((sm) => {
+          const formatted: ChatMessage = {
+            id: sm.id || `srv-${Math.random()}`,
+            senderName: sm.senderName || "Captain",
+            teamName: sm.teamName || "Squad",
+            isHostTeam: sm.teamName === scrim.hostTeamName,
+            message: sm.text || sm.message || "",
+            timestamp: sm.timestamp || new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          };
+          if (formatted.message && !seenIds.has(formatted.id)) {
+            seenIds.add(formatted.id);
+            merged.push(formatted);
+          }
+        });
+      }
+
+      setMessages(merged);
+    };
+
+    fetchChat();
+    const interval = setInterval(fetchChat, 1500);
+
+    // Cross-tab BroadcastChannel listener
+    let channel: BroadcastChannel | null = null;
+    try {
+      channel = new BroadcastChannel(`warroom_chat_${scrim.id}`);
+      channel.onmessage = (event) => {
+        if (event.data && isMounted) {
+          fetchChat();
+        }
       };
-      setMessages([initial]);
-      localStorage.setItem(storageKey, JSON.stringify([initial]));
-    }
-  }, [scrim]);
+    } catch {}
+
+    const handleStorageEvent = (e: StorageEvent) => {
+      if (e.key === storageKey && isMounted) {
+        fetchChat();
+      }
+    };
+    window.addEventListener("storage", handleStorageEvent);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+      if (channel) channel.close();
+      window.removeEventListener("storage", handleStorageEvent);
+    };
+  }, [isOpen, scrim]);
 
   // Auto-scroll chat
   useEffect(() => {
@@ -78,7 +152,7 @@ export default function ScrimWarRoomModal({
 
   if (!isOpen || !scrim) return null;
 
-  const handleSendMessage = (textToSend?: string) => {
+  const handleSendMessage = async (textToSend?: string) => {
     const text = (textToSend || inputMessage).trim();
     if (!text) return;
 
@@ -86,22 +160,42 @@ export default function ScrimWarRoomModal({
       ? scrim.hostTeamName
       : scrim.opponentTeamName || "Challenger Squad";
 
+    const senderDisplayName = user?.displayName || (isHost ? "Host Captain" : "Opponent Captain");
+
     const newMsg: ChatMessage = {
       id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-      senderName: user?.displayName || (isHost ? "Host Captain" : "Opponent Captain"),
+      senderName: senderDisplayName,
       teamName: senderTeamName,
       isHostTeam: isHost,
       message: text,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
 
-    const updated = [...messages, newMsg];
-    setMessages(updated);
+    setMessages((prev) => [...prev, newMsg]);
     if (!textToSend) setInputMessage("");
 
+    // Save to localStorage for instant local sync
     const storageKey = `collegium_warroom_chat_${scrim.id}`;
     try {
-      localStorage.setItem(storageKey, JSON.stringify(updated));
+      const stored = localStorage.getItem(storageKey);
+      const existing: ChatMessage[] = stored ? JSON.parse(stored) : [];
+      localStorage.setItem(storageKey, JSON.stringify([...existing, newMsg]));
+    } catch {}
+
+    // Post via BroadcastChannel
+    try {
+      const channel = new BroadcastChannel(`warroom_chat_${scrim.id}`);
+      channel.postMessage(newMsg);
+      channel.close();
+    } catch {}
+
+    // Post to server backend for cross-browser / cross-account sync
+    try {
+      await scrimsService.sendScrimChat(scrim.id, {
+        senderName: senderDisplayName,
+        teamName: senderTeamName,
+        text,
+      });
     } catch {}
   };
 

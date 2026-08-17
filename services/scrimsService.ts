@@ -97,4 +97,15 @@ export const scrimsService = {
 
   deleteScrim: (scrimId: string): Promise<void> =>
     apiClient.delete<void>(`/scrims/${scrimId}`),
+
+  getScrimChat: async (scrimId: string) => {
+    try {
+      return await apiClient.get<Array<{ id: string; senderName: string; teamName: string; text: string; timestamp: string }>>(`/scrims/${scrimId}/chat`);
+    } catch {
+      return [];
+    }
+  },
+
+  sendScrimChat: (scrimId: string, payload: { senderName: string; teamName: string; text: string }) =>
+    apiClient.post(`/scrims/${scrimId}/chat`, payload),
 };
