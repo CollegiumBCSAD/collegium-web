@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { getStoredTeams, fetchTeamsApi, Team } from "@/lib/teams";
+import { GAMES } from "@/lib/games";
 import AthleteProfileBanner from "@/components/dashboard/AthleteProfileBanner";
 import TeamRosterCard from "@/components/dashboard/TeamRosterCard";
 import DashboardShortcutTile from "@/components/dashboard/DashboardShortcutTile";
@@ -33,6 +34,23 @@ export default function DashboardPage() {
       t.members.some(
         (m) =>
           m.status === "ACCEPTED" &&
+          ((myId && m.userId === myId) ||
+           (myEmail && m.email && m.email.toLowerCase().trim() === myEmail) ||
+           (myName && m.displayName && m.displayName.toLowerCase().trim() === myName))
+      )
+    );
+  }, [user, allTeams]);
+
+  const pendingUserTeams = useMemo(() => {
+    if (!user) return [];
+    const myId = user.id;
+    const myEmail = user.email ? user.email.toLowerCase().trim() : "";
+    const myName = user.displayName ? user.displayName.toLowerCase().trim() : "";
+
+    return allTeams.filter((t) =>
+      t.members.some(
+        (m) =>
+          m.status === "PENDING" &&
           ((myId && m.userId === myId) ||
            (myEmail && m.email && m.email.toLowerCase().trim() === myEmail) ||
            (myName && m.displayName && m.displayName.toLowerCase().trim() === myName))
@@ -94,6 +112,42 @@ export default function DashboardPage() {
         <AthleteProfileBanner user={user} />
 
         {isCaptain && <CaptainRequestInbox />}
+
+        {pendingUserTeams.length > 0 && (
+          <div className="p-5 rounded-2xl bg-secondary-brand/10 border border-secondary-brand/30 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">⏳</span>
+                <h3 className="font-display text-sm font-bold uppercase tracking-wider text-foreground">
+                  Pending Squad Join Requests ({pendingUserTeams.length})
+                </h3>
+              </div>
+              <span className="text-[10px] font-sans font-extrabold px-2.5 py-1 rounded bg-secondary-brand/20 text-secondary-brand uppercase tracking-wider">
+                Awaiting Captain Approval
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {pendingUserTeams.map((t) => {
+                const game = GAMES[t.gameTitle] || GAMES.valo;
+                return (
+                  <div key={t.id} className="p-3.5 rounded-xl bg-card-bg border border-panel-border flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={game.image} alt={game.name} className="w-8 h-8 rounded-lg object-cover" />
+                      <div>
+                        <h4 className="font-display text-xs font-bold uppercase text-foreground">{t.name}</h4>
+                        <span className="text-[10px] font-sans text-secondary-text">Captain: {t.captainName}</span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-sans font-bold text-secondary-brand uppercase bg-secondary-brand/10 px-2.5 py-1 rounded border border-secondary-brand/20">
+                      PENDING
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-4">
