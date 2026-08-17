@@ -4,8 +4,10 @@ import React, { useState, useEffect } from "react";
 import { teamsService } from "@/services/teamsService";
 import { getStoredTeams, saveStoredTeams, Team, TeamMember } from "@/lib/teams";
 import { JoinRequest } from "@/types";
+import { useAuth } from "@/context/AuthContext";
 
 export default function CaptainRequestInbox() {
+  const { user } = useAuth();
   const [teams, setTeams] = useState<Team[]>(() => getStoredTeams());
   const [activeTeam, setActiveTeam] = useState<Team | null>(() => {
     const loaded = getStoredTeams();
@@ -16,19 +18,17 @@ export default function CaptainRequestInbox() {
   const [actionMessage, setActionMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!activeTeam) return;
+    if (!activeTeam || !user) return;
     let isMounted = true;
 
     teamsService
-      .getJoinRequests(activeTeam.id)
+      .getJoinRequests(activeTeam.id, user.id)
       .then((reqs) => {
         if (isMounted && Array.isArray(reqs)) {
           setApiRequests(reqs);
         }
       })
-      .catch(() => {
-        // Silent catch for demo/offline fallback to local storage members
-      })
+      .catch(() => {})
       .finally(() => {
         if (isMounted) setLoading(false);
       });
@@ -36,7 +36,7 @@ export default function CaptainRequestInbox() {
     return () => {
       isMounted = false;
     };
-  }, [activeTeam]);
+  }, [activeTeam, user]);
 
   if (!activeTeam) return null;
 
@@ -46,7 +46,8 @@ export default function CaptainRequestInbox() {
   const handleDecision = async (memberId: string, accept: boolean) => {
     const status = accept ? "ACCEPTED" : "DECLINED";
     try {
-      await teamsService.handleJoinRequest(activeTeam.id, memberId, status);
+      if (!user) throw new Error("Not authenticated");
+      await teamsService.handleJoinRequest(activeTeam.id, memberId, user.id, status);
       setActionMessage(`Request ${accept ? "accepted" : "declined"} successfully.`);
     } catch {
       setActionMessage(`Updated request locally.`);

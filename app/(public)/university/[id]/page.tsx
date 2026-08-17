@@ -14,6 +14,13 @@ interface GameRatingDetail {
   accent: string;
 }
 
+const GAME_DISPLAY: Record<string, { label: string; accent: string }> = {
+  VALORANT: { label: "VALORANT", accent: "#E53A4C" },
+  LOL: { label: "League of Legends", accent: "#00A3FF" },
+  MLBB: { label: "Mobile Legends: BB", accent: "#A855F7" },
+  CODM: { label: "Call of Duty: Mobile", accent: "#E5B800" },
+};
+
 export default function UniversityProfilePage() {
   const params = useParams();
   const universityId = params?.id as string;
