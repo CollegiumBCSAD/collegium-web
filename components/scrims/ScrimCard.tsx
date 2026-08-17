@@ -10,6 +10,7 @@ interface ScrimCardProps {
   onConfirmBooking?: (id: string) => void;
   onCancel?: (id: string) => void;
   onDelete?: (id: string) => void;
+  onOpenWarRoom?: (scrim: ScrimOffer) => void;
   isHost?: boolean;
   isOpponent?: boolean;
 }
@@ -20,6 +21,7 @@ export default function ScrimCard({
   onConfirmBooking,
   onCancel,
   onDelete,
+  onOpenWarRoom,
   isHost,
   isOpponent,
 }: ScrimCardProps) {
@@ -222,34 +224,44 @@ export default function ScrimCard({
             </div>
           )
         ) : isBooked ? (
-          <div className="w-full p-3 rounded-xl bg-[#111C18] border-l-2 border-l-[#10B981] border border-[#1C2C25] flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <span className="text-lg shrink-0">📅</span>
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-sans font-bold uppercase tracking-wider block text-[#34D399]">
-                    MATCH BOOKED!
+          <div className="w-full p-3 rounded-xl bg-[#111C18] border-l-2 border-l-[#10B981] border border-[#1C2C25] flex flex-col gap-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="text-lg shrink-0">📅</span>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-sans font-bold uppercase tracking-wider block text-[#34D399]">
+                      MATCH BOOKED!
+                    </span>
+                  </div>
+                  <span className="text-xs font-sans font-semibold text-[#E2E8F0] block truncate">
+                    {isHost
+                      ? `Opponent: ${scrim.opponentTeamName || "Opponent Squad"}`
+                      : `Host: ${scrim.hostTeamName}`}
+                  </span>
+                  <span className="text-[10px] font-sans text-[#94A3B8] block mt-0.5 truncate">
+                    Scheduled: {new Date(scrim.scheduledAt).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })} at {new Date(scrim.scheduledAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                   </span>
                 </div>
-                <span className="text-xs font-sans font-semibold text-[#E2E8F0] block truncate">
-                  {isHost
-                    ? `Opponent: ${scrim.opponentTeamName || "Opponent Squad"}`
-                    : `Host: ${scrim.hostTeamName}`}
-                </span>
-                <span className="text-[10px] font-sans text-[#94A3B8] block mt-0.5 truncate">
-                  Scheduled: {new Date(scrim.scheduledAt).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })} at {new Date(scrim.scheduledAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                </span>
               </div>
+              {onCancel && (
+                <button
+                  onClick={() => onCancel(scrim.id)}
+                  className="h-8 px-3 rounded-lg bg-[#1B2621] hover:bg-[#25362E] text-[#94A3B8] hover:text-[#F87171] border border-[#283C32] font-sans text-[11px] font-semibold uppercase tracking-wider transition-all cursor-pointer shrink-0"
+                  title="Cancel booking and re-open scrim offer"
+                >
+                  Unbook
+                </button>
+              )}
             </div>
-            {onCancel && (
-              <button
-                onClick={() => onCancel(scrim.id)}
-                className="h-8 px-3 rounded-lg bg-[#1B2621] hover:bg-[#25362E] text-[#94A3B8] hover:text-[#F87171] border border-[#283C32] font-sans text-[11px] font-semibold uppercase tracking-wider transition-all cursor-pointer shrink-0"
-                title="Cancel booking and re-open scrim offer"
-              >
-                Unbook
-              </button>
-            )}
+
+            <button
+              onClick={() => onOpenWarRoom && onOpenWarRoom(scrim)}
+              className="w-full h-9 rounded-lg bg-gradient-to-r from-[#FF4655] to-[#E63946] hover:from-[#FF5E6C] hover:to-[#FF4655] text-white font-sans text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-red-950/40 flex items-center justify-center gap-2"
+            >
+              <span>🔥</span>
+              <span>Enter Scrim War Room</span>
+            </button>
           </div>
         ) : isHost ? (
           <div className="w-full flex items-center justify-between gap-3 py-1">

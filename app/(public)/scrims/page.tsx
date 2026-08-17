@@ -9,6 +9,7 @@ import { scrimsService } from "@/services";
 import { getStoredTeams, fetchTeamsApi, Team } from "@/lib/teams";
 import ScrimCard from "@/components/scrims/ScrimCard";
 import PostScrimModal from "@/components/scrims/PostScrimModal";
+import ScrimWarRoomModal from "@/components/scrims/ScrimWarRoomModal";
 
 export default function ScrimsPage() {
   const { user } = useAuth();
@@ -17,6 +18,7 @@ export default function ScrimsPage() {
   const activeGame: GameId = globalGame || "valo";
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeWarRoomScrim, setActiveWarRoomScrim] = useState<ScrimOffer | null>(null);
   const [scrims, setScrims] = useState<ScrimOffer[]>([]);
   const [userTeams, setUserTeams] = useState<Team[]>(() => getStoredTeams());
   const [isLoading, setIsLoading] = useState(true);
@@ -352,6 +354,7 @@ export default function ScrimsPage() {
                 onConfirmBooking={handleConfirmBooking}
                 onCancel={handleCancelScrim}
                 onDelete={handleDeleteScrim}
+                onOpenWarRoom={(s) => setActiveWarRoomScrim(s)}
                 isHost={isUserHost(scrim)}
                 isOpponent={isUserOpponent(scrim)}
               />
@@ -363,6 +366,13 @@ export default function ScrimsPage() {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           onSubmit={handlePostScrimSubmit}
+        />
+
+        <ScrimWarRoomModal
+          scrim={activeWarRoomScrim}
+          isOpen={!!activeWarRoomScrim}
+          onClose={() => setActiveWarRoomScrim(null)}
+          isHost={activeWarRoomScrim ? isUserHost(activeWarRoomScrim) : false}
         />
       </div>
     </div>
