@@ -40,7 +40,7 @@ export interface University {
   domain: string;
   glicko2_rating: number;
   glicko2_rd: number;
-  glicko2_vol: number;
+  glicko2_sigma: number;
   wins: number;
   losses: number;
   createdAt: string;

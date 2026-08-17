@@ -48,7 +48,7 @@ export default function UniversityProfilePage() {
             domain: "umak.edu.ph",
             glicko2_rating: 1850.5,
             glicko2_rd: 45,
-            glicko2_vol: 0.06,
+            glicko2_sigma: 0.06,
             wins: 42,
             losses: 10,
             createdAt: new Date().toISOString(),
