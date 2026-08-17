@@ -106,6 +106,6 @@ export const scrimsService = {
     }
   },
 
-  sendScrimChat: (scrimId: string, payload: { senderName: string; teamName: string; text: string }) =>
+  sendScrimChat: (scrimId: string, payload: { id?: string; senderName: string; teamName: string; text: string; timestamp?: string }) =>
     apiClient.post(`/scrims/${scrimId}/chat`, payload),
 };

@@ -70,6 +70,18 @@ export default function ScrimWarRoomModal({
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
 
+    const formatTime = (rawTime?: string) => {
+      if (!rawTime) return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      if (rawTime.includes("AM") || rawTime.includes("PM")) return rawTime;
+      try {
+        const date = new Date(rawTime);
+        if (isNaN(date.getTime())) return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      } catch {
+        return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      }
+    };
+
     const fetchChat = async () => {
       let serverMsgs: any[] = [];
       try {
@@ -86,32 +98,39 @@ export default function ScrimWarRoomModal({
 
       const merged: ChatMessage[] = [systemMsg];
       const seenIds = new Set<string>([systemMsg.id]);
+      const seenContents = new Set<string>([`${systemMsg.senderName}_${systemMsg.teamName}_${systemMsg.message}`]);
 
-      // Add local messages
-      localMsgs.forEach((m) => {
-        if (!seenIds.has(m.id)) {
-          seenIds.add(m.id);
-          merged.push(m);
-        }
-      });
-
-      // Add server messages
+      // Add server messages first (canonical source of truth)
       if (Array.isArray(serverMsgs)) {
         serverMsgs.forEach((sm) => {
+          const rawId = sm.id || `srv-${Math.random()}`;
+          const msgText = sm.text || sm.message || "";
+          const contentKey = `${sm.senderName}_${sm.teamName}_${msgText}`;
           const formatted: ChatMessage = {
-            id: sm.id || `srv-${Math.random()}`,
+            id: rawId,
             senderName: sm.senderName || "Captain",
             teamName: sm.teamName || "Squad",
             isHostTeam: sm.teamName === scrim.hostTeamName,
-            message: sm.text || sm.message || "",
-            timestamp: sm.timestamp || new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            message: msgText,
+            timestamp: formatTime(sm.timestamp),
           };
-          if (formatted.message && !seenIds.has(formatted.id)) {
-            seenIds.add(formatted.id);
+          if (formatted.message && !seenIds.has(rawId) && !seenContents.has(contentKey)) {
+            seenIds.add(rawId);
+            seenContents.add(contentKey);
             merged.push(formatted);
           }
         });
       }
+
+      // Add local messages if not already in server
+      localMsgs.forEach((m) => {
+        const contentKey = `${m.senderName}_${m.teamName}_${m.message}`;
+        if (!seenIds.has(m.id) && !seenContents.has(contentKey)) {
+          seenIds.add(m.id);
+          seenContents.add(contentKey);
+          merged.push(m);
+        }
+      });
 
       setMessages(merged);
     };
@@ -161,17 +180,25 @@ export default function ScrimWarRoomModal({
       : scrim.opponentTeamName || "Challenger Squad";
 
     const senderDisplayName = user?.displayName || (isHost ? "Host Captain" : "Opponent Captain");
+    const msgId = `msg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const nowTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
     const newMsg: ChatMessage = {
-      id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      id: msgId,
       senderName: senderDisplayName,
       teamName: senderTeamName,
       isHostTeam: isHost,
       message: text,
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      timestamp: nowTime,
     };
 
-    setMessages((prev) => [...prev, newMsg]);
+    setMessages((prev) => {
+      const contentKey = `${newMsg.senderName}_${newMsg.teamName}_${newMsg.message}`;
+      if (prev.some((m) => m.id === msgId || `${m.senderName}_${m.teamName}_${m.message}` === contentKey)) {
+        return prev;
+      }
+      return [...prev, newMsg];
+    });
     if (!textToSend) setInputMessage("");
 
     // Save to localStorage for instant local sync
@@ -179,7 +206,9 @@ export default function ScrimWarRoomModal({
     try {
       const stored = localStorage.getItem(storageKey);
       const existing: ChatMessage[] = stored ? JSON.parse(stored) : [];
-      localStorage.setItem(storageKey, JSON.stringify([...existing, newMsg]));
+      if (!existing.some((e) => e.id === msgId || (e.senderName === senderDisplayName && e.message === text))) {
+        localStorage.setItem(storageKey, JSON.stringify([...existing, newMsg]));
+      }
     } catch {}
 
     // Post via BroadcastChannel
@@ -192,9 +221,11 @@ export default function ScrimWarRoomModal({
     // Post to server backend for cross-browser / cross-account sync
     try {
       await scrimsService.sendScrimChat(scrim.id, {
+        id: msgId,
         senderName: senderDisplayName,
         teamName: senderTeamName,
         text,
+        timestamp: nowTime,
       });
     } catch {}
   };
