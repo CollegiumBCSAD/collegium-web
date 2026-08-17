@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { getStoredTeams } from "@/lib/teams";
+import { getStoredTeams, fetchTeamsApi, Team } from "@/lib/teams";
 import AthleteProfileBanner from "@/components/dashboard/AthleteProfileBanner";
 import TeamRosterCard from "@/components/dashboard/TeamRosterCard";
 import DashboardShortcutTile from "@/components/dashboard/DashboardShortcutTile";
@@ -13,27 +13,40 @@ import CaptainRequestInbox from "@/components/CaptainRequestInbox";
 export default function DashboardPage() {
   const router = useRouter();
   const { user, isLoggedIn, isLoaded } = useAuth();
+  const [allTeams, setAllTeams] = useState<Team[]>(() => getStoredTeams());
+
+  useEffect(() => {
+    fetchTeamsApi().then((teams) => {
+      setAllTeams(teams);
+    });
+  }, []);
 
   const userTeams = useMemo(() => {
     if (!user) return [];
-    const allTeams = getStoredTeams();
-    const myEmail = user.email.toLowerCase().trim();
-    const myName = user.displayName.toLowerCase().trim();
+    const myId = user.id;
+    const myEmail = user.email ? user.email.toLowerCase().trim() : "";
+    const myName = user.displayName ? user.displayName.toLowerCase().trim() : "";
 
     return allTeams.filter((t) =>
+      (myId && t.captainId === myId) ||
+      (myName && t.captainName && t.captainName.toLowerCase().trim() === myName) ||
       t.members.some(
         (m) =>
-          m.email.toLowerCase().trim() === myEmail ||
-          m.displayName.toLowerCase().trim() === myName ||
-          t.captainName.toLowerCase().trim() === myName
+          m.status === "ACCEPTED" &&
+          ((myId && m.userId === myId) ||
+           (myEmail && m.email && m.email.toLowerCase().trim() === myEmail) ||
+           (myName && m.displayName && m.displayName.toLowerCase().trim() === myName))
       )
     );
-  }, [user]);
+  }, [user, allTeams]);
 
   const isCaptain = useMemo(() => {
     if (!user) return false;
-    const myName = user.displayName.toLowerCase().trim();
-    return userTeams.some((t) => t.captainName.toLowerCase().trim() === myName);
+    const myId = user.id;
+    const myName = user.displayName ? user.displayName.toLowerCase().trim() : "";
+    return userTeams.some(
+      (t) => (myId && t.captainId === myId) || (myName && t.captainName && t.captainName.toLowerCase().trim() === myName)
+    );
   }, [user, userTeams]);
 
   useEffect(() => {

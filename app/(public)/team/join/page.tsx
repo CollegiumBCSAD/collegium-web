@@ -89,12 +89,15 @@ function JoinTeamContent() {
 
   const selectedTeam = userSelectedTeam || inviteTeam;
 
-  const currentEmail = user?.email || "";
-
   const alreadyMemberInfo = useMemo(() => {
-    if (!selectedTeam) return null;
+    if (!selectedTeam || !user) return null;
+    const currentEmail = user.email ? user.email.toLowerCase() : "";
+    const currentId = user.id;
+
     const existing = selectedTeam.members.find(
-      (m) => m.email.toLowerCase() === currentEmail.toLowerCase()
+      (m) =>
+        (currentId && m.userId === currentId) ||
+        (currentEmail && m.email && m.email.toLowerCase() === currentEmail)
     );
     if (existing) {
       if (existing.status === "ACCEPTED") {
@@ -104,7 +107,7 @@ function JoinTeamContent() {
       }
     }
     return null;
-  }, [selectedTeam, currentEmail]);
+  }, [selectedTeam, user]);
 
   const handleJoinSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
