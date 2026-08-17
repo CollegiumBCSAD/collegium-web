@@ -12,6 +12,44 @@ import PostScrimModal from "@/components/scrims/PostScrimModal";
 import ScrimWarRoomModal from "@/components/scrims/ScrimWarRoomModal";
 import NoSquadModal from "@/components/scrims/NoSquadModal";
 
+const getMyRequestedScrims = (): Record<string, string[]> => {
+  if (typeof window === "undefined") return {};
+  try {
+    return JSON.parse(localStorage.getItem("collegium_scrim_user_requests") || "{}");
+  } catch {
+    return {};
+  }
+};
+
+const addMyRequestedScrim = (scrimId: string, teamId: string) => {
+  if (typeof window === "undefined") return;
+  const current = getMyRequestedScrims();
+  const list = current[scrimId] || [];
+  if (!list.includes(teamId)) {
+    list.push(teamId);
+  }
+  current[scrimId] = list;
+  localStorage.setItem("collegium_scrim_user_requests", JSON.stringify(current));
+};
+
+const removeMyRequestedScrim = (scrimId: string, teamId?: string) => {
+  if (typeof window === "undefined") return;
+  const current = getMyRequestedScrims();
+  if (teamId && current[scrimId]) {
+    current[scrimId] = current[scrimId].filter((id) => id !== teamId);
+    if (current[scrimId].length === 0) delete current[scrimId];
+  } else {
+    delete current[scrimId];
+  }
+  localStorage.setItem("collegium_scrim_user_requests", JSON.stringify(current));
+};
+
+const hasUserRequestedScrim = (scrimId: string, myTeamIds: string[], userId: string): boolean => {
+  const current = getMyRequestedScrims();
+  const list = current[scrimId] || [];
+  return list.some((id) => myTeamIds.includes(id) || id === userId);
+};
+
 export default function ScrimsPage() {
   const { user } = useAuth();
   const { selectedGame: globalGame, selectedGameInfo } = useGame();
@@ -94,6 +132,7 @@ export default function ScrimsPage() {
 
       if (scrim.opponentTeamId && (myTeamIds.includes(scrim.opponentTeamId) || scrim.opponentTeamId === user.id)) return true;
       if (scrim.opponentTeamName && myTeamNames.includes(scrim.opponentTeamName.toLowerCase().trim())) return true;
+      if (hasUserRequestedScrim(scrim.id, myTeamIds, user.id)) return true;
 
       return false;
     },
@@ -203,10 +242,10 @@ export default function ScrimsPage() {
     );
   }, [scrims, isUserHost, myTeams]);
 
-  const handleConfirmBooking = async (id: string) => {
+  const handleConfirmBooking = async (id: string, selectedOpponentId?: string) => {
     setScrimError("");
     try {
-      await scrimsService.confirmScrim(id);
+      await scrimsService.confirmScrim(id, selectedOpponentId);
       const data = await scrimsService.getScrims(activeGame);
       setScrims(data);
       syncScrimState(
@@ -236,6 +275,8 @@ export default function ScrimsPage() {
       return;
     }
 
+    addMyRequestedScrim(id, myTeam.id);
+
     try {
       await scrimsService.acceptScrim(id, { opponentId: myTeam.id });
       const data = await scrimsService.getScrims(activeGame);
@@ -253,6 +294,9 @@ export default function ScrimsPage() {
   };
 
   const handleCancelScrim = async (id: string) => {
+    const myTeam = myTeams.find((t: Team) => t.gameTitle === activeGame) || myTeams[0];
+    removeMyRequestedScrim(id, myTeam?.id);
+
     try {
       await scrimsService.cancelScrim(id);
       const data = await scrimsService.getScrims(activeGame);

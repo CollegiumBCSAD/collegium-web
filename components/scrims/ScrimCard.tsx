@@ -7,7 +7,7 @@ import { ScrimOffer } from "@/types";
 interface ScrimCardProps {
   scrim: ScrimOffer;
   onAccept: (id: string) => void;
-  onConfirmBooking?: (id: string) => void;
+  onConfirmBooking?: (id: string, selectedOpponentId?: string) => void;
   onCancel?: (id: string) => void;
   onDelete?: (id: string) => void;
   onOpenWarRoom?: (scrim: ScrimOffer) => void;
@@ -38,7 +38,7 @@ export default function ScrimCard({
         isBooked
           ? "border-[#10B981]/40 bg-gradient-to-b from-[#0F221B]/40 to-[#11141C]"
           : isPending
-          ? "border-[#F59E0B]/40 bg-gradient-to-b from-[#221B10]/40 to-[#11141C]"
+          ? "border-[#2A3142] bg-[#11141C]"
           : isCancelled
           ? "border-[#EF4444]/30 bg-[#161214] opacity-80"
           : "border-[#1E2433] hover:border-[#323B4E]"
@@ -49,7 +49,7 @@ export default function ScrimCard({
         <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500/80 via-teal-400/60 to-emerald-500/80" />
       )}
       {isPending && (
-        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-500/80 via-yellow-400/60 to-amber-500/80" />
+        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#475569]/60 via-[#64748B]/60 to-[#475569]/60" />
       )}
 
       <div className="space-y-3.5">
@@ -225,17 +225,13 @@ export default function ScrimCard({
               )}
             </div>
           ) : (
-            <div className="w-full p-3 rounded-xl bg-[#111622] border border-[#1E2538] flex items-center justify-between gap-3 text-xs font-sans">
-              <div className="flex items-center gap-2 text-[#94A3B8]">
-                <span>🔒</span>
-                <span className="font-bold uppercase tracking-wider text-[#CBD5E1]">
-                  SCRIM MATCH BOOKED (UNAVAILABLE)
-                </span>
-              </div>
-              <span className="px-2.5 py-1 rounded bg-[#10B981]/15 text-[#34D399] border border-[#10B981]/30 text-[10px] font-bold uppercase">
-                BOOKED
-              </span>
-            </div>
+            <button
+              onClick={() => onAccept(scrim.id)}
+              className="w-full h-10 rounded-xl bg-gradient-to-r from-[#FF4655] to-[#E63946] hover:from-[#FF5E6C] hover:to-[#FF4655] text-white font-sans text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-red-950/40 flex items-center justify-center gap-2"
+            >
+              <span>⚔️</span>
+              <span>Request Scrim</span>
+            </button>
           )
         ) : isBooked ? (
           isHost || isOpponent ? (
