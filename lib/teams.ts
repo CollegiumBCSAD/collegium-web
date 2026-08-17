@@ -84,35 +84,7 @@ export function getStoredTeams(): Team[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(TEAMS_STORAGE_KEY);
-    if (!raw) {
-      const defaultTeams: Team[] = [
-        {
-          id: "team-umak-1",
-          name: "UMAK Herons Alpha",
-          gameTitle: "valo",
-          universityId: "umak",
-          universityName: "University of Makati",
-          captainId: "seed-user-1",
-          captainName: "Varsity Captain",
-          inviteCode: "umak-alpha-77",
-          createdAt: new Date().toISOString(),
-          members: [
-            {
-              id: "mem-seed-1",
-              userId: "seed-user-1",
-              displayName: "Varsity Captain",
-              email: "seed.captain@umak.edu.ph",
-              gameHandle: "Heron#UMAK",
-              preferredRole: "Duelist",
-              status: "ACCEPTED",
-              joinedAt: new Date().toISOString(),
-            },
-          ],
-        },
-      ];
-      localStorage.setItem(TEAMS_STORAGE_KEY, JSON.stringify(defaultTeams));
-      return defaultTeams;
-    }
+    if (!raw) return [];
     return JSON.parse(raw);
   } catch {
     return [];

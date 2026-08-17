@@ -30,7 +30,7 @@ export default function DashboardPage() {
     try {
       await teamsService.leaveTeam(teamId, user.id);
       refreshTeams();
-    } catch {}
+    } catch { }
   };
 
   const userTeams = useMemo(() => {
@@ -46,8 +46,8 @@ export default function DashboardPage() {
         (m) =>
           m.status === "ACCEPTED" &&
           ((myId && m.userId === myId) ||
-           (myEmail && m.email && m.email.toLowerCase().trim() === myEmail) ||
-           (myName && m.displayName && m.displayName.toLowerCase().trim() === myName))
+            (myEmail && m.email && m.email.toLowerCase().trim() === myEmail) ||
+            (myName && m.displayName && m.displayName.toLowerCase().trim() === myName))
       )
     );
   }, [user, allTeams]);
@@ -63,8 +63,8 @@ export default function DashboardPage() {
         (m) =>
           m.status === "PENDING" &&
           ((myId && m.userId === myId) ||
-           (myEmail && m.email && m.email.toLowerCase().trim() === myEmail) ||
-           (myName && m.displayName && m.displayName.toLowerCase().trim() === myName))
+            (myEmail && m.email && m.email.toLowerCase().trim() === myEmail) ||
+            (myName && m.displayName && m.displayName.toLowerCase().trim() === myName))
       )
     );
   }, [user, allTeams]);

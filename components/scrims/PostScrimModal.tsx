@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { GAME_LIST } from "@/lib/games";
 import { GameId } from "@/types";
 import { getStoredTeams, fetchTeamsApi, Team } from "@/lib/teams";
+import { useAuth } from "@/context/AuthContext";
 
 interface PostScrimModalProps {
   isOpen: boolean;
@@ -37,24 +38,50 @@ export default function PostScrimModal({
   onClose,
   onSubmit,
 }: PostScrimModalProps) {
-  const [userTeams, setUserTeams] = useState<Team[]>(() => getStoredTeams());
+  const { user } = useAuth();
+  const [allTeams, setAllTeams] = useState<Team[]>(() => getStoredTeams());
+
+  useEffect(() => {
+    fetchTeamsApi().then((teams) => {
+      setAllTeams(teams);
+    });
+  }, []);
+
+  const userTeams = useMemo(() => {
+    if (!user) return [];
+    const myId = user.id;
+    const myEmail = user.email ? user.email.toLowerCase().trim() : "";
+    const myName = user.displayName ? user.displayName.toLowerCase().trim() : "";
+
+    return allTeams.filter((t) =>
+      (myId && t.captainId === myId) ||
+      (myName && t.captainName && t.captainName.toLowerCase().trim() === myName) ||
+      t.members.some(
+        (m) =>
+          m.status === "ACCEPTED" &&
+          ((myId && m.userId === myId) ||
+           (myEmail && m.email && m.email.toLowerCase().trim() === myEmail) ||
+           (myName && m.displayName && m.displayName.toLowerCase().trim() === myName))
+      )
+    );
+  }, [user, allTeams]);
+
   const [formGame, setFormGame] = useState<GameId>("valo");
-  const [selectedTeamId, setSelectedTeamId] = useState<string>(() => (userTeams.length > 0 ? userTeams[0].id : ""));
-  const [formTeamName, setFormTeamName] = useState<string>(() => (userTeams.length > 0 ? userTeams[0].name : ""));
+  const [selectedTeamId, setSelectedTeamId] = useState<string>("");
+  const [formTeamName, setFormTeamName] = useState<string>("");
   const [formFormat, setFormFormat] = useState("BO3");
   const [formRank, setFormRank] = useState("Ascendant+");
   const [formMap, setFormMap] = useState("Ascent");
   const [formNotes, setFormNotes] = useState("");
 
   useEffect(() => {
-    fetchTeamsApi().then((teams) => {
-      setUserTeams(teams);
-      if (teams.length > 0) {
-        setSelectedTeamId((prev) => prev || teams[0].id);
-        setFormTeamName((prev) => prev || teams[0].name);
-      }
-    });
-  }, []);
+    if (userTeams.length > 0) {
+      setSelectedTeamId((prev) => prev || userTeams[0].id);
+      setFormTeamName((prev) => prev || userTeams[0].name);
+    } else if (user?.university?.name) {
+      setFormTeamName((prev) => prev || `${user.university?.name} Squad`);
+    }
+  }, [userTeams, user]);
 
   // Modal lifecycle listeners
   useEffect(() => {

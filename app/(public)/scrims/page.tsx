@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useGame } from "@/context/GameContext";
 import { GameId, ScrimOffer } from "@/types";
 import { scrimsService } from "@/services";
+import { getStoredTeams, fetchTeamsApi, Team } from "@/lib/teams";
 import ScrimCard from "@/components/scrims/ScrimCard";
 import PostScrimModal from "@/components/scrims/PostScrimModal";
 
@@ -15,7 +16,12 @@ export default function ScrimsPage() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [scrims, setScrims] = useState<ScrimOffer[]>([]);
+  const [userTeams, setUserTeams] = useState<Team[]>(() => getStoredTeams());
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchTeamsApi().then((teams) => setUserTeams(teams));
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -33,6 +39,7 @@ export default function ScrimsPage() {
           setIsLoading(false);
         }
       });
+
     return () => {
       isMounted = false;
     };
@@ -48,6 +55,25 @@ export default function ScrimsPage() {
     return true;
   });
 
+  const myTeams = useMemo(() => {
+    if (!user) return [];
+    const myId = user.id;
+    const myEmail = user.email ? user.email.toLowerCase().trim() : "";
+    const myName = user.displayName ? user.displayName.toLowerCase().trim() : "";
+
+    return userTeams.filter((t: Team) =>
+      (myId && t.captainId === myId) ||
+      (myName && t.captainName && t.captainName.toLowerCase().trim() === myName) ||
+      t.members.some(
+        (m) =>
+          m.status === "ACCEPTED" &&
+          ((myId && m.userId === myId) ||
+           (myEmail && m.email && m.email.toLowerCase().trim() === myEmail) ||
+           (myName && m.displayName && m.displayName.toLowerCase().trim() === myName))
+      )
+    );
+  }, [user, userTeams]);
+
   const handlePostScrimSubmit = async (data: {
     gameTitle: GameId;
     teamId?: string;
@@ -57,9 +83,12 @@ export default function ScrimsPage() {
     mapPreference?: string;
     notes: string;
   }) => {
+    const userTeam = myTeams.find((t: Team) => t.gameTitle === data.gameTitle) || myTeams[0];
+    const teamId = data.teamId || userTeam?.id || user?.id || "default-team-id";
+
     const optimistic: ScrimOffer = {
       id: `scrim-${Date.now()}`,
-      teamId: data.teamId,
+      teamId,
       hostTeamName: data.hostTeamName,
       universityName: user?.university?.name || "",
       gameTitle: data.gameTitle,
@@ -74,7 +103,7 @@ export default function ScrimsPage() {
 
     try {
       await scrimsService.createScrim({
-        teamId: data.teamId || "default-team-id",
+        teamId,
         gameTitle: data.gameTitle,
         format: data.format,
         rankRange: data.rankRange,
@@ -89,17 +118,41 @@ export default function ScrimsPage() {
     setTimeout(() => scrimsService.getScrims(activeGame).then(setScrims), 1000);
   };
 
+  const [scrimError, setScrimError] = useState("");
+
+  const isUserHost = (scrim: ScrimOffer) => {
+    if (!user) return false;
+    const myTeamIds = myTeams.map((t: Team) => t.id);
+    const myTeamNames = myTeams.map((t: Team) => t.name.toLowerCase().trim());
+
+    if (scrim.teamId && myTeamIds.includes(scrim.teamId)) return true;
+    if (scrim.hostTeamName && myTeamNames.includes(scrim.hostTeamName.toLowerCase().trim())) return true;
+    return false;
+  };
+
   const handleAcceptScrim = async (id: string) => {
+    setScrimError("");
+    const targetScrim = scrims.find((s) => s.id === id);
+    if (targetScrim && isUserHost(targetScrim)) {
+      setScrimError("You cannot accept a scrim offer posted by your own team.");
+      return;
+    }
+
+    const myTeam = myTeams.find((t) => t.gameTitle === activeGame) || myTeams[0];
+    const opponentTeamId = myTeam?.id || user?.id || "";
+
+    if (!opponentTeamId) {
+      setScrimError("Please log in and join a university squad before accepting scrim offers.");
+      return;
+    }
+
     try {
-      await scrimsService.acceptScrim(id, { opponentId: user?.id || "" });
+      await scrimsService.acceptScrim(id, { opponentId: opponentTeamId });
       const data = await scrimsService.getScrims(activeGame);
       setScrims(data);
-    } catch {
-      setScrims((prev) =>
-        prev.map((s) =>
-          s.id === id ? { ...s, status: "CONFIRMED" as const, opponentTeamName: user?.displayName } : s
-        )
-      );
+    } catch (err: unknown) {
+      const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
+      setScrimError(errorObj?.response?.data?.message || errorObj?.message || "Failed to accept scrim offer.");
     }
   };
 
@@ -148,6 +201,15 @@ export default function ScrimsPage() {
           </button>
         </div>
 
+        {scrimError && (
+          <div className="p-4 rounded-xl bg-error/10 border border-error/30 text-error text-xs font-sans font-semibold flex items-center justify-between">
+            <span>⚠️ {scrimError}</span>
+            <button onClick={() => setScrimError("")} className="hover:underline cursor-pointer">
+              Dismiss
+            </button>
+          </div>
+        )}
+
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-16 space-y-4">
             <div className="w-8 h-8 border-4 border-primary-brand border-t-transparent rounded-full animate-spin" />
@@ -177,7 +239,7 @@ export default function ScrimsPage() {
                 scrim={scrim}
                 onAccept={handleAcceptScrim}
                 onCancel={handleCancelScrim}
-                isHost={scrim.universityName === user?.university?.name || Boolean(scrim.hostTeamName?.toLowerCase().includes("herons"))}
+                isHost={isUserHost(scrim)}
               />
             ))}
           </div>
