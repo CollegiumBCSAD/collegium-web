@@ -44,6 +44,19 @@ export default function ScrimsPage() {
     );
   }, [user, userTeams]);
 
+  const isUserHost = useCallback(
+    (scrim: ScrimOffer) => {
+      if (!user) return false;
+      const myTeamIds = myTeams.map((t: Team) => t.id);
+      const myTeamNames = myTeams.map((t: Team) => t.name.toLowerCase().trim());
+
+      if (scrim.teamId && myTeamIds.includes(scrim.teamId)) return true;
+      if (scrim.hostTeamName && myTeamNames.includes(scrim.hostTeamName.toLowerCase().trim())) return true;
+      return false;
+    },
+    [user, myTeams]
+  );
+
   useEffect(() => {
     let isMounted = true;
 
@@ -55,12 +68,11 @@ export default function ScrimsPage() {
             const list = Array.isArray(data) ? data : [];
             setScrims(list);
             setIsLoading(false);
-            if (myTeams.length > 0) {
-              syncScrimState(
-                list,
-                myTeams.map((t: Team) => t.name)
-              );
-            }
+            syncScrimState(
+              list,
+              isUserHost,
+              myTeams.map((t: Team) => t.name)
+            );
           }
         })
         .catch(() => {
@@ -78,20 +90,7 @@ export default function ScrimsPage() {
       isMounted = false;
       clearInterval(interval);
     };
-  }, [activeGame, myTeams, syncScrimState]);
-
-  const isUserHost = useCallback(
-    (scrim: ScrimOffer) => {
-      if (!user) return false;
-      const myTeamIds = myTeams.map((t: Team) => t.id);
-      const myTeamNames = myTeams.map((t: Team) => t.name.toLowerCase().trim());
-
-      if (scrim.teamId && myTeamIds.includes(scrim.teamId)) return true;
-      if (scrim.hostTeamName && myTeamNames.includes(scrim.hostTeamName.toLowerCase().trim())) return true;
-      return false;
-    },
-    [user, myTeams]
-  );
+  }, [activeGame, isUserHost, myTeams, syncScrimState]);
 
   const filteredScrims = useMemo(() => {
     return scrims.filter((s) => {
@@ -173,9 +172,11 @@ export default function ScrimsPage() {
       await scrimsService.confirmScrim(id);
       const data = await scrimsService.getScrims(activeGame);
       setScrims(data);
-      if (myTeams.length > 0) {
-        syncScrimState(data, myTeams.map((t: Team) => t.name));
-      }
+      syncScrimState(
+        data,
+        isUserHost,
+        myTeams.map((t: Team) => t.name)
+      );
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
       setScrimError(errorObj?.response?.data?.message || errorObj?.message || "Failed to confirm booking.");
@@ -202,9 +203,11 @@ export default function ScrimsPage() {
       await scrimsService.acceptScrim(id, { opponentId: opponentTeamId });
       const data = await scrimsService.getScrims(activeGame);
       setScrims(data);
-      if (myTeams.length > 0) {
-        syncScrimState(data, myTeams.map((t: Team) => t.name));
-      }
+      syncScrimState(
+        data,
+        isUserHost,
+        myTeams.map((t: Team) => t.name)
+      );
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
       setScrimError(errorObj?.response?.data?.message || errorObj?.message || "Failed to book scrim match.");
@@ -216,9 +219,11 @@ export default function ScrimsPage() {
       await scrimsService.cancelScrim(id);
       const data = await scrimsService.getScrims(activeGame);
       setScrims(data);
-      if (myTeams.length > 0) {
-        syncScrimState(data, myTeams.map((t: Team) => t.name));
-      }
+      syncScrimState(
+        data,
+        isUserHost,
+        myTeams.map((t: Team) => t.name)
+      );
     } catch {
       setScrims((prev) =>
         prev.map((s) =>

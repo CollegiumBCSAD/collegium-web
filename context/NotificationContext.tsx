@@ -21,6 +21,8 @@ interface NotificationContextType {
   notifications: ScrimNotification[];
   unreadCount: number;
   toastNotifications: ScrimNotification[];
+  activeConfirmedModal: ScrimNotification | null;
+  closeConfirmedModal: () => void;
   addNotification: (notification: Omit<ScrimNotification, "id" | "timestamp" | "read">) => void;
   syncScrimState: (
     scrims: Array<{
@@ -31,7 +33,8 @@ interface NotificationContextType {
       gameTitle?: string;
       scheduledAt?: string;
     }>,
-    myTeamNames: string[]
+    isUserHostFn: (scrim: any) => boolean,
+    myTeamNames?: string[]
   ) => void;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
@@ -41,11 +44,12 @@ interface NotificationContextType {
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
-const NOTIFICATIONS_STORAGE_KEY = "collegium_scrim_notifications_v1";
-const STATUS_MAP_STORAGE_KEY = "collegium_scrim_status_map_v1";
+const NOTIFICATIONS_STORAGE_KEY = "collegium_scrim_notifications_v2";
+const STATUS_MAP_STORAGE_KEY = "collegium_scrim_status_map_v2";
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const [notifications, setNotifications] = useState<ScrimNotification[]>([]);
+  const [activeConfirmedModal, setActiveConfirmedModal] = useState<ScrimNotification | null>(null);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -92,6 +96,10 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         }
         return updated;
       });
+
+      if (item.type === "ACCEPTED") {
+        setActiveConfirmedModal(newNotif);
+      }
     },
     []
   );
@@ -106,11 +114,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         gameTitle?: string;
         scheduledAt?: string;
       }>,
-      myTeamNames: string[]
+      isUserHostFn: (scrim: any) => boolean,
+      myTeamNames: string[] = []
     ) => {
-      if (!myTeamNames || myTeamNames.length === 0) return;
-      const normalizedMyTeams = myTeamNames.map((t) => t.toLowerCase().trim());
-
       let statusMap: Record<string, string> = {};
       if (typeof window !== "undefined") {
         try {
@@ -123,16 +129,13 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
       scrims.forEach((scrim) => {
         const lastStatus = statusMap[scrim.id];
+        const isHost = isUserHostFn(scrim);
 
-        const isMyOpponent =
-          scrim.opponentTeamName &&
-          normalizedMyTeams.includes(scrim.opponentTeamName.toLowerCase().trim());
-        const isMyHost =
-          scrim.hostTeamName &&
-          normalizedMyTeams.includes(scrim.hostTeamName.toLowerCase().trim());
+        // If not host, user is the requester/challenger on their board!
+        const isChallenger = !isHost;
 
-        // 1. Challenger Notification: Host Accepted Scrim Request (status is CONFIRMED & lastStatus was PENDING or not CONFIRMED)
-        if (scrim.status === "CONFIRMED" && isMyOpponent && lastStatus !== "CONFIRMED") {
+        // 1. Challenger Notification: Host Accepted Scrim Request (status is CONFIRMED & lastStatus was not CONFIRMED)
+        if (scrim.status === "CONFIRMED" && isChallenger && lastStatus !== "CONFIRMED") {
           addNotification({
             type: "ACCEPTED",
             scrimId: scrim.id,
@@ -148,7 +151,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         }
 
         // 2. Challenger Notification: Host Declined Scrim Request (status is OPEN & lastStatus was PENDING)
-        if (scrim.status === "OPEN" && isMyOpponent && lastStatus === "PENDING") {
+        if (scrim.status === "OPEN" && isChallenger && lastStatus === "PENDING") {
           addNotification({
             type: "DECLINED",
             scrimId: scrim.id,
@@ -164,7 +167,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         }
 
         // 3. Challenger Notification: Host Unbooked Match (status is OPEN & lastStatus was CONFIRMED)
-        if (scrim.status === "OPEN" && isMyOpponent && lastStatus === "CONFIRMED") {
+        if (scrim.status === "OPEN" && isChallenger && lastStatus === "CONFIRMED") {
           addNotification({
             type: "UNBOOKED",
             scrimId: scrim.id,
@@ -180,7 +183,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         }
 
         // 4. Host Notification: Opponent Sent Request (status is PENDING & lastStatus !== PENDING)
-        if (scrim.status === "PENDING" && isMyHost && lastStatus !== "PENDING") {
+        if (scrim.status === "PENDING" && isHost && lastStatus !== "PENDING") {
           addNotification({
             type: "ACCEPTED",
             scrimId: scrim.id,
@@ -195,7 +198,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           mapChanged = true;
         }
 
-        // Initialize status map for new scrims
+        // Initialize status map for untracked scrims
         if (!statusMap[scrim.id]) {
           statusMap[scrim.id] = scrim.status;
           mapChanged = true;
@@ -210,6 +213,10 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     },
     [addNotification]
   );
+
+  const closeConfirmedModal = useCallback(() => {
+    setActiveConfirmedModal(null);
+  }, []);
 
   const markAsRead = useCallback(
     (id: string) => {
@@ -249,6 +256,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         notifications,
         unreadCount,
         toastNotifications,
+        activeConfirmedModal,
+        closeConfirmedModal,
         addNotification,
         syncScrimState,
         markAsRead,
