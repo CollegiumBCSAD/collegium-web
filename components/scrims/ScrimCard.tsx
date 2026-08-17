@@ -8,10 +8,11 @@ interface ScrimCardProps {
   scrim: ScrimOffer;
   onAccept: (id: string) => void;
   onCancel?: (id: string) => void;
+  onDelete?: (id: string) => void;
   isHost?: boolean;
 }
 
-export default function ScrimCard({ scrim, onAccept, onCancel, isHost }: ScrimCardProps) {
+export default function ScrimCard({ scrim, onAccept, onCancel, onDelete, isHost }: ScrimCardProps) {
   const game = getGameInfo(scrim.gameTitle);
   const isBooked = scrim.status === "CONFIRMED";
 
@@ -101,8 +102,16 @@ export default function ScrimCard({ scrim, onAccept, onCancel, isHost }: ScrimCa
       {/* Action / Notification Bottom Area */}
       <div className="pt-2 flex items-center justify-between gap-3">
         {scrim.status === "CANCELLED" ? (
-          <div className="w-full p-2.5 rounded-lg bg-error/10 border border-error/30 text-error text-xs font-sans font-bold text-center">
-            ✕ Scrim Offer Cancelled
+          <div className="w-full flex items-center justify-between p-2.5 rounded-lg bg-error/10 border border-error/30 text-error text-xs font-sans font-bold">
+            <span>✕ Scrim Offer Cancelled</span>
+            {isHost && onDelete && (
+              <button
+                onClick={() => onDelete(scrim.id)}
+                className="text-[11px] hover:underline font-bold cursor-pointer"
+              >
+                Delete
+              </button>
+            )}
           </div>
         ) : isBooked ? (
           <div className="w-full p-3 rounded-xl bg-success/15 border border-success/40 text-success flex items-center justify-between shadow-inner gap-3">
@@ -127,27 +136,42 @@ export default function ScrimCard({ scrim, onAccept, onCancel, isHost }: ScrimCa
                 </span>
               </div>
             </div>
-            {onCancel && (
-              <button
-                onClick={() => onCancel(scrim.id)}
-                className="h-9 px-3 rounded-lg bg-error/15 hover:bg-error/30 text-error border border-error/40 font-sans text-[11px] font-bold uppercase tracking-wider transition-all active:scale-[0.98] shrink-0 cursor-pointer"
-                title="Cancel this booked scrim match"
-              >
-                Cancel Match
-              </button>
-            )}
-          </div>
-        ) : isHost && onCancel ? (
-          <div className="w-full flex items-center gap-3">
-            <div className="flex-1 text-xs font-sans text-secondary-text italic">
-              Your offer is live for challengers
+            <div className="flex items-center gap-2 shrink-0">
+              {onCancel && (
+                <button
+                  onClick={() => onCancel(scrim.id)}
+                  className="h-9 px-3 rounded-lg bg-secondary-brand/20 hover:bg-secondary-brand/30 text-secondary-brand border border-secondary-brand/40 font-sans text-[11px] font-bold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer"
+                  title="Cancel booking and re-open scrim offer"
+                >
+                  Unbook
+                </button>
+              )}
+              {isHost && onDelete && (
+                <button
+                  onClick={() => onDelete(scrim.id)}
+                  className="h-9 px-3 rounded-lg bg-error/15 hover:bg-error/30 text-error border border-error/40 font-sans text-[11px] font-bold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer"
+                  title="Delete scrim post permanently"
+                >
+                  Delete
+                </button>
+              )}
             </div>
-            <button
-              onClick={() => onCancel(scrim.id)}
-              className="h-10 px-4 rounded-lg bg-error/10 hover:bg-error/20 text-error border border-error/30 font-sans text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer"
-            >
-              Cancel Offer
-            </button>
+          </div>
+        ) : isHost ? (
+          <div className="w-full flex items-center justify-between gap-3">
+            <span className="text-xs font-sans text-secondary-brand font-semibold italic">
+              ⚡ Live on Scrims Board for challengers
+            </span>
+            <div className="flex items-center gap-2">
+              {onDelete && (
+                <button
+                  onClick={() => onDelete(scrim.id)}
+                  className="h-10 px-4 rounded-lg bg-error/10 hover:bg-error/20 text-error border border-error/30 font-sans text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer"
+                >
+                  🗑️ Delete Scrim
+                </button>
+              )}
+            </div>
           </div>
         ) : (
           <button

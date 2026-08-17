@@ -176,6 +176,15 @@ export default function ScrimsPage() {
     }
   };
 
+  const handleDeleteScrim = async (id: string) => {
+    try {
+      await scrimsService.deleteScrim(id);
+      setScrims((prev) => prev.filter((s) => s.id !== id));
+    } catch {
+      setScrims((prev) => prev.filter((s) => s.id !== id));
+    }
+  };
+
   return (
     <div className="flex flex-col flex-1 game-theme-bg py-10 px-4 sm:px-6 lg:px-10">
       <div className="max-w-6xl mx-auto space-y-8 w-full">
@@ -269,6 +278,7 @@ export default function ScrimsPage() {
                 scrim={scrim}
                 onAccept={handleAcceptScrim}
                 onCancel={handleCancelScrim}
+                onDelete={handleDeleteScrim}
                 isHost={isUserHost(scrim)}
               />
             ))}

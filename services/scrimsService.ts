@@ -87,4 +87,7 @@ export const scrimsService = {
 
   cancelScrim: (scrimId: string): Promise<ScrimOffer> =>
     apiClient.patch<ScrimOffer>(`/scrims/${scrimId}/cancel`),
+
+  deleteScrim: (scrimId: string): Promise<void> =>
+    apiClient.delete<void>(`/scrims/${scrimId}`),
 };
