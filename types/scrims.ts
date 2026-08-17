@@ -15,4 +15,5 @@ export interface ScrimOffer {
   notes?: string;
   status: ScrimStatus;
   opponentTeamName?: string;
+  opponentTeamId?: string;
 }

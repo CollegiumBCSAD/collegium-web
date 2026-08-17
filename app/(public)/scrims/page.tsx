@@ -57,6 +57,24 @@ export default function ScrimsPage() {
     [user, myTeams]
   );
 
+  const isUserOpponent = useCallback(
+    (scrim: ScrimOffer) => {
+      if (!user) return false;
+      if (isUserHost(scrim)) return false;
+      const myTeamNames = myTeams.map((t: Team) => t.name.toLowerCase().trim());
+      const myTeamIds = myTeams.map((t: Team) => t.id);
+
+      if (scrim.opponentTeamId && (myTeamIds.includes(scrim.opponentTeamId) || scrim.opponentTeamId === user.id)) return true;
+      if (scrim.opponentTeamName && myTeamNames.includes(scrim.opponentTeamName.toLowerCase().trim())) return true;
+      
+      // Fallback: If status is CONFIRMED or PENDING, and user is not host, this user is the challenger!
+      if (scrim.status === "CONFIRMED" || scrim.status === "PENDING") return true;
+
+      return false;
+    },
+    [user, myTeams, isUserHost]
+  );
+
   useEffect(() => {
     let isMounted = true;
 
@@ -71,6 +89,7 @@ export default function ScrimsPage() {
             syncScrimState(
               list,
               isUserHost,
+              isUserOpponent,
               myTeams.map((t: Team) => t.name)
             );
           }
@@ -90,7 +109,7 @@ export default function ScrimsPage() {
       isMounted = false;
       clearInterval(interval);
     };
-  }, [activeGame, isUserHost, myTeams, syncScrimState]);
+  }, [activeGame, isUserHost, isUserOpponent, myTeams, syncScrimState]);
 
   const filteredScrims = useMemo(() => {
     return scrims.filter((s) => {
@@ -159,13 +178,6 @@ export default function ScrimsPage() {
     );
   }, [scrims, isUserHost, myTeams]);
 
-  const isUserOpponent = (scrim: ScrimOffer) => {
-    if (!user) return false;
-    const myTeamNames = myTeams.map((t: Team) => t.name.toLowerCase().trim());
-    if (scrim.opponentTeamName && myTeamNames.includes(scrim.opponentTeamName.toLowerCase().trim())) return true;
-    return false;
-  };
-
   const handleConfirmBooking = async (id: string) => {
     setScrimError("");
     try {
@@ -175,6 +187,7 @@ export default function ScrimsPage() {
       syncScrimState(
         data,
         isUserHost,
+        isUserOpponent,
         myTeams.map((t: Team) => t.name)
       );
     } catch (err: unknown) {
@@ -206,6 +219,7 @@ export default function ScrimsPage() {
       syncScrimState(
         data,
         isUserHost,
+        isUserOpponent,
         myTeams.map((t: Team) => t.name)
       );
     } catch (err: unknown) {
@@ -222,6 +236,7 @@ export default function ScrimsPage() {
       syncScrimState(
         data,
         isUserHost,
+        isUserOpponent,
         myTeams.map((t: Team) => t.name)
       );
     } catch {

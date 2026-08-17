@@ -58,6 +58,7 @@ function parseServerScrimsResponse(data: unknown): ScrimOffer[] {
       notes: item.notes as string,
       status: (item.status as ScrimOffer["status"]) || "OPEN",
       opponentTeamName: (opponent.name as string) || (item.opponentTeamName as string),
+      opponentTeamId: (opponent.id as string) || (item.opponentId as string),
     };
   });
 }

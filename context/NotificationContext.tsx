@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 
 export interface ScrimNotification {
   id: string;
@@ -34,6 +34,7 @@ interface NotificationContextType {
       scheduledAt?: string;
     }>,
     isUserHostFn: (scrim: any) => boolean,
+    isUserOpponentFn: (scrim: any) => boolean,
     myTeamNames?: string[]
   ) => void;
   markAsRead: (id: string) => void;
@@ -44,8 +45,8 @@ interface NotificationContextType {
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
-const NOTIFICATIONS_STORAGE_KEY = "collegium_scrim_notifications_v2";
-const STATUS_MAP_STORAGE_KEY = "collegium_scrim_status_map_v2";
+const NOTIFICATIONS_STORAGE_KEY = "collegium_scrim_notifications_v3";
+const STATUS_MAP_STORAGE_KEY = "collegium_scrim_status_map_v3";
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const [notifications, setNotifications] = useState<ScrimNotification[]>([]);
@@ -115,6 +116,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         scheduledAt?: string;
       }>,
       isUserHostFn: (scrim: any) => boolean,
+      isUserOpponentFn: (scrim: any) => boolean,
       myTeamNames: string[] = []
     ) => {
       let statusMap: Record<string, string> = {};
@@ -130,12 +132,11 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       scrims.forEach((scrim) => {
         const lastStatus = statusMap[scrim.id];
         const isHost = isUserHostFn(scrim);
+        const isOpponent = isUserOpponentFn(scrim);
 
-        // If not host, user is the requester/challenger on their board!
-        const isChallenger = !isHost;
-
-        // 1. Challenger Notification: Host Accepted Scrim Request (status is CONFIRMED & lastStatus was not CONFIRMED)
-        if (scrim.status === "CONFIRMED" && isChallenger && lastStatus !== "CONFIRMED") {
+        // 1. Challenger Notification ONLY: Host Accepted Scrim Request (status is CONFIRMED & lastStatus was PENDING or not CONFIRMED)
+        // MUST BE isOpponent === true AND isHost === false!
+        if (scrim.status === "CONFIRMED" && isOpponent && !isHost && lastStatus !== "CONFIRMED") {
           addNotification({
             type: "ACCEPTED",
             scrimId: scrim.id,
@@ -150,8 +151,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           mapChanged = true;
         }
 
-        // 2. Challenger Notification: Host Declined Scrim Request (status is OPEN & lastStatus was PENDING)
-        if (scrim.status === "OPEN" && isChallenger && lastStatus === "PENDING") {
+        // 2. Challenger Notification ONLY: Host Declined Scrim Request (status is OPEN & lastStatus was PENDING)
+        if (scrim.status === "OPEN" && isOpponent && !isHost && lastStatus === "PENDING") {
           addNotification({
             type: "DECLINED",
             scrimId: scrim.id,
@@ -166,8 +167,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           mapChanged = true;
         }
 
-        // 3. Challenger Notification: Host Unbooked Match (status is OPEN & lastStatus was CONFIRMED)
-        if (scrim.status === "OPEN" && isChallenger && lastStatus === "CONFIRMED") {
+        // 3. Challenger Notification ONLY: Host Unbooked Match (status is OPEN & lastStatus was CONFIRMED)
+        if (scrim.status === "OPEN" && isOpponent && !isHost && lastStatus === "CONFIRMED") {
           addNotification({
             type: "UNBOOKED",
             scrimId: scrim.id,
@@ -182,7 +183,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           mapChanged = true;
         }
 
-        // 4. Host Notification: Opponent Sent Request (status is PENDING & lastStatus !== PENDING)
+        // 4. Host Notification ONLY: Opponent Sent Request (status is PENDING & lastStatus !== PENDING)
         if (scrim.status === "PENDING" && isHost && lastStatus !== "PENDING") {
           addNotification({
             type: "ACCEPTED",
