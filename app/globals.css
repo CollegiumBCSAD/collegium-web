@@ -72,3 +72,33 @@ h1, h2, h3, h4, .font-display, .font-oswald {
   font-weight: 700 !important;
   letter-spacing: 0.02em;
 }
+
+@keyframes pageSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes navGlowPulse {
+  0%, 100% {
+    opacity: 0.6;
+    filter: drop-shadow(0 0 4px rgba(229, 58, 76, 0.4));
+  }
+  50% {
+    opacity: 1;
+    filter: drop-shadow(0 0 10px rgba(229, 58, 76, 0.8));
+  }
+}
+
+.animate-page-slide-in {
+  animation: pageSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-nav-glow {
+  animation: navGlowPulse 2s ease-in-out infinite;
+}

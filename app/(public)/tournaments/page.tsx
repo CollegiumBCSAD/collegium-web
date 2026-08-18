@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import TournamentBracketModal from "@/components/tournaments/TournamentBracketModal";
 import TournamentCard from "@/components/tournaments/TournamentCard";
+import { TournamentCardSkeleton } from "@/components/ui/Skeleton";
 import { Tournament } from "@/types";
 import { tournamentsService } from "@/services";
 
@@ -42,41 +43,43 @@ export default function TournamentsPage() {
   return (
     <div className="flex flex-col flex-1 game-theme-bg relative">
       <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 md:px-10 lg:px-16 py-8 sm:py-12 lg:py-16">
-        <div className="border-t border-raised-panel/50 pt-8 mb-8 sm:mb-10 flex items-start justify-between">
+        <div className="border-b border-[#1E2538] pb-6 mb-8 sm:mb-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-foreground uppercase">
-              TOURNAMENTS
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xs font-mono font-bold tracking-widest text-primary-brand uppercase">
+                PHILIPPINE COLLEGIATE CIRCUIT
+              </span>
+            </div>
+            <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-foreground uppercase">
+              OFFICIAL TOURNAMENTS
             </h1>
-            <p className="font-sans text-xs sm:text-sm text-secondary-text mt-1 font-normal tracking-tight">
-              Fresh brackets and high-stakes events.
+            <p className="font-sans text-xs sm:text-sm text-secondary-text mt-1">
+              High-stakes bracketing, verified match logs, and real-time War Room operations.
             </p>
           </div>
-          <Link
-            href="/tournaments"
-            className="font-sans text-xs sm:text-sm font-medium text-secondary-text hover:text-foreground transition-colors pt-2"
-          >
-            See All
-          </Link>
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-sans font-bold text-slate-400 bg-[#121624] px-3.5 py-1.5 rounded-full border border-[#222B3F]">
+              🏆 {tournaments.length} Active Circuit{tournaments.length === 1 ? "" : "s"}
+            </span>
+          </div>
         </div>
 
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-20 space-y-4">
-            <div className="w-10 h-10 border-4 border-primary-brand border-t-transparent rounded-full animate-spin" />
-            <p className="font-sans text-xs font-semibold text-secondary-text tracking-wider uppercase">
-              Loading Tournaments...
-            </p>
+          <div className="flex flex-col gap-6">
+            <TournamentCardSkeleton />
+            <TournamentCardSkeleton />
           </div>
         ) : tournaments.length === 0 ? (
-          <div className="flex flex-col items-center justify-center text-center py-16 px-4 max-w-lg mx-auto space-y-4 rounded-2xl border border-panel-border bg-card-bg/60 p-10 shadow-2xl backdrop-blur-md">
-            <div className="w-16 h-16 rounded-full bg-raised-panel border border-panel-border flex items-center justify-center text-3xl shadow-inner">
+          <div className="flex flex-col items-center justify-center text-center py-16 px-4 max-w-lg mx-auto space-y-4 rounded-2xl border border-[#1E2538] bg-[#0E121C]/80 p-10 shadow-2xl backdrop-blur-md">
+            <div className="w-16 h-16 rounded-full bg-[#161C2C] border border-[#2A344D] flex items-center justify-center text-3xl shadow-inner">
               🏆
             </div>
             <div className="space-y-2">
               <h3 className="font-display text-xl sm:text-2xl font-bold text-foreground uppercase tracking-wide">
-                NO TOURNAMENTS FOUND
+                NO ACTIVE TOURNAMENTS FOUND
               </h3>
               <p className="font-sans text-xs sm:text-sm text-secondary-text leading-relaxed">
-                There are currently no active or upcoming tournaments in the database. New collegiate circuits will be listed here as soon as they are scheduled.
+                There are currently no active or upcoming tournaments scheduled in the database. New collegiate circuits will be listed here as soon as they are published by organizers.
               </p>
             </div>
           </div>
@@ -103,3 +106,4 @@ export default function TournamentsPage() {
     </div>
   );
 }
+

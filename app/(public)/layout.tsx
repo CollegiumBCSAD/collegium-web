@@ -160,8 +160,8 @@ function NavigationLinks({ mobile = false, onClose }: { mobile?: boolean; onClos
               key={item.href}
               href={item.href}
               onClick={onClose}
-              className={`font-sans text-base font-medium transition-colors hover:text-primary-brand ${
-                isActive ? "text-primary-brand" : "text-secondary-text"
+              className={`font-sans text-base font-bold transition-all duration-200 px-3 py-2 rounded-xl ${
+                isActive ? "text-primary-brand bg-primary-brand/10 border border-primary-brand/30" : "text-secondary-text hover:text-foreground"
               }`}
             >
               {item.name}
@@ -173,20 +173,29 @@ function NavigationLinks({ mobile = false, onClose }: { mobile?: boolean; onClos
   }
 
   return (
-    <nav className="hidden md:flex items-center gap-6 h-16">
+    <nav className="hidden md:flex items-center gap-1.5 h-16">
       {navItems.map((item) => {
         const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
         return (
           <Link
             key={item.href}
             href={item.href}
-            className={`font-sans text-sm font-medium transition-colors hover:text-foreground relative flex items-center h-full ${
-              isActive ? "text-foreground" : "text-secondary-text"
+            className={`font-sans text-xs sm:text-sm font-bold tracking-wide uppercase transition-all duration-200 relative flex items-center h-10 px-4 rounded-xl border group ${
+              isActive
+                ? "text-foreground bg-[#141926]/90 border-[#26314A] shadow-lg shadow-black/40"
+                : "text-secondary-text border-transparent hover:text-foreground hover:bg-[#121622]/60 hover:border-[#1E273A]"
             }`}
           >
-            {item.name}
+            <span className="relative z-10 transition-transform duration-200 group-hover:scale-[1.03]">
+              {item.name}
+            </span>
+
+            {/* Glowing Active Underline Indicator */}
             {isActive && (
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-brand" />
+              <>
+                <span className="absolute bottom-0 left-2 right-2 h-[2.5px] rounded-full bg-gradient-to-r from-primary-brand/20 via-primary-brand to-primary-brand/20 shadow-[0_0_10px_rgba(229,58,76,0.9)] animate-nav-glow" />
+                <span className="absolute inset-0 rounded-xl bg-primary-brand/5 pointer-events-none" />
+              </>
             )}
           </Link>
         );
@@ -214,6 +223,7 @@ export default function PublicLayout({
   children: React.ReactNode;
 }>) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
 
   return (
     <AuthProvider>
@@ -226,9 +236,9 @@ export default function PublicLayout({
             <header className="sticky top-0 z-40 border-b border-raised-panel bg-background/95 backdrop-blur-md">
               <div className="flex h-16 items-center justify-between px-4 sm:px-6 md:px-10">
                 <div className="flex items-center gap-6 sm:gap-8">
-                  <Link href="/" className="flex items-center gap-2 font-display text-xl font-bold tracking-wider text-foreground">
-                    <span className="h-5 w-5 rounded-xs bg-primary-brand inline-block" />
-                    <span>COLLEGIUM</span>
+                  <Link href="/" className="flex items-center gap-2.5 font-display text-xl font-extrabold tracking-wider text-foreground group">
+                    <span className="h-5 w-5 rounded-md bg-primary-brand inline-block shadow-md shadow-primary-brand/30 transition-transform duration-200 group-hover:scale-110" />
+                    <span className="group-hover:text-primary-brand transition-colors">COLLEGIUM</span>
                   </Link>
                   <NavigationLinks />
                 </div>
@@ -241,7 +251,7 @@ export default function PublicLayout({
 
                   <button
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                    className="flex h-10 w-10 items-center justify-center rounded md:hidden border border-raised-panel"
+                    className="flex h-10 w-10 items-center justify-center rounded-xl md:hidden border border-raised-panel bg-card-bg hover:bg-raised-panel transition-all"
                   >
                     <svg
                       className="h-6 w-6"
@@ -261,12 +271,12 @@ export default function PublicLayout({
             </header>
 
             {mobileMenuOpen && (
-              <div className="md:hidden border-b border-raised-panel bg-background px-6 py-4">
+              <div className="md:hidden border-b border-raised-panel bg-[#0C0F17] px-6 py-4 animate-in slide-in-from-top-2 duration-200">
                 <NavigationLinks mobile onClose={() => setMobileMenuOpen(false)} />
               </div>
             )}
 
-            <main className="flex-1 flex flex-col">{children}</main>
+            <main key={pathname} className="flex-1 flex flex-col animate-page-slide-in">{children}</main>
             <FloatingNotificationToast />
             <GlobalWarRoomModal />
           </div>
@@ -276,3 +286,4 @@ export default function PublicLayout({
     </AuthProvider>
   );
 }
+

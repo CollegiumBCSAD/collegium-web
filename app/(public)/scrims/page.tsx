@@ -10,6 +10,7 @@ import { scrimsService } from "@/services";
 import { getStoredTeams, fetchTeamsApi, Team } from "@/lib/teams";
 import { useWarRoom } from "@/context/WarRoomContext";
 import ScrimCard from "@/components/scrims/ScrimCard";
+import { ScrimCardSkeleton } from "@/components/ui/Skeleton";
 import PostScrimModal from "@/components/scrims/PostScrimModal";
 import NoSquadModal from "@/components/scrims/NoSquadModal";
 
@@ -487,11 +488,11 @@ export default function ScrimsPage() {
         )}
 
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-16 space-y-4">
-            <div className="w-8 h-8 border-4 border-primary-brand border-t-transparent rounded-full animate-spin" />
-            <p className="text-xs font-sans font-semibold text-secondary-text tracking-wider uppercase">
-              Loading {selectedGameInfo?.shortName || "esports"} scrim offers...
-            </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <ScrimCardSkeleton />
+            <ScrimCardSkeleton />
+            <ScrimCardSkeleton />
+            <ScrimCardSkeleton />
           </div>
         ) : enrichedScrims.length === 0 ? (
           <div className="flex flex-col items-center justify-center text-center py-16 px-4 max-w-md mx-auto space-y-4 rounded-2xl border border-panel-border bg-card-bg/60 p-8 shadow-2xl backdrop-blur-md">
@@ -542,3 +543,4 @@ export default function ScrimsPage() {
     </div>
   );
 }
+

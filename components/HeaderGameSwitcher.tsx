@@ -83,7 +83,7 @@ export default function HeaderGameSwitcher() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-64 rounded-2xl border border-[#272B3A] bg-[#0C0F17] shadow-2xl z-50 py-2">
+        <div className="absolute right-0 mt-2 w-64 rounded-2xl border border-[#272B3A] bg-[#0C0F17] shadow-2xl z-50 py-2 animate-in fade-in zoom-in-95 duration-150">
           <div className="px-4 py-2 border-b border-raised-panel">
             <span className="text-[10px] font-sans font-extrabold tracking-widest uppercase text-secondary-text block">
               Active Game Preference
