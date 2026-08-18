@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useGame } from "@/context/GameContext";
 import { GAME_LIST, GAMES, GameId, GameInfo } from "@/lib/games";
+import { ShieldIcon, TrophyIcon, SwordsIcon } from "@/components/ui/Icons";
 
 const ARENA_DETAILS: Record<string, { num: string; initial: string; genre: string; gradient: string }> = {
   valo: {
@@ -144,7 +145,7 @@ export default function GameSelectorModal() {
 
             <h1 className="font-display text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-white uppercase leading-none">
               FIND YOUR <br />
-              <span className="text-slate-500">NEXT ARENA.</span>
+              <span className="text-white/50">NEXT ARENA.</span>
             </h1>
 
             <p className="mt-3 font-sans text-xs sm:text-sm text-slate-400 max-w-md mx-auto leading-relaxed">
@@ -278,7 +279,9 @@ export default function GameSelectorModal() {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 w-full text-left">
             <div className="p-6 rounded-2xl bg-[#0D121F]/90 border border-[#1E293B] space-y-2 shadow-xl backdrop-blur-xl">
-              <span className="text-2xl block">🛡️</span>
+              <div className="w-10 h-10 rounded-xl bg-[#141A29] border border-[#232D44] flex items-center justify-center text-primary-brand mb-3">
+                <ShieldIcon className="w-5 h-5" />
+              </div>
               <h3 className="font-display text-base font-bold text-white uppercase">VERIFIED VARSITY ATHLETICS</h3>
               <p className="font-sans text-xs text-slate-400 leading-relaxed">
                 Cryptographically validated rosters via official university domains (`.edu.ph`) and Riot API integration.
@@ -286,7 +289,9 @@ export default function GameSelectorModal() {
             </div>
 
             <div className="p-6 rounded-2xl bg-[#0D121F]/90 border border-[#1E293B] space-y-2 shadow-xl backdrop-blur-xl">
-              <span className="text-2xl block">🏆</span>
+              <div className="w-10 h-10 rounded-xl bg-[#141A29] border border-[#232D44] flex items-center justify-center text-slate-300 mb-3">
+                <TrophyIcon className="w-5 h-5" />
+              </div>
               <h3 className="font-display text-base font-bold text-white uppercase">GLICKO-2 MATCH ENGINE</h3>
               <p className="font-sans text-xs text-slate-400 leading-relaxed">
                 Automated inter-university scrimmage scheduling, rating adjustments, and peer-validated match reporting.
@@ -294,7 +299,9 @@ export default function GameSelectorModal() {
             </div>
 
             <div className="p-6 rounded-2xl bg-[#0D121F]/90 border border-[#1E293B] space-y-2 shadow-xl backdrop-blur-xl">
-              <span className="text-2xl block">⚔️</span>
+              <div className="w-10 h-10 rounded-xl bg-[#141A29] border border-[#232D44] flex items-center justify-center text-slate-300 mb-3">
+                <SwordsIcon className="w-5 h-5" />
+              </div>
               <h3 className="font-display text-base font-bold text-white uppercase">LIVE WAR ROOM DM</h3>
               <p className="font-sans text-xs text-slate-400 leading-relaxed">
                 Realtime team-to-team tactical communication, custom lobby code sharing, and map veto coordination.
