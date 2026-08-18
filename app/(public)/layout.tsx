@@ -136,21 +136,69 @@ function HeaderAuthControls() {
   );
 }
 
-export default function PublicLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+function NavigationLinks({ mobile = false, onClose }: { mobile?: boolean; onClose?: () => void }) {
+  const { isLoggedIn } = useAuth();
   const pathname = usePathname();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
     { name: "Home", href: "/" },
     { name: "Tournaments", href: "/tournaments" },
     { name: "Rankings", href: "/leaderboard" },
-    { name: "Scrims", href: "/scrims" },
+    ...(isLoggedIn ? [{ name: "Scrims", href: "/scrims" }] : []),
     { name: "News", href: "/community" },
   ];
+
+  if (mobile) {
+    return (
+      <nav className="flex flex-col gap-4">
+        {navItems.map((item) => {
+          const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={onClose}
+              className={`font-sans text-base font-medium transition-colors hover:text-primary-brand ${
+                isActive ? "text-primary-brand" : "text-secondary-text"
+              }`}
+            >
+              {item.name}
+            </Link>
+          );
+        })}
+      </nav>
+    );
+  }
+
+  return (
+    <nav className="hidden md:flex items-center gap-6 h-16">
+      {navItems.map((item) => {
+        const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={`font-sans text-sm font-medium transition-colors hover:text-foreground relative flex items-center h-full ${
+              isActive ? "text-foreground" : "text-secondary-text"
+            }`}
+          >
+            {item.name}
+            {isActive && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-brand" />
+            )}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
+export default function PublicLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <AuthProvider>
@@ -166,25 +214,7 @@ export default function PublicLayout({
                     <span className="h-5 w-5 rounded-xs bg-primary-brand inline-block" />
                     <span>COLLEGIUM</span>
                   </Link>
-                  <nav className="hidden md:flex items-center gap-6 h-16">
-                    {navItems.map((item) => {
-                      const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
-                      return (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          className={`font-sans text-sm font-medium transition-colors hover:text-foreground relative flex items-center h-full ${
-                            isActive ? "text-foreground" : "text-secondary-text"
-                          }`}
-                        >
-                          {item.name}
-                          {isActive && (
-                            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-brand" />
-                          )}
-                        </Link>
-                      );
-                    })}
-                  </nav>
+                  <NavigationLinks />
                 </div>
 
                 <div className="flex items-center gap-3 sm:gap-4">
@@ -215,23 +245,7 @@ export default function PublicLayout({
 
             {mobileMenuOpen && (
               <div className="md:hidden border-b border-raised-panel bg-background px-6 py-4">
-                <nav className="flex flex-col gap-4">
-                  {navItems.map((item) => {
-                    const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        onClick={() => setMobileMenuOpen(false)}
-                        className={`font-sans text-base font-medium transition-colors hover:text-primary-brand ${
-                          isActive ? "text-primary-brand" : "text-secondary-text"
-                        }`}
-                      >
-                        {item.name}
-                      </Link>
-                    );
-                  })}
-                </nav>
+                <NavigationLinks mobile onClose={() => setMobileMenuOpen(false)} />
               </div>
             )}
 

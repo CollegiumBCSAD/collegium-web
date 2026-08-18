@@ -2,6 +2,7 @@
 
 
 import React, { useState, useMemo, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useGame } from "@/context/GameContext";
 import { GameId, ScrimOffer } from "@/types";
@@ -90,7 +91,8 @@ const removePendingScrimRequest = (scrimId: string, teamId?: string) => {
 };
 
 export default function ScrimsPage() {
-  const { user, isLoggedIn } = useAuth();
+  const router = useRouter();
+  const { user, isLoggedIn, isLoaded } = useAuth();
   const { selectedGame: globalGame, selectedGameInfo } = useGame();
   const activeGame: GameId = globalGame || "valo";
 
@@ -100,6 +102,12 @@ export default function ScrimsPage() {
   const [scrims, setScrims] = useState<ScrimOffer[]>([]);
   const [userTeams, setUserTeams] = useState<Team[]>(() => getStoredTeams());
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (isLoaded && !isLoggedIn) {
+      router.push("/login");
+    }
+  }, [isLoaded, isLoggedIn, router]);
 
   useEffect(() => {
     fetchTeamsApi().then((teams) => setUserTeams(teams));
@@ -393,6 +401,14 @@ export default function ScrimsPage() {
       setScrims((prev) => prev.filter((s) => s.id !== id));
     }
   };
+
+  if (!isLoaded || !isLoggedIn || !user) {
+    return (
+      <div className="min-h-[85vh] flex items-center justify-center text-xs font-sans text-secondary-text">
+        Loading Scrim Board...
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col flex-1 game-theme-bg py-10 px-4 sm:px-6 lg:px-10">
