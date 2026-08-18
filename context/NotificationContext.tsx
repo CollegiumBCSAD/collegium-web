@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { notificationsService, ServerNotification, NotificationCategory, NotificationType } from "@/services/notificationsService";
+import { connectSocket, disconnectSocket } from "@/services/socket";
 
 export interface AppNotification {
   id: string;
@@ -62,7 +63,6 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const [dismissedToastIds, setDismissedToastIds] = useState<Set<string>>(() => loadDismissedToastIds(userId));
   const [activeConfirmedModal, setActiveConfirmedModal] = useState<AppNotification | null>(null);
   const seenIdsRef = useRef<Set<string>>(new Set());
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     seenIdsRef.current = new Set();
@@ -84,44 +84,63 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     if (!isLoggedIn || !userId) {
-      if (pollRef.current) {
-        clearInterval(pollRef.current);
-        pollRef.current = null;
-      }
+      disconnectSocket();
       return;
     }
 
-    const poll = async () => {
+    const socket = connectSocket();
+
+    const refetch = async () => {
       const raw = await notificationsService.getNotifications();
       const mapped = raw.map(mapNotification);
-
-      const freshlySeen = mapped.filter((n) => !seenIdsRef.current.has(n.id));
       mapped.forEach((n) => seenIdsRef.current.add(n.id));
-
-      const newAccepted = freshlySeen.find(
-        (n) => n.type === "SCRIM_REQUEST_ACCEPTED" && !n.read
-      );
-      if (newAccepted) {
-        setActiveConfirmedModal(newAccepted);
-      }
-
       setNotifications(mapped);
     };
 
-    poll();
-    pollRef.current = setInterval(poll, 5000);
+    const handleNew = (raw: ServerNotification) => {
+      const mapped = mapNotification(raw);
+      if (seenIdsRef.current.has(mapped.id)) return;
+      seenIdsRef.current.add(mapped.id);
 
-    return () => {
-      if (pollRef.current) {
-        clearInterval(pollRef.current);
-        pollRef.current = null;
+      setNotifications((prev) => [mapped, ...prev]);
+
+      if (mapped.type === "SCRIM_REQUEST_ACCEPTED" && !mapped.read) {
+        setActiveConfirmedModal(mapped);
       }
     };
-  }, [isLoggedIn, userId]);
 
-  const closeConfirmedModal = useCallback(() => {
-    setActiveConfirmedModal(null);
-  }, []);
+    const handleUpdated = (raw: ServerNotification) => {
+      const mapped = mapNotification(raw);
+      setNotifications((prev) => prev.map((n) => (n.id === mapped.id ? mapped : n)));
+    };
+
+    const handleAllRead = () => {
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    };
+
+    const handleCleared = () => {
+      seenIdsRef.current = new Set();
+      setNotifications([]);
+    };
+
+    socket.on("connect", refetch);
+    socket.on("notification:new", handleNew);
+    socket.on("notification:updated", handleUpdated);
+    socket.on("notification:all-read", handleAllRead);
+    socket.on("notification:cleared", handleCleared);
+
+    if (socket.connected) {
+      refetch();
+    }
+
+    return () => {
+      socket.off("connect", refetch);
+      socket.off("notification:new", handleNew);
+      socket.off("notification:updated", handleUpdated);
+      socket.off("notification:all-read", handleAllRead);
+      socket.off("notification:cleared", handleCleared);
+    };
+  }, [isLoggedIn, userId]);
 
   const markAsRead = useCallback(
     (id: string) => {
@@ -136,6 +155,13 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     },
     [persistDismissed]
   );
+
+  const closeConfirmedModal = useCallback(() => {
+    if (activeConfirmedModal) {
+      markAsRead(activeConfirmedModal.id);
+    }
+    setActiveConfirmedModal(null);
+  }, [activeConfirmedModal, markAsRead]);
 
   const markAllAsRead = useCallback(() => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
