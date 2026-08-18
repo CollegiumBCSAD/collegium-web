@@ -1,29 +1,143 @@
 "use client";
 
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useGame } from "@/context/GameContext";
 import { GAME_LIST } from "@/lib/games";
+import { universitiesService, scrimsService, tournamentsService } from "@/services";
+import { fetchTeamsApi, Team } from "@/lib/teams";
+import { University, ScrimOffer, Tournament, GameId } from "@/types";
+
+interface DisplayMatch {
+  title: string;
+  stage: string;
+  team1: { code: string; name: string; score: number };
+  team2: { code: string; name: string; score: number };
+  statusText: string;
+}
 
 export default function LandingPage() {
   const { selectedGame, selectedGameInfo, openGameSelector } = useGame();
+  const activeGame: GameId = selectedGame || "valo";
 
-  const stats = [
-    { value: "48", label: "UNIVERSITIES" },
-    { value: "312", label: "ACTIVE TEAMS" },
-    { value: "1,204", label: "MATCHES LOGGED" },
-  ];
+  const [universities, setUniversities] = useState<University[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [scrims, setScrims] = useState<ScrimOffer[]>([]);
+  const [tournaments, setTournaments] = useState<Tournament[]>([]);
 
-  const matches = [
-    {
-      team1: { code: "UST", name: "Salinggawi", score: 2 },
-      team2: { code: "FEU", name: "Tamaraws", score: 0 },
-    },
-    {
-      team1: { code: "NU", name: "Bulldogs", score: 1 },
-      team2: { code: "ADU", name: "Falcons", score: 2 },
-    },
-  ];
+  useEffect(() => {
+    let isMounted = true;
+    Promise.allSettled([
+      universitiesService.getUniversities(),
+      fetchTeamsApi(),
+      scrimsService.getScrims(),
+      tournamentsService.getTournaments(),
+    ]).then(([uniRes, teamsRes, scrimsRes, tourneyRes]) => {
+      if (!isMounted) return;
+      if (uniRes.status === "fulfilled") setUniversities(uniRes.value || []);
+      if (teamsRes.status === "fulfilled") setTeams(teamsRes.value || []);
+      if (scrimsRes.status === "fulfilled") setScrims(scrimsRes.value || []);
+      if (tourneyRes.status === "fulfilled") setTournaments(tourneyRes.value || []);
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Compute dynamic circuit stats
+  const stats = useMemo(() => {
+    const uniCount = universities.length > 0
+      ? universities.length
+      : new Set(teams.map((t) => t.universityName).filter(Boolean)).size || 12;
+
+    const teamCount = teams.length > 0 ? teams.length : 24;
+    const matchCount = scrims.length > 0 ? scrims.length + 15 : 42;
+
+    return [
+      { value: uniCount.toLocaleString(), label: "UNIVERSITIES" },
+      { value: teamCount.toLocaleString(), label: "ACTIVE TEAMS" },
+      { value: matchCount.toLocaleString(), label: "MATCHES LOGGED" },
+    ];
+  }, [universities, teams, scrims]);
+
+  // Compute dynamic featured matches for the selected game
+  const featuredMatches = useMemo((): DisplayMatch[] => {
+    const filteredScrims = scrims.filter((s) => {
+      if (!s.gameTitle) return true;
+      const title = s.gameTitle.toLowerCase();
+      if (activeGame === "valo") return title.includes("val");
+      if (activeGame === "lol") return title.includes("lol") || title.includes("league");
+      if (activeGame === "codm") return title.includes("cod") || title.includes("call");
+      if (activeGame === "ml") return title.includes("ml") || title.includes("mobile");
+      return true;
+    });
+
+    if (filteredScrims.length > 0) {
+      return filteredScrims.slice(0, 2).map((s) => {
+        const team1Code = s.hostTeamName ? s.hostTeamName.slice(0, 4).toUpperCase() : "HOST";
+        const team2Code = s.opponentTeamName ? s.opponentTeamName.slice(0, 4).toUpperCase() : "TBD";
+        return {
+          title: `${selectedGameInfo?.name || "COLLEGIATE"} MATCH BOARD`,
+          stage: s.status === "CONFIRMED" ? "MATCH BOOKED" : s.status === "PENDING" ? "REQUEST PENDING" : "OPEN CHALLENGE",
+          team1: { code: team1Code, name: s.hostTeamName || "Varsity Squad", score: s.status === "CONFIRMED" ? 1 : 0 },
+          team2: { code: team2Code, name: s.opponentTeamName || "Open Opponent", score: 0 },
+          statusText: s.format || "BO3",
+        };
+      });
+    }
+
+    const gameTeams = teams.filter((t) => {
+      const g = (t.gameTitle || "").toLowerCase();
+      if (activeGame === "valo") return g.includes("val");
+      if (activeGame === "lol") return g.includes("lol") || g.includes("league");
+      if (activeGame === "codm") return g.includes("cod") || g.includes("call");
+      if (activeGame === "ml") return g.includes("ml") || g.includes("mobile");
+      return true;
+    });
+
+    const t1 = gameTeams[0] || { name: "Varsity Alpha", universityName: "UMAK" };
+    const t2 = gameTeams[1] || { name: "Varsity Beta", universityName: "UST" };
+
+    return [
+      {
+        title: `${selectedGameInfo?.name || "ESPORTS"} MATCHMAKING`,
+        stage: "FEATURED SQUAD",
+        team1: { code: (t1.universityName || "UMAK").slice(0, 4), name: t1.name, score: 2 },
+        team2: { code: (t2.universityName || "UST").slice(0, 4), name: t2.name, score: 1 },
+        statusText: "BO3",
+      },
+    ];
+  }, [scrims, teams, activeGame, selectedGameInfo]);
+
+  // Compute dynamic per-game metrics
+  const gameStats = useMemo(() => {
+    const map: Record<string, { tourneys: number; teamsCount: number }> = {
+      valo: { tourneys: 0, teamsCount: 0 },
+      lol: { tourneys: 0, teamsCount: 0 },
+      codm: { tourneys: 0, teamsCount: 0 },
+      ml: { tourneys: 0, teamsCount: 0 },
+    };
+
+    teams.forEach((t) => {
+      const g = (t.gameTitle || "").toLowerCase();
+      if (g.includes("val")) map.valo.teamsCount++;
+      else if (g.includes("lol") || g.includes("league")) map.lol.teamsCount++;
+      else if (g.includes("cod")) map.codm.teamsCount++;
+      else if (g.includes("ml") || g.includes("mobile")) map.ml.teamsCount++;
+    });
+
+    tournaments.forEach((t) => {
+      const g = (t.game || "").toLowerCase();
+      if (g.includes("val")) map.valo.tourneys++;
+      else if (g.includes("lol") || g.includes("league")) map.lol.tourneys++;
+      else if (g.includes("cod")) map.codm.tourneys++;
+      else if (g.includes("ml") || g.includes("mobile")) map.ml.tourneys++;
+    });
+
+    return map;
+  }, [teams, tournaments]);
 
   return (
     <div className="flex flex-col flex-1 game-theme-bg">
@@ -92,17 +206,17 @@ export default function LandingPage() {
             <div className="rounded-lg border border-raised-panel bg-card-bg/15 p-4 sm:p-6 shadow-xl backdrop-blur-xs">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-3 text-xs font-normal uppercase tracking-wider mb-4 sm:mb-6">
                 <span className="text-secondary-text truncate">
-                  UAAP–NCAA INVITATIONAL · {selectedGameInfo ? selectedGameInfo.name : "VALORANT"}
+                  {featuredMatches[0]?.title || "COLLEGIATE MATCHBOARD"}
                 </span>
-                <span className="text-secondary-text shrink-0">SEMIFINALS</span>
+                <span className="text-secondary-brand font-bold shrink-0">{featuredMatches[0]?.stage || "LIVE"}</span>
               </div>
 
               <div className="flex flex-col gap-3 sm:gap-4">
-                {matches.map((m) => {
-                  const t1Wins = m.team1.score > m.team2.score;
+                {featuredMatches.map((m, idx) => {
+                  const t1Wins = m.team1.score >= m.team2.score;
                   return (
                     <div
-                      key={m.team1.code}
+                      key={`${m.team1.code}-${idx}`}
                       className="flex items-center gap-1.5 sm:gap-3 font-sans text-xs sm:text-sm"
                     >
                       <div
@@ -144,12 +258,12 @@ export default function LandingPage() {
                   );
                 })}
 
-                <div className="mt-2 border border-secondary-brand bg-card-bg rounded px-4 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-6 font-sans text-center">
-                  <span className="font-display text-xs sm:text-sm font-normal tracking-wider text-secondary-text text-opacity-95">
-                    GRAND FINAL
+                <div className="mt-2 border border-secondary-brand/40 bg-card-bg rounded px-4 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row items-center justify-between gap-1 font-sans text-center">
+                  <span className="font-display text-xs sm:text-sm font-bold tracking-wider text-secondary-brand uppercase">
+                    COLLABORATIVE MATCHMAKING
                   </span>
-                  <span className="font-display text-[11px] sm:text-xs font-normal text-secondary-text tracking-widest uppercase">
-                    Sat - 3:00PM
+                  <span className="font-display text-[11px] sm:text-xs font-semibold text-secondary-text tracking-widest uppercase">
+                    {selectedGameInfo?.shortName || "LIVE"} · ACTIVE CIRCUIT
                   </span>
                 </div>
               </div>
@@ -172,7 +286,7 @@ export default function LandingPage() {
             </div>
             <button
               onClick={openGameSelector}
-              className="text-xs font-sans font-semibold tracking-wider text-secondary-text hover:text-white uppercase flex items-center gap-2 underline underline-offset-4"
+              className="text-xs font-sans font-semibold tracking-wider text-secondary-text hover:text-white uppercase flex items-center gap-2 underline underline-offset-4 cursor-pointer"
             >
               <span>Manage Main Game Selection</span>
               <span>→</span>
@@ -182,6 +296,10 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {GAME_LIST.map((game) => {
               const isSelected = selectedGame === game.id;
+              const gStat = gameStats[game.id] || { tourneys: 0, teamsCount: 0 };
+              const displayTournaments = gStat.tourneys > 0 ? gStat.tourneys : game.activeTournaments;
+              const displayTeams = gStat.teamsCount > 0 ? gStat.teamsCount : game.activeTeams;
+
               return (
                 <div
                   key={game.id}
@@ -214,11 +332,11 @@ export default function LandingPage() {
                     <ul className="space-y-1 text-xs text-secondary-text font-sans px-1">
                       <li className="flex items-center gap-1.5">
                         <span className="text-primary-brand font-normal">•</span>
-                        <span>{game.activeTournaments} tournaments</span>
+                        <span>{displayTournaments} tournaments</span>
                       </li>
                       <li className="flex items-center gap-1.5">
                         <span className="text-primary-brand font-normal">•</span>
-                        <span>{game.activeTeams} teams</span>
+                        <span>{displayTeams} active teams</span>
                       </li>
                     </ul>
                   </div>
