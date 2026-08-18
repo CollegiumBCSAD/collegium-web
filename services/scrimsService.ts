@@ -15,6 +15,16 @@ export interface AcceptScrimPayload {
   opponentId: string;
 }
 
+export interface ScrimChatMessage {
+  id: string;
+  scrimId: string;
+  senderId: string;
+  senderName: string;
+  teamName: string;
+  text: string;
+  createdAt: string;
+}
+
 const gameTitleToEnum: Record<string, string> = {
   valo: "VALORANT",
   lol: "LOL",
@@ -98,14 +108,14 @@ export const scrimsService = {
   deleteScrim: (scrimId: string): Promise<void> =>
     apiClient.delete<void>(`/scrims/${scrimId}`),
 
-  getScrimChat: async (scrimId: string) => {
+  getScrimChat: async (scrimId: string): Promise<ScrimChatMessage[]> => {
     try {
-      return await apiClient.get<Array<{ id: string; senderName: string; teamName: string; text: string; timestamp: string }>>(`/scrims/${scrimId}/chat`);
+      return await apiClient.get<ScrimChatMessage[]>(`/scrims/${scrimId}/chat`);
     } catch {
       return [];
     }
   },
 
-  sendScrimChat: (scrimId: string, payload: { id?: string; senderName: string; teamName: string; text: string; timestamp?: string }) =>
-    apiClient.post(`/scrims/${scrimId}/chat`, payload),
+  sendScrimChat: (scrimId: string, text: string): Promise<ScrimChatMessage> =>
+    apiClient.post<ScrimChatMessage>(`/scrims/${scrimId}/chat`, { text }),
 };
