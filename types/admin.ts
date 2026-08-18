@@ -45,6 +45,14 @@ export interface ScrimBoardPost {
   flagReason?: string;
 }
 
+export interface NewsfeedModerationItem {
+  id: string;
+  headline: string;
+  excerpt: string;
+  status: "PUBLISHED" | "PENDING" | "FLAGGED";
+  detail: string;
+}
+
 export interface FlaggedMatch {
   id: string;
   teamA: string;

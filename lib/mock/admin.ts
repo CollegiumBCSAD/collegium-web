@@ -3,6 +3,7 @@ import {
   PendingTournamentPost,
   PendingTeamRegistration,
   ScrimBoardPost,
+  NewsfeedModerationItem,
   FlaggedMatch,
 } from "@/types";
 
@@ -99,6 +100,30 @@ export const mockScrimBoardPosts: ScrimBoardPost[] = [
     game: "VALORANT",
     detail: "Open Jul 13, 5:30–7:00 PM · Posted by Coach Ramos",
     flagReason: "Flagged: similar post already live",
+  },
+];
+
+export const mockNewsfeedModerationItems: NewsfeedModerationItem[] = [
+  {
+    id: "1",
+    headline: "New season format introduces regional qualifiers",
+    excerpt: "Universities across the country will now face regional qualifiers before the national finals.",
+    status: "PUBLISHED",
+    detail: "Posted Jun 22, 2026 · By Collegium Editorial",
+  },
+  {
+    id: "2",
+    headline: "Three new universities join the Collegium circuit",
+    excerpt: "The latest wave of institutions expands the platform's reach and talent pool.",
+    status: "PENDING",
+    detail: "Submitted Jul 5, 2026 · By Collegium Editorial",
+  },
+  {
+    id: "3",
+    headline: "Watch the first live community scrim showcase",
+    excerpt: "Teams from across the archipelago will test strategies in a public broadcast next week.",
+    status: "FLAGGED",
+    detail: "Flagged Jul 6, 2026 · Reported for outdated info",
   },
 ];
 
