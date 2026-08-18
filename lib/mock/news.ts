@@ -1,3 +1,5 @@
+import { GAMES } from "@/lib/games";
+
 export interface NewsArticle {
   id: string;
   title: string;
@@ -6,7 +8,7 @@ export interface NewsArticle {
   category: string;
   readTime?: string;
   author?: string;
-  bgGradient: string;
+  image: string;
   isFeatured?: boolean;
 }
 
@@ -19,7 +21,7 @@ export const mockNewsArticles: NewsArticle[] = [
     category: "TOURNAMENT CIRCUIT",
     readTime: "4 MIN READ",
     author: "COLLEGIUM MEDIA TEAM",
-    bgGradient: "from-[#8E2632] via-[#48161D] to-[#160B0E]",
+    image: GAMES.valo.image,
     isFeatured: true,
   },
   {
@@ -30,7 +32,7 @@ export const mockNewsArticles: NewsArticle[] = [
     category: "CIRCUIT ANNOUNCEMENT",
     readTime: "3 MIN READ",
     author: "LEAGUE ADMIN",
-    bgGradient: "from-[#233568] via-[#141C38] to-[#0A0F20]",
+    image: GAMES.lol.image,
   },
   {
     id: "3",
@@ -40,7 +42,7 @@ export const mockNewsArticles: NewsArticle[] = [
     category: "COMMUNITY MILESTONE",
     readTime: "2 MIN READ",
     author: "GLICKO-2 ANALYTICS",
-    bgGradient: "from-[#8E6519] via-[#42300E] to-[#1C1405]",
+    image: GAMES.ml.image,
   },
   {
     id: "4",
@@ -50,7 +52,7 @@ export const mockNewsArticles: NewsArticle[] = [
     category: "RULESET & PATCH",
     readTime: "5 MIN READ",
     author: "RULES COMMITTEE",
-    bgGradient: "from-[#1F4532] via-[#0E2419] to-[#08120D]",
+    image: GAMES.valo.image,
   },
   {
     id: "5",
@@ -60,7 +62,6 @@ export const mockNewsArticles: NewsArticle[] = [
     category: "ATHLETE SPOTLIGHT",
     readTime: "6 MIN READ",
     author: "ESPORTS ANALYST",
-    bgGradient: "from-[#4C1D95] via-[#2A1054] to-[#110626]",
+    image: GAMES.codm.image,
   },
 ];
-
