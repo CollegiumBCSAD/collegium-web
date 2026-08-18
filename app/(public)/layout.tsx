@@ -11,7 +11,6 @@ import NotificationBell from "@/components/NotificationBell";
 import FloatingNotificationToast from "@/components/FloatingNotificationToast";
 import GameSelectorModal from "@/components/GameSelectorModal";
 import HeaderGameSwitcher from "@/components/HeaderGameSwitcher";
-import FloatingChatWidget from "@/components/FloatingChatWidget";
 
 function HeaderAuthControls() {
   const { user, isLoggedIn, logoutUser, isLoaded } = useAuth();
@@ -250,7 +249,6 @@ export default function PublicLayout({
             )}
 
             <main className="flex-1 flex flex-col">{children}</main>
-            <FloatingChatWidget />
             <FloatingNotificationToast />
           </div>
         </NotificationProvider>
