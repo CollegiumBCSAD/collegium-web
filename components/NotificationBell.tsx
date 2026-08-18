@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useNotifications, AppNotification } from "@/context/NotificationContext";
+import { CheckCircleIcon, XCircleIcon, AlertTriangleIcon, ClockIcon, UsersIcon, SwordsIcon, InfoIcon } from "@/components/ui/Icons";
 
 export default function NotificationBell() {
   const { isLoggedIn } = useAuth();
@@ -28,21 +29,19 @@ export default function NotificationBell() {
   const getIcon = (type: AppNotification["type"]) => {
     switch (type) {
       case "SCRIM_REQUEST_ACCEPTED":
-        return "🎉";
-      case "SCRIM_REQUEST_DECLINED":
-        return "✕";
-      case "SCRIM_UNBOOKED":
-        return "⚠️";
-      case "SCRIM_REQUEST_RECEIVED":
-        return "⏳";
-      case "TEAM_JOIN_REQUEST":
-        return "👥";
       case "TEAM_REQUEST_ACCEPTED":
-        return "✅";
+        return <CheckCircleIcon className="w-4 h-4 text-emerald-400" />;
+      case "SCRIM_REQUEST_DECLINED":
       case "TEAM_REQUEST_DECLINED":
-        return "🚫";
+        return <XCircleIcon className="w-4 h-4 text-amber-400" />;
+      case "SCRIM_UNBOOKED":
+        return <AlertTriangleIcon className="w-4 h-4 text-rose-400" />;
+      case "SCRIM_REQUEST_RECEIVED":
+        return <ClockIcon className="w-4 h-4 text-slate-300" />;
+      case "TEAM_JOIN_REQUEST":
+        return <UsersIcon className="w-4 h-4 text-purple-400" />;
       default:
-        return "⚔️";
+        return <SwordsIcon className="w-4 h-4 text-slate-300" />;
     }
   };
 
@@ -114,7 +113,9 @@ export default function NotificationBell() {
           <div className="flex-1 overflow-y-auto divide-y divide-[#1C2538]">
             {notifications.length === 0 ? (
               <div className="py-12 text-center text-xs font-sans text-slate-400 space-y-1">
-                <span className="text-2xl block mb-2">🔔</span>
+                <div className="w-10 h-10 rounded-xl bg-[#141A29] border border-[#232D44] flex items-center justify-center mx-auto mb-2 text-slate-400">
+                  <InfoIcon className="w-5 h-5" />
+                </div>
                 <p className="font-bold text-white">No Notifications Yet</p>
                 <p className="text-[11px] font-mono text-slate-400">Scrim updates and roster activity will show up here.</p>
               </div>

@@ -145,9 +145,11 @@ export default function PostScrimModal({
           <button
             onClick={onClose}
             aria-label="Close Modal"
-            className="text-secondary-text hover:text-foreground text-sm cursor-pointer"
+            className="w-8 h-8 rounded-full bg-[#141A29] hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 flex items-center justify-center text-sm font-bold transition-all cursor-pointer border border-[#232D44]"
           >
-            ✕
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
 

@@ -46,21 +46,21 @@ export default function FloatingNotificationToast() {
   const getIcon = (type: AppNotification["type"]) => {
     switch (type) {
       case "SCRIM_REQUEST_ACCEPTED":
-        return "🏆";
+        return <TrophyIcon className="w-4 h-4 text-emerald-400" />;
       case "SCRIM_REQUEST_RECEIVED":
-        return "⏳";
+        return <ClockIcon className="w-4 h-4 text-blue-400" />;
       case "SCRIM_REQUEST_DECLINED":
-        return "ℹ️";
+        return <InfoIcon className="w-4 h-4 text-amber-400" />;
       case "SCRIM_UNBOOKED":
-        return "⚠️";
+        return <AlertTriangleIcon className="w-4 h-4 text-rose-400" />;
       case "TEAM_JOIN_REQUEST":
-        return "👥";
+        return <UsersIcon className="w-4 h-4 text-purple-400" />;
       case "TEAM_REQUEST_ACCEPTED":
-        return "✅";
+        return <CheckCircleIcon className="w-4 h-4 text-emerald-400" />;
       case "TEAM_REQUEST_DECLINED":
-        return "🚫";
+        return <XCircleIcon className="w-4 h-4 text-amber-400" />;
       default:
-        return "⚔️";
+        return <SwordsIcon className="w-4 h-4 text-blue-400" />;
     }
   };
 
@@ -73,7 +73,7 @@ export default function FloatingNotificationToast() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in zoom-in-95 duration-200">
           <div className="w-full max-w-md bg-[#11141C] border border-[#10B981]/50 rounded-2xl p-6 shadow-2xl space-y-5 text-center relative overflow-hidden">
             <div className="w-16 h-16 rounded-full bg-[#10B981]/20 border border-[#10B981]/40 flex items-center justify-center text-3xl mx-auto animate-bounce">
-              🏆
+              <TrophyIcon className="w-8 h-8 text-[#10B981]" />
             </div>
             <div>
               <span className="text-[10px] font-sans font-extrabold uppercase tracking-widest text-[#34D399] block mb-1">
@@ -91,7 +91,7 @@ export default function FloatingNotificationToast() {
               onClick={closeConfirmedModal}
               className="w-full h-11 rounded-xl bg-gradient-to-r from-[#10B981] to-[#059669] hover:from-[#34D399] hover:to-[#10B981] text-white font-sans text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-emerald-950/40"
             >
-              ⚔️ Let&apos;s Warm Up!
+              Let&apos;s Warm Up!
             </button>
           </div>
         </div>
@@ -109,7 +109,7 @@ export default function FloatingNotificationToast() {
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2.5">
-                  <span className="text-xl shrink-0">{getIcon(item.type)}</span>
+                  <span className="shrink-0">{getIcon(item.type)}</span>
                   <div>
                     <h4 className="font-display text-xs font-bold uppercase text-[#F8FAFC]">
                       {item.title}
@@ -145,7 +145,7 @@ export default function FloatingNotificationToast() {
                   onClick={() => markAsRead(item.id)}
                   className="h-8 px-3 rounded-lg bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-sans text-[11px] font-bold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer shadow-md shadow-blue-950/40 flex items-center justify-center"
                 >
-                  {item.category === "TEAM" ? "👥 View Roster" : "⚔️ View Scrim"}
+                  {item.category === "TEAM" ? "View Roster" : "View Scrim"}
                 </Link>
               </div>
             </div>

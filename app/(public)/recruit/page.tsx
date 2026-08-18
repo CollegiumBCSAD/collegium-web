@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useGame } from "@/context/GameContext";
 import { GAME_LIST, GameId, getGameInfo } from "@/lib/games";
+import { UsersIcon } from "@/components/ui/Icons";
 
 interface RecruitPost {
   id: string;
@@ -99,7 +100,7 @@ export default function RecruitPage() {
             onClick={() => setIsModalOpen(true)}
             className="h-11 px-6 rounded-lg game-theme-btn font-sans text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] flex items-center justify-center cursor-pointer shadow-lg"
           >
-            📢 Post LFT / LFP Listing
+            Post LFT / LFP Listing
           </button>
         </div>
 
@@ -112,7 +113,7 @@ export default function RecruitPage() {
                 : "text-secondary-text hover:text-foreground"
             }`}
           >
-            🙋 Looking for Team (LFT)
+            Looking for Team (LFT)
           </button>
           <button
             onClick={() => setActiveTab("LFP")}
@@ -122,14 +123,14 @@ export default function RecruitPage() {
                 : "text-secondary-text hover:text-foreground"
             }`}
           >
-            🎯 Looking for Players (LFP)
+            Looking for Players (LFP)
           </button>
         </div>
 
         {filteredPosts.length === 0 ? (
           <div className="flex flex-col items-center justify-center text-center py-16 px-4 max-w-md mx-auto space-y-4 rounded-2xl border border-panel-border bg-card-bg/60 p-8 shadow-2xl backdrop-blur-md">
-            <div className="w-16 h-16 rounded-full bg-raised-panel border border-panel-border flex items-center justify-center text-3xl shadow-inner">
-              📢
+            <div className="w-16 h-16 rounded-2xl bg-[#141A29] border border-[#232D44] flex items-center justify-center shadow-inner">
+              <UsersIcon className="w-8 h-8 text-primary-brand" />
             </div>
             <div className="space-y-1">
               <h3 className="font-display text-xl font-bold text-foreground uppercase tracking-wide">

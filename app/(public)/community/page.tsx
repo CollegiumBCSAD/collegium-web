@@ -91,7 +91,7 @@ export default function CommunityPage() {
                 
                 <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
                   <span className="font-mono text-[10px] font-extrabold tracking-widest text-white uppercase px-3 py-1 rounded-full bg-primary-brand/90 shadow-md">
-                    ★ FEATURED STORY
+                    FEATURED STORY
                   </span>
                   <span className="font-mono text-xs font-bold text-slate-200 flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
                     <ClockIcon className="w-3.5 h-3.5 text-primary-brand" />
