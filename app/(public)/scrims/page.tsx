@@ -4,7 +4,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useGame } from "@/context/GameContext";
-import { useNotifications } from "@/context/NotificationContext";
 import { GameId, ScrimOffer } from "@/types";
 import { scrimsService } from "@/services";
 import { getStoredTeams, fetchTeamsApi, Team } from "@/lib/teams";
@@ -93,7 +92,6 @@ const removePendingScrimRequest = (scrimId: string, teamId?: string) => {
 export default function ScrimsPage() {
   const { user, isLoggedIn } = useAuth();
   const { selectedGame: globalGame, selectedGameInfo } = useGame();
-  const { addNotification, syncScrimState } = useNotifications();
   const activeGame: GameId = globalGame || "valo";
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -208,13 +206,6 @@ export default function ScrimsPage() {
             const list = Array.isArray(data) ? data : [];
             setScrims(list);
             setIsLoading(false);
-            syncScrimState(
-              list,
-              isUserHost,
-              isUserOpponent,
-              myTeams.map((t: Team) => t.name),
-              myTeams.map((t: Team) => t.id)
-            );
           }
         })
         .catch(() => {
@@ -232,7 +223,7 @@ export default function ScrimsPage() {
       isMounted = false;
       clearInterval(interval);
     };
-  }, [activeGame, isUserHost, isUserOpponent, myTeams, syncScrimState]);
+  }, [activeGame]);
 
   const filteredScrims = useMemo(() => {
     return scrims.filter((s) => {
@@ -330,13 +321,6 @@ export default function ScrimsPage() {
       await scrimsService.confirmScrim(id, selectedOpponentId);
       const data = await scrimsService.getScrims(activeGame);
       setScrims(data);
-      syncScrimState(
-        data,
-        isUserHost,
-        isUserOpponent,
-        myTeams.map((t: Team) => t.name),
-        myTeams.map((t: Team) => t.id)
-      );
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
       setScrimError(errorObj?.response?.data?.message || errorObj?.message || "Failed to confirm booking.");
@@ -377,13 +361,6 @@ export default function ScrimsPage() {
       await scrimsService.acceptScrim(id, { opponentId: myTeam.id });
       const data = await scrimsService.getScrims(activeGame);
       setScrims(data);
-      syncScrimState(
-        data,
-        isUserHost,
-        isUserOpponent,
-        myTeams.map((t: Team) => t.name),
-        myTeams.map((t: Team) => t.id)
-      );
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
       setScrimError(errorObj?.response?.data?.message || errorObj?.message || "Failed to book scrim match.");
@@ -399,13 +376,6 @@ export default function ScrimsPage() {
       await scrimsService.cancelScrim(id);
       const data = await scrimsService.getScrims(activeGame);
       setScrims(data);
-      syncScrimState(
-        data,
-        isUserHost,
-        isUserOpponent,
-        myTeams.map((t: Team) => t.name),
-        myTeams.map((t: Team) => t.id)
-      );
     } catch {
       setScrims((prev) =>
         prev.map((s) =>

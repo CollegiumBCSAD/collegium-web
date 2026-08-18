@@ -1,43 +1,39 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { notificationsService, ServerNotification, NotificationCategory, NotificationType } from "@/services/notificationsService";
 
-export interface ScrimNotification {
+export interface AppNotification {
   id: string;
-  type: "ACCEPTED" | "DECLINED" | "UNBOOKED" | "PENDING_REQUEST";
-  scrimId: string;
+  category: NotificationCategory;
+  type: NotificationType;
   title: string;
   message: string;
-  hostTeamName: string;
-  opponentTeamName?: string;
-  gameTitle?: string;
-  scheduledAt?: string;
+  link: string;
   timestamp: string;
   read: boolean;
-  dismissedFromToast?: boolean;
+}
+
+function mapNotification(n: ServerNotification): AppNotification {
+  return {
+    id: n.id,
+    category: n.category,
+    type: n.type,
+    title: n.title,
+    message: n.message,
+    link: n.link || "/dashboard",
+    timestamp: n.createdAt,
+    read: n.read,
+  };
 }
 
 interface NotificationContextType {
-  notifications: ScrimNotification[];
+  notifications: AppNotification[];
   unreadCount: number;
-  toastNotifications: ScrimNotification[];
-  activeConfirmedModal: ScrimNotification | null;
+  toastNotifications: AppNotification[];
+  activeConfirmedModal: AppNotification | null;
   closeConfirmedModal: () => void;
-  addNotification: (notification: Omit<ScrimNotification, "id" | "timestamp" | "read">) => void;
-  syncScrimState: (
-    scrims: Array<{
-      id: string;
-      status: string;
-      hostTeamName: string;
-      opponentTeamName?: string;
-      gameTitle?: string;
-      scheduledAt?: string;
-    }>,
-    isUserHostFn: (scrim: any) => boolean,
-    isUserOpponentFn: (scrim: any) => boolean,
-    myTeamNames?: string[],
-    myTeamIds?: string[]
-  ) => void;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
   dismissToast: (id: string) => void;
@@ -46,202 +42,82 @@ interface NotificationContextType {
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
-const NOTIFICATIONS_STORAGE_KEY = "collegium_scrim_notifications_v4";
-const STATUS_MAP_STORAGE_KEY = "collegium_scrim_status_map_v4";
+const TOAST_DISMISSED_STORAGE_PREFIX = "collegium_toast_dismissed_v1_";
+
+function loadDismissedToastIds(userId: string | undefined): Set<string> {
+  if (typeof window === "undefined" || !userId) return new Set();
+  try {
+    const stored = localStorage.getItem(TOAST_DISMISSED_STORAGE_PREFIX + userId);
+    return stored ? new Set(JSON.parse(stored)) : new Set();
+  } catch {
+    return new Set();
+  }
+}
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
-  const [notifications, setNotifications] = useState<ScrimNotification[]>([]);
-  const [activeConfirmedModal, setActiveConfirmedModal] = useState<ScrimNotification | null>(null);
+  const { user, isLoggedIn } = useAuth();
+  const userId = user?.id;
 
-  // Load from localStorage on mount
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [dismissedToastIds, setDismissedToastIds] = useState<Set<string>>(() => loadDismissedToastIds(userId));
+  const [activeConfirmedModal, setActiveConfirmedModal] = useState<AppNotification | null>(null);
+  const seenIdsRef = useRef<Set<string>>(new Set());
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const stored = localStorage.getItem(NOTIFICATIONS_STORAGE_KEY);
-        if (stored) {
-          setNotifications(JSON.parse(stored));
-        }
-      } catch {}
-    }
-  }, []);
+    seenIdsRef.current = new Set();
+    setActiveConfirmedModal(null);
+    setNotifications([]);
+    setDismissedToastIds(loadDismissedToastIds(userId));
+  }, [userId]);
 
-  // Save to localStorage when notifications change
-  const saveNotifications = useCallback((items: ScrimNotification[]) => {
-    setNotifications(items);
-    if (typeof window !== "undefined") {
-      try {
-        localStorage.setItem(NOTIFICATIONS_STORAGE_KEY, JSON.stringify(items));
-      } catch {}
-    }
-  }, []);
-
-  const addNotification = useCallback(
-    (item: Omit<ScrimNotification, "id" | "timestamp" | "read">) => {
-      const newNotif: ScrimNotification = {
-        ...item,
-        id: `notif-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-        timestamp: new Date().toISOString(),
-        read: false,
-        dismissedFromToast: false,
-      };
-
-      setNotifications((prev) => {
-        const duplicate = prev.find(
-          (n) => n.scrimId === item.scrimId && n.type === item.type
-        );
-        if (duplicate) return prev;
-        const updated = [newNotif, ...prev];
-        if (typeof window !== "undefined") {
-          try {
-            localStorage.setItem(NOTIFICATIONS_STORAGE_KEY, JSON.stringify(updated));
-          } catch {}
-        }
-        return updated;
-      });
-
-      // ONLY open the celebration popup window when a Host ACCEPTS a scrim request!
-      if (item.type === "ACCEPTED") {
-        setActiveConfirmedModal(newNotif);
-      }
-    },
-    []
-  );
-
-  const syncScrimState = useCallback(
-    (
-      scrims: Array<{
-        id: string;
-        status: string;
-        hostTeamName: string;
-        opponentTeamName?: string;
-        gameTitle?: string;
-        scheduledAt?: string;
-      }>,
-      isUserHostFn: (scrim: any) => boolean,
-      isUserOpponentFn: (scrim: any) => boolean,
-      myTeamNames: string[] = [],
-      myTeamIds: string[] = []
-    ) => {
-      let statusMap: Record<string, string> = {};
-      if (typeof window !== "undefined") {
+  const persistDismissed = useCallback(
+    (ids: Set<string>) => {
+      if (typeof window !== "undefined" && userId) {
         try {
-          const storedMap = localStorage.getItem(STATUS_MAP_STORAGE_KEY);
-          if (storedMap) statusMap = JSON.parse(storedMap);
-        } catch {}
-      }
-
-      let mapChanged = false;
-
-      scrims.forEach((scrim: any) => {
-        const lastStatus = statusMap[scrim.id];
-        const isHost = isUserHostFn(scrim);
-        const isOpponent = isUserOpponentFn(scrim);
-
-        const lowerMyTeamNames = myTeamNames.map((n) => n.toLowerCase().trim());
-        const scrimOpponentName = (scrim.opponentTeamName || "").toLowerCase().trim();
-        const scrimOpponentId = scrim.opponentTeamId || scrim.opponentId;
-
-        const isChosenOpponent =
-          !isHost &&
-          ((scrimOpponentName && lowerMyTeamNames.includes(scrimOpponentName)) ||
-           (scrimOpponentId && myTeamIds.includes(scrimOpponentId)));
-
-        // 1. Challenger Notification ONLY: Host Accepted Scrim Request (status is CONFIRMED & lastStatus was PENDING or not CONFIRMED)
-        // MUST BE the specific chosen opponent!
-        if (scrim.status === "CONFIRMED" && lastStatus !== "CONFIRMED") {
-          if (isChosenOpponent) {
-            addNotification({
-              type: "ACCEPTED",
-              scrimId: scrim.id,
-              title: "🎉 Scrim Match Request Accepted!",
-              message: `${scrim.hostTeamName} accepted your practice match request!`,
-              hostTeamName: scrim.hostTeamName,
-              opponentTeamName: scrim.opponentTeamName,
-              gameTitle: scrim.gameTitle,
-              scheduledAt: scrim.scheduledAt,
-            });
-            statusMap[scrim.id] = "CONFIRMED";
-            mapChanged = true;
-          } else if (isOpponent && !isHost) {
-            addNotification({
-              type: "DECLINED",
-              scrimId: scrim.id,
-              title: "✕ Scrim Request Declined",
-              message: `${scrim.hostTeamName} selected another opponent squad for this scrim.`,
-              hostTeamName: scrim.hostTeamName,
-              opponentTeamName: scrim.opponentTeamName,
-              gameTitle: scrim.gameTitle,
-              scheduledAt: scrim.scheduledAt,
-            });
-            statusMap[scrim.id] = "CONFIRMED";
-            mapChanged = true;
-          }
-        }
-
-        // 2. Challenger Notification ONLY: Host Declined Scrim Request (status is OPEN & lastStatus was PENDING)
-        if (scrim.status === "OPEN" && isOpponent && !isHost && lastStatus === "PENDING") {
-          addNotification({
-            type: "DECLINED",
-            scrimId: scrim.id,
-            title: "✕ Scrim Request Declined",
-            message: `${scrim.hostTeamName} declined your practice match request. The offer is re-opened on the board.`,
-            hostTeamName: scrim.hostTeamName,
-            opponentTeamName: scrim.opponentTeamName,
-            gameTitle: scrim.gameTitle,
-            scheduledAt: scrim.scheduledAt,
-          });
-          statusMap[scrim.id] = "OPEN";
-          mapChanged = true;
-        }
-
-        // 3. Challenger Notification ONLY: Host Unbooked Match (status is OPEN & lastStatus was CONFIRMED)
-        if (scrim.status === "OPEN" && isOpponent && !isHost && lastStatus === "CONFIRMED") {
-          addNotification({
-            type: "UNBOOKED",
-            scrimId: scrim.id,
-            title: "⚠️ Scrim Match Cancelled",
-            message: `${scrim.hostTeamName} unbooked the scheduled practice match.`,
-            hostTeamName: scrim.hostTeamName,
-            opponentTeamName: scrim.opponentTeamName,
-            gameTitle: scrim.gameTitle,
-            scheduledAt: scrim.scheduledAt,
-          });
-          statusMap[scrim.id] = "OPEN";
-          mapChanged = true;
-        }
-
-        // 4. Host Notification ONLY: Opponent Sent Request (status is PENDING & lastStatus !== PENDING)
-        // Uses PENDING_REQUEST type so it NEVER triggers a popup modal on screen!
-        if (scrim.status === "PENDING" && isHost && lastStatus !== "PENDING") {
-          addNotification({
-            type: "PENDING_REQUEST",
-            scrimId: scrim.id,
-            title: "⏳ Incoming Scrim Request!",
-            message: `${scrim.opponentTeamName || "An opponent squad"} requested to book your scrim offer!`,
-            hostTeamName: scrim.hostTeamName,
-            opponentTeamName: scrim.opponentTeamName,
-            gameTitle: scrim.gameTitle,
-            scheduledAt: scrim.scheduledAt,
-          });
-          statusMap[scrim.id] = "PENDING";
-          mapChanged = true;
-        }
-
-        // Initialize status map for untracked scrims
-        if (!statusMap[scrim.id]) {
-          statusMap[scrim.id] = scrim.status;
-          mapChanged = true;
-        }
-      });
-
-      if (mapChanged && typeof window !== "undefined") {
-        try {
-          localStorage.setItem(STATUS_MAP_STORAGE_KEY, JSON.stringify(statusMap));
+          localStorage.setItem(TOAST_DISMISSED_STORAGE_PREFIX + userId, JSON.stringify(Array.from(ids)));
         } catch {}
       }
     },
-    [addNotification]
+    [userId]
   );
+
+  useEffect(() => {
+    if (!isLoggedIn || !userId) {
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
+      return;
+    }
+
+    const poll = async () => {
+      const raw = await notificationsService.getNotifications();
+      const mapped = raw.map(mapNotification);
+
+      const freshlySeen = mapped.filter((n) => !seenIdsRef.current.has(n.id));
+      mapped.forEach((n) => seenIdsRef.current.add(n.id));
+
+      const newAccepted = freshlySeen.find(
+        (n) => n.type === "SCRIM_REQUEST_ACCEPTED" && !n.read
+      );
+      if (newAccepted) {
+        setActiveConfirmedModal(newAccepted);
+      }
+
+      setNotifications(mapped);
+    };
+
+    poll();
+    pollRef.current = setInterval(poll, 5000);
+
+    return () => {
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
+    };
+  }, [isLoggedIn, userId]);
 
   const closeConfirmedModal = useCallback(() => {
     setActiveConfirmedModal(null);
@@ -249,35 +125,48 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   const markAsRead = useCallback(
     (id: string) => {
-      const updated = notifications.map((n) =>
-        n.id === id ? { ...n, read: true, dismissedFromToast: true } : n
-      );
-      saveNotifications(updated);
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+      setDismissedToastIds((prev) => {
+        const updated = new Set(prev);
+        updated.add(id);
+        persistDismissed(updated);
+        return updated;
+      });
+      notificationsService.markAsRead(id).catch(() => {});
     },
-    [notifications, saveNotifications]
+    [persistDismissed]
   );
 
   const markAllAsRead = useCallback(() => {
-    const updated = notifications.map((n) => ({ ...n, read: true, dismissedFromToast: true }));
-    saveNotifications(updated);
-  }, [notifications, saveNotifications]);
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    setDismissedToastIds((prev) => {
+      const updated = new Set(prev);
+      notifications.forEach((n) => updated.add(n.id));
+      persistDismissed(updated);
+      return updated;
+    });
+    notificationsService.markAllAsRead().catch(() => {});
+  }, [notifications, persistDismissed]);
 
   const dismissToast = useCallback(
     (id: string) => {
-      const updated = notifications.map((n) =>
-        n.id === id ? { ...n, dismissedFromToast: true } : n
-      );
-      saveNotifications(updated);
+      setDismissedToastIds((prev) => {
+        const updated = new Set(prev);
+        updated.add(id);
+        persistDismissed(updated);
+        return updated;
+      });
     },
-    [notifications, saveNotifications]
+    [persistDismissed]
   );
 
   const clearAll = useCallback(() => {
-    saveNotifications([]);
-  }, [saveNotifications]);
+    setNotifications([]);
+    notificationsService.clearAll().catch(() => {});
+  }, []);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
-  const toastNotifications = notifications.filter((n) => !n.dismissedFromToast);
+  const toastNotifications = notifications.filter((n) => !n.read && !dismissedToastIds.has(n.id));
 
   return (
     <NotificationContext.Provider
@@ -287,8 +176,6 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         toastNotifications,
         activeConfirmedModal,
         closeConfirmedModal,
-        addNotification,
-        syncScrimState,
         markAsRead,
         markAllAsRead,
         dismissToast,

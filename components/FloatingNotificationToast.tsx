@@ -1,10 +1,11 @@
 "use client";
 
-import React from "react";
 import Link from "next/link";
-import { useNotifications, ScrimNotification } from "@/context/NotificationContext";
+import { useAuth } from "@/context/AuthContext";
+import { useNotifications, AppNotification } from "@/context/NotificationContext";
 
 export default function FloatingNotificationToast() {
+  const { isLoggedIn } = useAuth();
   const {
     toastNotifications,
     activeConfirmedModal,
@@ -13,35 +14,47 @@ export default function FloatingNotificationToast() {
     dismissToast,
   } = useNotifications();
 
-  const getBorderColor = (type: ScrimNotification["type"]) => {
+  const getBorderColor = (type: AppNotification["type"]) => {
     switch (type) {
-      case "ACCEPTED":
+      case "SCRIM_REQUEST_ACCEPTED":
+      case "TEAM_REQUEST_ACCEPTED":
         return "border-[#10B981] bg-gradient-to-r from-[#0F221B] to-[#11141C]";
-      case "PENDING_REQUEST":
+      case "SCRIM_REQUEST_RECEIVED":
         return "border-[#3B82F6] bg-gradient-to-r from-[#172554] to-[#11141C]";
-      case "DECLINED":
+      case "SCRIM_REQUEST_DECLINED":
+      case "TEAM_REQUEST_DECLINED":
         return "border-[#F59E0B] bg-gradient-to-r from-[#221B10] to-[#11141C]";
-      case "UNBOOKED":
+      case "SCRIM_UNBOOKED":
         return "border-[#EF4444] bg-gradient-to-r from-[#24171A] to-[#11141C]";
+      case "TEAM_JOIN_REQUEST":
+        return "border-[#A855F7] bg-gradient-to-r from-[#1E1533] to-[#11141C]";
       default:
         return "border-[#2563EB] bg-[#11141C]";
     }
   };
 
-  const getIcon = (type: ScrimNotification["type"]) => {
+  const getIcon = (type: AppNotification["type"]) => {
     switch (type) {
-      case "ACCEPTED":
+      case "SCRIM_REQUEST_ACCEPTED":
         return "🏆";
-      case "PENDING_REQUEST":
+      case "SCRIM_REQUEST_RECEIVED":
         return "⏳";
-      case "DECLINED":
+      case "SCRIM_REQUEST_DECLINED":
         return "ℹ️";
-      case "UNBOOKED":
+      case "SCRIM_UNBOOKED":
         return "⚠️";
+      case "TEAM_JOIN_REQUEST":
+        return "👥";
+      case "TEAM_REQUEST_ACCEPTED":
+        return "✅";
+      case "TEAM_REQUEST_DECLINED":
+        return "🚫";
       default:
         return "⚔️";
     }
   };
+
+  if (!isLoggedIn) return null;
 
   return (
     <>
@@ -57,26 +70,11 @@ export default function FloatingNotificationToast() {
                 SCRIM REQUEST ACCEPTED!
               </span>
               <h3 className="font-display text-xl font-bold uppercase text-[#F8FAFC]">
-                {activeConfirmedModal.hostTeamName} Accepted Your Scrim!
+                {activeConfirmedModal.title}
               </h3>
               <p className="font-sans text-xs text-[#94A3B8] mt-1">
-                Your practice match request has been confirmed by the host squad captain.
+                {activeConfirmedModal.message}
               </p>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-[#090C12] border border-[#191D28] text-xs font-sans space-y-2 text-left">
-              <div className="flex justify-between items-center text-[#94A3B8]">
-                <span>Host Squad:</span>
-                <span className="font-bold text-[#E2E8F0]">{activeConfirmedModal.hostTeamName}</span>
-              </div>
-              {activeConfirmedModal.scheduledAt && (
-                <div className="flex justify-between items-center text-[#94A3B8]">
-                  <span>Scheduled Time:</span>
-                  <span className="font-bold text-[#34D399]">
-                    {new Date(activeConfirmedModal.scheduledAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                  </span>
-                </div>
-              )}
             </div>
 
             <button
@@ -133,11 +131,11 @@ export default function FloatingNotificationToast() {
                   Mark Read
                 </button>
                 <Link
-                  href="/scrims"
+                  href={item.link || "/dashboard"}
                   onClick={() => markAsRead(item.id)}
                   className="h-8 px-3 rounded-lg bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-sans text-[11px] font-bold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer shadow-md shadow-blue-950/40 flex items-center justify-center"
                 >
-                  ⚔️ View Scrim
+                  {item.category === "TEAM" ? "👥 View Roster" : "⚔️ View Scrim"}
                 </Link>
               </div>
             </div>

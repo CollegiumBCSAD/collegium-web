@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { useNotifications, ScrimNotification } from "@/context/NotificationContext";
+import { useAuth } from "@/context/AuthContext";
+import { useNotifications, AppNotification } from "@/context/NotificationContext";
 
 export default function NotificationBell() {
+  const { isLoggedIn } = useAuth();
   const { notifications, unreadCount, markAsRead, markAllAsRead, clearAll } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -21,27 +23,41 @@ export default function NotificationBell() {
     };
   }, []);
 
-  const getIcon = (type: ScrimNotification["type"]) => {
+  if (!isLoggedIn) return null;
+
+  const getIcon = (type: AppNotification["type"]) => {
     switch (type) {
-      case "ACCEPTED":
+      case "SCRIM_REQUEST_ACCEPTED":
         return "🎉";
-      case "DECLINED":
+      case "SCRIM_REQUEST_DECLINED":
         return "✕";
-      case "UNBOOKED":
+      case "SCRIM_UNBOOKED":
         return "⚠️";
+      case "SCRIM_REQUEST_RECEIVED":
+        return "⏳";
+      case "TEAM_JOIN_REQUEST":
+        return "👥";
+      case "TEAM_REQUEST_ACCEPTED":
+        return "✅";
+      case "TEAM_REQUEST_DECLINED":
+        return "🚫";
       default:
         return "⚔️";
     }
   };
 
-  const getBadgeStyle = (type: ScrimNotification["type"]) => {
+  const getBadgeStyle = (type: AppNotification["type"]) => {
     switch (type) {
-      case "ACCEPTED":
+      case "SCRIM_REQUEST_ACCEPTED":
+      case "TEAM_REQUEST_ACCEPTED":
         return "bg-[#12241D] text-[#34D399] border-[#10B981]/30";
-      case "DECLINED":
+      case "SCRIM_REQUEST_DECLINED":
+      case "TEAM_REQUEST_DECLINED":
         return "bg-[#282115] text-[#FBBF24] border-[#F59E0B]/30";
-      case "UNBOOKED":
+      case "SCRIM_UNBOOKED":
         return "bg-[#2A181A] text-[#F87171] border-[#EF4444]/30";
+      case "TEAM_JOIN_REQUEST":
+        return "bg-[#1E1533] text-[#C084FC] border-[#A855F7]/30";
       default:
         return "bg-[#161F33] text-[#60A5FA] border-[#2563EB]/30";
     }
@@ -52,7 +68,7 @@ export default function NotificationBell() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-10 h-10 rounded-full border border-[#232A3B] bg-[#11141C] hover:bg-[#1A202C] text-[#94A3B8] hover:text-[#F8FAFC] flex items-center justify-center transition-all cursor-pointer relative"
-        title="Scrim Notifications"
+        title="Notifications"
       >
         <span className="text-base">🔔</span>
         {unreadCount > 0 && (
@@ -64,11 +80,10 @@ export default function NotificationBell() {
 
       {isOpen && (
         <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl border border-[#272E3F] bg-[#11141C] shadow-2xl z-50 overflow-hidden flex flex-col max-h-[480px]">
-          {/* Header */}
           <div className="p-3.5 border-b border-[#232A3B] flex items-center justify-between bg-[#151924]">
             <div className="flex items-center gap-2">
               <span className="font-display text-xs font-bold uppercase text-[#F8FAFC]">
-                Scrim Match Notifications
+                Notifications
               </span>
               {unreadCount > 0 && (
                 <span className="text-[10px] font-sans font-bold px-2 py-0.5 rounded-full bg-[#EF4444]/20 text-[#F87171] border border-[#EF4444]/30">
@@ -96,19 +111,22 @@ export default function NotificationBell() {
             )}
           </div>
 
-          {/* List Area */}
           <div className="flex-1 overflow-y-auto divide-y divide-[#1A202C]">
             {notifications.length === 0 ? (
               <div className="py-12 text-center text-xs font-sans text-[#64748B] space-y-1">
                 <span className="text-2xl block mb-2">🔔</span>
-                <p className="font-semibold text-[#94A3B8]">No Scrim Updates Yet</p>
-                <p className="text-[11px]">When opponents accept or decline requests, you will see alerts here.</p>
+                <p className="font-semibold text-[#94A3B8]">No Notifications Yet</p>
+                <p className="text-[11px]">Scrim updates and roster activity will show up here.</p>
               </div>
             ) : (
               notifications.map((n) => (
-                <div
+                <Link
                   key={n.id}
-                  onClick={() => markAsRead(n.id)}
+                  href={n.link || "/dashboard"}
+                  onClick={() => {
+                    markAsRead(n.id);
+                    setIsOpen(false);
+                  }}
                   className={`p-3.5 transition-colors cursor-pointer flex items-start gap-3 ${
                     n.read ? "bg-[#11141C] opacity-75" : "bg-[#161B26]"
                   } hover:bg-[#1C2232]`}
@@ -136,19 +154,18 @@ export default function NotificationBell() {
                   {!n.read && (
                     <span className="w-2 h-2 rounded-full bg-[#3B82F6] shrink-0 mt-1.5" />
                   )}
-                </div>
+                </Link>
               ))
             )}
           </div>
 
-          {/* Footer */}
           <div className="p-2.5 border-t border-[#232A3B] bg-[#151924] text-center">
             <Link
-              href="/scrims"
+              href="/dashboard"
               onClick={() => setIsOpen(false)}
               className="text-xs font-sans font-bold text-[#60A5FA] hover:text-[#93C5FD] transition-colors inline-flex items-center gap-1"
             >
-              <span>⚔️ Open Scrim Board</span>
+              <span>🏠 Open Dashboard</span>
             </Link>
           </div>
         </div>
