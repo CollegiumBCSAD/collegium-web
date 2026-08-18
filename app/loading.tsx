@@ -12,10 +12,9 @@ export default function GlobalLoading() {
       <div className="relative z-10 flex flex-col items-center gap-6 text-center max-w-sm">
         {/* Pulsing Brand Logo Icon Container */}
         <div className="relative flex items-center justify-center">
-          <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-[#121624] via-[#1A2033] to-[#0F1320] border border-[#2A344D] flex items-center justify-center shadow-2xl shadow-primary-brand/20 animate-pulse">
-            <span className="font-display text-3xl font-extrabold tracking-tighter text-primary-brand">
-              COL
-            </span>
+          <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-[#121624] via-[#1A2033] to-[#0F1320] border border-[#2A344D] flex items-center justify-center shadow-2xl shadow-primary-brand/20 animate-pulse p-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="Collegium Logo" className="w-full h-full object-contain" />
           </div>
           <div className="absolute inset-0 rounded-2xl border border-primary-brand/40 animate-ping opacity-25" />
         </div>

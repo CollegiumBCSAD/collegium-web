@@ -242,7 +242,8 @@ export default function PublicLayout({
               <div className="flex h-16 items-center justify-between px-4 sm:px-6 md:px-10">
                 <div className="flex items-center gap-6 sm:gap-8">
                   <Link href="/" className="flex items-center gap-2.5 font-display text-xl font-extrabold tracking-wider text-foreground group">
-                    <span className="h-5 w-5 rounded-md bg-primary-brand inline-block shadow-md shadow-primary-brand/30 transition-transform duration-200 group-hover:scale-110" />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/logo.png" alt="Collegium Logo" className="w-7 h-7 object-contain rounded-md shadow-md shadow-primary-brand/30 transition-transform duration-200 group-hover:scale-110" />
                     <span className="group-hover:text-primary-brand transition-colors">COLLEGIUM</span>
                   </Link>
                   <NavigationLinks />
