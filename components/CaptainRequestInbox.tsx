@@ -96,20 +96,19 @@ export default function CaptainRequestInbox() {
     saveStoredTeams(updatedTeams);
     setApiRequests((prev) => prev.filter((r) => r.id !== memberId));
 
-    // Refetch latest live teams from server
     fetchTeamsApi().then((fresh) => setTeams(fresh));
 
     setTimeout(() => setActionMessage(null), 3000);
   };
 
   return (
-    <div className="w-full bg-[#0D121F]/95 border border-[#1E293B] rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl space-y-6">
+    <div className="w-full bg-[#0D121F]/90 border border-[#1E293B] rounded-3xl p-6 shadow-xl backdrop-blur-xl space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#1E2538] pb-4">
         <div>
-          <span className="text-[10px] font-mono font-extrabold uppercase tracking-widest text-primary-brand block">
-            TEAM CAPTAIN ROSTER CONTROL
+          <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-400 block">
+            CAPTAIN ROSTER CONTROL
           </span>
-          <h3 className="font-display text-xl font-black uppercase text-white">
+          <h3 className="font-display text-lg font-bold uppercase text-white mt-0.5">
             {activeTeam.name} Roster Inbox
           </h3>
         </div>
@@ -134,14 +133,14 @@ export default function CaptainRequestInbox() {
 
         <div className="flex items-center gap-2">
           <span className="text-xs font-sans text-slate-400">Active Roster:</span>
-          <span className="text-xs font-mono font-extrabold text-white bg-[#141A29] px-3 py-1 rounded-full border border-[#232D44]">
+          <span className="text-xs font-mono font-bold text-white bg-[#141A29] px-3 py-1 rounded-full border border-[#232D44]">
             {acceptedMembers.length} Athletes
           </span>
         </div>
       </div>
 
       {actionMessage && (
-        <div className="p-3.5 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-xs font-sans font-bold text-emerald-400 shadow-sm">
+        <div className="p-3.5 rounded-xl bg-[#141A29] border border-[#232D44] text-xs font-sans font-bold text-slate-200 shadow-sm">
           {actionMessage}
         </div>
       )}
@@ -149,13 +148,13 @@ export default function CaptainRequestInbox() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
-            Pending Roster Join Requests ({pendingMembers.length + apiRequests.length})
+            Pending Join Requests ({pendingMembers.length + apiRequests.length})
           </h4>
           {loading && <span className="text-[10px] font-mono text-slate-400 animate-pulse">Syncing...</span>}
         </div>
 
         {pendingMembers.length === 0 && apiRequests.length === 0 ? (
-          <div className="p-6 rounded-2xl bg-[#080C14] border border-[#1C2538] text-center">
+          <div className="p-5 rounded-2xl bg-[#080C14] border border-[#1C2538] text-center">
             <p className="text-xs font-sans text-slate-400">
               No pending join requests. Share your team invite link to invite university peers!
             </p>
@@ -169,10 +168,10 @@ export default function CaptainRequestInbox() {
               >
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-display text-sm font-black text-white uppercase">
+                    <span className="font-display text-sm font-bold text-white uppercase">
                       {applicant.displayName}
                     </span>
-                    <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-primary-brand/15 text-primary-brand border border-primary-brand/30">
+                    <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#141A29] text-slate-300 border border-[#232D44]">
                       {applicant.gameHandle}
                     </span>
                   </div>
@@ -189,13 +188,13 @@ export default function CaptainRequestInbox() {
                 <div className="flex items-center gap-2 shrink-0">
                   <button
                     onClick={() => handleDecision(applicant.id, true)}
-                    className="h-8 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-sans font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-md"
+                    className="h-8 px-4 rounded-xl game-theme-btn text-white text-xs font-sans font-bold uppercase tracking-wider transition-all cursor-pointer shadow-md"
                   >
                     Accept
                   </button>
                   <button
                     onClick={() => handleDecision(applicant.id, false)}
-                    className="h-8 px-4 rounded-xl bg-[#141A29] hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 border border-[#232D44] hover:border-rose-500/40 text-xs font-sans font-bold uppercase transition-all cursor-pointer"
+                    className="h-8 px-4 rounded-xl bg-[#141A29] hover:bg-[#1F273D] text-slate-400 hover:text-white border border-[#232D44] text-xs font-sans font-bold uppercase transition-all cursor-pointer"
                   >
                     Decline
                   </button>
@@ -217,7 +216,7 @@ export default function CaptainRequestInbox() {
                 <span className="font-display text-xs font-bold text-white block">{m.displayName}</span>
                 <span className="text-[10px] font-mono text-slate-400">{m.gameHandle} {m.preferredRole ? `· ${m.preferredRole}` : ""}</span>
               </div>
-              <span className="text-[10px] font-mono font-bold text-emerald-400 uppercase bg-emerald-950/60 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
+              <span className="text-[10px] font-mono font-bold text-slate-300 uppercase bg-[#141A29] px-2.5 py-0.5 rounded-full border border-[#232D44]">
                 ACTIVE
               </span>
             </div>
