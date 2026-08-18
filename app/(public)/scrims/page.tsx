@@ -345,6 +345,10 @@ export default function ScrimsPage() {
 
   const handleAcceptScrim = async (id: string) => {
     setScrimError("");
+    if (user?.role === "ADMIN") {
+      setScrimError("Admin accounts cannot accept scrim offers.");
+      return;
+    }
     const targetScrim = scrims.find((s) => s.id === id);
     if (targetScrim && isUserHost(targetScrim)) {
       setScrimError("You cannot book a scrim offer posted by your own team.");
@@ -437,7 +441,7 @@ export default function ScrimsPage() {
           </div>
 
 
-          {isLoggedIn && (
+          {isLoggedIn && user?.role !== "ADMIN" && (
           <button
             onClick={() => {
               if (myTeams.length === 0) {

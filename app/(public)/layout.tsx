@@ -84,20 +84,24 @@ function HeaderAuthControls() {
               >
                 <span>🏠 My Dashboard</span>
               </Link>
-              <Link
-                href="/team/create"
-                onClick={() => setDropdownOpen(false)}
-                className="w-full flex items-center gap-2 px-4 py-2 text-xs font-sans text-secondary-text hover:text-foreground hover:bg-white/5"
-              >
-                <span>➕ Create Squad</span>
-              </Link>
-              <Link
-                href="/team/join"
-                onClick={() => setDropdownOpen(false)}
-                className="w-full flex items-center gap-2 px-4 py-2 text-xs font-sans text-secondary-text hover:text-foreground hover:bg-white/5"
-              >
-                <span>🤝 Join Squad</span>
-              </Link>
+              {user.role !== "ADMIN" && (
+                <>
+                  <Link
+                    href="/team/create"
+                    onClick={() => setDropdownOpen(false)}
+                    className="w-full flex items-center gap-2 px-4 py-2 text-xs font-sans text-secondary-text hover:text-foreground hover:bg-white/5"
+                  >
+                    <span>➕ Create Squad</span>
+                  </Link>
+                  <Link
+                    href="/team/join"
+                    onClick={() => setDropdownOpen(false)}
+                    className="w-full flex items-center gap-2 px-4 py-2 text-xs font-sans text-secondary-text hover:text-foreground hover:bg-white/5"
+                  >
+                    <span>🤝 Join Squad</span>
+                  </Link>
+                </>
+              )}
               <Link
                 href="/scrims"
                 onClick={() => setDropdownOpen(false)}
@@ -105,6 +109,15 @@ function HeaderAuthControls() {
               >
                 <span>⚔️ Scrims</span>
               </Link>
+              {user.role === "ADMIN" && (
+                <Link
+                  href="/admin"
+                  onClick={() => setDropdownOpen(false)}
+                  className="w-full flex items-center gap-2 px-4 py-2 text-xs font-sans text-secondary-text hover:text-foreground hover:bg-white/5"
+                >
+                  <span>🛠️ Admin Console</span>
+                </Link>
+              )}
             </div>
             <div className="pt-1 border-t border-raised-panel px-2 mt-1">
               <button

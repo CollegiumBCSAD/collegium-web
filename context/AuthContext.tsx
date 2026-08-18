@@ -48,6 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } else {
       clearAuth();
     }
+    return profile;
   }, [clearAuth, fetchProfile, handleTokenRefreshed]);
 
   const logoutUser = useCallback(async () => {
