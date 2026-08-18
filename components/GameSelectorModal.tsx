@@ -5,10 +5,38 @@ import Image from "next/image";
 import { useGame } from "@/context/GameContext";
 import { GAME_LIST, GAMES, GameId, GameInfo } from "@/lib/games";
 
+const ARENA_DETAILS: Record<string, { num: string; initial: string; genre: string; gradient: string }> = {
+  valo: {
+    num: "01",
+    initial: "V",
+    genre: "TACTICAL FPS",
+    gradient: "from-[#8B1424]/90 via-[#4F0B14]/80 to-[#140306]",
+  },
+  lol: {
+    num: "02",
+    initial: "L",
+    genre: "MOBA",
+    gradient: "from-[#0066B3]/90 via-[#003866]/80 to-[#001224]",
+  },
+  ml: {
+    num: "03",
+    initial: "M",
+    genre: "MOBILE MOBA",
+    gradient: "from-[#8C4A00]/90 via-[#4D2900]/80 to-[#1A0E00]",
+  },
+  codm: {
+    num: "04",
+    initial: "C",
+    genre: "ACTION FPS",
+    gradient: "from-[#856404]/90 via-[#473602]/80 to-[#140F00]",
+  },
+};
+
 export default function GameSelectorModal() {
   const { selectedGame, selectGame, isSelectorOpen, closeGameSelector, isLoaded } = useGame();
   const [hoveredGame, setHoveredGame] = useState<GameId | null>(null);
   const [isSelecting, setIsSelecting] = useState<GameId | null>(null);
+  const [showAbout, setShowAbout] = useState(false);
 
   useEffect(() => {
     if (isSelectorOpen) {
@@ -32,15 +60,16 @@ export default function GameSelectorModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col justify-between bg-[#0A0C10] text-foreground overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex flex-col justify-between bg-[#080A10] text-foreground overflow-y-auto">
+      {/* Ambient Glow */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {GAME_LIST.map((game) => {
           const isActive = hoveredGame === game.id || (!hoveredGame && selectedGame === game.id);
           return (
             <div
               key={game.id}
-              className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full blur-[140px] transition-opacity duration-700 pointer-events-none ${
-                isActive ? "opacity-25" : "opacity-0"
+              className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-[160px] transition-opacity duration-700 pointer-events-none ${
+                isActive ? "opacity-30" : "opacity-0"
               }`}
               style={{ backgroundColor: game.accentColor }}
             />
@@ -48,141 +77,245 @@ export default function GameSelectorModal() {
         })}
       </div>
 
+      {/* Navbar Header Bar with Perfectly Centered Navigation */}
       <header className="relative z-10 w-full max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
+        {/* Left: Brand Logo */}
         <div className="flex items-center gap-3">
-          <span className="h-5 w-5 bg-[#E53A4C] inline-block rounded-xs" />
-          <span className="font-display text-xl font-bold tracking-wider text-foreground">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="Collegium Logo" className="w-7 h-7 object-contain" />
+          <span className="font-display text-xl font-bold tracking-wider text-white">
             COLLEGIUM
           </span>
         </div>
-        {selectedGame && (
+
+        {/* Center: Perfectly Centered ARENAS / ABOUT Toggle */}
+        <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-8 font-mono text-xs tracking-widest uppercase bg-[#0D121F]/90 px-5 py-2 rounded-full border border-[#232D44] shadow-md backdrop-blur-md">
           <button
-            onClick={closeGameSelector}
-            className="flex items-center gap-2 text-xs font-sans font-medium uppercase tracking-widest text-secondary-text hover:text-foreground transition-colors px-3 py-1.5 rounded border border-raised-panel bg-card-bg hover:bg-raised-panel"
+            onClick={() => setShowAbout(false)}
+            className={`transition-all duration-200 cursor-pointer font-bold ${
+              !showAbout ? "text-primary-brand" : "text-slate-400 hover:text-white"
+            }`}
           >
-            <span>Back to Site</span>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            ARENAS
           </button>
-        )}
-      </header>
+          <button
+            onClick={() => setShowAbout(true)}
+            className={`transition-all duration-200 cursor-pointer font-bold ${
+              showAbout ? "text-primary-brand" : "text-slate-400 hover:text-white"
+            }`}
+          >
+            ABOUT
+          </button>
+        </div>
 
-      <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-8 max-w-6xl mx-auto w-full text-center">
-        <div className="mb-8 md:mb-12 max-w-2xl">
-          <span className="font-sans text-xs font-semibold tracking-[0.25em] text-[#F2B705] uppercase block mb-3">
-            Philippine Collegiate Esports Circuit
+        {/* Right: Live indicator & Exit Button */}
+        <div className="flex items-center gap-3">
+          <span className="text-[10px] font-mono text-slate-400 flex items-center gap-1.5 bg-[#121724] px-3 py-1.5 rounded-full border border-[#232D44]">
+            <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+            LIVE 107
           </span>
-          <h1 className="font-display text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight text-foreground uppercase">
-            Who is Playing?
-          </h1>
-          <p className="mt-3 font-sans text-sm sm:text-base text-secondary-text max-w-lg mx-auto">
-            Select your primary esports title to customize your circuit view. Your choice is saved locally and can be changed anytime.
-          </p>
-        </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8 w-full max-w-5xl">
-          {GAME_LIST.map((game: GameInfo) => {
-            const isSelected = selectedGame === game.id;
-            const isHovered = hoveredGame === game.id;
-            const isThisLoading = isSelecting === game.id;
-
-            return (
-              <button
-                key={game.id}
-                onClick={() => handleSelect(game.id)}
-                onMouseEnter={() => setHoveredGame(game.id)}
-                onMouseLeave={() => setHoveredGame(null)}
-                className="group relative flex flex-col items-center text-left focus:outline-none transition-transform duration-200"
-              >
-                <div
-                  className={`relative w-full aspect-[3/4] rounded-xl overflow-hidden bg-[#121520] border-2 transition-all duration-200 transform group-hover:-translate-y-1 ${
-                    isSelected
-                      ? `${game.borderColor}`
-                      : "border-[#272B3A] group-hover:border-white/50"
-                  }`}
-                >
-                  <Image
-                    src={game.image}
-                    alt={game.name}
-                    fill
-                    className="object-cover object-center transition-transform duration-300 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-
-                  <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between">
-                    <span className="text-[10px] font-sans font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-black/80 text-white/90 border border-white/10">
-                      {game.publisher}
-                    </span>
-                    {isSelected && (
-                      <span
-                        className="flex items-center justify-center w-6 h-6 rounded-full text-white text-xs font-bold"
-                        style={{ backgroundColor: game.accentColor }}
-                      >
-                        ✓
-                      </span>
-                    )}
-                  </div>
-
-                  {isThisLoading && (
-                    <div className="absolute inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center">
-                      <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                    </div>
-                  )}
-
-                  <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 text-left">
-                    <span
-                      className="inline-block text-[10px] font-sans font-extrabold tracking-widest uppercase mb-1 px-1.5 py-0.5 rounded text-white"
-                      style={{ backgroundColor: game.accentColor }}
-                    >
-                      {game.genre}
-                    </span>
-                    <h3 className="font-display text-base sm:text-lg font-bold text-white leading-tight uppercase">
-                      {game.shortName}
-                    </h3>
-                    <p className="font-sans text-[11px] text-white/70 line-clamp-1 mt-0.5 hidden sm:block">
-                      {game.tagline}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-3 text-center w-full">
-                  <span
-                    className={`font-display text-sm sm:text-base tracking-wider uppercase block font-semibold transition-colors duration-200 ${
-                      isSelected || isHovered ? "text-white" : "text-secondary-text"
-                    }`}
-                  >
-                    {game.name}
-                  </span>
-                  <span className="text-[11px] font-sans text-secondary-text/70 block mt-0.5">
-                    {game.activeTournaments} Tournaments · {game.activeTeams} Teams
-                  </span>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="mt-10 sm:mt-14 flex flex-col items-center gap-3">
-          {selectedGame ? (
+          {selectedGame && (
             <button
               onClick={closeGameSelector}
-              className="px-8 py-3 rounded border border-secondary-text/30 hover:border-white font-sans text-xs font-bold uppercase tracking-widest text-secondary-text hover:text-white transition-all bg-card-bg hover:bg-raised-panel"
+              className="flex items-center gap-2 text-xs font-sans font-bold uppercase tracking-wider text-slate-300 hover:text-white transition-all px-4 py-2 rounded-xl border border-[#232D44] bg-[#0D121F] hover:bg-[#141A29] cursor-pointer shadow-md"
             >
-              Continue with {GAMES[selectedGame].shortName}
+              <span>Back to Site</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
-          ) : (
-            <p className="font-sans text-xs text-secondary-text/80 tracking-wider">
-              Select any game title above to enter Collegium
-            </p>
           )}
         </div>
-      </main>
+      </header>
 
-      <footer className="relative z-10 w-full max-w-7xl mx-auto px-6 py-4 text-center">
-        <span className="font-sans text-[11px] text-secondary-text/50 tracking-wider">
-          COLLEGIUM PHILIPPINES · SELECTION SAVED LOCALLY
-        </span>
+      {/* Main Canvas: Toggle between Arenas and About */}
+      {!showAbout ? (
+        <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-6 max-w-6xl mx-auto w-full text-center">
+          {/* Title Header Matching Prototype */}
+          <div className="mb-8 md:mb-12 max-w-2xl text-center space-y-2">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <span className="h-[2px] w-6 bg-primary-brand" />
+              <span className="font-mono text-xs font-bold tracking-[0.25em] text-primary-brand uppercase">
+                CHOOSE YOUR BATTLEGROUND
+              </span>
+              <span className="h-[2px] w-6 bg-primary-brand" />
+            </div>
+
+            <h1 className="font-display text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-white uppercase leading-none">
+              FIND YOUR <br />
+              <span className="text-slate-500">NEXT ARENA.</span>
+            </h1>
+
+            <p className="mt-3 font-sans text-xs sm:text-sm text-slate-400 max-w-md mx-auto leading-relaxed">
+              Every game has a world. Pick yours and step into the conversation.
+            </p>
+          </div>
+
+          {/* 4 Arena Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 w-full max-w-6xl">
+            {GAME_LIST.map((game: GameInfo) => {
+              const isSelected = selectedGame === game.id;
+              const isThisLoading = isSelecting === game.id;
+              const meta = ARENA_DETAILS[game.id] || {
+                num: "01",
+                initial: game.name.charAt(0),
+                genre: game.genre,
+                gradient: "from-rose-950 via-slate-900 to-black",
+              };
+
+              return (
+                <button
+                  key={game.id}
+                  onClick={() => handleSelect(game.id)}
+                  onMouseEnter={() => setHoveredGame(game.id)}
+                  onMouseLeave={() => setHoveredGame(null)}
+                  className={`group relative text-left focus:outline-none transition-all duration-300 rounded-2xl p-2 border bg-[#0B0E17] ${
+                    isSelected
+                      ? "border-primary-brand ring-2 ring-primary-brand/50 shadow-2xl shadow-primary-brand/30 scale-[1.02]"
+                      : "border-[#1E293B] hover:border-slate-400 hover:-translate-y-1 shadow-xl"
+                  }`}
+                >
+                  {/* Inner Card Wrapper */}
+                  <div
+                    className={`relative w-full aspect-[4/5] rounded-xl overflow-hidden flex flex-col justify-between p-4 sm:p-5 bg-gradient-to-b ${meta.gradient}`}
+                  >
+                    {/* High Opacity Game Artwork Overlay */}
+                    <Image
+                      src={game.image}
+                      alt={game.name}
+                      fill
+                      className="object-cover object-center opacity-70 group-hover:scale-105 group-hover:opacity-85 transition-all duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#080A10]/95 via-black/35 to-transparent pointer-events-none" />
+
+                    {/* Top Bar inside Card */}
+                    <div className="relative z-10 flex items-center justify-between gap-2">
+                      <span className="text-[9px] font-mono font-bold tracking-widest text-white/90 bg-black/70 backdrop-blur-md px-2.5 py-1 rounded border border-white/10 uppercase">
+                        OFFICIAL ARENA
+                      </span>
+
+                      <span className="w-7 h-7 rounded-full bg-black/70 backdrop-blur-md border border-white/20 flex items-center justify-center font-mono text-[10px] text-white/90 font-bold shadow-md">
+                        {meta.num}
+                      </span>
+                    </div>
+
+                    {/* Loading Spinner */}
+                    {isThisLoading && (
+                      <div className="absolute inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center z-20">
+                        <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                      </div>
+                    )}
+
+                    {/* Bottom Content inside Card */}
+                    <div className="relative z-10 mt-auto pb-2 space-y-1">
+                      <span
+                        className="text-[10px] font-mono font-extrabold tracking-widest uppercase block drop-shadow-sm"
+                        style={{ color: game.accentColor }}
+                      >
+                        {meta.genre}
+                      </span>
+
+                      <h3 className="font-display text-lg sm:text-xl font-black text-white leading-tight uppercase drop-shadow-md">
+                        {game.name}
+                      </h3>
+                    </div>
+
+                    {/* Card Bottom Bar */}
+                    <div className="relative z-10 pt-3 border-t border-white/20 flex items-center justify-between text-[10px] font-mono text-slate-200 uppercase">
+                      <span className="flex items-center gap-1.5 font-bold">
+                        {isSelected ? (
+                          <span className="text-emerald-400 flex items-center gap-1">
+                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                            PRIMARY ARENA
+                          </span>
+                        ) : (
+                          <span>ENTER ARENA</span>
+                        )}
+                      </span>
+
+                      <span className="font-bold tracking-wider" style={{ color: game.accentColor }}>
+                        5v5 /
+                      </span>
+                    </div>
+
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Bottom Continue Action */}
+          <div className="mt-8 sm:mt-10 flex flex-col items-center gap-3">
+            {selectedGame ? (
+              <button
+                onClick={closeGameSelector}
+                className="h-11 px-8 rounded-xl game-theme-btn font-sans text-xs font-bold uppercase tracking-wider shadow-lg cursor-pointer transition-all active:scale-[0.98]"
+              >
+                Continue to {GAMES[selectedGame].shortName} Arena
+              </button>
+            ) : (
+              <p className="font-sans text-xs text-slate-400 tracking-wider">
+                Select any game title above to enter the Collegium Circuit
+              </p>
+            )}
+          </div>
+        </main>
+      ) : (
+        /* About Collegium Circuit Information View */
+        <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-8 max-w-4xl mx-auto w-full text-center space-y-8 animate-in fade-in duration-200">
+          <div className="space-y-3">
+            <span className="font-mono text-xs font-bold tracking-[0.25em] text-primary-brand uppercase block">
+              THE COLLEGIUM MISSION
+            </span>
+            <h2 className="font-display text-3xl sm:text-5xl font-black text-white uppercase tracking-tight">
+              PHILIPPINE COLLEGIATE ESPORTS ENGINE
+            </h2>
+            <p className="font-sans text-sm sm:text-base text-slate-300 max-w-xl mx-auto leading-relaxed">
+              Collegium is the single official home for Philippine university esports, connecting varsity athletes across Valorant, League of Legends, Mobile Legends: Bang Bang, and CODM.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 w-full text-left">
+            <div className="p-6 rounded-2xl bg-[#0D121F]/90 border border-[#1E293B] space-y-2 shadow-xl backdrop-blur-xl">
+              <span className="text-2xl block">🛡️</span>
+              <h3 className="font-display text-base font-bold text-white uppercase">VERIFIED VARSITY ATHLETICS</h3>
+              <p className="font-sans text-xs text-slate-400 leading-relaxed">
+                Cryptographically validated rosters via official university domains (`.edu.ph`) and Riot API integration.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-[#0D121F]/90 border border-[#1E293B] space-y-2 shadow-xl backdrop-blur-xl">
+              <span className="text-2xl block">🏆</span>
+              <h3 className="font-display text-base font-bold text-white uppercase">GLICKO-2 MATCH ENGINE</h3>
+              <p className="font-sans text-xs text-slate-400 leading-relaxed">
+                Automated inter-university scrimmage scheduling, rating adjustments, and peer-validated match reporting.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-[#0D121F]/90 border border-[#1E293B] space-y-2 shadow-xl backdrop-blur-xl">
+              <span className="text-2xl block">⚔️</span>
+              <h3 className="font-display text-base font-bold text-white uppercase">LIVE WAR ROOM DM</h3>
+              <p className="font-sans text-xs text-slate-400 leading-relaxed">
+                Realtime team-to-team tactical communication, custom lobby code sharing, and map veto coordination.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setShowAbout(false)}
+            className="h-11 px-8 rounded-xl game-theme-btn font-sans text-xs font-bold uppercase tracking-wider shadow-lg cursor-pointer transition-all active:scale-[0.98]"
+          >
+            ← Back to Arenas
+          </button>
+        </main>
+      )}
+
+      {/* Footer */}
+      <footer className="relative z-10 w-full max-w-7xl mx-auto px-6 py-4 flex items-center justify-between text-[10px] font-mono text-slate-500 uppercase tracking-widest border-t border-[#1C2538]">
+        <span>BUILT FOR PLAYERS, BY PLAYERS</span>
+        <span>SELECT AN ARENA TO CONTINUE</span>
+        <span>EST. 2026</span>
       </footer>
     </div>
   );
