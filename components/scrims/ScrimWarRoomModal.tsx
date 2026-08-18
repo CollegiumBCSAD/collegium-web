@@ -5,6 +5,7 @@ import { ScrimOffer } from "@/types";
 import { scrimsService, ScrimChatMessage as ServerChatMessage } from "@/services";
 import { getStoredTeams, fetchTeamsApi, Team } from "@/lib/teams";
 import { getSocket } from "@/services/socket";
+import { CalendarIcon, CrownIcon, FlameIcon, ZapIcon } from "@/components/ui/Icons";
 
 interface ChatMessage {
   id: string;
@@ -208,15 +209,17 @@ export default function ScrimWarRoomModal({
               onClick={handleCopyCode}
               className="h-7 px-2.5 rounded-lg bg-[#1E2433] hover:bg-[#2A3142] text-[#E2E8F0] font-sans text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer border border-[#2B3245] flex items-center gap-1"
             >
-              {isCopied ? "✓ Copied!" : "📋 Copy Code"}
+              {isCopied ? "✓ Copied!" : "Copy Code"}
             </button>
           </div>
 
-          <div className="text-xs font-sans text-[#64748B]">
-            📅 Match Schedule:{" "}
+          <div className="text-xs font-sans text-[#64748B] flex items-center gap-1.5">
+            <CalendarIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            <span>Match Schedule:{" "}
             <span className="text-[#E2E8F0] font-semibold">
               {new Date(scrim.scheduledAt).toLocaleDateString()} at{" "}
               {new Date(scrim.scheduledAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            </span>
             </span>
           </div>
         </div>
@@ -251,8 +254,9 @@ export default function ScrimWarRoomModal({
                     const isCapt = m.userId === hostSquad.captainId || idx === 0;
                     return (
                       <div key={m.id || idx} className="flex items-center justify-between text-xs font-sans text-[#CBD5E1]">
-                        <span className={isCapt ? "font-semibold text-[#34D399]" : "text-[#94A3B8]"}>
-                          {isCapt ? "👑 " : ""}{m.displayName || m.gameHandle || `Player ${idx + 1}`}
+                        <span className={`flex items-center gap-1 ${isCapt ? "font-semibold text-[#34D399]" : "text-[#94A3B8]"}`}>
+                          {isCapt && <CrownIcon className="w-3.5 h-3.5 text-[#F2B705] shrink-0" />}
+                          <span>{m.displayName || m.gameHandle || `Player ${idx + 1}`}</span>
                         </span>
                         <span className="text-[10px] text-[#64748B]">
                           {m.preferredRole || "Varsity"}
@@ -262,7 +266,10 @@ export default function ScrimWarRoomModal({
                   })
                 ) : (
                   <div className="flex items-center justify-between text-xs font-sans text-[#CBD5E1]">
-                    <span className="font-semibold text-[#34D399]">👑 {scrim.hostTeamName} Captain</span>
+                    <span className="font-semibold text-[#34D399] flex items-center gap-1">
+                      <CrownIcon className="w-3.5 h-3.5 text-[#F2B705] shrink-0" />
+                      <span>{scrim.hostTeamName} Captain</span>
+                    </span>
                     <span className="text-[10px] text-[#64748B]">Varsity</span>
                   </div>
                 )}
@@ -271,8 +278,8 @@ export default function ScrimWarRoomModal({
 
             {/* VS Divider */}
             <div className="flex items-center justify-center my-1">
-              <span className="px-3 py-1 rounded-full bg-[#1E2433] border border-[#2B3245] font-display text-xs font-extrabold text-[#38BDF8] tracking-widest">
-                ⚡ VS ⚡
+              <span className="px-3.5 py-1 rounded-full bg-[#1E2433] border border-[#2B3245] font-display text-xs font-extrabold text-[#38BDF8] tracking-widest">
+                VS
               </span>
             </div>
 
@@ -301,8 +308,9 @@ export default function ScrimWarRoomModal({
                     const isCapt = m.userId === opponentSquad.captainId || idx === 0;
                     return (
                       <div key={m.id || idx} className="flex items-center justify-between text-xs font-sans text-[#CBD5E1]">
-                        <span className={isCapt ? "font-semibold text-[#60A5FA]" : "text-[#94A3B8]"}>
-                          {isCapt ? "👑 " : ""}{m.displayName || m.gameHandle || `Player ${idx + 1}`}
+                        <span className={`flex items-center gap-1 ${isCapt ? "font-semibold text-[#60A5FA]" : "text-[#94A3B8]"}`}>
+                          {isCapt && <CrownIcon className="w-3.5 h-3.5 text-[#F2B705] shrink-0" />}
+                          <span>{m.displayName || m.gameHandle || `Player ${idx + 1}`}</span>
                         </span>
                         <span className="text-[10px] text-[#64748B]">
                           {m.preferredRole || "Varsity"}
@@ -312,7 +320,10 @@ export default function ScrimWarRoomModal({
                   })
                 ) : (
                   <div className="flex items-center justify-between text-xs font-sans text-[#CBD5E1]">
-                    <span className="font-semibold text-[#60A5FA]">👑 {scrim.opponentTeamName || "Challenger"} Captain</span>
+                    <span className="font-semibold text-[#60A5FA] flex items-center gap-1">
+                      <CrownIcon className="w-3.5 h-3.5 text-[#F2B705] shrink-0" />
+                      <span>{scrim.opponentTeamName || "Challenger"} Captain</span>
+                    </span>
                     <span className="text-[10px] text-[#64748B]">Varsity</span>
                   </div>
                 )}

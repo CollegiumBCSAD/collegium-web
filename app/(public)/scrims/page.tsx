@@ -11,6 +11,7 @@ import { getStoredTeams, fetchTeamsApi, Team } from "@/lib/teams";
 import { useWarRoom } from "@/context/WarRoomContext";
 import ScrimCard from "@/components/scrims/ScrimCard";
 import { ScrimCardSkeleton } from "@/components/ui/Skeleton";
+import { SwordsIcon, AlertTriangleIcon, TrophyIcon } from "@/components/ui/Icons";
 import PostScrimModal from "@/components/scrims/PostScrimModal";
 import NoSquadModal from "@/components/scrims/NoSquadModal";
 
@@ -439,48 +440,60 @@ export default function ScrimsPage() {
 
 
           {isLoggedIn && (
-          <button
-            onClick={() => {
-              if (myTeams.length === 0) {
-                setIsNoSquadModalOpen(true);
-              } else {
-                setIsModalOpen(true);
-              }
-            }}
-            className="h-11 px-6 rounded-lg game-theme-btn font-sans text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] flex items-center justify-center cursor-pointer shadow-lg"
-          >
-            ⚔️ Post Scrim Offer
-          </button>
-
+            <button
+              onClick={() => {
+                if (myTeams.length === 0) {
+                  setIsNoSquadModalOpen(true);
+                } else {
+                  setIsModalOpen(true);
+                }
+              }}
+              className="h-11 px-6 rounded-xl game-theme-btn font-sans text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer shadow-lg"
+            >
+              <SwordsIcon className="w-4 h-4" />
+              <span>Post Scrim Offer</span>
+            </button>
           )}
         </div>
 
         {bookedScrims.length > 0 && (
-          <div className="p-5 rounded-2xl bg-gradient-to-r from-success/20 via-emerald-950/40 to-success/10 border border-success/50 shadow-xl space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-success/20 border border-success/40 flex items-center justify-center text-xl">
-                  🏆
+          <div className="relative overflow-hidden rounded-2xl bg-[#0B0F19]/95 border border-emerald-500/30 p-5 sm:p-6 shadow-2xl backdrop-blur-xl space-y-3">
+            {/* Top Accent Line */}
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500 via-teal-300 to-emerald-500" />
+            
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-xl bg-emerald-950/70 border border-emerald-500/40 text-emerald-400 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-950/50">
+                  <SwordsIcon className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-display text-sm font-bold uppercase tracking-wider text-foreground">
-                    You Have {bookedScrims.length} Booked Practice Scrim{bookedScrims.length > 1 ? "s" : ""}!
-                  </h3>
-                  <p className="text-xs font-sans text-secondary-text">
-                    An opponent has booked your practice scrim match offer. Prepare your 5-man varsity squad!
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-display text-base sm:text-lg font-bold uppercase tracking-wide text-foreground">
+                      {bookedScrims.length} Practice Match{bookedScrims.length > 1 ? "es" : ""} Booked & Ready
+                    </h3>
+                  </div>
+                  <p className="text-xs font-sans text-slate-300 mt-0.5 leading-relaxed">
+                    An opponent squad has confirmed your scrimmage offer. Prepare your varsity lineup for War Room deployment!
                   </p>
                 </div>
               </div>
-              <span className="text-xs font-sans font-bold px-3 py-1 rounded-full bg-success/20 text-success border border-success/40 uppercase tracking-wider">
-                🟢 MATCH BOOKED
-              </span>
+              
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="text-xs font-mono font-extrabold px-3.5 py-1.5 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-500/40 uppercase tracking-wider flex items-center gap-2 shadow-sm">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  CONFIRMED & READY
+                </span>
+              </div>
             </div>
           </div>
         )}
 
         {scrimError && (
-          <div className="p-4 rounded-xl bg-error/10 border border-error/30 text-error text-xs font-sans font-semibold flex items-center justify-between">
-            <span>⚠️ {scrimError}</span>
+          <div className="p-4 rounded-xl bg-error/10 border border-error/30 text-error text-xs font-sans font-semibold flex items-center justify-between gap-2">
+            <span className="flex items-center gap-2">
+              <AlertTriangleIcon className="w-4 h-4 text-error shrink-0" />
+              <span>{scrimError}</span>
+            </span>
             <button onClick={() => setScrimError("")} className="hover:underline cursor-pointer">
               Dismiss
             </button>
@@ -496,8 +509,8 @@ export default function ScrimsPage() {
           </div>
         ) : enrichedScrims.length === 0 ? (
           <div className="flex flex-col items-center justify-center text-center py-16 px-4 max-w-md mx-auto space-y-4 rounded-2xl border border-panel-border bg-card-bg/60 p-8 shadow-2xl backdrop-blur-md">
-            <div className="w-16 h-16 rounded-full bg-raised-panel border border-panel-border flex items-center justify-center text-3xl shadow-inner">
-              ⚔️
+            <div className="w-16 h-16 rounded-full bg-raised-panel border border-panel-border flex items-center justify-center text-primary-brand shadow-inner">
+              <SwordsIcon className="w-8 h-8" />
             </div>
             <div className="space-y-1">
               <h3 className="font-display text-xl font-bold text-foreground uppercase tracking-wide">

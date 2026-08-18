@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { useGame } from "@/context/GameContext";
 import { GAME_LIST, GameInfo } from "@/lib/games";
+import { GamepadIcon } from "@/components/ui/Icons";
 
 export default function HeaderGameSwitcher() {
   const { selectedGame, selectedGameInfo, selectGame, openGameSelector, isLoaded } = useGame();
@@ -61,9 +62,9 @@ export default function HeaderGameSwitcher() {
           </>
         ) : (
           <>
-            <span className="w-6 h-6 rounded-full bg-primary-brand/20 text-primary-brand flex items-center justify-center text-xs font-bold">
-              🎮
-            </span>
+            <div className="w-6 h-6 rounded-full bg-primary-brand/20 text-primary-brand flex items-center justify-center">
+              <GamepadIcon className="w-3.5 h-3.5 text-primary-brand" />
+            </div>
             <span className="text-xs font-sans font-bold uppercase tracking-wider text-foreground">
               Select Game
             </span>

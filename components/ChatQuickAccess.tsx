@@ -6,6 +6,7 @@ import { useWarRoom } from "@/context/WarRoomContext";
 import { scrimsService } from "@/services";
 import { fetchTeamsApi, Team } from "@/lib/teams";
 import { ScrimOffer } from "@/types";
+import { SwordsIcon, FlameIcon } from "@/components/ui/Icons";
 
 interface ActiveChat {
   scrim: ScrimOffer;
@@ -101,7 +102,7 @@ export default function ChatQuickAccess() {
         className="w-10 h-10 rounded-full border border-[#232A3B] bg-[#11141C] hover:bg-[#1A202C] text-[#94A3B8] hover:text-[#F8FAFC] flex items-center justify-center transition-all cursor-pointer relative"
         title="War Room Chats"
       >
-        <span className="text-base">💬</span>
+        <SwordsIcon className="w-4 h-4 text-[#94A3B8]" />
         {chats.length > 0 && (
           <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-[#3B82F6] text-white text-[10px] font-sans font-bold flex items-center justify-center ring-2 ring-[#0B0E14]">
             {chats.length > 9 ? "9+" : chats.length}
@@ -123,8 +124,8 @@ export default function ChatQuickAccess() {
                 Loading confirmed matches...
               </div>
             ) : chats.length === 0 ? (
-              <div className="py-12 text-center text-xs font-sans text-[#64748B] space-y-1">
-                <span className="text-2xl block mb-2">💬</span>
+              <div className="py-12 text-center text-xs font-sans text-[#64748B] space-y-1 flex flex-col items-center">
+                <SwordsIcon className="w-6 h-6 text-[#64748B] mb-2" />
                 <p className="font-semibold text-[#94A3B8]">No Active War Rooms</p>
                 <p className="text-[11px]">Confirmed scrim matches will show up here.</p>
               </div>
@@ -139,7 +140,7 @@ export default function ChatQuickAccess() {
                   className="w-full text-left p-3.5 transition-colors cursor-pointer hover:bg-[#1C2232] flex items-center gap-3"
                 >
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0 border bg-[#161F33] text-[#60A5FA] border-[#2563EB]/30">
-                    🔥
+                    <FlameIcon className="w-4 h-4 text-primary-brand" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <span className="text-xs font-sans font-bold text-[#F8FAFC] truncate block">

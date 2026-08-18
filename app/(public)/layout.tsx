@@ -14,6 +14,7 @@ import ChatQuickAccess from "@/components/ChatQuickAccess";
 import ScrimWarRoomModal from "@/components/scrims/ScrimWarRoomModal";
 import GameSelectorModal from "@/components/GameSelectorModal";
 import HeaderGameSwitcher from "@/components/HeaderGameSwitcher";
+import { HomeIcon, PlusIcon, UsersIcon, SwordsIcon } from "@/components/ui/Icons";
 
 function HeaderAuthControls() {
   const { user, isLoggedIn, logoutUser, isLoaded } = useAuth();
@@ -80,30 +81,34 @@ function HeaderAuthControls() {
               <Link
                 href="/dashboard"
                 onClick={() => setDropdownOpen(false)}
-                className="w-full flex items-center gap-2 px-4 py-2 text-xs font-sans text-secondary-text hover:text-foreground hover:bg-white/5"
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-sans font-semibold text-secondary-text hover:text-foreground hover:bg-white/5 transition-colors"
               >
-                <span>🏠 My Dashboard</span>
+                <HomeIcon className="w-3.5 h-3.5 text-primary-brand" />
+                <span>My Dashboard</span>
               </Link>
               <Link
                 href="/team/create"
                 onClick={() => setDropdownOpen(false)}
-                className="w-full flex items-center gap-2 px-4 py-2 text-xs font-sans text-secondary-text hover:text-foreground hover:bg-white/5"
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-sans font-semibold text-secondary-text hover:text-foreground hover:bg-white/5 transition-colors"
               >
-                <span>➕ Create Squad</span>
+                <PlusIcon className="w-3.5 h-3.5 text-primary-brand" />
+                <span>Create Squad</span>
               </Link>
               <Link
                 href="/team/join"
                 onClick={() => setDropdownOpen(false)}
-                className="w-full flex items-center gap-2 px-4 py-2 text-xs font-sans text-secondary-text hover:text-foreground hover:bg-white/5"
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-sans font-semibold text-secondary-text hover:text-foreground hover:bg-white/5 transition-colors"
               >
-                <span>🤝 Join Squad</span>
+                <UsersIcon className="w-3.5 h-3.5 text-primary-brand" />
+                <span>Join Squad</span>
               </Link>
               <Link
                 href="/scrims"
                 onClick={() => setDropdownOpen(false)}
-                className="w-full flex items-center gap-2 px-4 py-2 text-xs font-sans text-secondary-text hover:text-foreground hover:bg-white/5"
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-sans font-semibold text-secondary-text hover:text-foreground hover:bg-white/5 transition-colors"
               >
-                <span>⚔️ Scrims</span>
+                <SwordsIcon className="w-3.5 h-3.5 text-primary-brand" />
+                <span>Scrims Board</span>
               </Link>
             </div>
             <div className="pt-1 border-t border-raised-panel px-2 mt-1">

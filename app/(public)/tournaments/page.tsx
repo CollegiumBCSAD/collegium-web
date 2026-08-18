@@ -5,6 +5,7 @@ import Link from "next/link";
 import TournamentBracketModal from "@/components/tournaments/TournamentBracketModal";
 import TournamentCard from "@/components/tournaments/TournamentCard";
 import { TournamentCardSkeleton } from "@/components/ui/Skeleton";
+import { TrophyIcon } from "@/components/ui/Icons";
 import { Tournament } from "@/types";
 import { tournamentsService } from "@/services";
 
@@ -58,8 +59,9 @@ export default function TournamentsPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-xs font-sans font-bold text-slate-400 bg-[#121624] px-3.5 py-1.5 rounded-full border border-[#222B3F]">
-              🏆 {tournaments.length} Active Circuit{tournaments.length === 1 ? "" : "s"}
+            <span className="text-xs font-sans font-bold text-slate-400 bg-[#121624] px-3.5 py-1.5 rounded-full border border-[#222B3F] flex items-center gap-2">
+              <TrophyIcon className="w-4 h-4 text-primary-brand" />
+              <span>{tournaments.length} Active Circuit{tournaments.length === 1 ? "" : "s"}</span>
             </span>
           </div>
         </div>
@@ -71,8 +73,8 @@ export default function TournamentsPage() {
           </div>
         ) : tournaments.length === 0 ? (
           <div className="flex flex-col items-center justify-center text-center py-16 px-4 max-w-lg mx-auto space-y-4 rounded-2xl border border-[#1E2538] bg-[#0E121C]/80 p-10 shadow-2xl backdrop-blur-md">
-            <div className="w-16 h-16 rounded-full bg-[#161C2C] border border-[#2A344D] flex items-center justify-center text-3xl shadow-inner">
-              🏆
+            <div className="w-16 h-16 rounded-full bg-[#161C2C] border border-[#2A344D] flex items-center justify-center text-primary-brand shadow-inner">
+              <TrophyIcon className="w-8 h-8" />
             </div>
             <div className="space-y-2">
               <h3 className="font-display text-xl sm:text-2xl font-bold text-foreground uppercase tracking-wide">

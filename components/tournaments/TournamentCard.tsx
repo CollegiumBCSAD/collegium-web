@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Tournament } from "@/types";
+import { TrophyIcon } from "@/components/ui/Icons";
 
 interface TournamentCardProps {
   tournament: Tournament;
@@ -35,7 +36,7 @@ export default function TournamentCard({
               ? "bg-slate-900/80 text-slate-300 border-slate-700" 
               : "bg-emerald-950/80 text-emerald-400 border-emerald-500/40 animate-pulse"
           }`}>
-            {isCompleted ? "✓ COMPLETED" : "🔴 LIVE CIRCUIT"}
+            {isCompleted ? "COMPLETED" : "LIVE CIRCUIT"}
           </span>
         </div>
 
@@ -52,7 +53,8 @@ export default function TournamentCard({
         <div>
           <div className="flex items-center justify-between gap-4 mb-2">
             <span className="font-sans text-xs font-bold tracking-widest text-primary-brand uppercase flex items-center gap-1.5">
-              <span>🏆</span> OFFICIAL COLLEGIATE CIRCUIT
+              <TrophyIcon className="w-4 h-4 text-primary-brand" />
+              <span>OFFICIAL COLLEGIATE CIRCUIT</span>
             </span>
             <span className="font-mono text-xs font-semibold text-secondary-text">
               {tournament.statusText || "Season Tournament"}

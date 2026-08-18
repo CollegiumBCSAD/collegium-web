@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { GameId } from "@/types";
 import { getGameInfo } from "@/lib/games";
+import { ShieldIcon } from "@/components/ui/Icons";
 
 interface NoSquadModalProps {
   isOpen: boolean;
@@ -26,7 +27,7 @@ export default function NoSquadModal({
         
         {/* Warning Icon */}
         <div className="w-16 h-16 rounded-full bg-[#F59E0B]/20 border border-[#F59E0B]/40 flex items-center justify-center text-3xl mx-auto animate-bounce">
-          🛡️
+          <ShieldIcon className="w-8 h-8 text-[#F59E0B]" />
         </div>
 
         {/* Modal Header & Message */}
@@ -50,7 +51,7 @@ export default function NoSquadModal({
             onClick={onClose}
             className="w-full h-11 rounded-xl bg-gradient-to-r from-[#F59E0B] to-[#D97706] hover:from-[#FBBF24] hover:to-[#F59E0B] text-white font-sans text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-amber-950/40 flex items-center justify-center gap-2"
           >
-            <span>🛡️</span>
+            <span><ShieldIcon className="w-4 h-4" /></span>
             <span>Register / Create Squad First</span>
           </Link>
 

@@ -7,6 +7,7 @@ import { useGame } from "@/context/GameContext";
 import { universitiesService } from "@/services";
 import { University } from "@/types";
 import { LeaderboardSkeletonRow } from "@/components/ui/Skeleton";
+import { MedalIcon } from "@/components/ui/Icons";
 
 const GAME_ID_TO_DISPLAY: Record<string, string> = {
   valo: "VALORANT",
@@ -31,7 +32,6 @@ function mapUniversitiesToLeaderboard(universities: University[], game: string):
     winRate: u.wins + u.losses > 0 ? Math.round((u.wins / (u.wins + u.losses)) * 100) : 0,
     streak: u.wins > 0 ? `${Math.min(u.wins, 9)}W` : `${Math.min(u.losses, 9)}L`,
     game,
-    icon: i === 0 ? "👑" : i === 1 ? "🥈" : i === 2 ? "🥉" : undefined,
   }));
 }
 
@@ -139,7 +139,7 @@ export default function LeaderboardPage() {
 
                   <div className="flex flex-col min-w-0">
                     <div className="flex items-center gap-2">
-                      {entry.icon && <span className="text-base">{entry.icon}</span>}
+                      {entry.rank <= 3 && <MedalIcon rank={entry.rank} className="w-5 h-5 shrink-0" />}
                       <h2 className="font-display text-base sm:text-lg font-bold tracking-wide text-foreground group-hover:text-primary-brand transition-colors truncate">
                         {entry.university}
                       </h2>

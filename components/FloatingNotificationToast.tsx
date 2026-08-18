@@ -3,6 +3,16 @@
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useNotifications, AppNotification } from "@/context/NotificationContext";
+import {
+  TrophyIcon,
+  SwordsIcon,
+  ClockIcon,
+  AlertTriangleIcon,
+  UsersIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  InfoIcon,
+} from "@/components/ui/Icons";
 
 export default function FloatingNotificationToast() {
   const { isLoggedIn } = useAuth();
