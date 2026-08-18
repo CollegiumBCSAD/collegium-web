@@ -42,9 +42,11 @@ Before implementing features, modifying components, or introducing state:
   - `@/services/teamsService`: Methods for team management (`getTeams`, `getTeamById`, `createTeam`, `joinTeam`).
   - `@/services/scrimsService`: Methods for scrim offers (`getScrims`, `createScrim`, `acceptScrim`).
   - `@/services/tournamentsService`: Methods for tournament data (`getTournaments`, `getBracket`, `getBoxScore`).
+  - `@/services/notificationsService`: Methods for notifications (`getNotifications`, `markAsRead`, `markAllAsRead`, `clearAll`).
 - **Global Contexts**:
   - `useAuth()`: Manages user profile state, session status, and authentication credentials.
   - `useGame()`: Manages selected game title, theme accents, and modal state.
+  - `useNotifications()`: Polls `GET /notifications` for the logged-in user; `NotificationBell`/`FloatingNotificationToast` render whatever it returns and stay hidden entirely when logged out. Notifications are created server-side (see `collegium-server/AGENTS.md` §6) — never invent a client-side notification by writing to this context's state directly.
 - **Silent Token Auto-Refresh**: The base API client automatically attempts token renewal via `/auth/refresh` upon encountering `401 Unauthorized` responses. Manual token refresh loops in UI components are prohibited.
 - **Data Persistence**: Invoke domain API services (`@/services`). Fallback to local storage (e.g., `lib/teams.ts`) only when operating in offline/demo environments.
 
