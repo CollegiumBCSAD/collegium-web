@@ -122,33 +122,33 @@ export default function CreateTeamPage() {
   };
 
   return (
-    <div className="flex flex-col flex-1 items-center justify-center px-4 py-12 game-theme-bg relative">
-      <div className="w-full max-w-xl bg-[#0C101A]/95 border border-[#1E273A] rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6 relative min-h-[540px] flex flex-col justify-between backdrop-blur-xl">
-        {/* Top Gradient Line */}
-        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary-brand via-accent to-primary-brand rounded-t-2xl" />
+    <div className="flex flex-col flex-1 items-center justify-center px-4 py-8 sm:py-12 game-theme-bg min-h-[calc(100vh-4rem)]">
+      <div className="w-full max-w-xl bg-[#0D121F]/98 border border-[#1E293B] rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 relative flex flex-col justify-between backdrop-blur-xl">
+        {/* Top Accent Line */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-brand via-rose-500 to-primary-brand rounded-t-3xl" />
 
         <button
           type="button"
           onClick={handleClose}
-          className="absolute top-5 right-5 w-8 h-8 rounded-xl border border-[#232D44] bg-[#121624] hover:bg-[#1A2236] text-secondary-text hover:text-foreground flex items-center justify-center transition-all z-10 cursor-pointer"
+          className="absolute top-5 right-5 w-8 h-8 rounded-full border border-[#232D44] bg-[#141A29] hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 flex items-center justify-center text-sm font-bold transition-all z-10 cursor-pointer"
           title="Close window"
           aria-label="Close window"
         >
           ✕
         </button>
 
-        {/* Tab Selector */}
-        <div className="flex border border-[#232D44] rounded-xl bg-[#080B12] p-1 gap-2 pr-10">
+        {/* Tab Selector Switcher */}
+        <div className="flex border border-[#1C2538] rounded-2xl bg-[#080C14] p-1 gap-2 pr-10">
           <Link
             href="/team/create"
-            className="flex-1 h-10 rounded-lg bg-gradient-to-r from-primary-brand to-[#B91C1C] text-white text-xs font-sans font-bold uppercase tracking-wider flex items-center justify-center gap-2 text-center shadow-lg shadow-primary-brand/30"
+            className="flex-1 h-10 rounded-xl bg-gradient-to-r from-primary-brand to-rose-600 text-white text-xs font-mono font-black uppercase tracking-wider flex items-center justify-center gap-2 text-center shadow-md shadow-red-950/40"
           >
             <PlusIcon className="w-4 h-4" />
             <span>Create Squad</span>
           </Link>
           <Link
             href="/team/join"
-            className="flex-1 h-10 rounded-lg bg-transparent hover:bg-[#121624] text-secondary-text hover:text-foreground text-xs font-sans font-bold uppercase tracking-wider flex items-center justify-center gap-2 text-center transition-colors"
+            className="flex-1 h-10 rounded-xl bg-transparent hover:bg-[#141A29] text-slate-400 hover:text-white text-xs font-mono font-bold uppercase tracking-wider flex items-center justify-center gap-2 text-center transition-colors"
           >
             <UsersIcon className="w-4 h-4" />
             <span>Join Squad</span>
@@ -156,15 +156,15 @@ export default function CreateTeamPage() {
         </div>
 
         {/* Header Title */}
-        <div className="border-b border-[#1E2538] pb-4">
-          <span className="text-xs font-mono font-extrabold uppercase tracking-widest text-secondary-brand block mb-1 flex items-center gap-1.5">
-            <ShieldIcon className="w-4 h-4 text-secondary-brand" />
+        <div className="border-b border-[#1C2538] pb-4">
+          <span className="text-xs font-mono font-extrabold uppercase tracking-widest text-amber-400 block mb-1 flex items-center gap-1.5">
+            <ShieldIcon className="w-4 h-4 text-amber-400" />
             {user?.university?.name || "University"} Varsity Hub
           </span>
-          <h1 className="font-display text-2xl sm:text-3xl font-extrabold uppercase tracking-wider text-foreground">
+          <h1 className="font-display text-2xl sm:text-3xl font-black uppercase tracking-wider text-white">
             CREATE VARSITY SQUAD
           </h1>
-          <p className="font-sans text-xs text-secondary-text mt-1 leading-relaxed">
+          <p className="font-sans text-xs text-slate-400 mt-1 leading-relaxed">
             Establish a 5-man varsity team under your university banner. (Limit: 1 active squad per title).
           </p>
         </div>
@@ -172,10 +172,10 @@ export default function CreateTeamPage() {
         {createdTeam ? (
           <div className="space-y-6">
             <div className="p-5 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 text-center space-y-2">
-              <div className="w-12 h-12 rounded-full bg-emerald-900/60 border border-emerald-500/50 text-emerald-400 inline-flex items-center justify-center shadow-lg shadow-emerald-950/50">
+              <div className="w-12 h-12 rounded-full bg-emerald-900/60 border border-emerald-500/50 text-emerald-400 inline-flex items-center justify-center shadow-lg">
                 <CheckCircleIcon className="w-6 h-6 text-emerald-400" />
               </div>
-              <h2 className="font-display text-xl font-extrabold uppercase text-foreground tracking-wide">
+              <h2 className="font-display text-xl font-black uppercase text-white tracking-wide">
                 {createdTeam.name}
               </h2>
               <p className="text-xs font-sans text-slate-300">
@@ -183,8 +183,8 @@ export default function CreateTeamPage() {
               </p>
             </div>
 
-            <div className="p-4 rounded-xl bg-[#080B12] border border-[#1E2538] space-y-3">
-              <label className="block text-xs font-sans font-bold uppercase tracking-wider text-secondary-text">
+            <div className="p-4 rounded-2xl bg-[#080C14] border border-[#1C2538] space-y-3">
+              <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
                 Shareable Team Invite Link
               </label>
               <div className="flex items-center gap-2">
@@ -192,16 +192,16 @@ export default function CreateTeamPage() {
                   type="text"
                   readOnly
                   value={getInviteUrl()}
-                  className="flex-1 h-11 px-3 rounded-xl bg-[#0F1420] border border-[#232D44] text-foreground text-xs font-mono select-all focus:outline-none"
+                  className="flex-1 h-11 px-3.5 rounded-xl bg-[#141A29] border border-[#232D44] text-white text-xs font-mono select-all focus:outline-none"
                 />
                 <button
                   onClick={copyInviteLink}
-                  className="h-11 px-5 rounded-xl bg-primary-brand hover:bg-primary-brand/90 text-white font-sans text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer shrink-0 shadow-md shadow-primary-brand/30"
+                  className="h-11 px-5 rounded-xl bg-gradient-to-r from-primary-brand to-rose-600 hover:opacity-90 text-white font-sans text-xs font-extrabold uppercase tracking-wider transition-transform active:scale-95 cursor-pointer shrink-0 shadow-md shadow-red-950/40"
                 >
                   {copied ? "Copied! ✓" : "Copy Link"}
                 </button>
               </div>
-              <p className="text-[11px] font-sans text-slate-400">
+              <p className="text-[11px] font-mono text-slate-400">
                 Send this link to teammates with a matching university domain for instant verified join.
               </p>
             </div>
@@ -209,13 +209,13 @@ export default function CreateTeamPage() {
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <Link
                 href="/dashboard"
-                className="flex-1 h-11 rounded-xl bg-primary-brand hover:bg-primary-brand/90 text-white font-sans text-xs font-extrabold uppercase tracking-wider transition-colors flex items-center justify-center text-center shadow-lg shadow-primary-brand/30"
+                className="flex-1 h-11 rounded-xl bg-gradient-to-r from-primary-brand to-rose-600 hover:opacity-90 text-white font-sans text-xs font-extrabold uppercase tracking-wider flex items-center justify-center text-center shadow-md shadow-red-950/40"
               >
                 Go to Dashboard
               </Link>
               <button
                 onClick={() => setCreatedTeam(null)}
-                className="h-11 px-6 rounded-xl bg-[#141926] text-secondary-text hover:text-foreground font-sans text-xs font-bold uppercase tracking-wider border border-[#232D44] transition-colors cursor-pointer"
+                className="h-11 px-6 rounded-xl bg-[#141A29] text-slate-300 hover:text-white font-sans text-xs font-bold uppercase tracking-wider border border-[#232D44] transition-colors cursor-pointer"
               >
                 Create Another Squad
               </button>
@@ -224,14 +224,14 @@ export default function CreateTeamPage() {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
-              <div className="p-3.5 rounded-xl bg-rose-950/40 border border-rose-500/40 text-rose-300 text-xs font-sans leading-relaxed flex items-center gap-2">
+              <div className="p-3.5 rounded-2xl bg-rose-950/50 border border-rose-500/40 text-rose-300 text-xs font-sans leading-relaxed flex items-center gap-2">
                 <AlertTriangleIcon className="w-4 h-4 text-rose-400 shrink-0" />
                 <span>{error}</span>
               </div>
             )}
 
             <div>
-              <label className="block text-xs font-sans font-bold uppercase tracking-wider text-secondary-text mb-2">
+              <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-2">
                 Target Esports Title
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -242,20 +242,20 @@ export default function CreateTeamPage() {
                     onClick={() => setSelectedGame(game.id)}
                     className={`p-2.5 rounded-xl border text-left flex flex-col items-center justify-center transition-all cursor-pointer ${
                       selectedGame === game.id
-                        ? `${game.borderColor} border-2 bg-[#141926] shadow-lg shadow-black/40`
-                        : "border-[#1E2538] bg-[#080B12] opacity-70 hover:opacity-100 hover:border-[#2C3752]"
+                        ? "border-primary-brand border-2 bg-[#141A29] shadow-lg shadow-black/40"
+                        : "border-[#1C2538] bg-[#080C14] opacity-70 hover:opacity-100 hover:border-[#232D44]"
                     }`}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={game.image} alt={game.name} className="w-8 h-8 rounded-md object-cover mb-1 shadow" />
-                    <span className="font-display text-xs font-bold uppercase">{game.shortName}</span>
+                    <span className="font-display text-xs font-bold uppercase text-white">{game.shortName}</span>
                   </button>
                 ))}
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-sans font-bold uppercase tracking-wider text-secondary-text mb-1">
+              <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-1">
                 Custom Squad Name
               </label>
               <input
@@ -263,13 +263,13 @@ export default function CreateTeamPage() {
                 value={teamName}
                 onChange={(e) => setTeamName(e.target.value)}
                 placeholder="e.g. UMAK Herons Alpha"
-                className="w-full h-11 px-4 rounded-xl bg-[#080B12] border border-[#1E2538] focus:border-primary-brand text-foreground text-sm font-sans focus:outline-none transition-colors"
+                className="w-full h-11 px-4 rounded-xl bg-[#080C14] border border-[#1C2538] focus:border-primary-brand text-white text-sm font-sans focus:outline-none transition-colors"
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-sans font-bold uppercase tracking-wider text-secondary-text mb-1">
+                <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-1">
                   Captain In-Game Tag
                 </label>
                 <input
@@ -277,12 +277,12 @@ export default function CreateTeamPage() {
                   value={gameHandle}
                   onChange={(e) => setGameHandle(e.target.value)}
                   placeholder="Riot ID / MLBB ID"
-                  className="w-full h-11 px-4 rounded-xl bg-[#080B12] border border-[#1E2538] focus:border-primary-brand text-foreground text-sm font-sans focus:outline-none transition-colors"
+                  className="w-full h-11 px-4 rounded-xl bg-[#080C14] border border-[#1C2538] focus:border-primary-brand text-white text-sm font-sans focus:outline-none transition-colors"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-sans font-bold uppercase tracking-wider text-secondary-text mb-1">
+                <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-1">
                   Captain Role (Optional)
                 </label>
                 <input
@@ -290,7 +290,7 @@ export default function CreateTeamPage() {
                   value={preferredRole}
                   onChange={(e) => setPreferredRole(e.target.value)}
                   placeholder="e.g. Duelist, Jungler"
-                  className="w-full h-11 px-4 rounded-xl bg-[#080B12] border border-[#1E2538] focus:border-primary-brand text-foreground text-sm font-sans focus:outline-none transition-colors"
+                  className="w-full h-11 px-4 rounded-xl bg-[#080C14] border border-[#1C2538] focus:border-primary-brand text-white text-sm font-sans focus:outline-none transition-colors"
                 />
               </div>
             </div>
@@ -299,7 +299,7 @@ export default function CreateTeamPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-11 rounded-xl bg-gradient-to-r from-primary-brand to-[#B91C1C] hover:from-primary-brand/90 hover:to-[#991B1B] text-white font-sans text-xs font-extrabold uppercase tracking-widest transition-all active:scale-[0.98] shadow-lg shadow-primary-brand/30 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                className="w-full h-11 rounded-xl bg-gradient-to-r from-primary-brand to-rose-600 hover:opacity-90 text-white font-sans text-xs font-extrabold uppercase tracking-widest transition-transform active:scale-95 shadow-md shadow-red-950/40 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 <TrophyIcon className="w-4 h-4" />
                 <span>{isLoading ? "Creating Squad..." : "Create Squad & Generate Invite Link"}</span>
@@ -311,4 +311,3 @@ export default function CreateTeamPage() {
     </div>
   );
 }
-

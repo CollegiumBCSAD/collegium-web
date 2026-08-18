@@ -42,21 +42,21 @@ function HeaderAuthControls() {
       <div className="relative" ref={dropdownRef}>
         <button
           onClick={() => setDropdownOpen(!dropdownOpen)}
-          className="flex items-center gap-3 px-4 py-2 rounded-full border border-panel-border bg-card-bg/90 hover:bg-raised-panel transition-all focus:outline-none shadow-md cursor-pointer group"
+          className="flex items-center gap-3 px-4 py-2 rounded-full border border-[#232D44] bg-[#0D121F]/90 hover:bg-[#141A29] hover:border-white/20 transition-all duration-200 focus:outline-none shadow-md cursor-pointer group active:scale-95"
         >
-          <div className="w-7 h-7 rounded-full bg-primary-brand text-foreground flex items-center justify-center font-bold text-xs shrink-0 shadow-sm">
+          <div className="w-7 h-7 rounded-full bg-primary-brand text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-sm group-hover:scale-110 transition-transform duration-200">
             {user.displayName.charAt(0)}
           </div>
           <div className="hidden sm:flex flex-col text-left leading-tight">
-            <span className="text-xs font-sans font-bold text-foreground">
+            <span className="text-xs font-sans font-bold text-white">
               {user.displayName}
             </span>
-            <span className="text-[10px] font-sans text-secondary-text">
+            <span className="text-[10px] font-mono text-slate-400">
               {user.university?.name?.split(" ")[0] || "Athlete"} · {user.role || "Player"}
             </span>
           </div>
           <svg
-            className={`w-3.5 h-3.5 text-secondary-text group-hover:text-foreground transition-transform duration-200 ${
+            className={`w-3.5 h-3.5 text-slate-400 group-hover:text-white transition-transform duration-200 ${
               dropdownOpen ? "rotate-180" : ""
             }`}
             fill="none"
@@ -68,12 +68,12 @@ function HeaderAuthControls() {
         </button>
 
         {dropdownOpen && (
-          <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-[#272B3A] bg-[#0C0F17] shadow-2xl z-50 py-2">
-            <div className="px-4 py-2 border-b border-raised-panel">
-              <span className="text-xs font-display font-bold text-foreground uppercase block">
+          <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-[#1E293B] bg-[#0D121F] shadow-2xl z-50 py-2 animate-dropdown-pop">
+            <div className="px-4 py-2 border-b border-[#1C2538]">
+              <span className="text-xs font-display font-black text-white uppercase block">
                 {user.displayName}
               </span>
-              <span className="text-[10px] font-sans text-secondary-text block mt-0.5">
+              <span className="text-[10px] font-mono text-slate-400 block mt-0.5">
                 {user.email}
               </span>
             </div>
@@ -81,7 +81,7 @@ function HeaderAuthControls() {
               <Link
                 href="/dashboard"
                 onClick={() => setDropdownOpen(false)}
-                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-sans font-semibold text-secondary-text hover:text-foreground hover:bg-white/5 transition-colors"
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-sans font-semibold text-slate-300 hover:text-white hover:bg-[#141A29] hover:translate-x-1 transition-all duration-150"
               >
                 <HomeIcon className="w-3.5 h-3.5 text-primary-brand" />
                 <span>My Dashboard</span>
@@ -89,7 +89,7 @@ function HeaderAuthControls() {
               <Link
                 href="/team/create"
                 onClick={() => setDropdownOpen(false)}
-                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-sans font-semibold text-secondary-text hover:text-foreground hover:bg-white/5 transition-colors"
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-sans font-semibold text-slate-300 hover:text-white hover:bg-[#141A29] hover:translate-x-1 transition-all duration-150"
               >
                 <PlusIcon className="w-3.5 h-3.5 text-primary-brand" />
                 <span>Create Squad</span>
@@ -97,7 +97,7 @@ function HeaderAuthControls() {
               <Link
                 href="/team/join"
                 onClick={() => setDropdownOpen(false)}
-                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-sans font-semibold text-secondary-text hover:text-foreground hover:bg-white/5 transition-colors"
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-sans font-semibold text-slate-300 hover:text-white hover:bg-[#141A29] hover:translate-x-1 transition-all duration-150"
               >
                 <UsersIcon className="w-3.5 h-3.5 text-primary-brand" />
                 <span>Join Squad</span>
@@ -105,19 +105,19 @@ function HeaderAuthControls() {
               <Link
                 href="/scrims"
                 onClick={() => setDropdownOpen(false)}
-                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-sans font-semibold text-secondary-text hover:text-foreground hover:bg-white/5 transition-colors"
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-sans font-semibold text-slate-300 hover:text-white hover:bg-[#141A29] hover:translate-x-1 transition-all duration-150"
               >
                 <SwordsIcon className="w-3.5 h-3.5 text-primary-brand" />
                 <span>Scrims Board</span>
               </Link>
             </div>
-            <div className="pt-1 border-t border-raised-panel px-2 mt-1">
+            <div className="pt-1 border-t border-[#1C2538] px-2 mt-1">
               <button
                 onClick={() => {
                   logoutUser();
                   setDropdownOpen(false);
                 }}
-                className="w-full text-left px-3 py-1.5 rounded-lg text-xs font-sans font-semibold text-error hover:bg-error/10 transition-colors"
+                className="w-full text-left px-3 py-1.5 rounded-lg text-xs font-sans font-semibold text-rose-400 hover:bg-rose-950/30 transition-colors cursor-pointer"
               >
                 Log Out
               </button>
