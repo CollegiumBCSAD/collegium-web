@@ -1,4 +1,8 @@
-import { UniversityVerification } from "@/types";
+import {
+  UniversityVerification,
+  PendingTournamentPost,
+  PendingTeamRegistration,
+} from "@/types";
 
 export const mockUniversityVerifications: UniversityVerification[] = [
   {
@@ -42,5 +46,34 @@ export const mockUniversityVerifications: UniversityVerification[] = [
     domain: "@umak.edu.ph",
     status: "VERIFIED",
     detail: "Approved Jun 15, 2026",
+  },
+];
+
+export const mockPendingTournamentPosts: PendingTournamentPost[] = [
+  {
+    id: "1",
+    name: "Collegium Preseason Cup",
+    game: "Mobile Legends: Bang Bang",
+    detail: "Submitted by Admin queue · 12 teams interested",
+    bracketFormat: "Single Elimination",
+    seeding: "Random Seeding",
+    scheduleStart: "20/07/2026",
+  },
+];
+
+export const mockPendingTeamRegistrations: PendingTeamRegistration[] = [
+  {
+    id: "1",
+    teamName: "UMak Vanguards",
+    tournamentName: "University Circuit Open",
+    game: "VALORANT",
+    detail: "7 players submitted · Jul 3, 2026",
+  },
+  {
+    id: "2",
+    teamName: "FEU Tamaraws",
+    tournamentName: "Campus Clash Invitational",
+    game: "VALORANT",
+    detail: "7 players submitted · Jul 5, 2026",
   },
 ];
