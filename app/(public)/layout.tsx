@@ -7,8 +7,11 @@ import { useState } from "react";
 import { GameProvider } from "@/context/GameContext";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { NotificationProvider } from "@/context/NotificationContext";
+import { WarRoomProvider, useWarRoom } from "@/context/WarRoomContext";
 import NotificationBell from "@/components/NotificationBell";
 import FloatingNotificationToast from "@/components/FloatingNotificationToast";
+import ChatQuickAccess from "@/components/ChatQuickAccess";
+import ScrimWarRoomModal from "@/components/scrims/ScrimWarRoomModal";
 import GameSelectorModal from "@/components/GameSelectorModal";
 import HeaderGameSwitcher from "@/components/HeaderGameSwitcher";
 
@@ -192,6 +195,19 @@ function NavigationLinks({ mobile = false, onClose }: { mobile?: boolean; onClos
   );
 }
 
+function GlobalWarRoomModal() {
+  const { activeWarRoom, closeWarRoom } = useWarRoom();
+
+  return (
+    <ScrimWarRoomModal
+      scrim={activeWarRoom?.scrim ?? null}
+      isOpen={!!activeWarRoom}
+      onClose={closeWarRoom}
+      isHost={activeWarRoom?.isHost ?? false}
+    />
+  );
+}
+
 export default function PublicLayout({
   children,
 }: Readonly<{
@@ -203,6 +219,7 @@ export default function PublicLayout({
     <AuthProvider>
       <GameProvider>
         <NotificationProvider>
+        <WarRoomProvider>
           <div className="flex min-h-screen flex-col bg-background text-foreground relative">
             <GameSelectorModal />
 
@@ -218,6 +235,7 @@ export default function PublicLayout({
 
                 <div className="flex items-center gap-3 sm:gap-4">
                   <HeaderGameSwitcher />
+                  <ChatQuickAccess />
                   <NotificationBell />
                   <HeaderAuthControls />
 
@@ -250,7 +268,9 @@ export default function PublicLayout({
 
             <main className="flex-1 flex flex-col">{children}</main>
             <FloatingNotificationToast />
+            <GlobalWarRoomModal />
           </div>
+        </WarRoomProvider>
         </NotificationProvider>
       </GameProvider>
     </AuthProvider>

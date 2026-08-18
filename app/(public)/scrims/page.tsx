@@ -8,9 +8,9 @@ import { useGame } from "@/context/GameContext";
 import { GameId, ScrimOffer } from "@/types";
 import { scrimsService } from "@/services";
 import { getStoredTeams, fetchTeamsApi, Team } from "@/lib/teams";
+import { useWarRoom } from "@/context/WarRoomContext";
 import ScrimCard from "@/components/scrims/ScrimCard";
 import PostScrimModal from "@/components/scrims/PostScrimModal";
-import ScrimWarRoomModal from "@/components/scrims/ScrimWarRoomModal";
 import NoSquadModal from "@/components/scrims/NoSquadModal";
 
 const getMyRequestedScrims = (): Record<string, string[]> => {
@@ -94,11 +94,11 @@ export default function ScrimsPage() {
   const router = useRouter();
   const { user, isLoggedIn, isLoaded } = useAuth();
   const { selectedGame: globalGame, selectedGameInfo } = useGame();
+  const { openWarRoom } = useWarRoom();
   const activeGame: GameId = globalGame || "valo";
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isNoSquadModalOpen, setIsNoSquadModalOpen] = useState(false);
-  const [activeWarRoomScrim, setActiveWarRoomScrim] = useState<ScrimOffer | null>(null);
   const [scrims, setScrims] = useState<ScrimOffer[]>([]);
   const [userTeams, setUserTeams] = useState<Team[]>(() => getStoredTeams());
   const [isLoading, setIsLoading] = useState(true);
@@ -518,7 +518,7 @@ export default function ScrimsPage() {
                 onDeclineRequest={handleDeclineRequest}
                 onCancel={handleCancelScrim}
                 onDelete={handleDeleteScrim}
-                onOpenWarRoom={(s) => setActiveWarRoomScrim(s)}
+                onOpenWarRoom={(s) => openWarRoom(s, isUserHost(s))}
                 isHost={isUserHost(scrim)}
                 isOpponent={isUserOpponent(scrim)}
                 isChosenOpponent={isUserChosenOpponent(scrim)}
@@ -531,13 +531,6 @@ export default function ScrimsPage() {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           onSubmit={handlePostScrimSubmit}
-        />
-
-        <ScrimWarRoomModal
-          scrim={activeWarRoomScrim}
-          isOpen={!!activeWarRoomScrim}
-          onClose={() => setActiveWarRoomScrim(null)}
-          isHost={activeWarRoomScrim ? isUserHost(activeWarRoomScrim) : false}
         />
 
         <NoSquadModal
