@@ -37,6 +37,14 @@ export interface PendingTeamRegistration {
   detail: string;
 }
 
+export interface ScrimBoardPost {
+  id: string;
+  teamName: string;
+  game: string;
+  detail: string;
+  flagReason?: string;
+}
+
 export interface FlaggedMatch {
   id: string;
   teamA: string;

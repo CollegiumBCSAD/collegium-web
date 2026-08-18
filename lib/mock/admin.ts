@@ -2,6 +2,7 @@ import {
   UniversityVerification,
   PendingTournamentPost,
   PendingTeamRegistration,
+  ScrimBoardPost,
   FlaggedMatch,
 } from "@/types";
 
@@ -76,6 +77,28 @@ export const mockPendingTeamRegistrations: PendingTeamRegistration[] = [
     tournamentName: "Campus Clash Invitational",
     game: "VALORANT",
     detail: "7 players submitted · Jul 5, 2026",
+  },
+];
+
+export const mockScrimBoardPosts: ScrimBoardPost[] = [
+  {
+    id: "1",
+    teamName: "Ateneo Blue Eagles",
+    game: "MLBB",
+    detail: 'Open Jul 10, 8:00–10:00 PM · Posted by Coach Villar · Note: "Looking for high-tier practice"',
+  },
+  {
+    id: "2",
+    teamName: "Adamson Falcons",
+    game: "VALORANT",
+    detail: 'Open Jul 11, 6:00–8:00 PM · Posted by athlete "Kade" (no coach on roster)',
+  },
+  {
+    id: "3",
+    teamName: "NU Bulldogs",
+    game: "VALORANT",
+    detail: "Open Jul 13, 5:30–7:00 PM · Posted by Coach Ramos",
+    flagReason: "Flagged: similar post already live",
   },
 ];
 
