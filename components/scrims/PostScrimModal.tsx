@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { GAME_LIST } from "@/lib/games";
 import { GameId } from "@/types";
 import { getStoredTeams, fetchTeamsApi, Team } from "@/lib/teams";
@@ -74,14 +74,17 @@ export default function PostScrimModal({
   const [formMap, setFormMap] = useState("Ascent");
   const [formNotes, setFormNotes] = useState("");
 
-  useEffect(() => {
+  const teamDefaultKey = userTeams.length > 0 ? userTeams[0].id : (user?.university?.name ?? "");
+  const prevTeamDefaultKeyRef = useRef(teamDefaultKey);
+  if (prevTeamDefaultKeyRef.current !== teamDefaultKey) {
+    prevTeamDefaultKeyRef.current = teamDefaultKey;
     if (userTeams.length > 0) {
-      setSelectedTeamId((prev) => prev || userTeams[0].id);
-      setFormTeamName((prev) => prev || userTeams[0].name);
+      setSelectedTeamId(userTeams[0].id);
+      setFormTeamName(userTeams[0].name);
     } else if (user?.university?.name) {
-      setFormTeamName((prev) => prev || `${user.university?.name} Squad`);
+      setFormTeamName(`${user.university.name} Squad`);
     }
-  }, [userTeams, user]);
+  }
 
   // Modal lifecycle listeners
   useEffect(() => {

@@ -63,13 +63,14 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const [dismissedToastIds, setDismissedToastIds] = useState<Set<string>>(() => loadDismissedToastIds(userId));
   const [activeConfirmedModal, setActiveConfirmedModal] = useState<AppNotification | null>(null);
   const seenIdsRef = useRef<Set<string>>(new Set());
+  const prevUserIdRef = useRef<string | undefined>(userId);
 
-  useEffect(() => {
-    seenIdsRef.current = new Set();
+  if (prevUserIdRef.current !== userId) {
+    prevUserIdRef.current = userId;
     setActiveConfirmedModal(null);
     setNotifications([]);
     setDismissedToastIds(loadDismissedToastIds(userId));
-  }, [userId]);
+  }
 
   const persistDismissed = useCallback(
     (ids: Set<string>) => {
@@ -83,6 +84,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   );
 
   useEffect(() => {
+    seenIdsRef.current = new Set();
+
     if (!isLoggedIn || !userId) {
       disconnectSocket();
       return;

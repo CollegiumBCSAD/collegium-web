@@ -42,7 +42,6 @@ export default function ScrimWarRoomModal({
 }: ScrimWarRoomModalProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState("");
-  const [lobbyCode, setLobbyCode] = useState("");
   const [isCopied, setIsCopied] = useState(false);
   const [teams, setTeams] = useState<Team[]>(() => getStoredTeams());
   const chatBottomRef = useRef<HTMLDivElement>(null);
@@ -74,11 +73,9 @@ export default function ScrimWarRoomModal({
   }, [scrim, teams]);
 
   // Deterministic lobby code shared across ALL players & windows
-  useEffect(() => {
-    if (!scrim) return;
-    const code = getDeterministicLobbyCode(scrim.id, scrim.hostTeamName, scrim.opponentTeamName);
-    setLobbyCode(code);
-  }, [scrim]);
+  const lobbyCode = scrim
+    ? getDeterministicLobbyCode(scrim.id, scrim.hostTeamName, scrim.opponentTeamName)
+    : "";
 
   // Live War Room chat: history hydration + WebSocket push, no polling
   useEffect(() => {

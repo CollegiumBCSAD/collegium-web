@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useWarRoom } from "@/context/WarRoomContext";
 import { scrimsService } from "@/services";
@@ -13,6 +13,34 @@ interface ActiveChat {
   opponentLabel: string;
 }
 
+async function fetchActiveChats(userId: string): Promise<ActiveChat[]> {
+  const [scrims, teams] = await Promise.all([
+    scrimsService.getScrims(),
+    fetchTeamsApi(),
+  ]);
+
+  const myTeamIds = new Set(
+    teams
+      .filter((t: Team) =>
+        t.captainId === userId ||
+        t.members.some((m) => m.userId === userId && m.status === "ACCEPTED")
+      )
+      .map((t: Team) => t.id)
+  );
+
+  return scrims
+    .filter((s) => s.status === "CONFIRMED")
+    .filter((s) => (s.teamId && myTeamIds.has(s.teamId)) || (s.opponentTeamId && myTeamIds.has(s.opponentTeamId)))
+    .map((s) => {
+      const isHost = !!(s.teamId && myTeamIds.has(s.teamId));
+      return {
+        scrim: s,
+        isHost,
+        opponentLabel: isHost ? (s.opponentTeamName || "Challenger Squad") : s.hostTeamName,
+      };
+    });
+}
+
 export default function ChatQuickAccess() {
   const { isLoggedIn, user } = useAuth();
   const { openWarRoom } = useWarRoom();
@@ -20,6 +48,7 @@ export default function ChatQuickAccess() {
   const [chats, setChats] = useState<ActiveChat[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const userId = user?.id;
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -33,47 +62,25 @@ export default function ChatQuickAccess() {
     };
   }, []);
 
-  const loadChats = useCallback(async () => {
-    if (!user) return;
-    try {
-      const [scrims, teams] = await Promise.all([
-        scrimsService.getScrims(),
-        fetchTeamsApi(),
-      ]);
-
-      const myTeamIds = new Set(
-        teams
-          .filter((t: Team) =>
-            t.captainId === user.id ||
-            t.members.some((m) => m.userId === user.id && m.status === "ACCEPTED")
-          )
-          .map((t: Team) => t.id)
-      );
-
-      const active: ActiveChat[] = scrims
-        .filter((s) => s.status === "CONFIRMED")
-        .filter((s) => (s.teamId && myTeamIds.has(s.teamId)) || (s.opponentTeamId && myTeamIds.has(s.opponentTeamId)))
-        .map((s) => {
-          const isHost = !!(s.teamId && myTeamIds.has(s.teamId));
-          return {
-            scrim: s,
-            isHost,
-            opponentLabel: isHost ? (s.opponentTeamName || "Challenger Squad") : s.hostTeamName,
-          };
-        });
-
-      setChats(active);
-    } catch {
-      setChats([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user]);
-
   useEffect(() => {
-    if (!isLoggedIn) return;
-    loadChats();
-  }, [isLoggedIn, loadChats]);
+    if (!isLoggedIn || !userId) return;
+
+    let isMounted = true;
+    fetchActiveChats(userId)
+      .then((active) => {
+        if (isMounted) setChats(active);
+      })
+      .catch(() => {
+        if (isMounted) setChats([]);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isLoggedIn, userId]);
 
   if (!isLoggedIn) return null;
 
@@ -83,9 +90,12 @@ export default function ChatQuickAccess() {
         onClick={() => {
           const next = !isOpen;
           setIsOpen(next);
-          if (next) {
+          if (next && userId) {
             setIsLoading(true);
-            loadChats();
+            fetchActiveChats(userId)
+              .then((active) => setChats(active))
+              .catch(() => setChats([]))
+              .finally(() => setIsLoading(false));
           }
         }}
         className="w-10 h-10 rounded-full border border-[#232A3B] bg-[#11141C] hover:bg-[#1A202C] text-[#94A3B8] hover:text-[#F8FAFC] flex items-center justify-center transition-all cursor-pointer relative"
