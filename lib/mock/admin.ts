@@ -2,6 +2,7 @@ import {
   UniversityVerification,
   PendingTournamentPost,
   PendingTeamRegistration,
+  FlaggedMatch,
 } from "@/types";
 
 export const mockUniversityVerifications: UniversityVerification[] = [
@@ -75,5 +76,31 @@ export const mockPendingTeamRegistrations: PendingTeamRegistration[] = [
     tournamentName: "Campus Clash Invitational",
     game: "VALORANT",
     detail: "7 players submitted · Jul 5, 2026",
+  },
+];
+
+export const mockFlaggedMatches: FlaggedMatch[] = [
+  {
+    id: "1",
+    teamA: "UMak Vanguards",
+    teamB: "FEU Tamaraws",
+    game: "VALORANT",
+    detail: "Quarterfinals · University Circuit Open · Jul 1, 2026",
+    scoreA: 2,
+    scoreB: 0,
+    claimA:
+      "Round 7 was replayed after a server desync but the original score was kept — final should be 2–1, not 2–0.",
+    claimB: "Server desync happened during warmup, not a scored round. Original 2–0 result stands.",
+  },
+  {
+    id: "2",
+    teamA: "UMak Vanguards",
+    teamB: "UE Red Warriors",
+    game: "Mobile Legends: Bang Bang",
+    detail: "Round 1 · Metro League · Jun 24, 2026",
+    scoreA: 0,
+    scoreB: 2,
+    claimA: "Opponent used an unregistered substitute for Game 2. Requesting forfeit review.",
+    claimB: "Substitute was registered before the match — roster update was submitted in advance.",
   },
 ];

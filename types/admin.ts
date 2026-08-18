@@ -36,3 +36,15 @@ export interface PendingTeamRegistration {
   game: string;
   detail: string;
 }
+
+export interface FlaggedMatch {
+  id: string;
+  teamA: string;
+  teamB: string;
+  game: string;
+  detail: string;
+  scoreA: number;
+  scoreB: number;
+  claimA: string;
+  claimB: string;
+}
