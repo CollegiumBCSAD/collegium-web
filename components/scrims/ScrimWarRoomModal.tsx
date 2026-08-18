@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { ScrimOffer } from "@/types";
 import { useAuth } from "@/context/AuthContext";
-
 import { scrimsService } from "@/services";
+import { getStoredTeams, fetchTeamsApi, Team } from "@/lib/teams";
 
 interface ChatMessage {
   id: string;
@@ -45,7 +45,34 @@ export default function ScrimWarRoomModal({
   const [inputMessage, setInputMessage] = useState("");
   const [lobbyCode, setLobbyCode] = useState("");
   const [isCopied, setIsCopied] = useState(false);
+  const [teams, setTeams] = useState<Team[]>(() => getStoredTeams());
   const chatBottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    fetchTeamsApi().then((data) => {
+      if (Array.isArray(data) && data.length > 0) {
+        setTeams(data);
+      }
+    });
+  }, []);
+
+  const hostSquad = useMemo(() => {
+    if (!scrim) return null;
+    return teams.find(
+      (t) =>
+        (scrim.teamId && t.id === scrim.teamId) ||
+        t.name.toLowerCase().trim() === scrim.hostTeamName.toLowerCase().trim()
+    );
+  }, [scrim, teams]);
+
+  const opponentSquad = useMemo(() => {
+    if (!scrim) return null;
+    return teams.find(
+      (t) =>
+        (scrim.opponentTeamId && t.id === scrim.opponentTeamId) ||
+        (scrim.opponentTeamName && t.name.toLowerCase().trim() === scrim.opponentTeamName.toLowerCase().trim())
+    );
+  }, [scrim, teams]);
 
   // Deterministic lobby code shared across ALL players & windows
   useEffect(() => {
@@ -326,26 +353,26 @@ export default function ScrimWarRoomModal({
               </p>
 
               <div className="pt-2 border-t border-[#1E2433] space-y-1">
-                <div className="flex items-center justify-between text-xs font-sans text-[#CBD5E1]">
-                  <span className="font-semibold text-[#34D399]">👑 Host Captain</span>
-                  <span className="text-[10px] text-[#64748B]">Radiant</span>
-                </div>
-                <div className="flex items-center justify-between text-xs font-sans text-[#94A3B8]">
-                  <span>Player 2 (Duelist)</span>
-                  <span className="text-[10px] text-[#64748B]">Ascendant 3</span>
-                </div>
-                <div className="flex items-center justify-between text-xs font-sans text-[#94A3B8]">
-                  <span>Player 3 (Initiator)</span>
-                  <span className="text-[10px] text-[#64748B]">Immortal 1</span>
-                </div>
-                <div className="flex items-center justify-between text-xs font-sans text-[#94A3B8]">
-                  <span>Player 4 (Controller)</span>
-                  <span className="text-[10px] text-[#64748B]">Ascendant 2</span>
-                </div>
-                <div className="flex items-center justify-between text-xs font-sans text-[#94A3B8]">
-                  <span>Player 5 (Sentinel)</span>
-                  <span className="text-[10px] text-[#64748B]">Ascendant 1</span>
-                </div>
+                {hostSquad && hostSquad.members && hostSquad.members.length > 0 ? (
+                  hostSquad.members.map((m, idx) => {
+                    const isCapt = m.userId === hostSquad.captainId || idx === 0;
+                    return (
+                      <div key={m.id || idx} className="flex items-center justify-between text-xs font-sans text-[#CBD5E1]">
+                        <span className={isCapt ? "font-semibold text-[#34D399]" : "text-[#94A3B8]"}>
+                          {isCapt ? "👑 " : ""}{m.displayName || m.gameHandle || `Player ${idx + 1}`}
+                        </span>
+                        <span className="text-[10px] text-[#64748B]">
+                          {m.preferredRole || "Varsity"}
+                        </span>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="flex items-center justify-between text-xs font-sans text-[#CBD5E1]">
+                    <span className="font-semibold text-[#34D399]">👑 {scrim.hostTeamName} Captain</span>
+                    <span className="text-[10px] text-[#64748B]">Varsity</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -372,30 +399,30 @@ export default function ScrimWarRoomModal({
                 {scrim.opponentTeamName || "Challenger Squad"}
               </h3>
               <p className="text-[11px] font-sans text-[#64748B]">
-                Challenger Varsity
+                {opponentSquad?.universityName || "Challenger Varsity"}
               </p>
 
               <div className="pt-2 border-t border-[#1E2433] space-y-1">
-                <div className="flex items-center justify-between text-xs font-sans text-[#CBD5E1]">
-                  <span className="font-semibold text-[#60A5FA]">👑 Opponent Captain</span>
-                  <span className="text-[10px] text-[#64748B]">Immortal 2</span>
-                </div>
-                <div className="flex items-center justify-between text-xs font-sans text-[#94A3B8]">
-                  <span>Player 2 (Duelist)</span>
-                  <span className="text-[10px] text-[#64748B]">Ascendant 2</span>
-                </div>
-                <div className="flex items-center justify-between text-xs font-sans text-[#94A3B8]">
-                  <span>Player 3 (Initiator)</span>
-                  <span className="text-[10px] text-[#64748B]">Ascendant 3</span>
-                </div>
-                <div className="flex items-center justify-between text-xs font-sans text-[#94A3B8]">
-                  <span>Player 4 (Controller)</span>
-                  <span className="text-[10px] text-[#64748B]">Immortal 1</span>
-                </div>
-                <div className="flex items-center justify-between text-xs font-sans text-[#94A3B8]">
-                  <span>Player 5 (Sentinel)</span>
-                  <span className="text-[10px] text-[#64748B]">Ascendant 1</span>
-                </div>
+                {opponentSquad && opponentSquad.members && opponentSquad.members.length > 0 ? (
+                  opponentSquad.members.map((m, idx) => {
+                    const isCapt = m.userId === opponentSquad.captainId || idx === 0;
+                    return (
+                      <div key={m.id || idx} className="flex items-center justify-between text-xs font-sans text-[#CBD5E1]">
+                        <span className={isCapt ? "font-semibold text-[#60A5FA]" : "text-[#94A3B8]"}>
+                          {isCapt ? "👑 " : ""}{m.displayName || m.gameHandle || `Player ${idx + 1}`}
+                        </span>
+                        <span className="text-[10px] text-[#64748B]">
+                          {m.preferredRole || "Varsity"}
+                        </span>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="flex items-center justify-between text-xs font-sans text-[#CBD5E1]">
+                    <span className="font-semibold text-[#60A5FA]">👑 {scrim.opponentTeamName || "Challenger"} Captain</span>
+                    <span className="text-[10px] text-[#64748B]">Varsity</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -428,7 +455,7 @@ export default function ScrimWarRoomModal({
                         [{msg.teamName}] {msg.senderName}
                       </span>
                       <span className="text-[#64748B]">
-                        {new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        {msg.timestamp}
                       </span>
                     </div>
 
