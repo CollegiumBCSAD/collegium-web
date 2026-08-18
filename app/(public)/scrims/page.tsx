@@ -1,5 +1,6 @@
 "use client";
 
+
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useGame } from "@/context/GameContext";
@@ -90,7 +91,7 @@ const removePendingScrimRequest = (scrimId: string, teamId?: string) => {
 };
 
 export default function ScrimsPage() {
-  const { user } = useAuth();
+  const { user, isLoggedIn } = useAuth();
   const { selectedGame: globalGame, selectedGameInfo } = useGame();
   const { addNotification, syncScrimState } = useNotifications();
   const activeGame: GameId = globalGame || "valo";
@@ -449,6 +450,8 @@ export default function ScrimsPage() {
             </p>
           </div>
 
+
+          {isLoggedIn && (
           <button
             onClick={() => {
               if (myTeams.length === 0) {
@@ -461,6 +464,8 @@ export default function ScrimsPage() {
           >
             ⚔️ Post Scrim Offer
           </button>
+
+          )}
         </div>
 
         {bookedScrims.length > 0 && (
