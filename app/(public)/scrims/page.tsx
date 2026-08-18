@@ -11,7 +11,8 @@ import { getStoredTeams, fetchTeamsApi, Team } from "@/lib/teams";
 import { useWarRoom } from "@/context/WarRoomContext";
 import ScrimCard from "@/components/scrims/ScrimCard";
 import { ScrimCardSkeleton } from "@/components/ui/Skeleton";
-import { SwordsIcon, AlertTriangleIcon, TrophyIcon } from "@/components/ui/Icons";
+import { SwordsIcon, AlertTriangleIcon, TrophyIcon, ZapIcon, ShieldIcon, CheckCircleIcon, FlameIcon } from "@/components/ui/Icons";
+import { GAME_LIST } from "@/lib/games";
 import PostScrimModal from "@/components/scrims/PostScrimModal";
 import NoSquadModal from "@/components/scrims/NoSquadModal";
 
@@ -95,7 +96,7 @@ const removePendingScrimRequest = (scrimId: string, teamId?: string) => {
 export default function ScrimsPage() {
   const router = useRouter();
   const { user, isLoggedIn, isLoaded } = useAuth();
-  const { selectedGame: globalGame, selectedGameInfo } = useGame();
+  const { selectedGame: globalGame, selectedGameInfo, selectGame } = useGame();
   const { openWarRoom } = useWarRoom();
   const activeGame: GameId = globalGame || "valo";
 
@@ -104,6 +105,7 @@ export default function ScrimsPage() {
   const [scrims, setScrims] = useState<ScrimOffer[]>([]);
   const [userTeams, setUserTeams] = useState<Team[]>(() => getStoredTeams());
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedFormat, setSelectedFormat] = useState<string>("ALL");
 
   useEffect(() => {
     if (isLoaded && !isLoggedIn) {
@@ -240,6 +242,10 @@ export default function ScrimsPage() {
       // Cancelled scrims are only visible to the host captain who posted them
       if (s.status === "CANCELLED" && !isUserHost(s)) return false;
 
+      if (selectedFormat !== "ALL") {
+        if (s.format && !s.format.toUpperCase().includes(selectedFormat)) return false;
+      }
+
       if (!s.gameTitle) return true;
       const title = s.gameTitle.toLowerCase();
       if (activeGame === "valo") return title.includes("val");
@@ -248,7 +254,7 @@ export default function ScrimsPage() {
       if (activeGame === "ml") return title.includes("ml") || title.includes("mobile");
       return true;
     });
-  }, [scrims, activeGame, isUserHost]);
+  }, [scrims, activeGame, selectedFormat, isUserHost]);
 
   const enrichedScrims = useMemo(() => {
     const map = getPendingScrimRequestsMap();
@@ -406,85 +412,121 @@ export default function ScrimsPage() {
 
   if (!isLoaded || !isLoggedIn || !user) {
     return (
-      <div className="min-h-[85vh] flex items-center justify-center text-xs font-sans text-secondary-text">
+      <div className="min-h-[85vh] flex items-center justify-center text-xs font-sans text-secondary-text animate-pulse">
         Loading Scrim Board...
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col flex-1 game-theme-bg py-10 px-4 sm:px-6 lg:px-10">
-      <div className="max-w-6xl mx-auto space-y-8 w-full">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-raised-panel pb-6">
+    <div className="flex flex-col flex-1 game-theme-bg relative">
+      <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 md:px-10 lg:px-16 py-8 sm:py-12 lg:py-16 space-y-8">
+        
+        {/* Header Banner */}
+        <div className="border-b border-[#1E2538] pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-sans font-extrabold uppercase tracking-widest text-secondary-brand">
-                Gankster-Style Scrim Finder
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="text-xs font-mono font-bold tracking-widest text-primary-brand uppercase flex items-center gap-1.5">
+                <SwordsIcon className="w-4 h-4 text-primary-brand" />
+                AUTOMATED INTER-UNIVERSITY MATCHMAKING
               </span>
-              {selectedGameInfo && (
-                <span
-                  className="text-[10px] font-sans font-bold tracking-widest uppercase px-2.5 py-0.5 rounded-full text-white"
-                  style={{ backgroundColor: selectedGameInfo.accentColor, color: selectedGameInfo.id === "codm" ? "#0A0C10" : "#FFFFFF" }}
-                >
-                  {selectedGameInfo.shortName}
-                </span>
-              )}
             </div>
-            <h1 className="font-display text-3xl font-bold uppercase tracking-wider text-foreground">
-              Inter-University Scrim Board
+            <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-foreground uppercase">
+              INTER-UNIVERSITY SCRIM BOARD
             </h1>
-            <p className="font-sans text-xs text-secondary-text mt-1">
-              Find verified collegiate opponents for {selectedGameInfo?.name || "Valorant"} practice matches and tournament warm-ups
+            <p className="font-sans text-xs sm:text-sm text-secondary-text mt-1 max-w-xl leading-relaxed">
+              Find verified collegiate opponents for {selectedGameInfo?.name || "Valorant"} practice matches, custom lobby testing, and tournament warm-ups.
             </p>
           </div>
 
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Game Selector Tabs */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+              {GAME_LIST.map((game) => {
+                const isActive = activeGame === game.id;
+                return (
+                  <button
+                    key={game.id}
+                    onClick={() => selectGame(game.id)}
+                    className={`px-3 py-1.5 rounded-xl font-sans text-xs font-bold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 border ${
+                      isActive
+                        ? "bg-primary-brand text-white border-primary-brand shadow-lg shadow-primary-brand/30"
+                        : "bg-[#121624] text-secondary-text border-[#222B3F] hover:text-foreground hover:bg-[#182033]"
+                    }`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={game.image} alt={game.name} className="w-4 h-4 rounded object-cover" />
+                    <span>{game.shortName}</span>
+                  </button>
+                );
+              })}
+            </div>
 
-          {isLoggedIn && (
-            <button
-              onClick={() => {
-                if (myTeams.length === 0) {
-                  setIsNoSquadModalOpen(true);
-                } else {
-                  setIsModalOpen(true);
-                }
-              }}
-              className="h-11 px-6 rounded-xl game-theme-btn font-sans text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer shadow-lg"
-            >
-              <SwordsIcon className="w-4 h-4" />
-              <span>Post Scrim Offer</span>
-            </button>
-          )}
+            {isLoggedIn && (
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="h-10 px-5 rounded-xl game-theme-btn font-sans text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer shadow-lg shrink-0"
+              >
+                <SwordsIcon className="w-4 h-4" />
+                <span>Post Scrim Offer</span>
+              </button>
+            )}
+          </div>
         </div>
 
+        {/* Quick Format Filter & Status Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-[#0D121F]/95 border border-[#1E293B] shadow-xl backdrop-blur-md">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono font-bold text-slate-400 uppercase tracking-widest mr-2">FORMAT:</span>
+            {["ALL", "BO1", "BO3", "BO5"].map((fmt) => (
+              <button
+                key={fmt}
+                onClick={() => setSelectedFormat(fmt)}
+                className={`px-3 py-1 rounded-lg font-sans text-xs font-bold uppercase tracking-wider transition-all cursor-pointer border ${
+                  selectedFormat === fmt
+                    ? "bg-primary-brand text-white border-primary-brand shadow-sm"
+                    : "bg-[#080B12] text-slate-400 border-[#1E2538] hover:text-white"
+                }`}
+              >
+                {fmt}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-3 text-xs font-mono text-slate-300">
+            <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#080B12] border border-[#1E2538]">
+              <ZapIcon className="w-3.5 h-3.5 text-amber-400" />
+              <span>OPEN OFFERS: <strong className="text-white">{enrichedScrims.length}</strong></span>
+            </span>
+            {bookedScrims.length > 0 && (
+              <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#141A29] text-emerald-400 border border-[#232D44]">
+                <CheckCircleIcon className="w-3.5 h-3.5 text-emerald-400" />
+                <span>BOOKED MATCHES: <strong className="text-white">{bookedScrims.length}</strong></span>
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Booked Scrim Compact Notification Toast Bar */}
         {bookedScrims.length > 0 && (
-          <div className="relative overflow-hidden rounded-2xl bg-[#0B0F19]/95 border border-emerald-500/30 p-5 sm:p-6 shadow-2xl backdrop-blur-xl space-y-3">
-            {/* Top Accent Line */}
-            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500 via-teal-300 to-emerald-500" />
-            
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3.5">
-                <div className="w-11 h-11 rounded-xl bg-emerald-950/70 border border-emerald-500/40 text-emerald-400 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-950/50">
-                  <SwordsIcon className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-display text-base sm:text-lg font-bold uppercase tracking-wide text-foreground">
-                      {bookedScrims.length} Practice Match{bookedScrims.length > 1 ? "es" : ""} Booked & Ready
-                    </h3>
-                  </div>
-                  <p className="text-xs font-sans text-slate-300 mt-0.5 leading-relaxed">
-                    An opponent squad has confirmed your scrimmage offer. Prepare your varsity lineup for War Room deployment!
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-2 shrink-0">
-                <span className="text-xs font-mono font-extrabold px-3.5 py-1.5 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-500/40 uppercase tracking-wider flex items-center gap-2 shadow-sm">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  CONFIRMED & READY
+          <div className="rounded-xl bg-[#0D121F]/95 border border-[#1E293B] px-4 py-2.5 shadow-lg backdrop-blur-md flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+              <span className="text-xs font-sans font-bold text-white truncate">
+                {bookedScrims.length} Practice Match Booked & Ready:{" "}
+                <span className="text-slate-300 font-normal">
+                  {bookedScrims[0]?.hostTeamName} vs {bookedScrims[0]?.opponentTeamName || "Opponent"}
                 </span>
-              </div>
+              </span>
             </div>
+
+            <button
+              onClick={() => openWarRoom(bookedScrims[0], isUserHost(bookedScrims[0]))}
+              className="h-8 px-4 rounded-lg game-theme-btn font-sans text-xs font-extrabold uppercase tracking-wider shadow-md shrink-0 flex items-center gap-1.5 cursor-pointer"
+            >
+              <FlameIcon className="w-3.5 h-3.5 text-white" />
+              <span>War Room →</span>
+            </button>
           </div>
         )}
 
@@ -508,8 +550,8 @@ export default function ScrimsPage() {
             <ScrimCardSkeleton />
           </div>
         ) : enrichedScrims.length === 0 ? (
-          <div className="flex flex-col items-center justify-center text-center py-16 px-4 max-w-md mx-auto space-y-4 rounded-2xl border border-panel-border bg-card-bg/60 p-8 shadow-2xl backdrop-blur-md">
-            <div className="w-16 h-16 rounded-full bg-raised-panel border border-panel-border flex items-center justify-center text-primary-brand shadow-inner">
+          <div className="flex flex-col items-center justify-center text-center py-16 px-4 max-w-md mx-auto space-y-4 rounded-2xl border border-[#1E273A] bg-[#0C101A]/95 p-8 shadow-2xl backdrop-blur-md">
+            <div className="w-16 h-16 rounded-full bg-[#141926] border border-[#232B3E] flex items-center justify-center text-primary-brand shadow-inner">
               <SwordsIcon className="w-8 h-8" />
             </div>
             <div className="space-y-1">
@@ -517,7 +559,7 @@ export default function ScrimsPage() {
                 NO OPEN SCRIMS FOUND FOR {selectedGameInfo?.shortName || "THIS TITLE"}
               </h3>
               <p className="font-sans text-xs text-secondary-text leading-relaxed">
-                There are currently no active scrim offers listed for {selectedGameInfo?.name || "this game"}. Click &quot;Post Scrim Offer&quot; to challenge collegiate opponents!
+                There are currently no active scrim offers matching your filter. Click &quot;Post Scrim Offer&quot; to challenge collegiate opponents!
               </p>
             </div>
           </div>
@@ -556,4 +598,5 @@ export default function ScrimsPage() {
     </div>
   );
 }
+
 

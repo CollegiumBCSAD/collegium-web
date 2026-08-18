@@ -6,11 +6,11 @@ import { ScrimOffer } from "@/types";
 import {
   SwordsIcon,
   FlameIcon,
-  CalendarIcon,
   ClockIcon,
   LockIcon,
   TrashIcon,
   ZapIcon,
+  CheckCircleIcon,
 } from "@/components/ui/Icons";
 
 interface ScrimCardProps {
@@ -51,98 +51,77 @@ export default function ScrimCard({
     ? [{ teamId: scrim.opponentTeamId || "op-id", teamName: scrim.opponentTeamName }]
     : [{ teamId: "op-default", teamName: "Challenger Squad" }];
 
+  const formattedTime = new Date(scrim.scheduledAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
   return (
     <div
-      className={`p-5 rounded-2xl bg-[#0C101A]/95 border transition-all duration-300 shadow-2xl backdrop-blur-md relative overflow-hidden flex flex-col justify-between group ${
-        isBooked
-          ? "border-emerald-500/40 bg-gradient-to-b from-emerald-950/20 via-[#0C101A] to-[#0C101A]"
-          : isPending
-          ? "border-amber-500/30 bg-[#0C101A]"
-          : isCancelled
-          ? "border-rose-500/30 bg-[#140D0F]/90 opacity-80"
-          : "border-[#1E273A] hover:border-primary-brand/40 hover:bg-[#101524]"
+      className={`p-5 rounded-3xl bg-[#0D121F]/95 border transition-all duration-200 shadow-xl relative flex flex-col justify-between group ${
+        isCancelled
+          ? "border-rose-900/30 opacity-70"
+          : "border-[#1E293B] hover:border-primary-brand/50"
       }`}
     >
-      {/* Top Accent Lines */}
-      {isBooked && (
-        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500/80 via-teal-400/60 to-emerald-500/80" />
-      )}
-      {isPending && (
-        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-500/80 via-yellow-400/60 to-amber-500/80" />
-      )}
-      {!isBooked && !isPending && !isCancelled && (
-        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary-brand/40 via-accent/30 to-primary-brand/40 opacity-0 group-hover:opacity-100 transition-opacity" />
-      )}
-
       <div className="space-y-4">
-        {/* Card Header Row */}
+        {/* Header Row: Game Logo, Team Name, University & Badges */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3.5 min-w-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={game.image}
               alt={game.name}
-              className="w-11 h-11 rounded-xl object-cover ring-1 ring-white/10 shrink-0 shadow-md"
+              className="w-10 h-10 rounded-xl object-cover ring-1 ring-white/15 shrink-0 shadow-md"
             />
             <div className="min-w-0">
-              <div className="flex items-center gap-1.5 mb-0.5">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-400 truncate">
-                  {scrim.universityName || "UNIVERSITY"}
-                </span>
+              <div className="flex items-center gap-2">
+                <h3 className="font-display text-base font-black uppercase text-white truncate">
+                  {scrim.hostTeamName}
+                </h3>
                 {isHost && (
-                  <span className="text-[9px] font-sans font-extrabold uppercase px-1.5 py-0.2 rounded bg-primary-brand/20 text-primary-brand border border-primary-brand/30 shrink-0">
-                    HOST SQUAD
+                  <span className="text-[9px] font-mono font-extrabold uppercase px-2 py-0.5 rounded bg-primary-brand/15 text-primary-brand border border-primary-brand/30 shrink-0">
+                    YOU (HOST)
                   </span>
                 )}
               </div>
-              <h3 className="font-display text-base sm:text-lg font-bold uppercase tracking-wide text-foreground truncate">
-                {scrim.hostTeamName}
-              </h3>
+              <span className="text-[11px] font-sans font-semibold text-slate-400 truncate block mt-0.5">
+                {scrim.universityName || "UNIVERSITY"}
+              </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 shrink-0">
-            {/* Status Badge */}
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Status Pill */}
             {isBooked ? (
-              <span className="inline-flex items-center gap-1.5 text-[10px] font-sans font-extrabold uppercase px-2.5 py-1 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-500/40 shadow-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                BOOKED
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-sans font-extrabold uppercase px-3 py-1 rounded-full bg-[#141A29] text-emerald-400 border border-[#232D44]">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                MATCH BOOKED
               </span>
             ) : isPending ? (
-              isHost || isOpponent ? (
-                <span className="inline-flex items-center gap-1.5 text-[10px] font-sans font-extrabold uppercase px-2.5 py-1 rounded-full bg-amber-950/80 text-amber-400 border border-amber-500/40 shadow-sm">
-                  <ClockIcon className="w-3 h-3 text-amber-400" />
-                  PENDING
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1.5 text-[10px] font-sans font-extrabold uppercase px-2.5 py-1 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-500/40">
-                  <LockIcon className="w-3 h-3 text-emerald-400" />
-                  BOOKED
-                </span>
-              )
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-sans font-extrabold uppercase px-3 py-1 rounded-full bg-[#141A29] text-amber-400 border border-[#232D44]">
+                <ClockIcon className="w-3 h-3 text-amber-400" />
+                PENDING
+              </span>
             ) : isCancelled ? (
-              <span className="text-[10px] font-sans font-extrabold uppercase px-2.5 py-1 rounded-full bg-rose-950/80 text-rose-400 border border-rose-500/40">
+              <span className="text-[10px] font-sans font-extrabold uppercase px-3 py-1 rounded-full bg-rose-950/50 text-rose-400 border border-rose-900/40">
                 CANCELLED
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 text-[10px] font-sans font-extrabold uppercase px-2.5 py-1 rounded-full bg-blue-950/80 text-blue-400 border border-blue-500/40 shadow-sm">
-                <ZapIcon className="w-3 h-3 text-blue-400" />
-                OPEN SCRIM
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-sans font-extrabold uppercase px-3 py-1 rounded-full bg-[#141A29] text-slate-300 border border-[#232D44]">
+                <ZapIcon className="w-3 h-3 text-amber-400" />
+                OPEN OFFER
               </span>
             )}
 
-            {/* Game Badge */}
-            <span className="text-[10px] font-mono font-extrabold uppercase px-2 py-1 rounded-full bg-[#141926] text-slate-300 border border-[#232B3E]">
+            {/* Game Tag */}
+            <span className="text-[10px] font-mono font-bold uppercase px-2.5 py-1 rounded-full bg-[#141A29] text-slate-300 border border-[#232D44]">
               {game.shortName}
             </span>
 
-            {/* Top-Right Delete X Button */}
+            {/* Delete Icon */}
             {isHost && onDelete && (
               <button
                 onClick={() => setDeleteConfirmOpen(true)}
-                aria-label="Delete Scrim"
-                className="w-6 h-6 rounded-md bg-[#161C2C] hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 flex items-center justify-center text-xs font-bold transition-all cursor-pointer border border-[#242E46] hover:border-rose-500/40 ml-0.5"
-                title="Remove/Delete this scrim"
+                className="w-7 h-7 rounded-lg bg-[#141A29] hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 flex items-center justify-center text-xs transition-all border border-[#232D44] hover:border-rose-500/40"
+                title="Delete Scrim Offer"
               >
                 <TrashIcon className="w-3.5 h-3.5" />
               </button>
@@ -150,92 +129,56 @@ export default function ScrimCard({
           </div>
         </div>
 
-        {/* Info Grid Box */}
-        <div className="grid grid-cols-3 gap-2 p-3 rounded-xl bg-[#080B12] border border-[#181F30] text-center">
-          <div>
-            <span className="text-[9px] font-sans font-bold text-slate-500 uppercase tracking-widest block">Format</span>
-            <span className="text-xs font-mono font-bold text-foreground">{scrim.format}</span>
-          </div>
-          <div>
-            <span className="text-[9px] font-sans font-bold text-slate-500 uppercase tracking-widest block">Rank Tier</span>
-            <span className="text-xs font-mono font-bold text-foreground">{scrim.rankRange}</span>
-          </div>
-          <div>
-            <span className="text-[9px] font-sans font-bold text-slate-500 uppercase tracking-widest block">Map / Time</span>
-            <span className="text-xs font-mono font-bold text-foreground truncate block">
-              {scrim.mapPreference ? `${scrim.mapPreference} · ` : ""}
-              {new Date(scrim.scheduledAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-            </span>
-          </div>
+        {/* Spec Inline Bar (Clean 1-line format, no nested boxes!) */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2 px-3 rounded-xl bg-[#080C14] border border-[#1C2538] text-xs font-mono">
+          <span className="text-slate-400">FORMAT: <strong className="text-white">{scrim.format}</strong></span>
+          <span className="text-slate-600">·</span>
+          <span className="text-slate-400">TIER: <strong className="text-white">{scrim.rankRange}</strong></span>
+          <span className="text-slate-600">·</span>
+          <span className="text-slate-400">MAP / TIME: <strong className="text-white">{scrim.mapPreference ? `${scrim.mapPreference} @ ` : ""}{formattedTime}</strong></span>
         </div>
 
         {/* Notes */}
         {scrim.notes && (
-          <p className="text-xs font-sans text-slate-300 bg-[#0A0D15] p-2.5 rounded-lg border border-[#161D2E] italic">
+          <p className="text-xs font-sans text-slate-300 italic">
             &quot;{scrim.notes}&quot;
           </p>
         )}
       </div>
 
-      {/* Action Bottom Area */}
-      <div className="pt-4 mt-2 border-t border-[#161D2E]">
+      {/* Action Footer */}
+      <div className="pt-4 mt-3 border-t border-[#1C2538]">
         {isCancelled ? (
-          <div className="w-full flex items-center justify-between p-2.5 rounded-xl bg-rose-950/30 border border-rose-500/30 text-rose-300 text-xs font-sans font-medium">
-            <span>Scrim offer cancelled by host</span>
+          <div className="text-xs font-sans text-rose-400 font-semibold flex items-center justify-between">
+            <span>Scrim offer cancelled</span>
             {isHost && (
-              <button
-                onClick={() => setDeleteConfirmOpen(true)}
-                className="text-[11px] hover:underline font-bold text-rose-400 cursor-pointer"
-              >
+              <button onClick={() => setDeleteConfirmOpen(true)} className="hover:underline font-bold text-rose-400">
                 Delete
               </button>
             )}
           </div>
         ) : isPending ? (
           isHost ? (
-            <div className="w-full p-3 rounded-xl bg-[#121624] border border-[#222B40] space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <ClockIcon className="w-4 h-4 text-amber-400" />
-                  <div>
-                    <span className="text-[11px] font-sans font-bold uppercase tracking-wider block text-amber-400">
-                      INCOMING SCRIM REQUESTS ({pendingList.length})
-                    </span>
-                    <span className="text-[10px] font-sans text-slate-400">
-                      Select a team to accept
-                    </span>
-                  </div>
-                </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs font-sans font-bold text-amber-400 uppercase">
+                <span>INCOMING REQUESTS ({pendingList.length})</span>
               </div>
-
-              <div className="space-y-2 max-h-48 overflow-y-auto pr-0.5">
+              <div className="space-y-1.5 max-h-36 overflow-y-auto">
                 {pendingList.map((req) => (
-                  <div
-                    key={req.teamId}
-                    className="p-2.5 rounded-lg bg-[#0A0D15] border border-[#1E2538] flex items-center justify-between gap-3"
-                  >
-                    <div className="min-w-0">
-                      <span className="text-xs font-sans font-bold text-foreground block truncate">
-                        {req.teamName}
-                      </span>
-                      {req.universityName && (
-                        <span className="text-[10px] font-sans text-slate-400 block truncate">
-                          {req.universityName}
-                        </span>
-                      )}
-                    </div>
+                  <div key={req.teamId} className="flex items-center justify-between gap-2 p-2 rounded-xl bg-[#080C14] border border-[#1C2538]">
+                    <span className="text-xs font-sans font-bold text-white truncate">{req.teamName}</span>
                     <div className="flex items-center gap-1.5 shrink-0">
                       <button
                         onClick={() => onDeclineRequest ? onDeclineRequest(scrim.id, req.teamId) : onCancel && onCancel(scrim.id)}
-                        className="h-7 px-2.5 rounded-lg bg-[#161C2C] hover:bg-[#20283D] text-slate-400 hover:text-rose-400 border border-[#263048] font-sans text-[10px] font-bold uppercase transition-all cursor-pointer"
+                        className="px-2.5 py-1 rounded-lg bg-[#141A29] hover:bg-[#1F273D] text-slate-300 hover:text-rose-400 text-[10px] font-bold uppercase transition-all"
                       >
                         Decline
                       </button>
                       <button
                         onClick={() => onConfirmBooking && onConfirmBooking(scrim.id, req.teamId)}
-                        className="h-7 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-sans text-[10px] font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-emerald-950/50"
+                        className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black uppercase tracking-wider transition-all shadow-md"
                       >
-                        Accept Request
+                        Accept
                       </button>
                     </div>
                   </div>
@@ -243,31 +186,24 @@ export default function ScrimCard({
               </div>
             </div>
           ) : isOpponent ? (
-            <div className="w-full p-3 rounded-xl bg-[#121624] border-l-4 border-l-amber-500 border border-[#222B40] flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <ClockIcon className="w-4 h-4 text-amber-400" />
-                <div>
-                  <span className="text-[11px] font-sans font-bold uppercase tracking-wider block text-amber-400">
-                    SCRIM REQUEST SENT
-                  </span>
-                  <span className="text-[11px] font-sans text-slate-400">
-                    Sent to {scrim.hostTeamName}. Awaiting Captain Approval.
-                  </span>
-                </div>
-              </div>
+            <div className="flex items-center justify-between gap-3 text-xs font-sans">
+              <span className="text-amber-400 font-bold flex items-center gap-1.5">
+                <ClockIcon className="w-3.5 h-3.5" />
+                Request Sent — Awaiting Host Captain
+              </span>
               {onCancel && (
                 <button
                   onClick={() => onCancel(scrim.id)}
-                  className="h-8 px-3 rounded-lg bg-[#161C2C] hover:bg-[#20283D] text-slate-400 hover:text-rose-400 border border-[#263048] font-sans text-[11px] font-semibold uppercase tracking-wider transition-all cursor-pointer shrink-0"
+                  className="px-3 py-1 rounded-lg bg-[#141A29] hover:bg-rose-950/40 text-slate-300 hover:text-rose-400 text-[10px] font-bold uppercase border border-[#232D44]"
                 >
-                  Cancel Request
+                  Cancel
                 </button>
               )}
             </div>
           ) : (
             <button
               onClick={() => onAccept(scrim.id)}
-              className="w-full h-10 rounded-xl bg-gradient-to-r from-primary-brand via-rose-600 to-[#D02436] hover:brightness-110 text-white font-sans text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-primary-brand/30 flex items-center justify-center gap-2"
+              className="w-full h-10 rounded-xl game-theme-btn font-sans text-xs font-extrabold uppercase tracking-wider transition-all active:scale-[0.98] shadow-lg flex items-center justify-center gap-2"
             >
               <SwordsIcon className="w-4 h-4" />
               <span>Request Scrim Match</span>
@@ -275,70 +211,39 @@ export default function ScrimCard({
           )
         ) : isBooked ? (
           isHost || isChosenOpponent ? (
-            <div className="w-full p-4 rounded-xl bg-[#0A120E]/90 border border-emerald-500/35 shadow-xl backdrop-blur-md flex flex-col gap-3.5 relative overflow-hidden">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <CalendarIcon className="w-5 h-5 text-emerald-400 shrink-0" />
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5 mb-0.5">
-                      <span className="text-[10px] font-mono font-extrabold uppercase tracking-widest text-emerald-400 flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        VERIFIED MATCH BOOKED
-                      </span>
-                    </div>
-                    <span className="text-xs font-sans font-bold text-foreground block truncate">
-                      {isHost
-                        ? `Opponent: ${scrim.opponentTeamName || "Opponent Squad"}`
-                        : `Host: ${scrim.hostTeamName}`}
-                    </span>
-                    <span className="text-[10px] font-mono text-slate-400 block mt-0.5 truncate">
-                      Scheduled: {new Date(scrim.scheduledAt).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })} at {new Date(scrim.scheduledAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                    </span>
-                  </div>
-                </div>
-                {isHost && onCancel && (
-                  <button
-                    onClick={() => onCancel(scrim.id)}
-                    className="h-7 px-3 rounded-lg bg-[#14201A] hover:bg-[#1E2E27] text-slate-400 hover:text-rose-400 border border-emerald-500/30 font-sans text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer shrink-0"
-                    title="Cancel booking and re-open scrim offer"
-                  >
-                    Unbook
-                  </button>
-                )}
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <span className="text-[10px] font-mono font-bold text-emerald-400 block uppercase">MATCH CONFIRMED</span>
+                <span className="text-xs font-sans font-bold text-white truncate block">
+                  VS {isHost ? (scrim.opponentTeamName || "Opponent Squad") : scrim.hostTeamName}
+                </span>
               </div>
-
               <button
                 onClick={() => onOpenWarRoom && onOpenWarRoom(scrim)}
-                className="w-full h-11 rounded-xl bg-gradient-to-r from-primary-brand via-rose-600 to-[#C02636] hover:brightness-110 text-white font-sans text-xs font-extrabold uppercase tracking-widest transition-all duration-200 active:scale-[0.98] cursor-pointer shadow-xl shadow-red-950/50 flex items-center justify-center gap-2 border border-white/15"
+                className="h-10 px-5 rounded-xl game-theme-btn font-sans text-xs font-black uppercase tracking-wider transition-all shrink-0 shadow-lg flex items-center gap-2"
               >
                 <FlameIcon className="w-4 h-4 text-white" />
-                <span>Enter Scrim War Room</span>
+                <span>Enter War Room →</span>
               </button>
             </div>
           ) : (
-            <div className="w-full p-3 rounded-xl bg-[#0A0D15] border border-[#1C2336] flex items-center justify-between gap-3 text-xs font-sans">
-              <div className="flex items-center gap-2 text-slate-400">
+            <div className="flex items-center justify-between text-xs font-sans text-slate-400">
+              <span className="flex items-center gap-1.5">
                 <LockIcon className="w-3.5 h-3.5 text-slate-400" />
-                <span className="font-bold uppercase tracking-wider text-slate-300">
-                  BOOKED BY ANOTHER TEAM
-                </span>
-              </div>
-              <span className="px-2.5 py-1 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-500/40 text-[10px] font-bold uppercase">
-                MATCH BOOKED
+                Booked by another varsity squad
               </span>
+              <span className="text-[10px] font-bold uppercase text-emerald-400">CONFIRMED</span>
             </div>
           )
         ) : isHost ? (
-          <div className="w-full flex items-center justify-between gap-3 py-1">
-            <span className="text-xs font-sans text-slate-400 flex items-center gap-1.5">
-              <ZapIcon className="w-3.5 h-3.5 text-amber-400" />
-              <span>Live on Scrims Board for collegiate challengers</span>
-            </span>
+          <div className="text-xs font-sans text-slate-400 flex items-center gap-1.5">
+            <ZapIcon className="w-3.5 h-3.5 text-amber-400" />
+            <span>Open offer visible to collegiate varsity squads</span>
           </div>
         ) : (
           <button
             onClick={() => onAccept(scrim.id)}
-            className="w-full h-10 rounded-xl bg-gradient-to-r from-primary-brand via-rose-600 to-[#D02436] hover:brightness-110 text-white font-sans text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-primary-brand/30 flex items-center justify-center gap-2"
+            className="w-full h-10 rounded-xl game-theme-btn font-sans text-xs font-extrabold uppercase tracking-wider transition-all active:scale-[0.98] shadow-lg flex items-center justify-center gap-2"
           >
             <SwordsIcon className="w-4 h-4" />
             <span>Request Scrim Match</span>
@@ -346,32 +251,25 @@ export default function ScrimCard({
         )}
       </div>
 
-      {/* Delete Confirmation Pop-Up Modal */}
+      {/* Delete Confirmation Modal */}
       {deleteConfirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-sm bg-[#0C101A] border border-[#222B40] rounded-2xl p-6 shadow-2xl space-y-4 text-left">
-            <div className="flex items-center gap-3 border-b border-[#1E273A] pb-3">
-              <div className="w-9 h-9 rounded-full bg-rose-950/60 text-rose-400 flex items-center justify-center border border-rose-500/30">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="w-full max-w-sm bg-[#0E131F] border border-[#232D44] rounded-2xl p-6 shadow-2xl space-y-4 text-left">
+            <div className="flex items-center gap-3 border-b border-[#1C2538] pb-3">
+              <div className="w-8 h-8 rounded-full bg-rose-950/60 text-rose-400 flex items-center justify-center border border-rose-500/30">
                 <TrashIcon className="w-4 h-4" />
               </div>
-              <div>
-                <h3 className="font-display text-base font-bold uppercase text-foreground">
-                  Remove Scrim Offer?
-                </h3>
-                <span className="text-[11px] font-sans text-slate-400">
-                  Permanently delete this practice offer
-                </span>
-              </div>
+              <h3 className="font-display text-base font-bold uppercase text-white">
+                Delete Scrim Offer?
+              </h3>
             </div>
-
             <p className="font-sans text-xs text-slate-300 leading-relaxed">
-              Are you sure you want to delete this scrim offer? This action will permanently remove the post from the inter-university board.
+              Are you sure you want to delete this scrimmage post?
             </p>
-
             <div className="flex items-center justify-end gap-3 pt-2">
               <button
                 onClick={() => setDeleteConfirmOpen(false)}
-                className="h-9 px-4 rounded-xl bg-[#161C2C] hover:bg-[#20283D] text-slate-300 font-sans text-xs font-bold uppercase tracking-wider transition-all cursor-pointer border border-[#263048]"
+                className="h-9 px-4 rounded-xl bg-[#141A29] text-slate-300 font-sans text-xs font-bold uppercase border border-[#232D44]"
               >
                 Cancel
               </button>
@@ -380,9 +278,9 @@ export default function ScrimCard({
                   setDeleteConfirmOpen(false);
                   if (onDelete) onDelete(scrim.id);
                 }}
-                className="h-9 px-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-sans text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-rose-950/50"
+                className="h-9 px-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-sans text-xs font-bold uppercase shadow-lg"
               >
-                Delete Scrim
+                Delete
               </button>
             </div>
           </div>
@@ -391,5 +289,3 @@ export default function ScrimCard({
     </div>
   );
 }
-
-

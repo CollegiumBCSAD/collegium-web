@@ -74,17 +74,16 @@ export default function PostScrimModal({
   const [formMap, setFormMap] = useState("Ascent");
   const [formNotes, setFormNotes] = useState("");
 
-  const teamDefaultKey = userTeams.length > 0 ? userTeams[0].id : (user?.university?.name ?? "");
-  const prevTeamDefaultKeyRef = useRef(teamDefaultKey);
-  if (prevTeamDefaultKeyRef.current !== teamDefaultKey) {
-    prevTeamDefaultKeyRef.current = teamDefaultKey;
+  useEffect(() => {
     if (userTeams.length > 0) {
-      setSelectedTeamId(userTeams[0].id);
-      setFormTeamName(userTeams[0].name);
-    } else if (user?.university?.name) {
-      setFormTeamName(`${user.university.name} Squad`);
+      if (!selectedTeamId || !userTeams.some((t) => t.id === selectedTeamId)) {
+        setSelectedTeamId(userTeams[0].id);
+        setFormTeamName(userTeams[0].name);
+      }
+    } else if (!formTeamName) {
+      setFormTeamName(user?.university?.name ? `${user.university.name} Varsity` : `${user?.displayName || "Varsity"} Squad`);
     }
-  }
+  }, [userTeams, user, selectedTeamId, formTeamName]);
 
   // Modal lifecycle listeners
   useEffect(() => {
