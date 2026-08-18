@@ -3,6 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import {
+  mockUniversityVerifications,
+  mockScrimBoardPosts,
+  mockPendingTournamentPosts,
+  mockPendingTeamRegistrations,
+  mockFlaggedMatches,
+} from "@/lib/mock/admin";
 
 interface AdminNavItem {
   label: string;
@@ -13,12 +20,22 @@ interface AdminNavItem {
 
 const NAV_ITEMS: AdminNavItem[] = [
   { label: "Dashboard", href: "/admin", icon: "📊" },
-  { label: "Universities", href: "/admin/universities", icon: "🎓", badge: 3 },
-  { label: "Scrim Board", href: "/admin/scrim-board", icon: "📅", badge: 1 },
-  { label: "Tournaments", href: "/admin/tournaments", icon: "🏆", badge: 5 },
+  {
+    label: "Universities",
+    href: "/admin/universities",
+    icon: "🎓",
+    badge: mockUniversityVerifications.filter((u) => u.status === "PENDING").length,
+  },
+  { label: "Scrim Board", href: "/admin/scrim-board", icon: "📅", badge: mockScrimBoardPosts.length },
+  {
+    label: "Tournaments",
+    href: "/admin/tournaments",
+    icon: "🏆",
+    badge: mockPendingTournamentPosts.length + mockPendingTeamRegistrations.length,
+  },
   { label: "Users", href: "/admin/users", icon: "👥" },
   { label: "Newsfeed", href: "/admin/newsfeed", icon: "📰" },
-  { label: "Disputes", href: "/admin/disputes", icon: "🚩", badge: 2 },
+  { label: "Disputes", href: "/admin/disputes", icon: "🚩", badge: mockFlaggedMatches.length },
 ];
 
 export default function AdminSidebar() {
