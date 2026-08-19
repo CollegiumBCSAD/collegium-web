@@ -1,7 +1,6 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
 import { GameId, GameInfo, GAMES, STORAGE_KEY } from "@/lib/games";
 
 interface GameContextType {

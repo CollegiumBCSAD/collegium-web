@@ -10,7 +10,7 @@ import { GAMES } from "@/lib/games";
 import AthleteProfileBanner from "@/components/dashboard/AthleteProfileBanner";
 import TeamRosterCard from "@/components/dashboard/TeamRosterCard";
 import CaptainRequestInbox from "@/components/CaptainRequestInbox";
-import { TrophyIcon, SwordsIcon, UsersIcon, ShieldIcon, CheckCircleIcon, ZapIcon, ClockIcon, AlertTriangleIcon } from "@/components/ui/Icons";
+import { TrophyIcon, SwordsIcon, UsersIcon, ShieldIcon, ClockIcon } from "@/components/ui/Icons";
 
 export default function DashboardPage() {
   const router = useRouter();

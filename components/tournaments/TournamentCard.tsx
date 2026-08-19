@@ -1,9 +1,8 @@
 "use client";
 
-import React from "react";
 import Image from "next/image";
 import { Tournament } from "@/types";
-import { TrophyIcon, SwordsIcon, ShieldIcon } from "@/components/ui/Icons";
+import { TrophyIcon, ShieldIcon } from "@/components/ui/Icons";
 import { GAMES } from "@/lib/games";
 
 interface TournamentCardProps {

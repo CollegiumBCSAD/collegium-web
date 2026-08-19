@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { GAMES } from "@/lib/games";
 import { Team } from "@/types";
-import { UsersIcon, CrownIcon, ShieldIcon } from "@/components/ui/Icons";
+import { UsersIcon, CrownIcon } from "@/components/ui/Icons";
 import RosterDetailsModal from "./RosterDetailsModal";
 
 interface TeamRosterCardProps {

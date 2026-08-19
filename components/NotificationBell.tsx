@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useNotifications, AppNotification } from "@/context/NotificationContext";
-import { CheckCircleIcon, XCircleIcon, AlertTriangleIcon, ClockIcon, UsersIcon, SwordsIcon, InfoIcon } from "@/components/ui/Icons";
+import { CheckCircleIcon, XCircleIcon, AlertTriangleIcon, ClockIcon, UsersIcon, SwordsIcon } from "@/components/ui/Icons";
 
 export default function NotificationBell() {
   const { isLoggedIn } = useAuth();

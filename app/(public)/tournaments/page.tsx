@@ -1,16 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import TournamentBracketModal from "@/components/tournaments/TournamentBracketModal";
 import TournamentCard from "@/components/tournaments/TournamentCard";
 import { TournamentCardSkeleton } from "@/components/ui/Skeleton";
 import { TrophyIcon } from "@/components/ui/Icons";
 import { Tournament } from "@/types";
 import { tournamentsService } from "@/services";
-import { useGame } from "@/context/GameContext";
 
 export default function TournamentsPage() {
-  const { selectedGameInfo } = useGame();
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);

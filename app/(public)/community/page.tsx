@@ -1,14 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { mockNewsArticles } from "@/lib/mock/news";
 import Link from "next/link";
-import { TrophyIcon, FlameIcon, ZapIcon, CalendarIcon, ClockIcon } from "@/components/ui/Icons";
-import { useGame } from "@/context/GameContext";
-import { GAMES } from "@/lib/games";
+import { FlameIcon, ZapIcon, CalendarIcon, ClockIcon } from "@/components/ui/Icons";
 
 export default function CommunityPage() {
-  const { selectedGameInfo } = useGame();
   const [activeCategory, setActiveCategory] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState<string>("");
 

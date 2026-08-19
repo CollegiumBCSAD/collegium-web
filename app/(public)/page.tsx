@@ -20,7 +20,7 @@ interface DisplayMatch {
 }
 
 export default function LandingPage() {
-  const { selectedGame, selectedGameInfo, selectGame, openGameSelector } = useGame();
+  const { selectedGame, selectedGameInfo, openGameSelector } = useGame();
   const { isLoggedIn } = useAuth();
   const activeGame: GameId = selectedGame || "valo";
 
