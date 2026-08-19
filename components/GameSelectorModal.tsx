@@ -61,7 +61,7 @@ export default function GameSelectorModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col justify-between bg-[#080A10] text-foreground overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex flex-col justify-between bg-[#080A10] text-foreground overflow-y-auto animate-in fade-in duration-500 backdrop-blur-2xl">
       {/* Ambient Glow */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {GAME_LIST.map((game) => {
@@ -79,7 +79,7 @@ export default function GameSelectorModal() {
       </div>
 
       {/* Navbar Header Bar with Perfectly Centered Navigation */}
-      <header className="relative z-10 w-full max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
+      <header className="relative z-10 w-full max-w-7xl mx-auto px-6 py-6 flex items-center justify-between animate-arena-header-down">
         {/* Left: Brand Logo */}
         <div className="flex items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -134,7 +134,7 @@ export default function GameSelectorModal() {
       {!showAbout ? (
         <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-6 max-w-6xl mx-auto w-full text-center">
           {/* Title Header Matching Prototype */}
-          <div className="mb-8 md:mb-12 max-w-2xl text-center space-y-2">
+          <div className="mb-8 md:mb-12 max-w-2xl text-center space-y-2 animate-arena-header-down">
             <div className="flex items-center justify-center gap-2 mb-2">
               <span className="h-[2px] w-6 bg-primary-brand" />
               <span className="font-mono text-xs font-bold tracking-[0.25em] text-primary-brand uppercase">
@@ -153,9 +153,9 @@ export default function GameSelectorModal() {
             </p>
           </div>
 
-          {/* 4 Arena Cards Grid */}
+          {/* 4 Arena Cards Grid with Staggered Roll-In */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 w-full max-w-6xl">
-            {GAME_LIST.map((game: GameInfo) => {
+            {GAME_LIST.map((game: GameInfo, idx: number) => {
               const isSelected = selectedGame === game.id;
               const isThisLoading = isSelecting === game.id;
               const meta = ARENA_DETAILS[game.id] || {
@@ -171,7 +171,8 @@ export default function GameSelectorModal() {
                   onClick={() => handleSelect(game.id)}
                   onMouseEnter={() => setHoveredGame(game.id)}
                   onMouseLeave={() => setHoveredGame(null)}
-                  className={`group relative text-left focus:outline-none transition-all duration-300 rounded-2xl p-2 border bg-[#0B0E17] ${
+                  style={{ animationDelay: `${idx * 120}ms` }}
+                  className={`group relative text-left focus:outline-none transition-all duration-300 rounded-2xl p-2 border bg-[#0B0E17] animate-arena-roll-in ${
                     isSelected
                       ? "border-primary-brand ring-2 ring-primary-brand/50 shadow-2xl shadow-primary-brand/30 scale-[1.02]"
                       : "border-[#1E293B] hover:border-slate-400 hover:-translate-y-1 shadow-xl"

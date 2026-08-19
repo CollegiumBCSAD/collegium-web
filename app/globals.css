@@ -46,6 +46,38 @@ html {
   overflow-y: scroll;
 }
 
+/* Custom Global Dark Esports Scrollbar for All Scrollable Elements */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #1F2C46 #070912;
+}
+
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: #070912;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1F2C46;
+  border-radius: 9999px;
+  border: 1.5px solid #070912;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-brand, #E53A4C);
+  border-color: #070912;
+}
+
+::-webkit-scrollbar-corner {
+  background: #070912;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -72,15 +104,51 @@ button:active, a:active {
 }
 
 .game-theme-btn {
-  background: linear-gradient(90deg, var(--primary-brand) 0%, rgba(var(--game-glow-rgb), 0.85) 100%);
-  color: var(--game-btn-text, #FFFFFF);
-  font-weight: 700;
+  background: linear-gradient(90deg, var(--primary-brand) 0%, rgba(var(--game-glow-rgb), 0.88) 100%);
+  color: var(--game-btn-text, #FFFFFF) !important;
+  font-family: 'Oswald', var(--font-oswald), sans-serif !important;
+  font-weight: 800 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%) !important;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 }
 .game-theme-btn:hover {
-  filter: brightness(1.12);
+  filter: brightness(1.15);
   transform: translateY(-1px);
   box-shadow: 0 6px 24px rgba(var(--game-glow-rgb), 0.45);
+}
+.game-theme-btn:active {
+  transform: scale(0.96) !important;
+}
+
+.tactical-btn-secondary {
+  background: #141A29;
+  color: #EDEEF2 !important;
+  border: 1px solid #243350;
+  font-family: 'Oswald', var(--font-oswald), sans-serif !important;
+  font-weight: 800 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.tactical-btn-secondary:hover {
+  background: #1C253B;
+  color: #FFFFFF !important;
+  border-color: #3A4D75;
+  transform: translateY(-1px);
+}
+.tactical-btn-secondary:active {
+  transform: scale(0.96) !important;
 }
 
 h1, h2, h3, h4, .font-display, .font-oswald {
@@ -162,4 +230,35 @@ h1, h2, h3, h4, .font-display, .font-oswald {
 
 .animate-nav-glow {
   animation: navGlowPulse 2s ease-in-out infinite;
+}
+
+/* Arena Smart Animation Roll-In */
+@keyframes arenaRollIn {
+  0% {
+    opacity: 0;
+    transform: translateY(45px) scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes arenaHeaderDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-25px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-arena-roll-in {
+  animation: arenaRollIn 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-arena-header-down {
+  animation: arenaHeaderDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }

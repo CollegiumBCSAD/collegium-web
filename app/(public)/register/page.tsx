@@ -217,7 +217,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full h-11 rounded-lg game-theme-btn font-sans text-xs font-bold uppercase tracking-widest transition-all active:scale-[0.98] shadow-lg flex items-center justify-center cursor-pointer disabled:opacity-50"
+              className="w-full h-11 game-theme-btn text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] shadow-lg flex items-center justify-center cursor-pointer disabled:opacity-50"
             >
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />

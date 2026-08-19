@@ -157,7 +157,7 @@ function JoinTeamContent() {
     <div className="flex flex-col flex-1 items-center justify-center px-4 py-8 sm:py-12 game-theme-bg min-h-[calc(100vh-4rem)]">
       <div className="w-full max-w-xl bg-[#0D121F]/98 border border-[#1E293B] rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 relative flex flex-col justify-between backdrop-blur-xl">
         {/* Top Accent Line */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-brand via-rose-500 to-primary-brand rounded-t-3xl" />
+        <div className="absolute top-0 left-0 right-0 h-1 bg-primary-brand rounded-t-3xl" />
 
         <button
           type="button"
@@ -180,7 +180,7 @@ function JoinTeamContent() {
           </Link>
           <Link
             href="/team/join"
-            className="flex-1 h-10 rounded-xl bg-gradient-to-r from-primary-brand to-rose-600 text-white text-xs font-mono font-black uppercase tracking-wider flex items-center justify-center gap-2 text-center shadow-md shadow-red-950/40"
+            className="flex-1 h-10 rounded-xl game-theme-btn text-xs font-mono font-black uppercase tracking-wider flex items-center justify-center gap-2 text-center shadow-md"
           >
             <UsersIcon className="w-4 h-4" />
             <span>Join Squad</span>
@@ -220,7 +220,7 @@ function JoinTeamContent() {
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <Link
                 href="/dashboard"
-                className="flex-1 h-11 rounded-xl bg-gradient-to-r from-primary-brand to-rose-600 hover:opacity-90 text-white font-sans text-xs font-extrabold uppercase tracking-wider flex items-center justify-center text-center shadow-md shadow-red-950/40"
+                className="flex-1 h-11 rounded-xl game-theme-btn font-sans text-xs font-extrabold uppercase tracking-wider flex items-center justify-center text-center shadow-md"
               >
                 Go to Dashboard
               </Link>
@@ -249,7 +249,7 @@ function JoinTeamContent() {
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <Link
                 href="/dashboard"
-                className="flex-1 h-11 rounded-xl bg-gradient-to-r from-primary-brand to-rose-600 hover:opacity-90 text-white font-sans text-xs font-extrabold uppercase tracking-wider flex items-center justify-center text-center shadow-md shadow-red-950/40"
+                className="flex-1 h-11 rounded-xl game-theme-btn font-sans text-xs font-extrabold uppercase tracking-wider flex items-center justify-center text-center shadow-md"
               >
                 Go to Dashboard
               </Link>
@@ -361,7 +361,7 @@ function JoinTeamContent() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-11 rounded-xl bg-gradient-to-r from-primary-brand to-rose-600 hover:opacity-90 text-white font-sans text-xs font-extrabold uppercase tracking-widest transition-transform active:scale-95 shadow-md shadow-red-950/40 flex items-center justify-center cursor-pointer disabled:opacity-50"
+                className="w-full h-11 game-theme-btn text-xs font-extrabold uppercase tracking-wider transition-transform active:scale-95 shadow-md flex items-center justify-center cursor-pointer disabled:opacity-50"
               >
                 {isLoading ? "Submitting Request..." : inviteCodeParam ? "Instant Domain Join Roster" : "Submit Join Request to Captain"}
               </button>

@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { mockNewsArticles } from "@/lib/mock/news";
 import Link from "next/link";
-import { TrophyIcon, FlameIcon, ZapIcon, CalendarIcon, ClockIcon } from "@/components/ui/Icons";
+import { FlameIcon, ZapIcon, CalendarIcon, ClockIcon } from "@/components/ui/Icons";
 
 export default function CommunityPage() {
   const [activeCategory, setActiveCategory] = useState<string>("ALL");
@@ -60,11 +60,16 @@ export default function CommunityPage() {
                   <button
                     key={cat}
                     onClick={() => setActiveCategory(cat)}
-                    className={`px-3.5 py-2 rounded-xl font-sans text-xs font-extrabold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap border ${
+                    className={`px-3.5 py-2 rounded-xl font-sans text-xs font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap border ${
                       isActive
-                        ? "bg-primary-brand text-white border-primary-brand shadow-lg shadow-red-950/50"
+                        ? "shadow-lg"
                         : "bg-[#0D121F] text-slate-400 border-[#1E293B] hover:text-white hover:bg-[#141A29]"
                     }`}
+                    style={{
+                      backgroundColor: isActive ? "var(--primary-brand)" : undefined,
+                      color: isActive ? "var(--game-btn-text, #FFFFFF)" : undefined,
+                      borderColor: isActive ? "var(--primary-brand)" : undefined,
+                    }}
                   >
                     {cat}
                   </button>
@@ -90,7 +95,13 @@ export default function CommunityPage() {
                 <div className="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
                 
                 <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
-                  <span className="font-mono text-[10px] font-extrabold tracking-widest text-white uppercase px-3 py-1 rounded-full bg-primary-brand/90 shadow-md">
+                  <span
+                    className="font-mono text-[10px] font-black tracking-widest uppercase px-3 py-1 rounded-full shadow-md"
+                    style={{
+                      backgroundColor: "var(--primary-brand)",
+                      color: "var(--game-btn-text, #FFFFFF)",
+                    }}
+                  >
                     FEATURED STORY
                   </span>
                   <span className="font-mono text-xs font-bold text-slate-200 flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
@@ -128,7 +139,7 @@ export default function CommunityPage() {
                   </span>
                   <Link
                     href={`/community`}
-                    className="h-10 px-5 rounded-xl game-theme-btn font-sans text-xs font-extrabold uppercase tracking-wider flex items-center gap-2 shadow-lg cursor-pointer"
+                    className="h-10 px-6 game-theme-btn font-sans text-xs font-extrabold uppercase tracking-wider flex items-center gap-2 shadow-lg cursor-pointer"
                   >
                     <span>Read Article</span>
                     <span>→</span>
@@ -156,69 +167,59 @@ export default function CommunityPage() {
               {filteredArticles.map((article) => (
                 <article
                   key={article.id}
-                  className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-[#1E293B] bg-[#0D121F]/95 shadow-xl transition-all duration-300 hover:border-primary-brand/50 hover:-translate-y-1"
+                  className="group bg-[#0D121F]/95 border border-[#1E2538] hover:border-primary-brand/50 rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 shadow-lg flex flex-col justify-between"
                 >
-                  <div>
-                    {/* Article Thumbnail Image */}
-                    <div className="w-full h-44 overflow-hidden relative">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={article.image}
-                        alt={article.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#0D121F] via-transparent to-black/30" />
-                      
-                      <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
-                        <span className="font-mono text-[9px] font-extrabold tracking-widest text-white uppercase px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20">
+                  <div className="relative h-44 overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={article.image}
+                      alt={article.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0D121F] via-transparent to-transparent" />
+                    <span
+                      className="absolute top-3 left-3 text-[10px] font-sans font-bold uppercase px-2.5 py-0.5 rounded text-white shadow bg-primary-brand"
+                    >
+                      {article.category}
+                    </span>
+                  </div>
+
+                    <div className="p-5 flex flex-col flex-1 justify-between space-y-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400">
+                          <span>{article.date}</span>
+                          <span>·</span>
+                          <span>{article.readTime}</span>
+                        </div>
+                        <h4 className="font-display text-base font-bold text-white group-hover:text-primary-brand transition-colors leading-snug">
+                          {article.title}
+                        </h4>
+                        <p className="font-sans text-xs text-slate-400 line-clamp-2">
+                          {article.excerpt}
+                        </p>
+                      </div>
+
+                      <div className="pt-3 border-t border-[#1C2538] flex items-center justify-between">
+                        <span className="text-[10px] font-mono text-slate-500 font-bold uppercase">
                           {article.category}
                         </span>
+                        <span className="font-sans text-xs font-bold text-primary-brand group-hover:translate-x-1 transition-transform flex items-center gap-1">
+                          <span>Read</span>
+                          <span>→</span>
+                        </span>
                       </div>
-                      {article.readTime && (
-                        <div className="absolute bottom-3 right-3 z-10">
-                          <span className="font-mono text-[10px] text-slate-200 bg-black/60 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-white/10">
-                            {article.readTime}
-                          </span>
-                        </div>
-                      )}
                     </div>
-
-                    <div className="p-6 space-y-3">
-                      <h2 className="font-display text-base font-black tracking-wide text-white uppercase leading-snug group-hover:text-primary-brand transition-colors">
-                        {article.title}
-                      </h2>
-
-                      <p className="font-sans text-xs text-slate-300 leading-relaxed line-clamp-3">
-                        {article.excerpt}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="px-6 pb-6 pt-2 flex items-center justify-between border-t border-[#1C2538] mt-2">
-                    <span className="font-mono text-[11px] text-slate-400 flex items-center gap-1">
-                      <CalendarIcon className="w-3.5 h-3.5 text-slate-400" />
-                      {article.date}
-                    </span>
-                    <span className="font-sans text-xs font-extrabold text-primary-brand flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                      <span>Read</span>
-                      <span>→</span>
-                    </span>
-                  </div>
-                </article>
-              ))}
+                  </article>
+                ))}
             </div>
           )}
         </div>
 
-        {/* Collegiate Broadcast & Discord Banner */}
-        <div className="relative overflow-hidden rounded-3xl bg-[#0D121F]/95 border border-[#1E293B] p-8 sm:p-10 shadow-2xl backdrop-blur-xl flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="space-y-2 text-center md:text-left">
-            <span className="text-xs font-mono font-extrabold text-primary-brand uppercase tracking-widest flex items-center justify-center md:justify-start gap-1.5">
-              <TrophyIcon className="w-4 h-4 text-[#F2B705]" />
-              COLLEGIUM BROADCAST & COMMUNITY
-            </span>
-            <h3 className="font-display text-xl sm:text-2xl font-black text-white uppercase tracking-wide">
-              Want Your Varsity Match Streamed Live?
+        {/* Discord Banner */}
+        <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#0F1524] via-[#0D121F] to-[#0F1524] border border-[#1E2538] flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
+          <div className="space-y-1 text-center md:text-left">
+            <h3 className="font-display text-lg sm:text-xl font-bold uppercase text-white tracking-wide">
+              Official Collegiate Community
             </h3>
             <p className="font-sans text-xs sm:text-sm text-slate-300 max-w-xl">
               Join the official COLLEGIUM Discord to submit match clips, request broadcast casters, and receive real-time scrimmage notifications.
@@ -230,7 +231,7 @@ export default function CommunityPage() {
               href="https://discord.gg"
               target="_blank"
               rel="noreferrer"
-              className="h-11 px-6 rounded-xl game-theme-btn font-sans text-xs font-extrabold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+              className="h-11 px-6 game-theme-btn font-sans text-xs font-extrabold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg cursor-pointer"
             >
               <FlameIcon className="w-4 h-4 text-white" />
               <span>Join Collegiate Discord</span>

@@ -4,11 +4,13 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useGame } from "@/context/GameContext";
 import { api } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
   const { loginWithToken } = useAuth();
+  const { openGameSelector } = useGame();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -57,7 +59,12 @@ export default function LoginPage() {
         true
       );
       const profile = await loginWithToken(res.access_token);
-      router.push(profile?.role === "ADMIN" ? "/admin" : "/dashboard");
+      if (profile?.role === "ADMIN") {
+        router.push("/admin");
+      } else {
+        openGameSelector();
+        router.push("/dashboard");
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Login failed. Please try again.");
     } finally {
@@ -170,7 +177,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full h-11 rounded-lg game-theme-btn font-sans text-xs font-bold uppercase tracking-widest transition-all active:scale-[0.98] shadow-lg flex items-center justify-center cursor-pointer disabled:opacity-50"
+              className="w-full h-11 game-theme-btn text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] shadow-lg flex items-center justify-center cursor-pointer disabled:opacity-50"
             >
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />

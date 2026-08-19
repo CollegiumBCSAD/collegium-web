@@ -55,6 +55,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await authService.logout();
     } catch {}
+    // Smooth 500ms delay so logout transition feels natural & unhurried
+    await new Promise((resolve) => setTimeout(resolve, 500));
     clearAuth();
   }, [clearAuth]);
 

@@ -174,7 +174,7 @@ export default function RosterDetailsModal({ team, isOpen, onClose, onRosterUpda
             <button
               type="button"
               onClick={copyInviteLink}
-              className="h-10 px-4 rounded-lg bg-primary-brand hover:bg-primary-brand/90 text-foreground font-sans text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer shrink-0 font-bold"
+              className="h-10 px-5 game-theme-btn text-xs font-bold uppercase tracking-wider shrink-0 cursor-pointer"
             >
               {copied ? "Copied! ✓" : "Copy Link"}
             </button>
@@ -194,7 +194,10 @@ export default function RosterDetailsModal({ team, isOpen, onClose, onRosterUpda
               type="button"
               onClick={handleLeaveTeam}
               disabled={isLeaving}
-              className="h-9 px-4 rounded-lg bg-error/10 hover:bg-error/20 text-error border border-error/30 text-xs font-sans font-bold uppercase tracking-wider transition-colors cursor-pointer disabled:opacity-50"
+              className="h-9 px-4 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 hover:text-white border border-rose-500/40 text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer disabled:opacity-50"
+              style={{
+                clipPath: "polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%)",
+              }}
             >
               {isLeaving ? "Leaving Roster..." : "Leave Squad Roster"}
             </button>
