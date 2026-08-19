@@ -190,12 +190,17 @@ export default function CaptainRequestInbox() {
                       onClick={() => setSelectedTeamId(t.id)}
                       className={`px-3.5 py-1.5 text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2 rounded-none border ${
                         isActive
-                          ? "game-theme-btn shadow-md border-primary-brand/80"
+                          ? "shadow-md border-primary-brand"
                           : "bg-[#101626] text-slate-400 hover:text-white border-[#1E293B] hover:border-[#2E3C5B]"
                       }`}
+                      style={{
+                        clipPath: "none",
+                        backgroundColor: isActive ? "var(--primary-brand)" : undefined,
+                        color: isActive ? "var(--game-btn-text, #FFFFFF)" : undefined,
+                      }}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={g.image} alt="" className="w-3.5 h-3.5 rounded-sm object-cover" />
+                      <img src={g.image} alt="" className="w-3.5 h-3.5 rounded-none object-cover" />
                       <span>{t.name}</span>
                     </button>
                   );
