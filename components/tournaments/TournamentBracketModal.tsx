@@ -90,21 +90,25 @@ export default function TournamentBracketModal({
         score: m.team2.score ?? 0,
         isWinner: m.team2.isWinner,
       },
+      status: m.status,
+      timeLabel: m.timeLabel,
     })),
   }));
 
   const lastMatch = normalizedRounds[normalizedRounds.length - 1]?.matches[0];
-  const champion = lastMatch
+  const isFinalsComplete = 
+    lastMatch && 
+    (lastMatch.team1.isWinner || lastMatch.team2.isWinner) && 
+    lastMatch.team1.name !== "TBD" && 
+    lastMatch.team1.name !== "Finalist 1" &&
+    lastMatch.team2.name !== "TBD" && 
+    lastMatch.team2.name !== "Finalist 2";
+
+  const champion = isFinalsComplete
     ? lastMatch.team1.isWinner
       ? lastMatch.team1.name
-      : lastMatch.team2.isWinner
-      ? lastMatch.team2.name
-      : lastMatch.team1.score > lastMatch.team2.score
-      ? lastMatch.team1.name
-      : lastMatch.team2.score > lastMatch.team1.score
-      ? lastMatch.team2.name
-      : lastMatch.team1.name
-    : "TBD";
+      : lastMatch.team2.name
+    : null;
 
   const totalCols = normalizedRounds.length > 0 ? normalizedRounds.length + 1 : 1;
 
@@ -412,30 +416,38 @@ export default function TournamentBracketModal({
                       </div>
                     </div>
 
-                    {/* Crowned Champion Winner Card */}
+                    {/* Crowned Champion Winner Card or In Contention Card */}
                     <div 
-                      className="w-56 bg-gradient-to-b from-[#1C1708] via-[#0E101B] to-[#070912] border-2 border-amber-500/80 p-4 shadow-2xl text-center space-y-2"
+                      className={`w-56 border-2 p-4 shadow-2xl text-center space-y-2 ${
+                        champion 
+                          ? "bg-gradient-to-b from-[#1C1708] via-[#0E101B] to-[#070912] border-amber-500/80 shadow-[0_0_20px_rgba(245,158,11,0.2)]" 
+                          : "bg-[#090C16] border-[#22304A]"
+                      }`}
                       style={{
                         clipPath: "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
                       }}
                     >
-                      <div className="flex items-center justify-center gap-1.5 text-amber-400 font-display text-[10px] font-black uppercase tracking-widest">
-                        <CrownIcon className="w-3.5 h-3.5 text-amber-400" />
-                        <span>TOURNAMENT CHAMPION</span>
+                      <div className={`flex items-center justify-center gap-1.5 font-display text-[10px] font-black uppercase tracking-widest ${
+                        champion ? "text-amber-400" : "text-emerald-400"
+                      }`}>
+                        <CrownIcon className="w-3.5 h-3.5" />
+                        <span>{champion ? "TOURNAMENT CHAMPION" : "CHAMPIONSHIP TROPHY"}</span>
                       </div>
 
                       <h3 className="font-display text-base font-black uppercase text-white tracking-wide">
-                        {champion}
+                        {champion || "Awaiting Finalists"}
                       </h3>
 
-                      <div className="pt-2 border-t border-amber-500/30">
+                      <div className="pt-2 border-t border-white/10">
                         <span 
-                          className="px-2.5 py-0.5 bg-amber-500 text-black font-mono text-[9px] font-black uppercase tracking-wider inline-block"
+                          className={`px-2.5 py-0.5 font-mono text-[9px] font-black uppercase tracking-wider inline-block ${
+                            champion ? "bg-amber-500 text-black" : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
+                          }`}
                           style={{
                             clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
                           }}
                         >
-                          GOLD MEDALIST
+                          {champion ? "GOLD MEDALIST" : "MATCHES IN PROGRESS"}
                         </span>
                       </div>
                     </div>

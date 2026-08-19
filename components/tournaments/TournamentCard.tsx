@@ -15,8 +15,18 @@ export default function TournamentCard({
   onSelect,
 }: TournamentCardProps) {
   const isCompleted = tournament.status?.toLowerCase() === "completed";
-  const gameKey = tournament.game?.toLowerCase() === "lol" ? "lol" : tournament.game?.toLowerCase() === "codm" ? "codm" : tournament.game?.toLowerCase() === "mlbb" || tournament.game?.toLowerCase() === "ml" ? "ml" : "valo";
+  const gameStr = (tournament.game || "").toLowerCase();
+  const gameKey = 
+    gameStr.includes("lol") || gameStr.includes("league") 
+      ? "lol" 
+      : gameStr.includes("codm") || gameStr.includes("call of duty") || gameStr.includes("duty")
+      ? "codm" 
+      : gameStr.includes("mlbb") || gameStr.includes("mobile legends") || gameStr.includes("ml")
+      ? "ml" 
+      : "valo";
+      
   const gameInfo = GAMES[gameKey as keyof typeof GAMES] || GAMES.valo;
+  const cardImage = tournament.image || gameInfo.image;
 
   return (
     <div 
@@ -31,8 +41,8 @@ export default function TournamentCard({
       {/* Left Game Artwork Banner */}
       <div className="w-full md:w-72 lg:w-80 h-48 md:h-auto shrink-0 relative overflow-hidden bg-[#060812] p-6 flex flex-col justify-between border-b md:border-b-0 md:border-r border-[#182338]">
         {/* Background Artwork */}
-        <div className="absolute inset-0 opacity-25 group-hover:opacity-40 transition-opacity duration-500 scale-105 group-hover:scale-110 object-cover">
-          <Image src={gameInfo.image} alt="" fill className="object-cover" />
+        <div className="absolute inset-0 opacity-30 group-hover:opacity-50 transition-opacity duration-500 scale-105 group-hover:scale-110 object-cover">
+          <Image src={cardImage} alt="" fill className="object-cover" />
         </div>
         <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-[#0A0D18] via-transparent to-transparent pointer-events-none" />
 

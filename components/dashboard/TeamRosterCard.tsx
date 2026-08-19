@@ -28,25 +28,18 @@ export default function TeamRosterCard({ team, onRosterUpdated }: TeamRosterCard
   return (
     <>
       <div className="group relative">
-        {/* Glow halo */}
-        <div 
-          className="absolute -inset-0.5 opacity-30 group-hover:opacity-60 transition-opacity blur-sm"
-          style={{ backgroundColor: game.accentColor }}
-        />
-
         {/* Main Card with Chamfered Top-Right & Bottom-Left Cuts */}
         <div 
-          className="relative overflow-hidden bg-gradient-to-b from-[#0F1424] via-[#0B0E1B] to-[#070912] border border-[#1E293B] p-5 shadow-xl transition-all duration-300 group-hover:-translate-y-1"
+          className="relative overflow-hidden bg-[#0A0D18] border border-[#1C253D] p-5 shadow-2xl transition-all duration-300 group-hover:border-primary-brand/50 group-hover:-translate-y-1"
           style={{
             clipPath: "polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))",
           }}
         >
           {/* Tactical Game Accent Top Bar */}
           <div
-            className="absolute top-0 left-0 right-0 h-[2.5px]"
+            className="absolute top-0 left-0 right-0 h-[2px]"
             style={{
-              backgroundColor: game.accentColor,
-              boxShadow: `0 0 10px ${game.accentColor}`,
+              background: `linear-gradient(90deg, transparent 0%, var(--primary-brand) 50%, transparent 100%)`,
             }}
           />
 
@@ -55,12 +48,8 @@ export default function TeamRosterCard({ team, onRosterUpdated }: TeamRosterCard
           <img
             src={game.image}
             alt=""
-            className="absolute right-0 bottom-0 w-36 h-36 object-cover opacity-[0.07] group-hover:opacity-[0.15] group-hover:scale-110 grayscale blur-[1px] transition-all duration-500 pointer-events-none"
+            className="absolute right-0 bottom-0 w-32 h-32 object-cover opacity-[0.05] group-hover:opacity-[0.10] grayscale blur-[0.5px] transition-all duration-500 pointer-events-none"
           />
-
-          {/* Corner Tick Marks */}
-          <div className="absolute top-1 left-1 w-2 h-2 border-t border-l border-white/20 pointer-events-none" />
-          <div className="absolute bottom-1 right-1 w-2 h-2 border-b border-r border-white/20 pointer-events-none" />
 
           {/* Header: Squad Identity & Game */}
           <div className="flex items-start justify-between gap-3 relative z-10">
@@ -87,11 +76,9 @@ export default function TeamRosterCard({ team, onRosterUpdated }: TeamRosterCard
             </div>
 
             <span
-              className="text-[10px] font-mono font-bold uppercase px-3 py-0.5 text-white shrink-0 shadow-sm"
+              className="text-[9px] font-mono font-bold uppercase px-2.5 py-0.5 text-slate-300 bg-[#0E1322] border border-[#1E2942] shrink-0"
               style={{
-                backgroundColor: game.accentColor,
-                color: "var(--game-btn-text, #FFFFFF)",
-                clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
+                clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
               }}
             >
               {game.shortName}
@@ -99,7 +86,7 @@ export default function TeamRosterCard({ team, onRosterUpdated }: TeamRosterCard
           </div>
 
           {/* Members Preview & Invite Action */}
-          <div className="pt-3.5 mt-3.5 border-t border-[#182338] flex items-center justify-between gap-3 text-xs relative z-10">
+          <div className="pt-3.5 mt-3.5 border-t border-[#162034] flex items-center justify-between gap-3 text-xs relative z-10">
             <div className="flex items-center gap-2">
               <span className="text-slate-400 font-sans flex items-center gap-1.5">
                 <UsersIcon className="w-3.5 h-3.5 text-slate-400" />
@@ -109,7 +96,7 @@ export default function TeamRosterCard({ team, onRosterUpdated }: TeamRosterCard
               <button
                 type="button"
                 onClick={handleCopyInvite}
-                className="text-[10px] font-mono font-bold text-slate-400 hover:text-white bg-[#141A29] hover:bg-[#1C263C] px-2 py-0.5 border border-[#243350] transition-colors cursor-pointer"
+                className="text-[10px] font-mono font-bold text-slate-300 hover:text-white bg-[#0E1322] hover:bg-[#161F34] px-2 py-0.5 border border-[#1E2942] transition-colors cursor-pointer"
                 style={{
                   clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
                 }}
@@ -122,9 +109,9 @@ export default function TeamRosterCard({ team, onRosterUpdated }: TeamRosterCard
             <button
               type="button"
               onClick={() => setIsModalOpen(true)}
-              className="h-8 px-4 bg-[#141C2E] hover:bg-primary-brand text-slate-200 hover:text-white font-display text-xs font-black uppercase tracking-wider transition-all border border-[#22314E] hover:border-primary-brand cursor-pointer shadow-md active:scale-95 flex items-center gap-1"
+              className="h-7.5 px-3.5 game-theme-btn text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer shadow-md active:scale-95 flex items-center gap-1"
               style={{
-                clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
+                clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
               }}
             >
               <span>Manage Roster</span>

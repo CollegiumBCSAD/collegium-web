@@ -8,7 +8,7 @@ import { universitiesService } from "@/services";
 import { University } from "@/types";
 import { LeaderboardSkeletonRow } from "@/components/ui/Skeleton";
 import { CrownIcon, TrophyIcon, ZapIcon } from "@/components/ui/Icons";
-import { GAME_LIST } from "@/lib/games";
+import { GAMES } from "@/lib/games";
 
 const GAME_ID_TO_DISPLAY: Record<string, string> = {
   valo: "VALORANT",
@@ -47,7 +47,7 @@ function getWinRateColor(rate: number): string {
 }
 
 export default function LeaderboardPage() {
-  const { selectedGame: globalGame, selectGame } = useGame();
+  const { selectedGame: globalGame } = useGame();
   const activeGame = globalGame || "valo";
   const gameDisplayName = GAME_ID_TO_DISPLAY[activeGame] || "VALORANT";
   const enumValue = GAME_ID_TO_ENUM[activeGame] || "VALORANT";
@@ -85,7 +85,7 @@ export default function LeaderboardPage() {
       <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 md:px-10 lg:px-16 py-8 sm:py-12 space-y-12">
         
         {/* Header Title & Tactical Slanted Game Switcher */}
-        <div className="border-b border-[#1E2538] pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span 
@@ -97,38 +97,42 @@ export default function LeaderboardPage() {
                 <ZapIcon className="w-3.5 h-3.5 text-primary-brand" />
                 GLICKO-2 DYNAMIC RANKING ENGINE
               </span>
+              <span className="text-xs font-mono font-bold text-slate-400 uppercase">
+                • {gameDisplayName} DIVISION
+              </span>
             </div>
             <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white uppercase drop-shadow-md">
               PHILIPPINE UNIVERSITY STANDINGS
             </h1>
             <p className="font-sans text-xs sm:text-sm text-slate-400 mt-1 max-w-xl leading-relaxed">
-              Real-time aggregated Glicko-2 evaluations for verified collegiate varsity esports programs.
+              Real-time aggregated Glicko-2 evaluations for verified collegiate varsity esports programs in <strong className="text-white font-bold">{gameDisplayName}</strong>.
             </p>
           </div>
 
-          {/* Tactical Slanted Game Filter Tabs */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-            {GAME_LIST.map((game) => {
-              const isActive = activeGame === game.id;
-              return (
-                <button
-                  key={game.id}
-                  onClick={() => selectGame(game.id)}
-                  className={`px-4 py-2 text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 shadow-md ${
-                    isActive ? "game-theme-btn scale-105" : "tactical-btn-secondary"
-                  }`}
-                  style={{
-                    backgroundColor: isActive ? game.accentColor : undefined,
-                    color: isActive ? (game.id === "codm" || game.id === "ml" ? "#0A0C10" : "#FFFFFF") : undefined,
-                    boxShadow: isActive ? `0 0 16px ${game.accentColor}60` : undefined,
-                  }}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={game.image} alt={game.name} className="w-4 h-4 rounded object-cover ring-1 ring-white/10" />
-                  <span>{game.shortName}</span>
-                </button>
-              );
-            })}
+          {/* Sleek Active Game Circuit Chip */}
+          <div 
+            className="flex items-center gap-3 bg-[#0A0D18] border border-[#1E293B] px-4 py-2 shadow-lg shrink-0"
+            style={{
+              clipPath: "polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%)",
+            }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img 
+              src={GAMES[activeGame as keyof typeof GAMES]?.image || "/valorant-art-1.png"} 
+              alt={gameDisplayName} 
+              className="w-7 h-7 object-cover border border-white/20" 
+              style={{
+                clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
+              }}
+            />
+            <div>
+              <span className="text-[9px] font-mono font-bold text-slate-400 block uppercase tracking-wider">
+                ACTIVE BATTLEGROUND
+              </span>
+              <span className="font-display text-sm font-black uppercase text-white tracking-wide">
+                {gameDisplayName}
+              </span>
+            </div>
           </div>
         </div>
 

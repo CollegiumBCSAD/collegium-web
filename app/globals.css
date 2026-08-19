@@ -104,51 +104,121 @@ button:active, a:active {
 }
 
 .game-theme-btn {
-  background: linear-gradient(90deg, var(--primary-brand) 0%, rgba(var(--game-glow-rgb), 0.88) 100%);
+  background: 
+    linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.06) 40%, transparent 60%),
+    linear-gradient(135deg, var(--primary-brand) 0%, rgba(var(--game-glow-rgb), 0.95) 100%);
   color: var(--game-btn-text, #FFFFFF) !important;
   font-family: 'Oswald', var(--font-oswald), sans-serif !important;
   font-weight: 800 !important;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%) !important;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  letter-spacing: 0.08em;
+  clip-path: polygon(12px 0, 100% 0, calc(100% - 12px) 100%, 0 100%) !important;
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.6),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.5),
+    0 4px 14px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba(var(--game-glow-rgb), 0.45);
+  border-top: 1.5px solid rgba(255, 255, 255, 0.45);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.6);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+.game-theme-btn::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -75%;
+  width: 50%;
+  height: 200%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: rotate(25deg);
+  transition: all 0.6s ease;
+  pointer-events: none;
+}
+.game-theme-btn:hover::after {
+  left: 130%;
 }
 .game-theme-btn:hover {
-  filter: brightness(1.15);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 24px rgba(var(--game-glow-rgb), 0.45);
+  filter: brightness(1.15) contrast(1.1);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 
+    inset 0 1px 2px rgba(255, 255, 255, 0.8),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.6),
+    0 8px 24px rgba(0, 0, 0, 0.55),
+    0 0 32px rgba(var(--game-glow-rgb), 0.75);
 }
 .game-theme-btn:active {
-  transform: scale(0.96) !important;
+  transform: scale(0.97) translateY(1px) !important;
+  box-shadow: 
+    inset 0 2px 5px rgba(0, 0, 0, 0.7),
+    0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
 .tactical-btn-secondary {
-  background: #141A29;
+  background: 
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.02) 40%, transparent 60%),
+    linear-gradient(180deg, #1C2438 0%, #101625 50%, #080B14 100%);
   color: #EDEEF2 !important;
-  border: 1px solid #243350;
+  border: 1px solid #2B3D63;
+  border-top: 1.5px solid rgba(255, 255, 255, 0.3);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.7);
   font-family: 'Oswald', var(--font-oswald), sans-serif !important;
   font-weight: 800 !important;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%) !important;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  letter-spacing: 0.08em;
+  clip-path: polygon(12px 0, 100% 0, calc(100% - 12px) 100%, 0 100%) !important;
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.25),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.6),
+    0 4px 12px rgba(0, 0, 0, 0.5);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+.tactical-btn-secondary::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -75%;
+  width: 50%;
+  height: 200%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transform: rotate(25deg);
+  transition: all 0.6s ease;
+  pointer-events: none;
+}
+.tactical-btn-secondary:hover::after {
+  left: 130%;
 }
 .tactical-btn-secondary:hover {
-  background: #1C253B;
+  background: 
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.04) 40%, transparent 60%),
+    linear-gradient(180deg, #283554 0%, #162035 50%, #0D121F 100%);
   color: #FFFFFF !important;
-  border-color: #3A4D75;
-  transform: translateY(-1px);
+  border-color: rgba(var(--game-glow-rgb), 0.65);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 
+    inset 0 1px 2px rgba(255, 255, 255, 0.45),
+    inset 0 0 14px rgba(var(--game-glow-rgb), 0.2),
+    0 8px 20px rgba(0, 0, 0, 0.6),
+    0 0 22px rgba(var(--game-glow-rgb), 0.4);
 }
 .tactical-btn-secondary:active {
-  transform: scale(0.96) !important;
+  transform: scale(0.97) translateY(1px) !important;
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.7),
+    0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
 h1, h2, h3, h4, .font-display, .font-oswald {
