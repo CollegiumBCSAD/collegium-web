@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { GAME_LIST } from "@/lib/games";
 import { GameId } from "@/types";
 import { getStoredTeams, fetchTeamsApi, Team } from "@/lib/teams";
@@ -67,23 +67,26 @@ export default function PostScrimModal({
   }, [user, allTeams]);
 
   const [formGame, setFormGame] = useState<GameId>("valo");
-  const [selectedTeamId, setSelectedTeamId] = useState<string>("");
-  const [formTeamName, setFormTeamName] = useState<string>("");
+  const [manualTeamId, setManualTeamId] = useState<string>("");
+  const [manualTeamName, setManualTeamName] = useState<string>("");
   const [formFormat, setFormFormat] = useState("BO3");
   const [formRank, setFormRank] = useState("Ascendant+");
   const [formMap, setFormMap] = useState("Ascent");
   const [formNotes, setFormNotes] = useState("");
 
-  useEffect(() => {
-    if (userTeams.length > 0) {
-      if (!selectedTeamId || !userTeams.some((t) => t.id === selectedTeamId)) {
-        setSelectedTeamId(userTeams[0].id);
-        setFormTeamName(userTeams[0].name);
-      }
-    } else if (!formTeamName) {
-      setFormTeamName(user?.university?.name ? `${user.university.name} Varsity` : `${user?.displayName || "Varsity"} Squad`);
-    }
-  }, [userTeams, user, selectedTeamId, formTeamName]);
+  const selectedTeamId =
+    manualTeamId && userTeams.some((t) => t.id === manualTeamId)
+      ? manualTeamId
+      : userTeams[0]?.id ?? "";
+
+  const defaultTeamName = user?.university?.name
+    ? `${user.university.name} Varsity`
+    : `${user?.displayName || "Varsity"} Squad`;
+
+  const formTeamName =
+    userTeams.length > 0
+      ? userTeams.find((t) => t.id === selectedTeamId)?.name ?? ""
+      : manualTeamName || defaultTeamName;
 
   // Modal lifecycle listeners
   useEffect(() => {
@@ -105,11 +108,7 @@ export default function PostScrimModal({
   if (!isOpen) return null;
 
   const handleTeamChange = (teamId: string) => {
-    setSelectedTeamId(teamId);
-    const found = userTeams.find((t) => t.id === teamId);
-    if (found) {
-      setFormTeamName(found.name);
-    }
+    setManualTeamId(teamId);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -192,7 +191,7 @@ export default function PostScrimModal({
                 type="text"
                 required
                 value={formTeamName}
-                onChange={(e) => setFormTeamName(e.target.value)}
+                onChange={(e) => setManualTeamName(e.target.value)}
                 placeholder="e.g. UMAK Herons Alpha"
                 className="w-full h-11 px-4 rounded-lg bg-background border border-panel-border text-foreground text-sm font-sans focus:outline-none"
               />
