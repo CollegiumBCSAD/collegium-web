@@ -3,7 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import { University } from "@/types";
-import { GAME_LIST, GAMES } from "@/lib/games";
+import { GAMES } from "@/lib/games";
 import { SwordsIcon } from "@/components/ui/Icons";
 
 interface UniversityGameCardsProps {

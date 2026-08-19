@@ -10,7 +10,6 @@ import {
   LockIcon,
   TrashIcon,
   ZapIcon,
-  CheckCircleIcon,
 } from "@/components/ui/Icons";
 
 interface ScrimCardProps {

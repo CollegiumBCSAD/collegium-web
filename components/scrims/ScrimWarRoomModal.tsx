@@ -5,7 +5,7 @@ import { ScrimOffer } from "@/types";
 import { scrimsService, ScrimChatMessage as ServerChatMessage } from "@/services";
 import { getStoredTeams, fetchTeamsApi, Team } from "@/lib/teams";
 import { getSocket } from "@/services/socket";
-import { CalendarIcon, CrownIcon, FlameIcon, ZapIcon, CheckCircleIcon, UsersIcon } from "@/components/ui/Icons";
+import { CrownIcon, CheckCircleIcon, UsersIcon } from "@/components/ui/Icons";
 
 interface ChatMessage {
   id: string;
@@ -179,7 +179,6 @@ export default function ScrimWarRoomModal({
     "GLHF! Ready to start.",
   ];
 
-  const opponentName = isHost ? (scrim.opponentTeamName || "Challenger Squad") : scrim.hostTeamName;
   const hostInitial = scrim.hostTeamName.charAt(0).toUpperCase();
   const oppInitial = (scrim.opponentTeamName || "C").charAt(0).toUpperCase();
 

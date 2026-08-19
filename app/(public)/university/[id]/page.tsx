@@ -74,7 +74,7 @@ export default function UniversityProfilePage() {
         <UniversityGameCards university={university} />
 
         {/* Interactive Verified Rosters & Match Logs Component */}
-        <UniversityRosterSection university={university} />
+        <UniversityRosterSection />
       </div>
     </div>
   );

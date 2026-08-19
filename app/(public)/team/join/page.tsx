@@ -7,7 +7,7 @@ import { Team, GameId } from "@/types";
 import { GAMES } from "@/lib/games";
 import { teamsService } from "@/services";
 import { useAuth } from "@/context/AuthContext";
-import { PlusIcon, UsersIcon, ShieldIcon, AlertTriangleIcon, CheckCircleIcon } from "@/components/ui/Icons";
+import { PlusIcon, UsersIcon, ShieldIcon, AlertTriangleIcon } from "@/components/ui/Icons";
 
 function JoinTeamContent() {
   const searchParams = useSearchParams();

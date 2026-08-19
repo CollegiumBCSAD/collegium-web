@@ -11,7 +11,7 @@ import { getStoredTeams, fetchTeamsApi, Team } from "@/lib/teams";
 import { useWarRoom } from "@/context/WarRoomContext";
 import ScrimCard from "@/components/scrims/ScrimCard";
 import { ScrimCardSkeleton } from "@/components/ui/Skeleton";
-import { SwordsIcon, AlertTriangleIcon, TrophyIcon, ZapIcon, ShieldIcon, CheckCircleIcon, FlameIcon } from "@/components/ui/Icons";
+import { SwordsIcon, AlertTriangleIcon, ZapIcon, CheckCircleIcon, FlameIcon } from "@/components/ui/Icons";
 import { GAME_LIST } from "@/lib/games";
 import PostScrimModal from "@/components/scrims/PostScrimModal";
 import NoSquadModal from "@/components/scrims/NoSquadModal";

@@ -2,14 +2,9 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { University } from "@/types";
 import { TrophyIcon, CrownIcon, CheckCircleIcon } from "@/components/ui/Icons";
 
-interface UniversityRosterSectionProps {
-  university: University;
-}
-
-export default function UniversityRosterSection({ university }: UniversityRosterSectionProps) {
+export default function UniversityRosterSection() {
   const [activeTab, setActiveTab] = useState<"ROSTER" | "MATCHES" | "CERTIFICATION">("ROSTER");
 
   const mockAthletes = [
