@@ -20,7 +20,7 @@ export interface AuthContextType {
   accessToken: string | null;
   isLoggedIn: boolean;
   isLoaded: boolean;
-  loginWithToken: (token?: string) => Promise<void>;
+  loginWithToken: (token?: string) => Promise<UserProfile | null>;
   logoutUser: () => Promise<void>;
 }
 

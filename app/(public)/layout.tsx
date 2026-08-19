@@ -14,7 +14,7 @@ import ChatQuickAccess from "@/components/ChatQuickAccess";
 import ScrimWarRoomModal from "@/components/scrims/ScrimWarRoomModal";
 import GameSelectorModal from "@/components/GameSelectorModal";
 import HeaderGameSwitcher from "@/components/HeaderGameSwitcher";
-import { HomeIcon, PlusIcon, UsersIcon, SwordsIcon } from "@/components/ui/Icons";
+import { HomeIcon, PlusIcon, UsersIcon, SwordsIcon, ShieldIcon } from "@/components/ui/Icons";
 
 function HeaderAuthControls() {
   const { user, isLoggedIn, logoutUser, isLoaded } = useAuth();
@@ -86,22 +86,26 @@ function HeaderAuthControls() {
                 <HomeIcon className="w-3.5 h-3.5 text-primary-brand" />
                 <span>My Dashboard</span>
               </Link>
-              <Link
-                href="/team/create"
-                onClick={() => setDropdownOpen(false)}
-                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-sans font-semibold text-slate-300 hover:text-white hover:bg-[#141A29] hover:translate-x-1 transition-all duration-150"
-              >
-                <PlusIcon className="w-3.5 h-3.5 text-primary-brand" />
-                <span>Create Squad</span>
-              </Link>
-              <Link
-                href="/team/join"
-                onClick={() => setDropdownOpen(false)}
-                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-sans font-semibold text-slate-300 hover:text-white hover:bg-[#141A29] hover:translate-x-1 transition-all duration-150"
-              >
-                <UsersIcon className="w-3.5 h-3.5 text-primary-brand" />
-                <span>Join Squad</span>
-              </Link>
+              {user.role !== "ADMIN" && (
+                <>
+                  <Link
+                    href="/team/create"
+                    onClick={() => setDropdownOpen(false)}
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-sans font-semibold text-slate-300 hover:text-white hover:bg-[#141A29] hover:translate-x-1 transition-all duration-150"
+                  >
+                    <PlusIcon className="w-3.5 h-3.5 text-primary-brand" />
+                    <span>Create Squad</span>
+                  </Link>
+                  <Link
+                    href="/team/join"
+                    onClick={() => setDropdownOpen(false)}
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-sans font-semibold text-slate-300 hover:text-white hover:bg-[#141A29] hover:translate-x-1 transition-all duration-150"
+                  >
+                    <UsersIcon className="w-3.5 h-3.5 text-primary-brand" />
+                    <span>Join Squad</span>
+                  </Link>
+                </>
+              )}
               <Link
                 href="/scrims"
                 onClick={() => setDropdownOpen(false)}
@@ -110,6 +114,16 @@ function HeaderAuthControls() {
                 <SwordsIcon className="w-3.5 h-3.5 text-primary-brand" />
                 <span>Scrims Board</span>
               </Link>
+              {user.role === "ADMIN" && (
+                <Link
+                  href="/admin"
+                  onClick={() => setDropdownOpen(false)}
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-sans font-semibold text-slate-300 hover:text-white hover:bg-[#141A29] hover:translate-x-1 transition-all duration-150"
+                >
+                  <ShieldIcon className="w-3.5 h-3.5 text-primary-brand" />
+                  <span>Admin Console</span>
+                </Link>
+              )}
             </div>
             <div className="pt-1 border-t border-[#1C2538] px-2 mt-1">
               <button

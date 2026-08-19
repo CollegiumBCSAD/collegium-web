@@ -56,8 +56,8 @@ export default function LoginPage() {
         { email: email.trim(), password },
         true
       );
-      await loginWithToken(res.access_token);
-      router.push("/dashboard");
+      const profile = await loginWithToken(res.access_token);
+      router.push(profile?.role === "ADMIN" ? "/admin" : "/dashboard");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Login failed. Please try again.");
     } finally {

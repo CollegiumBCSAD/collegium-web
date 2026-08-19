@@ -353,6 +353,10 @@ export default function ScrimsPage() {
 
   const handleAcceptScrim = async (id: string) => {
     setScrimError("");
+    if (user?.role === "ADMIN") {
+      setScrimError("Admin accounts cannot accept scrim offers.");
+      return;
+    }
     const targetScrim = scrims.find((s) => s.id === id);
     if (targetScrim && isUserHost(targetScrim)) {
       setScrimError("You cannot book a scrim offer posted by your own team.");
@@ -462,9 +466,15 @@ export default function ScrimsPage() {
               })}
             </div>
 
-            {isLoggedIn && (
+            {isLoggedIn && user?.role !== "ADMIN" && (
               <button
-                onClick={() => setIsModalOpen(true)}
+                onClick={() => {
+                  if (myTeams.length === 0) {
+                    setIsNoSquadModalOpen(true);
+                  } else {
+                    setIsModalOpen(true);
+                  }
+                }}
                 className="h-10 px-5 rounded-xl game-theme-btn font-sans text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer shadow-lg shrink-0"
               >
                 <SwordsIcon className="w-4 h-4" />

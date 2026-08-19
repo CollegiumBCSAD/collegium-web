@@ -4,3 +4,4 @@ export * from "./teamsService";
 export * from "./scrimsService";
 export * from "./tournamentsService";
 export * from "./universitiesService";
+export * from "./adminService";
