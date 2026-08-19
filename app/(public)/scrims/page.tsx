@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useGame } from "@/context/GameContext";
@@ -351,6 +351,10 @@ export default function ScrimsPage() {
 
   const handleAcceptScrim = async (id: string) => {
     setScrimError("");
+    if (user?.role === "ADMIN") {
+      setScrimError("Admin accounts cannot accept scrim offers.");
+      return;
+    }
     const targetScrim = scrims.find((s) => s.id === id);
     if (targetScrim && isUserHost(targetScrim)) {
       setScrimError("You cannot book a scrim offer posted by your own team.");
@@ -442,9 +446,15 @@ export default function ScrimsPage() {
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            {isLoggedIn && (
+            {isLoggedIn && user?.role !== "ADMIN" && (
               <button
-                onClick={() => setIsModalOpen(true)}
+                onClick={() => {
+                  if (myTeams.length === 0) {
+                    setIsNoSquadModalOpen(true);
+                  } else {
+                    setIsModalOpen(true);
+                  }
+                }}
                 className="h-10 px-5 game-theme-btn font-display text-xs font-black uppercase tracking-wider transition-all active:scale-[0.98] flex items-center justify-center gap-2.5 cursor-pointer shadow-lg hover:shadow-primary-brand/20 shrink-0"
                 style={{
                   clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",

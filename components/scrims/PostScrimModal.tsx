@@ -62,59 +62,51 @@ export default function PostScrimModal({
     );
   }, [user, allTeams]);
 
-  const [formGame, setFormGame] = useState<GameId>(defaultGame);
-  const [selectedTeamId, setSelectedTeamId] = useState<string>("");
-  const [formTeamName, setFormTeamName] = useState<string>("");
+  const [manualGame, setManualGame] = useState<GameId | null>(null);
+  const [manualTeamId, setManualTeamId] = useState<string>("");
+  const [manualTeamName, setManualTeamName] = useState<string>("");
   const [formFormat, setFormFormat] = useState("BO3");
   const [formRank, setFormRank] = useState("Ascendant+");
-  const [formMap, setFormMap] = useState("Ascent");
+  const [formMap, setFormMap] = useState(() => (GAME_MAP_OPTIONS[defaultGame] || GAME_MAP_OPTIONS.valo)[0]);
   const [formNotes, setFormNotes] = useState("");
 
-  // Sync formGame and formMap when defaultGame or isOpen changes
-  useEffect(() => {
+  // Reset the form's game/map defaults each time the modal is (re)opened
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
     if (isOpen) {
-      setFormGame(defaultGame);
-      const maps = GAME_MAP_OPTIONS[defaultGame] || GAME_MAP_OPTIONS.valo;
-      setFormMap(maps[0]);
+      setManualGame(null);
+      setFormMap((GAME_MAP_OPTIONS[defaultGame] || GAME_MAP_OPTIONS.valo)[0]);
     }
-  }, [isOpen, defaultGame]);
+  }
+
+  const formGame = manualGame ?? defaultGame;
 
   const userTeamsForGame = useMemo(() => {
     const matching = userTeams.filter((t) => t.gameTitle === formGame);
     return matching.length > 0 ? matching : userTeams;
   }, [userTeams, formGame]);
 
-  useEffect(() => {
-    if (userTeamsForGame.length > 0) {
-      if (!selectedTeamId || !userTeamsForGame.some((t) => t.id === selectedTeamId)) {
-        setSelectedTeamId(userTeamsForGame[0].id);
-        setFormTeamName(userTeamsForGame[0].name);
-      }
-    } else if (!formTeamName) {
-      setFormTeamName(
-        user?.university?.name ? `${user.university.name} Varsity` : `${user?.displayName || "Varsity"} Squad`
-      );
-    }
-  }, [userTeamsForGame, user, selectedTeamId, formTeamName]);
+  const selectedTeamId =
+    manualTeamId && userTeamsForGame.some((t) => t.id === manualTeamId)
+      ? manualTeamId
+      : userTeamsForGame[0]?.id ?? "";
+
+  const defaultTeamName = user?.university?.name
+    ? `${user.university.name} Varsity`
+    : `${user?.displayName || "Varsity"} Squad`;
+
+  const formTeamName =
+    userTeamsForGame.length > 0
+      ? userTeamsForGame.find((t) => t.id === selectedTeamId)?.name ?? ""
+      : manualTeamName || defaultTeamName;
 
   const handleGameChange = (game: GameId) => {
-    setFormGame(game);
+    setManualGame(game);
     const maps = GAME_MAP_OPTIONS[game] || GAME_MAP_OPTIONS.valo;
     setFormMap(maps[0]);
-
-    const matchingTeam = userTeams.find((t) => t.gameTitle === game);
-    if (matchingTeam) {
-      setSelectedTeamId(matchingTeam.id);
-      setFormTeamName(matchingTeam.name);
-    } else if (userTeams.length > 0) {
-      setSelectedTeamId(userTeams[0].id);
-      setFormTeamName(userTeams[0].name);
-    } else {
-      setSelectedTeamId("");
-      setFormTeamName(
-        user?.university?.name ? `${user.university.name} Varsity` : `${user?.displayName || "Varsity"} Squad`
-      );
-    }
+    setManualTeamId("");
+    setManualTeamName("");
   };
 
   // Modal lifecycle listeners
@@ -137,11 +129,7 @@ export default function PostScrimModal({
   if (!isOpen) return null;
 
   const handleTeamChange = (teamId: string) => {
-    setSelectedTeamId(teamId);
-    const found = userTeamsForGame.find((t) => t.id === teamId);
-    if (found) {
-      setFormTeamName(found.name);
-    }
+    setManualTeamId(teamId);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -224,7 +212,7 @@ export default function PostScrimModal({
                 type="text"
                 required
                 value={formTeamName}
-                onChange={(e) => setFormTeamName(e.target.value)}
+                onChange={(e) => setManualTeamName(e.target.value)}
                 placeholder="e.g. UMAK Herons Alpha"
                 className="w-full h-11 px-4 rounded-lg bg-background border border-panel-border text-foreground text-sm font-sans focus:outline-none"
               />

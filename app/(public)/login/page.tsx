@@ -58,9 +58,13 @@ export default function LoginPage() {
         { email: email.trim(), password },
         true
       );
-      await loginWithToken(res.access_token);
-      openGameSelector();
-      router.push("/dashboard");
+      const profile = await loginWithToken(res.access_token);
+      if (profile?.role === "ADMIN") {
+        router.push("/admin");
+      } else {
+        openGameSelector();
+        router.push("/dashboard");
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Login failed. Please try again.");
     } finally {

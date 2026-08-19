@@ -57,7 +57,6 @@ export default function LeaderboardPage() {
 
   useEffect(() => {
     let cancelled = false;
-    setIsLoading(true);
 
     universitiesService.getUniversities(enumValue)
       .then((universities) => {

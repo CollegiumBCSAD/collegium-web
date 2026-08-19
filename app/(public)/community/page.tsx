@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { mockNewsArticles, NewsArticle } from "@/lib/mock/news";
+import { mockNewsArticles } from "@/lib/mock/news";
 import Link from "next/link";
 import { TrophyIcon, FlameIcon, ZapIcon, CalendarIcon, ClockIcon } from "@/components/ui/Icons";
 import { useGame } from "@/context/GameContext";

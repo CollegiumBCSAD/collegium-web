@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { ScrimOffer } from "@/types";
 import { scrimsService, ScrimChatMessage as ServerChatMessage } from "@/services";
 import { getStoredTeams, fetchTeamsApi, Team } from "@/lib/teams";
 import { getSocket } from "@/services/socket";
 import { getGameInfo } from "@/lib/games";
-import { CalendarIcon, CrownIcon, FlameIcon, ZapIcon, CheckCircleIcon, UsersIcon } from "@/components/ui/Icons";
+import { CrownIcon, CheckCircleIcon, UsersIcon } from "@/components/ui/Icons";
 
 interface ChatMessage {
   id: string;
