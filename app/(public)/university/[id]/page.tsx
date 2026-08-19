@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { universitiesService } from "@/services/universitiesService";
 import { University } from "@/types";
+import { getMockUniversity } from "@/lib/mock/universities";
 import UniversityHeaderBanner from "@/components/university/UniversityHeaderBanner";
 import UniversityGameCards from "@/components/university/UniversityGameCards";
 import UniversityRosterSection from "@/components/university/UniversityRosterSection";
@@ -23,13 +24,14 @@ export default function UniversityProfilePage() {
       .getUniversityById(universityId)
       .then((data) => {
         if (isMounted) {
-          setUniversity(data);
+          setUniversity(data || getMockUniversity(universityId));
           setLoading(false);
         }
       })
       .catch(() => {
         if (isMounted) {
-          setUniversity(null);
+          const fallback = getMockUniversity(universityId);
+          setUniversity(fallback);
           setLoading(false);
         }
       });

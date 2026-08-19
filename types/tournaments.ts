@@ -67,6 +67,8 @@ export interface BracketMatch {
   id: string;
   team1: MatchTeam;
   team2: MatchTeam;
+  status?: "LIVE" | "COMPLETED" | "UPCOMING" | string;
+  timeLabel?: string;
 }
 
 export interface TournamentBracketModalProps {

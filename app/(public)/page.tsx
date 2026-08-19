@@ -154,45 +154,69 @@ export default function LandingPage() {
               </span>
 
               {selectedGameInfo && (
-                <div
-                  className="inline-flex items-center p-3 sm:p-3.5 pr-5 rounded-2xl bg-gradient-to-r from-[#0F1422]/98 via-[#0A0D17]/95 to-[#0F1422]/98 border-2 shadow-2xl backdrop-blur-xl transition-all duration-300"
+                <button
+                  type="button"
+                  onClick={openGameSelector}
+                  className="group relative overflow-hidden inline-flex items-center gap-3.5 px-4 py-2.5 bg-[#080C16] border border-[#1E293B] hover:border-primary-brand/80 transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl backdrop-blur-xl"
                   style={{
-                    borderColor: `${selectedGameInfo.accentColor}AA`,
-                    boxShadow: `0 0 25px ${selectedGameInfo.accentColor}25`,
+                    boxShadow: `0 4px 20px rgba(0, 0, 0, 0.6), 0 0 20px ${selectedGameInfo.accentColor}25, inset 0 1px 1px rgba(255, 255, 255, 0.15)`,
+                    clipPath: "polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))",
                   }}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="relative w-11 h-11 rounded-xl overflow-hidden shrink-0 border-2 border-white/20 shadow-md">
-                      <Image
-                        src={selectedGameInfo.image}
-                        alt={selectedGameInfo.name}
-                        fill
-                        className="object-cover"
+                  {/* Subtle dynamic ambient background glow */}
+                  <div 
+                    className="absolute -right-4 -bottom-4 w-24 h-24 rounded-full opacity-20 blur-xl pointer-events-none group-hover:opacity-40 transition-opacity"
+                    style={{ backgroundColor: selectedGameInfo.accentColor }}
+                  />
+
+                  {/* Game Crest */}
+                  <div 
+                    className="relative w-9 h-9 overflow-hidden shrink-0 border border-white/20 shadow-md group-hover:scale-105 transition-transform"
+                    style={{
+                      clipPath: "polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)",
+                    }}
+                  >
+                    <Image
+                      src={selectedGameInfo.image}
+                      alt={selectedGameInfo.name}
+                      fill
+                      className="object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                  </div>
+
+                  <div className="flex flex-col text-left">
+                    <div className="flex items-center gap-1.5 leading-none mb-1">
+                      <span 
+                        className="w-1.5 h-1.5 rounded-full animate-ping shrink-0" 
+                        style={{ backgroundColor: selectedGameInfo.accentColor }}
                       />
+                      <span className="text-[8px] font-mono font-black tracking-widest text-slate-400 uppercase">
+                        ACTIVE ARENA
+                      </span>
+                      <span className="text-[8px] font-mono text-slate-500">•</span>
+                      <span className="text-[8px] font-mono font-bold text-slate-300 uppercase">
+                        {selectedGameInfo.genre}
+                      </span>
                     </div>
 
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-mono font-extrabold tracking-widest text-slate-400 uppercase">
-                          ACTIVE BATTLEGROUND
-                        </span>
-                        <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded bg-[#161E30] text-slate-300 border border-[#27344D]">
-                          {selectedGameInfo.genre}
-                        </span>
-                      </div>
-                      <h3
-                        className="font-display text-lg sm:text-xl font-black uppercase tracking-wide leading-tight flex items-center gap-2"
-                        style={{ color: selectedGameInfo.accentColor }}
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="font-display text-base sm:text-lg font-black uppercase tracking-wider leading-none transition-colors"
+                        style={{
+                          color: selectedGameInfo.accentColor,
+                          textShadow: `0 0 12px ${selectedGameInfo.accentColor}50`,
+                        }}
                       >
-                        <span
-                          className="w-2 h-2 rounded-full animate-pulse shrink-0"
-                          style={{ backgroundColor: selectedGameInfo.accentColor }}
-                        />
                         {selectedGameInfo.name}
-                      </h3>
+                      </span>
+                      <span className="text-[8px] font-mono font-bold text-slate-400 group-hover:text-white uppercase tracking-wider bg-[#141A29] px-1.5 py-0.5 border border-[#232D44] flex items-center gap-0.5 transition-colors">
+                        <span>SWITCH</span>
+                        <span className="text-primary-brand">▾</span>
+                      </span>
                     </div>
                   </div>
-                </div>
+                </button>
               )}
             </div>
 
@@ -242,146 +266,208 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Hero Live Esports Broadcast & Match Hub Showcase */}
-          <div className="lg:col-span-5 w-full mt-6 lg:mt-0 space-y-4">
-            {/* Dynamic Game Background Artwork Banner Overlay */}
-            <div className="relative w-full h-28 rounded-2xl overflow-hidden border border-[#1C2538] shadow-lg group">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={selectedGameInfo?.image || "/valorant.png"}
-                alt="Game Title Artwork"
-                className="w-full h-full object-cover object-center opacity-45 group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#080C14] via-[#080C14]/70 to-transparent" />
+          {/* Unified High-Tech Esports Console & Live Matchday Hub */}
+          <div className="lg:col-span-5 w-full mt-6 lg:mt-0">
+            <div 
+              className="relative overflow-hidden bg-[#0A0D18] border border-[#1E293B] shadow-2xl transition-all duration-300 hover:border-primary-brand/50"
+              style={{
+                clipPath: "polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))",
+              }}
+            >
+              {/* Dynamic Game Background Artwork Banner */}
+              <div className="relative w-full h-32 overflow-hidden border-b border-[#182338]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={selectedGameInfo?.image || "/valorant.png"}
+                  alt="Game Title Artwork"
+                  className="w-full h-full object-cover object-center opacity-40 transition-transform duration-700 hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0A0D18] via-[#0A0D18]/60 to-transparent" />
 
-              {/* Header Title & Game Switcher Selector */}
-              <div className="absolute inset-0 p-4 flex flex-col justify-between">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-[10px] font-mono font-bold tracking-widest text-slate-300 bg-[#080C14]/90 px-2.5 py-1 rounded-full border border-[#232D44] flex items-center gap-1.5 shadow-sm">
-                    <span className="w-2 h-2 rounded-full bg-slate-400" />
-                    LIVE MATCHDAY SHOWCASE
-                  </span>
-
-                  <button
-                    onClick={openGameSelector}
-                    className="text-[10px] font-mono font-bold text-slate-200 bg-[#080C14]/90 hover:bg-[#141A29] px-2.5 py-1 rounded-full border border-[#232D44] transition-all cursor-pointer"
-                  >
-                    {selectedGameInfo?.shortName || "VALO"} TITLE ▾
-                  </button>
-                </div>
-
-                <div className="flex items-end justify-between">
-                  <div>
-                    <span className="text-xs font-display font-bold uppercase text-white tracking-wide block">
-                      {selectedGameInfo?.name || "VALORANT"} CIRCUIT
+                {/* Banner Header Overlay */}
+                <div className="absolute inset-0 p-4 flex flex-col justify-between z-10">
+                  <div className="flex items-center justify-between gap-2">
+                    <span 
+                      className="text-[9px] font-mono font-black tracking-widest text-primary-brand bg-black/80 backdrop-blur-md px-2.5 py-1 border border-primary-brand/40 flex items-center gap-1.5 shadow-md"
+                      style={{
+                        clipPath: "polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)",
+                      }}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary-brand animate-pulse" />
+                      LIVE MATCHDAY SHOWCASE
                     </span>
-                    <span className="text-[10px] font-mono text-slate-300">
-                      Official Inter-University Scrim Board
-                    </span>
+
+                    <button
+                      onClick={openGameSelector}
+                      className="text-[9px] font-mono font-bold text-slate-200 bg-black/80 hover:bg-[#141A29] px-2.5 py-1 border border-[#232D44] transition-all cursor-pointer flex items-center gap-1"
+                      style={{
+                        clipPath: "polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)",
+                      }}
+                    >
+                      <span>{selectedGameInfo?.shortName || "VALO"} TITLE</span>
+                      <span className="text-primary-brand">▾</span>
+                    </button>
                   </div>
 
-                  <span className="text-[10px] font-mono font-bold text-slate-300 bg-[#141A29] px-2.5 py-0.5 rounded border border-[#232D44]">
-                    MATCHMAKING ACTIVE
-                  </span>
-                </div>
-              </div>
-            </div>
+                  <div className="flex items-end justify-between">
+                    <div>
+                      <h3 className="text-sm font-display font-black uppercase text-white tracking-wider block">
+                        {selectedGameInfo?.name || "VALORANT"} CIRCUIT
+                      </h3>
+                      <span className="text-[9px] font-mono text-slate-400">
+                        Official Inter-University Scrim Board & Brackets
+                      </span>
+                    </div>
 
-            {/* Featured Head-to-Head Team VS Stage */}
-            <div className="p-4 rounded-2xl bg-[#0D121F]/90 border border-[#1E293B] space-y-4 shadow-xl backdrop-blur-xl">
-              <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 border-b border-[#1C2538] pb-2">
-                <span className="text-slate-300 font-bold uppercase tracking-wider">
-                  {featuredMatches[0]?.stage || "FEATURED MATCHDAY"}
-                </span>
-                <span className="text-slate-300 font-bold bg-[#141A29] px-2 py-0.5 rounded border border-[#232D44]">
-                  {featuredMatches[0]?.statusText || "BO3"}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between gap-3">
-                {/* Team 1 Crest */}
-                <div className="flex flex-col items-center text-center space-y-1.5 flex-1 min-w-0">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary-brand/80 to-rose-700 text-white flex items-center justify-center font-display text-base font-bold shadow-lg border border-white/10 shrink-0">
-                    {featuredMatches[0]?.team1.code || "UMAK"}
-                  </div>
-                  <span className="font-sans text-xs font-bold text-white truncate max-w-full block">
-                    {featuredMatches[0]?.team1.name || "UMak Varsity"}
-                  </span>
-                  <span className="text-[9px] font-mono text-slate-400">Host Squad</span>
-                </div>
-
-                {/* Score & VS Badge */}
-                <div className="flex flex-col items-center justify-center shrink-0 px-2">
-                  <div className="flex items-center gap-2 bg-[#141A29] px-3.5 py-1.5 rounded-2xl border border-[#232D44]">
-                    <span className="font-display text-2xl font-bold text-white">
-                      0
-                    </span>
-                    <span className="font-mono text-xs text-slate-500 font-bold">:</span>
-                    <span className="font-display text-2xl font-bold text-white">
-                      0
+                    <span 
+                      className="text-[8px] font-mono font-bold text-emerald-400 bg-emerald-950/40 px-2 py-0.5 border border-emerald-800/50"
+                      style={{
+                        clipPath: "polygon(2px 0, 100% 0, calc(100% - 2px) 100%, 0 100%)",
+                      }}
+                    >
+                      MATCHMAKING ACTIVE
                     </span>
                   </div>
-                  <span className="text-[9px] font-mono text-slate-400 font-bold mt-1">
-                    UNSTARTED MATCH
-                  </span>
-                </div>
-
-                {/* Team 2 Crest */}
-                <div className="flex flex-col items-center text-center space-y-1.5 flex-1 min-w-0">
-                  <div className="w-12 h-12 rounded-2xl bg-[#141A29] text-white flex items-center justify-center font-display text-base font-bold shadow-md border border-[#232D44] shrink-0">
-                    {featuredMatches[0]?.team2.code || "DLSU"}
-                  </div>
-                  <span className="font-sans text-xs font-bold text-white truncate max-w-full block">
-                    {featuredMatches[0]?.team2.name || "Challenger"}
-                  </span>
-                  <span className="text-[9px] font-mono text-slate-400">Challenger</span>
                 </div>
               </div>
-            </div>
 
-            {/* Circuit Top Leaderboard Ticker */}
-            <div className="p-3.5 rounded-2xl bg-[#0D121F]/90 border border-[#1E293B] space-y-2 shadow-lg backdrop-blur-xl">
-              <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
-                <span>CIRCUIT LEADERBOARD STANDINGS</span>
-                <Link href="/leaderboard" className="text-primary-brand hover:underline font-bold">
-                  View Rankings →
-                </Link>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-mono">
-                <div className="p-2 rounded-xl bg-[#141A29] border border-[#232D44]">
-                  <span className="text-slate-300 font-bold block">#1 UMAK</span>
-                  <span className="text-slate-400 block">1,500.0 PTS</span>
-                </div>
-                <div className="p-2 rounded-xl bg-[#141A29] border border-[#232D44]">
-                  <span className="text-slate-300 font-bold block">#2 DLSU</span>
-                  <span className="text-slate-400 block">1,480.0 PTS</span>
-                </div>
-                <div className="p-2 rounded-xl bg-[#141A29] border border-[#232D44]">
-                  <span className="text-slate-300 font-bold block">#3 UST</span>
-                  <span className="text-slate-400 block">1,450.0 PTS</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Action Buttons (Only visible for authenticated athletes) */}
-            {isLoggedIn && (
-              <div className="pt-1 grid grid-cols-2 gap-3">
-                <Link
-                  href="/scrims"
-                  className="h-11 game-theme-btn font-sans text-xs font-bold uppercase tracking-wider shadow-lg flex items-center justify-center gap-1.5 transition-all active:scale-[0.98]"
+              {/* Console Body: Duel Stage + Standings + War Room CTA */}
+              <div className="p-4 sm:p-5 space-y-4 bg-gradient-to-b from-[#0A0D18] via-[#080B14] to-[#0A0D18]">
+                
+                {/* Featured Head-to-Head Duel Stage */}
+                <div 
+                  className="p-3.5 bg-[#060912] border border-[#182338] shadow-inner"
+                  style={{
+                    clipPath: "polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))",
+                  }}
                 >
-                  <span>Enter War Room</span>
-                </Link>
+                  <div className="flex items-center justify-between text-[9px] font-mono text-slate-400 border-b border-[#141A29] pb-2 mb-3">
+                    <span className="text-slate-300 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary-brand" />
+                      FEATURED MATCHDAY • BO3
+                    </span>
+                    <span className="text-emerald-400 font-bold">MATCH READY</span>
+                  </div>
 
-                <Link
-                  href="/scrims"
-                  className="h-11 tactical-btn-secondary text-white font-sans text-xs font-semibold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-md"
+                  <div className="flex items-center justify-between gap-3">
+                    {/* Team 1 Crest */}
+                    <div className="flex flex-col items-center text-center space-y-1 flex-1 min-w-0">
+                      <div 
+                        className="w-11 h-11 bg-gradient-to-br from-primary-brand/90 to-[#141A29] text-white flex items-center justify-center font-display text-sm font-black shadow-lg border border-white/20 shrink-0"
+                        style={{
+                          clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
+                        }}
+                      >
+                        UMAK
+                      </div>
+                      <span className="font-display text-xs font-black text-white truncate max-w-full block uppercase">
+                        UMak Varsity
+                      </span>
+                      <span className="text-[8px] font-mono text-slate-500 uppercase">HOST SQUAD</span>
+                    </div>
+
+                    {/* Score & VS Badge */}
+                    <div className="flex flex-col items-center justify-center shrink-0 px-2">
+                      <div 
+                        className="flex items-center gap-2 bg-[#101625] px-3 py-1 border border-[#1E293B] shadow-inner"
+                        style={{
+                          clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
+                        }}
+                      >
+                        <span className="font-display text-xl font-black text-white">0</span>
+                        <span className="font-mono text-xs text-primary-brand font-black">:</span>
+                        <span className="font-display text-xl font-black text-white">0</span>
+                      </div>
+                      <span className="text-[8px] font-mono text-slate-400 font-bold mt-1 tracking-wider uppercase">
+                        WAR ROOM OPEN
+                      </span>
+                    </div>
+
+                    {/* Team 2 Crest */}
+                    <div className="flex flex-col items-center text-center space-y-1 flex-1 min-w-0">
+                      <div 
+                        className="w-11 h-11 bg-[#141A29] text-slate-200 flex items-center justify-center font-display text-sm font-black shadow-md border border-[#232D44] shrink-0"
+                        style={{
+                          clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
+                        }}
+                      >
+                        DLSU
+                      </div>
+                      <span className="font-display text-xs font-black text-white truncate max-w-full block uppercase">
+                        DLSU Archers
+                      </span>
+                      <span className="text-[8px] font-mono text-slate-500 uppercase">CHALLENGER</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Circuit Leaderboard Ticker */}
+                <div 
+                  className="p-3 bg-[#060912] border border-[#182338]"
+                  style={{
+                    clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+                  }}
                 >
-                  <span>Browse Scrims →</span>
-                </Link>
+                  <div className="flex items-center justify-between text-[9px] font-mono text-slate-400 mb-2">
+                    <span className="font-bold tracking-wider uppercase">CIRCUIT STANDINGS</span>
+                    <Link href="/leaderboard" className="text-primary-brand hover:underline font-bold flex items-center gap-1">
+                      <span>View Full Board</span>
+                      <span>→</span>
+                    </Link>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 text-center text-[9px] font-mono">
+                    <div 
+                      className="p-1.5 bg-[#0D121F] border border-amber-500/30 shadow-sm"
+                      style={{
+                        clipPath: "polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)",
+                      }}
+                    >
+                      <span className="text-amber-400 font-black block">🥇 #1 UMAK</span>
+                      <span className="text-slate-300 font-bold block mt-0.5">1,500 PTS</span>
+                    </div>
+                    <div 
+                      className="p-1.5 bg-[#0D121F] border border-slate-400/30 shadow-sm"
+                      style={{
+                        clipPath: "polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)",
+                      }}
+                    >
+                      <span className="text-slate-200 font-black block">🥈 #2 DLSU</span>
+                      <span className="text-slate-300 font-bold block mt-0.5">1,480 PTS</span>
+                    </div>
+                    <div 
+                      className="p-1.5 bg-[#0D121F] border border-amber-700/30 shadow-sm"
+                      style={{
+                        clipPath: "polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)",
+                      }}
+                    >
+                      <span className="text-amber-600 font-black block">🥉 #3 UST</span>
+                      <span className="text-slate-300 font-bold block mt-0.5">1,450 PTS</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Hero Action Controls (Only visible for authenticated athletes) */}
+                {isLoggedIn && (
+                  <div className="grid grid-cols-2 gap-3 pt-1">
+                    <Link
+                      href="/scrims"
+                      className="h-10 game-theme-btn font-display text-xs font-black uppercase tracking-wider shadow-lg flex items-center justify-center gap-1.5"
+                    >
+                      <span>Enter War Room</span>
+                    </Link>
+
+                    <Link
+                      href="/scrims"
+                      className="h-10 tactical-btn-secondary font-display text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md"
+                    >
+                      <span>Browse Scrims →</span>
+                    </Link>
+                  </div>
+                )}
+
               </div>
-            )}
+            </div>
           </div>
         </div>
       </section>

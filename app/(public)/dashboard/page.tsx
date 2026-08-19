@@ -253,13 +253,13 @@ export default function DashboardPage() {
           <div className="space-y-5">
             
             <div 
-              className="p-5 sm:p-6 bg-[#0A0D18] border border-[#1E293B] space-y-4 shadow-xl relative"
+              className="p-5 sm:p-6 bg-[#090C16] border border-[#1E293B] space-y-4 shadow-2xl relative overflow-hidden"
               style={{
                 clipPath: "polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))",
               }}
             >
               {/* Top Accent Line */}
-              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary-brand/80 via-primary-brand/20 to-transparent" />
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary-brand via-primary-brand/30 to-transparent" />
 
               <div className="border-b border-[#182338] pb-3 relative z-10">
                 <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-primary-brand block">
@@ -273,14 +273,14 @@ export default function DashboardPage() {
               <div className="space-y-2.5 relative z-10">
                 <Link
                   href="/scrims"
-                  className="w-full p-3.5 bg-[#060812] hover:bg-[#121929] border border-[#182338] hover:border-primary-brand/50 flex items-center justify-between transition-all group cursor-pointer shadow-inner"
+                  className="w-full p-3.5 bg-[#050711] hover:bg-[#101626] border border-[#162034] hover:border-primary-brand/50 flex items-center justify-between transition-all group cursor-pointer shadow-inner"
                   style={{
                     clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
                   }}
                 >
                   <div className="flex items-center gap-3">
                     <div 
-                      className="w-8 h-8 bg-[#121929] text-primary-brand border border-[#202C45] flex items-center justify-center shrink-0"
+                      className="w-9 h-9 bg-[#0E1322] text-primary-brand border border-[#1E2942] flex items-center justify-center shrink-0 group-hover:border-primary-brand/60"
                       style={{
                         clipPath: "polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%)",
                       }}
@@ -288,27 +288,32 @@ export default function DashboardPage() {
                       <SwordsIcon className="w-4 h-4" />
                     </div>
                     <div>
-                      <span className="font-display text-xs font-bold text-white uppercase tracking-wide block group-hover:text-primary-brand transition-colors">
-                        Practice Scrims
-                      </span>
-                      <span className="text-[10px] text-slate-400 font-sans block">
+                      <div className="flex items-center gap-2">
+                        <span className="font-display text-xs font-bold text-white uppercase tracking-wide block group-hover:text-primary-brand transition-colors">
+                          Practice Scrims
+                        </span>
+                        <span className="text-[8px] font-mono font-bold text-slate-300 bg-[#0E1322] px-1.5 py-0.2 border border-[#1E2942]">
+                          LOBBIES
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-sans block mt-0.5">
                         Custom lobbies & match veto
                       </span>
                     </div>
                   </div>
-                  <span className="text-xs text-slate-500 group-hover:text-slate-300 group-hover:translate-x-1 transition-all">→</span>
+                  <span className="text-xs text-slate-500 group-hover:text-white group-hover:translate-x-1 transition-all">→</span>
                 </Link>
 
                 <Link
                   href="/tournaments"
-                  className="w-full p-3.5 bg-[#060812] hover:bg-[#121929] border border-[#182338] hover:border-primary-brand/50 flex items-center justify-between transition-all group cursor-pointer shadow-inner"
+                  className="w-full p-3.5 bg-[#050711] hover:bg-[#101626] border border-[#162034] hover:border-primary-brand/50 flex items-center justify-between transition-all group cursor-pointer shadow-inner"
                   style={{
                     clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
                   }}
                 >
                   <div className="flex items-center gap-3">
                     <div 
-                      className="w-8 h-8 bg-[#121929] text-amber-400 border border-[#202C45] flex items-center justify-center shrink-0"
+                      className="w-9 h-9 bg-[#0E1322] text-slate-300 border border-[#1E2942] flex items-center justify-center shrink-0 group-hover:border-primary-brand/60"
                       style={{
                         clipPath: "polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%)",
                       }}
@@ -316,27 +321,32 @@ export default function DashboardPage() {
                       <TrophyIcon className="w-4 h-4" />
                     </div>
                     <div>
-                      <span className="font-display text-xs font-bold text-white uppercase tracking-wide block group-hover:text-primary-brand transition-colors">
-                        Tournaments & Brackets
-                      </span>
-                      <span className="text-[10px] text-slate-400 font-sans block">
+                      <div className="flex items-center gap-2">
+                        <span className="font-display text-xs font-bold text-white uppercase tracking-wide block group-hover:text-primary-brand transition-colors">
+                          Tournaments & Brackets
+                        </span>
+                        <span className="text-[8px] font-mono font-bold text-slate-300 bg-[#0E1322] px-1.5 py-0.2 border border-[#1E2942]">
+                          BRACKETS
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-sans block mt-0.5">
                         Official collegiate circuit
                       </span>
                     </div>
                   </div>
-                  <span className="text-xs text-slate-500 group-hover:text-slate-300 group-hover:translate-x-1 transition-all">→</span>
+                  <span className="text-xs text-slate-500 group-hover:text-white group-hover:translate-x-1 transition-all">→</span>
                 </Link>
 
                 <Link
                   href="/recruit"
-                  className="w-full p-3.5 bg-[#060812] hover:bg-[#121929] border border-[#182338] hover:border-primary-brand/50 flex items-center justify-between transition-all group cursor-pointer shadow-inner"
+                  className="w-full p-3.5 bg-[#050711] hover:bg-[#101626] border border-[#162034] hover:border-primary-brand/50 flex items-center justify-between transition-all group cursor-pointer shadow-inner"
                   style={{
                     clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
                   }}
                 >
                   <div className="flex items-center gap-3">
                     <div 
-                      className="w-8 h-8 bg-[#121929] text-slate-300 border border-[#202C45] flex items-center justify-center shrink-0"
+                      className="w-9 h-9 bg-[#0E1322] text-slate-300 border border-[#1E2942] flex items-center justify-center shrink-0 group-hover:border-primary-brand/60"
                       style={{
                         clipPath: "polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%)",
                       }}
@@ -344,15 +354,20 @@ export default function DashboardPage() {
                       <UsersIcon className="w-4 h-4" />
                     </div>
                     <div>
-                      <span className="font-display text-xs font-bold text-white uppercase tracking-wide block group-hover:text-primary-brand transition-colors">
-                        Recruitment & LFT
-                      </span>
-                      <span className="text-[10px] text-slate-400 font-sans block">
+                      <div className="flex items-center gap-2">
+                        <span className="font-display text-xs font-bold text-white uppercase tracking-wide block group-hover:text-primary-brand transition-colors">
+                          Recruitment & LFT
+                        </span>
+                        <span className="text-[8px] font-mono font-bold text-slate-400 bg-[#0E1322] px-1.5 py-0.2 border border-[#1E2942]">
+                          SCOUTING
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-sans block mt-0.5">
                         Find varsity teammates
                       </span>
                     </div>
                   </div>
-                  <span className="text-xs text-slate-500 group-hover:text-slate-300 group-hover:translate-x-1 transition-all">→</span>
+                  <span className="text-xs text-slate-500 group-hover:text-white group-hover:translate-x-1 transition-all">→</span>
                 </Link>
               </div>
             </div>
