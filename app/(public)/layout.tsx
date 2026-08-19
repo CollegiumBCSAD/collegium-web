@@ -14,7 +14,6 @@ import ChatQuickAccess from "@/components/ChatQuickAccess";
 import ScrimWarRoomModal from "@/components/scrims/ScrimWarRoomModal";
 import GameSelectorModal from "@/components/GameSelectorModal";
 import HeaderGameSwitcher from "@/components/HeaderGameSwitcher";
-import ActiveArenaBanner from "@/components/ActiveArenaBanner";
 import { HomeIcon, PlusIcon, UsersIcon, SwordsIcon } from "@/components/ui/Icons";
 
 function HeaderAuthControls() {
@@ -35,7 +34,7 @@ function HeaderAuthControls() {
   }, []);
 
   if (!isLoaded) {
-    return <div className="h-10 w-32 rounded-full bg-raised-panel/60 border border-raised-panel animate-pulse" />;
+    return <div className="h-9 w-28 rounded-xl bg-[#141A29] border border-[#232D44] animate-pulse" />;
   }
 
   if (isLoggedIn && user) {
@@ -43,17 +42,24 @@ function HeaderAuthControls() {
       <div className="relative" ref={dropdownRef}>
         <button
           onClick={() => setDropdownOpen(!dropdownOpen)}
-          className="flex items-center gap-3 px-4 py-2 rounded-full border border-[#232D44] bg-[#0D121F]/90 hover:bg-[#141A29] hover:border-white/20 transition-all duration-200 focus:outline-none shadow-md cursor-pointer group active:scale-95"
+          className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-[#1E293B] bg-[#0A0D18] hover:border-primary-brand/60 hover:bg-[#101524] transition-all duration-200 focus:outline-none shadow-md cursor-pointer group"
         >
-          <div className="w-7 h-7 rounded-full bg-primary-brand text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-sm group-hover:scale-110 transition-transform duration-200">
+          {/* Athlete Avatar Badge */}
+          <div 
+            className="w-7 h-7 rounded-lg flex items-center justify-center font-display font-black text-xs shrink-0 shadow-sm group-hover:scale-105 transition-transform duration-200"
+            style={{
+              backgroundColor: "var(--primary-brand)",
+              color: "var(--game-btn-text, #FFFFFF)",
+            }}
+          >
             {user.displayName.charAt(0)}
           </div>
-          <div className="hidden sm:flex flex-col text-left leading-tight">
-            <span className="text-xs font-sans font-bold text-white">
+          <div className="hidden sm:flex flex-col text-left leading-tight pr-1">
+            <span className="text-xs font-display font-black tracking-wide text-white uppercase group-hover:text-primary-brand transition-colors">
               {user.displayName}
             </span>
             <span className="text-[10px] font-mono text-slate-400">
-              {user.university?.name?.split(" ")[0] || "Athlete"} · {user.role || "Player"}
+              {user.university?.name?.split(" ")[0] || "University"} • <span className="text-slate-300 font-bold uppercase">{user.role || "ATHLETE"}</span>
             </span>
           </div>
           <svg
@@ -64,17 +70,17 @@ function HeaderAuthControls() {
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
           </svg>
         </button>
 
         {dropdownOpen && (
-          <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-[#1E293B] bg-[#0D121F] shadow-2xl z-50 py-2 animate-dropdown-pop">
-            <div className="px-4 py-2 border-b border-[#1C2538]">
+          <div className="absolute right-0 mt-2 w-56 rounded-xl bg-[#0A0D18] border border-[#1E293B] shadow-2xl z-50 py-2 animate-dropdown-pop overflow-hidden">
+            <div className="px-4 py-2 border-b border-[#182338]">
               <span className="text-xs font-display font-black text-white uppercase block">
                 {user.displayName}
               </span>
-              <span className="text-[10px] font-mono text-slate-400 block mt-0.5">
+              <span className="text-[10px] font-mono text-slate-400 block mt-0.5 truncate">
                 {user.email}
               </span>
             </div>
@@ -82,7 +88,7 @@ function HeaderAuthControls() {
               <Link
                 href="/dashboard"
                 onClick={() => setDropdownOpen(false)}
-                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-sans font-semibold text-slate-300 hover:text-white hover:bg-[#141A29] hover:translate-x-1 transition-all duration-150"
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-mono font-bold uppercase tracking-wider text-slate-300 hover:text-white hover:bg-[#141A29] hover:translate-x-1 transition-all duration-150"
               >
                 <HomeIcon className="w-3.5 h-3.5 text-primary-brand" />
                 <span>My Dashboard</span>
@@ -90,7 +96,7 @@ function HeaderAuthControls() {
               <Link
                 href="/team/create"
                 onClick={() => setDropdownOpen(false)}
-                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-sans font-semibold text-slate-300 hover:text-white hover:bg-[#141A29] hover:translate-x-1 transition-all duration-150"
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-mono font-bold uppercase tracking-wider text-slate-300 hover:text-white hover:bg-[#141A29] hover:translate-x-1 transition-all duration-150"
               >
                 <PlusIcon className="w-3.5 h-3.5 text-primary-brand" />
                 <span>Create Squad</span>
@@ -98,7 +104,7 @@ function HeaderAuthControls() {
               <Link
                 href="/team/join"
                 onClick={() => setDropdownOpen(false)}
-                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-sans font-semibold text-slate-300 hover:text-white hover:bg-[#141A29] hover:translate-x-1 transition-all duration-150"
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-mono font-bold uppercase tracking-wider text-slate-300 hover:text-white hover:bg-[#141A29] hover:translate-x-1 transition-all duration-150"
               >
                 <UsersIcon className="w-3.5 h-3.5 text-primary-brand" />
                 <span>Join Squad</span>
@@ -106,19 +112,19 @@ function HeaderAuthControls() {
               <Link
                 href="/scrims"
                 onClick={() => setDropdownOpen(false)}
-                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-sans font-semibold text-slate-300 hover:text-white hover:bg-[#141A29] hover:translate-x-1 transition-all duration-150"
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-mono font-bold uppercase tracking-wider text-slate-300 hover:text-white hover:bg-[#141A29] hover:translate-x-1 transition-all duration-150"
               >
                 <SwordsIcon className="w-3.5 h-3.5 text-primary-brand" />
                 <span>Scrims Board</span>
               </Link>
             </div>
-            <div className="pt-1 border-t border-[#1C2538] px-2 mt-1">
+            <div className="pt-1 border-t border-[#182338] px-2 mt-1">
               <button
                 onClick={() => {
                   logoutUser();
                   setDropdownOpen(false);
                 }}
-                className="w-full text-left px-3 py-1.5 rounded-lg text-xs font-sans font-semibold text-rose-400 hover:bg-rose-950/30 transition-colors cursor-pointer"
+                className="w-full text-left px-3 py-1.5 text-xs font-mono font-bold uppercase tracking-wider text-rose-400 hover:bg-rose-950/30 transition-colors cursor-pointer"
               >
                 Log Out
               </button>
@@ -158,7 +164,7 @@ function NavigationLinks({ mobile = false, onClose }: { mobile?: boolean; onClos
 
   if (mobile) {
     return (
-      <nav className="flex flex-col gap-4">
+      <nav className="flex flex-col gap-2">
         {navItems.map((item) => {
           const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
           return (
@@ -166,8 +172,10 @@ function NavigationLinks({ mobile = false, onClose }: { mobile?: boolean; onClos
               key={item.href}
               href={item.href}
               onClick={onClose}
-              className={`font-sans text-base font-bold transition-all duration-200 px-3 py-2 rounded-xl ${
-                isActive ? "text-primary-brand bg-primary-brand/10 border border-primary-brand/30" : "text-secondary-text hover:text-foreground"
+              className={`font-display text-sm font-black uppercase tracking-wider transition-all duration-200 px-4 py-2.5 rounded-lg ${
+                isActive 
+                  ? "text-primary-brand bg-primary-brand/10 border border-primary-brand/30" 
+                  : "text-slate-300 hover:text-white"
               }`}
             >
               {item.name}
@@ -179,29 +187,32 @@ function NavigationLinks({ mobile = false, onClose }: { mobile?: boolean; onClos
   }
 
   return (
-    <nav className="hidden md:flex items-center gap-1.5 h-16">
+    <nav className="hidden md:flex items-center gap-1 sm:gap-2 h-16">
       {navItems.map((item) => {
         const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
         return (
           <Link
             key={item.href}
             href={item.href}
-            className={`font-sans text-xs sm:text-sm font-bold tracking-wide uppercase transition-all duration-200 relative flex items-center h-10 px-4 rounded-xl border group ${
+            className={`font-display text-xs sm:text-sm font-black tracking-wider uppercase transition-all duration-200 relative flex items-center h-10 px-3.5 sm:px-4 cursor-pointer group ${
               isActive
-                ? "text-foreground bg-[#141926]/90 border-[#26314A] shadow-lg shadow-black/40"
-                : "text-secondary-text border-transparent hover:text-foreground hover:bg-[#121622]/60 hover:border-[#1E273A]"
+                ? "text-white"
+                : "text-slate-400 hover:text-white"
             }`}
           >
-            <span className="relative z-10 transition-transform duration-200 group-hover:scale-[1.03]">
+            <span className="relative z-10 transition-transform duration-200 group-hover:scale-105">
               {item.name}
             </span>
 
-            {/* Glowing Active Underline Indicator */}
+            {/* Sleek Underline Cyber Lightbar */}
             {isActive && (
-              <>
-                <span className="absolute bottom-0 left-2 right-2 h-[2.5px] rounded-full bg-gradient-to-r from-primary-brand/20 via-primary-brand to-primary-brand/20 shadow-[0_0_10px_rgba(229,58,76,0.9)] animate-nav-glow" />
-                <span className="absolute inset-0 rounded-xl bg-primary-brand/5 pointer-events-none" />
-              </>
+              <span 
+                className="absolute bottom-1 left-2.5 right-2.5 h-[2px] rounded-full"
+                style={{
+                  backgroundColor: "var(--primary-brand)",
+                  boxShadow: "0 0 10px var(--primary-brand)",
+                }}
+              />
             )}
           </Link>
         );
@@ -229,7 +240,6 @@ export default function PublicLayout({
   children: React.ReactNode;
 }>) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const pathname = usePathname();
 
   return (
     <AuthProvider>
@@ -239,10 +249,10 @@ export default function PublicLayout({
           <div className="flex min-h-screen flex-col bg-background text-foreground relative">
             <GameSelectorModal />
 
-            <header className="sticky top-0 z-40 border-b border-raised-panel bg-background/95 backdrop-blur-md">
+            <header className="sticky top-0 z-40 border-b border-[#182338] bg-[#070912]/95 backdrop-blur-md">
               <div className="flex h-16 items-center justify-between px-4 sm:px-6 md:px-10">
                 <div className="flex items-center gap-6 sm:gap-8">
-                  <Link href="/" className="flex items-center gap-2.5 font-display text-xl font-extrabold tracking-wider text-foreground group">
+                  <Link href="/" className="flex items-center gap-2.5 font-display text-xl font-black tracking-wider text-white group">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src="/logo.png" alt="Collegium Logo" className="w-7 h-7 object-contain rounded-md shadow-md shadow-primary-brand/30 transition-transform duration-200 group-hover:scale-110" />
                     <span className="group-hover:text-primary-brand transition-colors">COLLEGIUM</span>
@@ -250,7 +260,7 @@ export default function PublicLayout({
                   <NavigationLinks />
                 </div>
 
-                <div className="flex items-center gap-3 sm:gap-4">
+                <div className="flex items-center gap-2.5 sm:gap-3.5">
                   <HeaderGameSwitcher />
                   <ChatQuickAccess />
                   <NotificationBell />
@@ -258,34 +268,34 @@ export default function PublicLayout({
 
                   <button
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                    className="flex h-10 w-10 items-center justify-center rounded-xl md:hidden border border-raised-panel bg-card-bg hover:bg-raised-panel transition-all"
+                    className="flex md:hidden h-9 w-9 items-center justify-center rounded-xl bg-[#141A29] border border-[#232D44] text-slate-300 hover:text-white"
+                    aria-label="Toggle mobile navigation menu"
                   >
-                    <svg
-                      className="h-6 w-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       {mobileMenuOpen ? (
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       ) : (
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                       )}
                     </svg>
                   </button>
                 </div>
               </div>
+
+              {mobileMenuOpen && (
+                <div className="border-b border-[#182338] bg-[#0A0D18] p-4 md:hidden animate-page-slide-in">
+                  <NavigationLinks mobile onClose={() => setMobileMenuOpen(false)} />
+                  <div className="mt-4 pt-4 border-t border-[#182338] flex flex-col gap-2">
+                    <HeaderAuthControls />
+                  </div>
+                </div>
+              )}
             </header>
 
-            {mobileMenuOpen && (
-              <div className="md:hidden border-b border-raised-panel bg-[#0C0F17] px-6 py-4 animate-in slide-in-from-top-2 duration-200">
-                <NavigationLinks mobile onClose={() => setMobileMenuOpen(false)} />
-              </div>
-            )}
+            <main className="flex flex-1 flex-col">{children}</main>
 
-            <main key={pathname} className="flex-1 flex flex-col animate-page-slide-in">{children}</main>
-            <FloatingNotificationToast />
             <GlobalWarRoomModal />
+            <FloatingNotificationToast />
           </div>
         </WarRoomProvider>
         </NotificationProvider>
@@ -293,4 +303,3 @@ export default function PublicLayout({
     </AuthProvider>
   );
 }
-

@@ -36,6 +36,16 @@ function mapUniversitiesToLeaderboard(universities: University[], game: string):
   }));
 }
 
+/**
+ * Calculates a single progressive color from 0% (Red) -> 50% (Yellow/Amber) -> 100% (Green)
+ */
+function getWinRateColor(rate: number): string {
+  const clamped = Math.max(0, Math.min(100, rate));
+  // Hue transitions smoothly from 0 (Red) up to 142 (Emerald Green)
+  const hue = (clamped / 100) * 142;
+  return `hsl(${hue.toFixed(1)}, 85%, 50%)`;
+}
+
 export default function LeaderboardPage() {
   const { selectedGame: globalGame, selectGame } = useGame();
   const activeGame = globalGame || "valo";
@@ -123,7 +133,7 @@ export default function LeaderboardPage() {
           </div>
         </div>
 
-        {/* 3D Stepped Championship Podium Cards (No Enclosing Background) */}
+        {/* 3D Stepped Championship Podium Cards */}
         {!isLoading && standings.length >= 3 && (
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b border-[#1E2538] pb-3">
@@ -178,7 +188,7 @@ export default function LeaderboardPage() {
                       </div>
                     </div>
 
-                    {/* Recessed Telemetry Box */}
+                    {/* Recessed Telemetry Box with Single Progressive Color */}
                     <div className="w-full mt-4 p-3 bg-[#05070E] border border-[#182236] flex items-center justify-between font-mono text-xs shadow-inner">
                       <div>
                         <span className="text-[8px] text-slate-400 block uppercase font-bold">GLICKO-2</span>
@@ -186,7 +196,9 @@ export default function LeaderboardPage() {
                       </div>
                       <div className="text-right">
                         <span className="text-[8px] text-slate-400 block uppercase font-bold">WIN RATE</span>
-                        <span className="font-bold text-slate-200 text-base">{top2.winRate}%</span>
+                        <span className="font-bold text-base" style={{ color: getWinRateColor(top2.winRate) }}>
+                          {top2.winRate}%
+                        </span>
                       </div>
                     </div>
                   </Link>
@@ -247,7 +259,7 @@ export default function LeaderboardPage() {
                       </div>
                     </div>
 
-                    {/* Recessed Gold Telemetry Box */}
+                    {/* Recessed Gold Telemetry Box with Single Progressive Color */}
                     <div className="w-full mt-4 p-3.5 bg-[#080703] border border-amber-500/30 flex items-center justify-between font-mono shadow-inner">
                       <div>
                         <span className="text-[8px] text-amber-400/80 block uppercase font-bold">GLICKO-2 SCORE</span>
@@ -255,7 +267,9 @@ export default function LeaderboardPage() {
                       </div>
                       <div className="text-right">
                         <span className="text-[8px] text-amber-400/80 block uppercase font-bold">CIRCUIT WIN RATE</span>
-                        <span className="font-bold text-white text-lg">{top1.winRate}%</span>
+                        <span className="font-bold text-lg" style={{ color: getWinRateColor(top1.winRate) }}>
+                          {top1.winRate}%
+                        </span>
                       </div>
                     </div>
                   </Link>
@@ -311,7 +325,7 @@ export default function LeaderboardPage() {
                       </div>
                     </div>
 
-                    {/* Recessed Telemetry Box */}
+                    {/* Recessed Telemetry Box with Single Progressive Color */}
                     <div className="w-full mt-4 p-3 bg-[#05070E] border border-[#182236] flex items-center justify-between font-mono text-xs shadow-inner">
                       <div>
                         <span className="text-[8px] text-slate-400 block uppercase font-bold">GLICKO-2</span>
@@ -319,7 +333,9 @@ export default function LeaderboardPage() {
                       </div>
                       <div className="text-right">
                         <span className="text-[8px] text-slate-400 block uppercase font-bold">WIN RATE</span>
-                        <span className="font-bold text-slate-200 text-base">{top3.winRate}%</span>
+                        <span className="font-bold text-base" style={{ color: getWinRateColor(top3.winRate) }}>
+                          {top3.winRate}%
+                        </span>
                       </div>
                     </div>
                   </Link>
@@ -340,7 +356,7 @@ export default function LeaderboardPage() {
           </div>
         )}
 
-        {/* Full Rankings Tactical Cards List */}
+        {/* Full Rankings Laser-Straight Table */}
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b border-[#1E2538] pb-3">
             <h3 className="font-display text-base sm:text-lg font-black uppercase text-white tracking-wider flex items-center gap-2">
@@ -359,100 +375,94 @@ export default function LeaderboardPage() {
               <LeaderboardSkeletonRow />
             </div>
           ) : (
-            <div className="flex flex-col gap-3.5">
-              {remainingStandings.map((entry) => (
-                <Link
-                  key={entry.id}
-                  href={`/university/${entry.id}`}
-                  className="group relative flex flex-col md:flex-row items-start md:items-center justify-between gap-6 overflow-hidden bg-[#0A0D18] border border-[#1E293B] p-5 sm:p-6 shadow-xl transition-all duration-200 hover:border-primary-brand/60 hover:bg-[#0E1322] cursor-pointer"
-                  style={{
-                    clipPath: "polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px))",
-                  }}
-                >
-                  {/* Subtle Top Neutral Highlight */}
-                  <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-slate-500/30 via-slate-400/10 to-transparent" />
+            <div className="flex flex-col gap-3">
+              {remainingStandings.map((entry) => {
+                const singleColor = getWinRateColor(entry.winRate);
+                return (
+                  <Link
+                    key={entry.id}
+                    href={`/university/${entry.id}`}
+                    className="group relative flex flex-col md:flex-row items-start md:items-center bg-[#0A0D18] border border-[#1E293B] hover:border-[#2E3C56] p-5 sm:p-6 shadow-xl transition-all duration-200 hover:bg-[#0E1322] cursor-pointer rounded-xl gap-6"
+                  >
+                    {/* Subtle Top Neutral Highlight */}
+                    <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-slate-500/20 via-slate-400/10 to-transparent" />
 
-                  <div className="flex items-center gap-4 sm:gap-6 shrink-0 pl-1">
-                    {/* 3D Octagonal Rank Badge */}
-                    <div 
-                      className="h-13 w-13 bg-gradient-to-br from-[#1A2236] to-[#0E1424] text-white border border-[#2B3B5C] flex items-center justify-center font-display text-xl sm:text-2xl font-black shrink-0 shadow-lg group-hover:border-primary-brand group-hover:text-primary-brand transition-colors"
-                      style={{
-                        clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
-                      }}
-                    >
-                      {entry.rank}
-                    </div>
+                    {/* Column 1: Rank + University Name & Rating (Takes all remaining flexible space) */}
+                    <div className="flex items-center gap-4 sm:gap-6 flex-1 min-w-0 pr-2">
+                      {/* Octagonal Rank Badge */}
+                      <div 
+                        className="h-12 w-12 sm:h-13 sm:w-13 bg-gradient-to-br from-[#1A2236] to-[#0E1424] text-white border border-[#2B3B5C] flex items-center justify-center font-display text-xl sm:text-2xl font-black shrink-0 shadow-md group-hover:border-primary-brand group-hover:text-primary-brand transition-colors"
+                        style={{
+                          clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
+                        }}
+                      >
+                        {entry.rank}
+                      </div>
 
-                    <div className="flex flex-col min-w-0">
-                      <h2 className="font-display text-base sm:text-lg font-black tracking-wide text-white group-hover:text-primary-brand transition-colors truncate">
-                        {entry.university}
-                      </h2>
-                      <div className="mt-1 flex items-center gap-3">
-                        <span className="font-mono text-xs font-bold text-white">
-                          {entry.rating.toFixed(1)} <span className="text-[10px] text-slate-400 font-normal">Glicko-2</span>
-                        </span>
-                        <span 
-                          className="text-[9px] font-mono font-bold px-2 py-0.5 bg-[#141A29] text-slate-300 border border-[#232D44]"
-                          style={{
-                            clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-                          }}
-                        >
-                          ±42.5 RD
-                        </span>
+                      <div className="flex flex-col min-w-0">
+                        <h2 className="font-display text-base sm:text-lg font-black tracking-wide text-white group-hover:text-primary-brand transition-colors truncate">
+                          {entry.university}
+                        </h2>
+                        <div className="mt-1 flex items-center gap-3">
+                          <span className="font-mono text-xs font-bold text-white">
+                            {entry.rating.toFixed(1)} <span className="text-[10px] text-slate-400 font-normal">Glicko-2</span>
+                          </span>
+                          <span className="text-[9px] font-mono font-bold px-2 py-0.5 bg-[#141A29] text-slate-300 border border-[#232D44] rounded">
+                            ±42.5 RD
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Inset Win Rate Telemetry Well */}
-                  <div className="flex flex-col w-full md:w-64 lg:w-80 p-2.5 bg-[#05070E] border border-[#161D2E] shadow-inner">
-                    <div className="flex items-center justify-between text-[10px] font-mono font-bold tracking-wider text-slate-300 uppercase mb-1.5">
-                      <span>CIRCUIT WIN RATE</span>
-                      <span className="font-mono font-bold text-white">{entry.winRate}%</span>
+                    {/* Column 2: Fixed-Width Laser-Straight Circuit Win Rate Well */}
+                    <div className="flex flex-col w-full md:w-72 lg:w-80 shrink-0 p-3 bg-[#05070E] border border-[#161D2E] rounded-lg shadow-inner">
+                      <div className="flex items-center justify-between text-[10px] font-mono font-bold tracking-wider text-slate-300 uppercase mb-1.5">
+                        <span>CIRCUIT WIN RATE</span>
+                        <span className="font-mono font-bold" style={{ color: singleColor }}>
+                          {entry.winRate}%
+                        </span>
+                      </div>
+                      <div className="w-full bg-[#080B14] h-2.5 rounded-full overflow-hidden border border-[#1E2538] p-0.5">
+                        <div
+                          className="h-full rounded-full transition-all duration-500 shadow-sm"
+                          style={{
+                            width: `${Math.max(entry.winRate, 3)}%`,
+                            backgroundColor: singleColor,
+                          }}
+                        />
+                      </div>
                     </div>
-                    <div className="w-full bg-[#060812] h-2 overflow-hidden border border-[#1E2538]">
-                      <div
-                        className="bg-gradient-to-r from-slate-500 to-slate-300 h-full transition-all duration-500 shadow-sm"
-                        style={{ width: `${entry.winRate}%` }}
-                      />
-                    </div>
-                  </div>
 
-                  {/* Stats & Streak */}
-                  <div className="flex items-center justify-between md:justify-end gap-8 sm:gap-12 w-full md:w-auto pt-4 md:pt-0 border-t md:border-t-0 border-[#1E2538]">
-                    <div className="flex flex-col">
+                    {/* Column 3: Fixed-Width Laser-Straight Recent Streak */}
+                    <div className="flex flex-col w-full md:w-28 shrink-0 md:text-center pt-3 md:pt-0 border-t md:border-t-0 border-[#1E2538]">
                       <span className="font-mono text-[9px] font-bold tracking-widest text-slate-400 uppercase">
                         RECENT STREAK
                       </span>
                       <span
                         className={`font-mono text-sm sm:text-base font-bold mt-0.5 ${
-                          entry.streak.includes("W") ? "text-slate-200" : "text-slate-400"
+                          entry.streak.includes("W") ? "text-emerald-400" : "text-rose-400"
                         }`}
                       >
                         {entry.streak}
                       </span>
                     </div>
 
-                    <div 
-                      className="font-display text-xs font-bold tracking-wider text-slate-200 uppercase px-3 py-1.5 bg-[#141A29] border border-[#232D44] shadow-sm"
-                      style={{
-                        clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
-                      }}
-                    >
-                      {entry.game}
+                    {/* Column 4: Fixed-Width Laser-Straight Game Badge */}
+                    <div className="flex items-center md:justify-end w-full md:w-28 shrink-0">
+                      <span className="font-display text-xs font-bold tracking-wider text-slate-200 uppercase px-3 py-1.5 bg-[#141A29] border border-[#232D44] shadow-sm rounded-md">
+                        {entry.game}
+                      </span>
                     </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                );
+              })}
             </div>
           )}
         </div>
 
         {/* Engine Explainer Footer */}
         <div 
-          className="p-6 sm:p-8 bg-[#0A0D18] border border-[#1E293B] space-y-3 shadow-2xl relative"
-          style={{
-            clipPath: "polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))",
-          }}
+          className="p-6 sm:p-8 bg-[#0A0D18] border border-[#1E293B] space-y-3 shadow-2xl relative rounded-xl"
         >
           <div className="space-y-1 text-center md:text-left">
             <span className="text-xs font-mono font-bold text-slate-300 uppercase tracking-widest flex items-center justify-center md:justify-start gap-1.5">
