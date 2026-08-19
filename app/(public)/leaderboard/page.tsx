@@ -7,7 +7,7 @@ import { useGame } from "@/context/GameContext";
 import { universitiesService } from "@/services";
 import { University } from "@/types";
 import { LeaderboardSkeletonRow } from "@/components/ui/Skeleton";
-import { CrownIcon, TrophyIcon, ShieldIcon, CheckCircleIcon, ZapIcon } from "@/components/ui/Icons";
+import { CrownIcon, TrophyIcon, CheckCircleIcon, ZapIcon } from "@/components/ui/Icons";
 import { GAME_LIST } from "@/lib/games";
 
 const GAME_ID_TO_DISPLAY: Record<string, string> = {
@@ -47,7 +47,6 @@ export default function LeaderboardPage() {
 
   useEffect(() => {
     let cancelled = false;
-    setIsLoading(true);
 
     universitiesService.getUniversities(enumValue)
       .then((universities) => {
