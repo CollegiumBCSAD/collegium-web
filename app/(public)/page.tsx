@@ -4,10 +4,12 @@ import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useGame } from "@/context/GameContext";
+import { useAuth } from "@/context/AuthContext";
 import { GAME_LIST } from "@/lib/games";
 import { universitiesService, scrimsService, tournamentsService } from "@/services";
 import { fetchTeamsApi, Team } from "@/lib/teams";
 import { University, ScrimOffer, Tournament, GameId } from "@/types";
+import { GamepadIcon } from "@/components/ui/Icons";
 
 interface DisplayMatch {
   title: string;
@@ -19,6 +21,7 @@ interface DisplayMatch {
 
 export default function LandingPage() {
   const { selectedGame, selectedGameInfo, selectGame, openGameSelector } = useGame();
+  const { isLoggedIn } = useAuth();
   const activeGame: GameId = selectedGame || "valo";
 
   const [universities, setUniversities] = useState<University[]>([]);
@@ -201,13 +204,26 @@ export default function LandingPage() {
             <p className="mt-4 sm:mt-6 max-w-lg font-sans text-sm md:text-base text-secondary-text leading-relaxed">
               Collegium brings scrim scheduling, tournament brackets, and live rankings for Valorant, League of Legends, MLBB, and CODM into a single home for the Philippine collegiate scene.
             </p>
-            <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row w-full sm:w-auto gap-3 sm:gap-4">
+            <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center w-full sm:w-auto gap-3 sm:gap-4">
               <Link
                 href="/tournaments"
-                className="inline-flex h-12 items-center justify-center rounded game-theme-btn px-6 text-sm font-bold uppercase tracking-wider transition-all active:scale-[0.98] shadow-lg w-full sm:w-auto text-center font-display"
+                className="inline-flex h-12 items-center justify-center game-theme-btn px-7 text-sm font-bold uppercase tracking-wider transition-all active:scale-[0.98] shadow-lg w-full sm:w-auto text-center font-display cursor-pointer"
               >
                 Explore Tournaments
               </Link>
+
+              <button
+                type="button"
+                onClick={openGameSelector}
+                className="inline-flex h-12 items-center justify-center gap-2.5 tactical-btn-secondary px-7 text-sm font-bold uppercase tracking-wider text-white transition-all active:scale-[0.98] shadow-md w-full sm:w-auto text-center font-display cursor-pointer group"
+                style={{
+                  borderColor: selectedGameInfo ? `${selectedGameInfo.accentColor}66` : undefined,
+                  boxShadow: selectedGameInfo ? `0 0 15px ${selectedGameInfo.accentColor}20` : undefined,
+                }}
+              >
+                <GamepadIcon className="w-4 h-4 text-primary-brand group-hover:scale-110 transition-transform" />
+                <span>Switch Game</span>
+              </button>
             </div>
 
             <div className="mt-10 sm:mt-16 w-full pt-6 sm:pt-8 border-t border-raised-panel/30 sm:border-t-0">
@@ -348,22 +364,24 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="pt-1 grid grid-cols-2 gap-3">
-              <Link
-                href="/scrims"
-                className="h-11 rounded-xl game-theme-btn font-sans text-xs font-bold uppercase tracking-wider shadow-lg flex items-center justify-center gap-1.5 transition-all active:scale-[0.98]"
-              >
-                <span>Enter War Room</span>
-              </Link>
+            {/* Action Buttons (Only visible for authenticated athletes) */}
+            {isLoggedIn && (
+              <div className="pt-1 grid grid-cols-2 gap-3">
+                <Link
+                  href="/scrims"
+                  className="h-11 game-theme-btn font-sans text-xs font-bold uppercase tracking-wider shadow-lg flex items-center justify-center gap-1.5 transition-all active:scale-[0.98]"
+                >
+                  <span>Enter War Room</span>
+                </Link>
 
-              <Link
-                href="/scrims"
-                className="h-11 rounded-xl bg-[#141A29] hover:bg-[#1C243A] text-white font-sans text-xs font-semibold uppercase tracking-wider border border-[#232D44] transition-all flex items-center justify-center gap-1.5 shadow-md"
-              >
-                <span>Browse Scrims →</span>
-              </Link>
-            </div>
+                <Link
+                  href="/scrims"
+                  className="h-11 tactical-btn-secondary text-white font-sans text-xs font-semibold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-md"
+                >
+                  <span>Browse Scrims →</span>
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </section>

@@ -33,7 +33,7 @@ export default function MatchCard({ match, onViewBoxScore }: MatchCardProps) {
 
       <button
         onClick={onViewBoxScore}
-        className="w-full py-1.5 bg-primary-brand hover:opacity-90 text-foreground font-sans text-xs font-bold tracking-normal text-center transition-colors cursor-pointer"
+        className="w-full py-1.5 game-theme-btn font-sans text-xs font-bold tracking-normal text-center transition-colors cursor-pointer"
       >
         View
       </button>

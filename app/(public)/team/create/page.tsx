@@ -299,7 +299,7 @@ export default function CreateTeamPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-11 rounded-xl game-theme-btn font-sans text-xs font-extrabold uppercase tracking-widest transition-transform active:scale-95 shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                className="w-full h-11 game-theme-btn text-xs font-extrabold uppercase tracking-wider transition-transform active:scale-95 shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 <TrophyIcon className="w-4 h-4" />
                 <span>{isLoading ? "Creating Squad..." : "Create Squad & Generate Invite Link"}</span>

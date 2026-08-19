@@ -3,15 +3,16 @@
 import React from "react";
 import Image from "next/image";
 import { useGame } from "@/context/GameContext";
+import { useAuth } from "@/context/AuthContext";
 import { GamepadIcon } from "@/components/ui/Icons";
 
 export default function HeaderGameSwitcher() {
   const { selectedGameInfo, openGameSelector, isLoaded } = useGame();
+  const { isLoggedIn } = useAuth();
 
-  if (!isLoaded) {
-    return (
-      <div className="h-10 w-28 sm:w-36 rounded-full bg-raised-panel/60 border border-raised-panel animate-pulse" />
-    );
+  // Hide the header game switcher completely when a user is logged in
+  if (!isLoaded || isLoggedIn) {
+    return null;
   }
 
   return (

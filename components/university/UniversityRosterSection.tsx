@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
 import { University } from "@/types";
 import { TrophyIcon, CrownIcon, CheckCircleIcon } from "@/components/ui/Icons";
 
@@ -27,16 +26,28 @@ export default function UniversityRosterSection({ university }: UniversityRoster
   ];
 
   return (
-    <div className="p-6 sm:p-8 rounded-2xl bg-[#0D121F]/90 border border-[#1E293B] space-y-6 shadow-xl backdrop-blur-xl">
-      
-      {/* Header & Interactive Tab Switcher */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#1C2538] pb-4">
+    <div 
+      className="p-6 sm:p-8 bg-[#0A0D18] border border-[#1E293B] space-y-6 shadow-2xl relative"
+      style={{
+        clipPath: "polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px))",
+      }}
+    >
+      {/* Top Neutral Highlight Bevel */}
+      <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-slate-500/40 via-slate-400/20 to-transparent" />
+
+      {/* Header & Interactive Tactical Tab Switcher */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#182338] pb-4 relative z-10">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-primary-brand/10 border border-primary-brand/20 flex items-center justify-center text-primary-brand">
+          <div 
+            className="w-10 h-10 bg-[#141A29] border border-[#232D44] flex items-center justify-center text-slate-300 shrink-0"
+            style={{
+              clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
+            }}
+          >
             <TrophyIcon className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="font-display text-base font-bold uppercase text-white tracking-wide">
+            <h3 className="font-display text-base font-black uppercase text-white tracking-wide">
               Varsity Rosters & Match History
             </h3>
             <p className="text-xs font-sans text-slate-400">
@@ -45,66 +56,64 @@ export default function UniversityRosterSection({ university }: UniversityRoster
           </div>
         </div>
 
-        {/* Tab Switcher Pills */}
-        <div className="flex items-center gap-1 p-1 rounded-lg bg-[#080C14] border border-[#1C2538]">
-          <button
-            onClick={() => setActiveTab("ROSTER")}
-            className={`px-3 py-1 rounded-md text-xs font-sans font-semibold uppercase transition-all ${
-              activeTab === "ROSTER"
-                ? "bg-primary-brand text-white shadow-sm"
-                : "text-slate-400 hover:text-white"
-            }`}
-          >
-            Roster
-          </button>
-          <button
-            onClick={() => setActiveTab("MATCHES")}
-            className={`px-3 py-1 rounded-md text-xs font-sans font-semibold uppercase transition-all ${
-              activeTab === "MATCHES"
-                ? "bg-primary-brand text-white shadow-sm"
-                : "text-slate-400 hover:text-white"
-            }`}
-          >
-            Matches
-          </button>
-          <button
-            onClick={() => setActiveTab("CERTIFICATION")}
-            className={`px-3 py-1 rounded-md text-xs font-sans font-semibold uppercase transition-all ${
-              activeTab === "CERTIFICATION"
-                ? "bg-primary-brand text-white shadow-sm"
-                : "text-slate-400 hover:text-white"
-            }`}
-          >
-            Info
-          </button>
+        {/* Tactical Slanted Tab Switcher */}
+        <div className="flex items-center gap-2">
+          {(["ROSTER", "MATCHES", "CERTIFICATION"] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-1.5 text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
+                activeTab === tab
+                  ? "game-theme-btn shadow-md"
+                  : "tactical-btn-secondary text-slate-400"
+              }`}
+            >
+              {tab === "CERTIFICATION" ? "Info" : tab === "ROSTER" ? "Roster" : "Matches"}
+            </button>
+          ))}
         </div>
       </div>
 
       {/* Tab Content Display */}
       {activeTab === "ROSTER" && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 animate-in fade-in duration-200">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 relative z-10 animate-in fade-in duration-200">
           {mockAthletes.map((a, idx) => (
             <div
               key={idx}
-              className="p-3.5 rounded-xl bg-[#080C14] border border-[#1C2538] flex items-center justify-between gap-3 hover:border-slate-400 transition-all"
+              className="p-4 bg-[#060812] border border-[#182338] flex items-center justify-between gap-3 shadow-inner hover:border-[#3A4E7A] transition-all"
+              style={{
+                clipPath: "polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%)",
+              }}
             >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-[#141A29] text-white flex items-center justify-center font-semibold text-xs border border-white/10 shrink-0">
+              <div className="flex items-center gap-3 min-w-0">
+                {/* Octagonal Avatar Emblem */}
+                <div 
+                  className="w-10 h-10 bg-[#141A29] text-white flex items-center justify-center font-black text-xs border border-white/10 shrink-0"
+                  style={{
+                    clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
+                  }}
+                >
                   {a.name.charAt(0)}
                 </div>
-                <div>
+                <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className="font-sans font-bold text-xs text-white">{a.name}</span>
+                    <span className="font-display text-xs font-bold uppercase text-white truncate">{a.name}</span>
                     {a.isCaptain && <CrownIcon className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
                   </div>
-                  <span className="text-[11px] font-sans text-slate-400 block">{a.handle}</span>
-                  <span className="text-[10px] font-sans text-slate-400 flex items-center gap-1 mt-0.5 font-normal">
-                    <CheckCircleIcon className="w-3 h-3 text-slate-400" /> {a.status}
+                  <span className="text-[10px] font-mono text-slate-400 block truncate">{a.handle}</span>
+                  <span className="text-[9px] font-mono text-slate-400 flex items-center gap-1 mt-0.5">
+                    <CheckCircleIcon className="w-2.5 h-2.5 text-slate-400" /> {a.status}
                   </span>
                 </div>
               </div>
 
-              <span className="text-[10px] font-sans font-medium text-slate-300 bg-[#141A29] px-2 py-0.5 rounded-md border border-[#232D44] shrink-0">
+              {/* Slanted Role Tag */}
+              <span 
+                className="text-[9px] font-mono font-bold text-slate-300 bg-[#141A29] px-2.5 py-0.5 border border-[#232D44] shrink-0"
+                style={{
+                  clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
+                }}
+              >
                 {a.role.split(" / ")[0]}
               </span>
             </div>
@@ -113,69 +122,45 @@ export default function UniversityRosterSection({ university }: UniversityRoster
       )}
 
       {activeTab === "MATCHES" && (
-        <div className="space-y-2.5 animate-in fade-in duration-200">
+        <div className="space-y-3 relative z-10 animate-in fade-in duration-200">
           {mockMatches.map((m, idx) => (
             <div
               key={idx}
-              className="p-3.5 rounded-xl bg-[#080C14] border border-[#1C2538] flex items-center justify-between gap-4 hover:border-slate-400 transition-all"
+              className="p-4 bg-[#060812] border border-[#182338] flex items-center justify-between gap-4 shadow-inner"
+              style={{
+                clipPath: "polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%)",
+              }}
             >
               <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-sans font-semibold ${
-                  m.result === "VICTORY" ? "bg-[#141A29] text-white border border-[#232D44]" : "bg-[#141A29] text-slate-400 border border-[#232D44]"
-                }`}>
-                  {m.result === "VICTORY" ? "WIN" : "LOSS"}
-                </div>
+                <span 
+                  className="text-xs font-mono font-bold px-2.5 py-0.5 text-slate-300 bg-[#141A29] border border-[#232D44]"
+                  style={{
+                    clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
+                  }}
+                >
+                  {m.title}
+                </span>
                 <div>
-                  <span className="font-sans font-semibold text-xs text-white block">
-                    vs {m.opponent}
-                  </span>
-                  <span className="text-[10px] font-sans text-slate-400">
-                    {m.title} · {m.type} · {m.date}
-                  </span>
+                  <span className="font-display text-sm font-bold uppercase text-white block">VS {m.opponent}</span>
+                  <span className="text-[10px] font-mono text-slate-400">{m.type} · {m.date}</span>
                 </div>
               </div>
 
-              <span className="font-sans text-xs font-semibold text-white bg-[#141A29] px-2.5 py-1 rounded-md border border-[#232D44]">
-                {m.score}
-              </span>
+              <div className="flex items-center gap-3">
+                <span className="font-display text-lg font-black text-white">{m.score}</span>
+                <span 
+                  className="text-[9px] font-mono font-bold px-2.5 py-0.5 border text-slate-300 bg-[#141A29] border-[#232D44]"
+                  style={{
+                    clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
+                  }}
+                >
+                  {m.result}
+                </span>
+              </div>
             </div>
           ))}
         </div>
       )}
-
-      {activeTab === "CERTIFICATION" && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 animate-in fade-in duration-200">
-          <div className="p-3.5 rounded-xl bg-[#080C14] border border-[#1C2538] space-y-1">
-            <span className="text-[10px] font-sans font-semibold text-amber-400 uppercase tracking-wider block">
-              Roster Status
-            </span>
-            <span className="font-sans text-xs font-medium text-white block">Verified Active Lineup</span>
-          </div>
-          <div className="p-3.5 rounded-xl bg-[#080C14] border border-[#1C2538] space-y-1">
-            <span className="text-[10px] font-sans font-semibold text-primary-brand uppercase tracking-wider block">
-              Match Engine
-            </span>
-            <span className="font-sans text-xs font-medium text-white block">Dual-Mode VCS & Glicko-2</span>
-          </div>
-          <div className="p-3.5 rounded-xl bg-[#080C14] border border-[#1C2538] space-y-1">
-            <span className="text-[10px] font-sans font-semibold text-slate-300 uppercase tracking-wider block">
-              Official Division
-            </span>
-            <span className="font-sans text-xs font-medium text-white block">Philippine Collegiate Circuit</span>
-          </div>
-        </div>
-      )}
-
-      {/* Footer Navigation Back Link */}
-      <div className="pt-3 border-t border-[#1C2538] flex items-center justify-between">
-        <Link
-          href="/leaderboard"
-          className="h-9 px-4 rounded-lg bg-[#141A29] hover:bg-[#1F273D] text-white font-sans text-xs font-semibold uppercase tracking-wider transition-all border border-[#232D44] inline-flex items-center gap-1.5 shadow-sm"
-        >
-          <span>← Back to Rankings</span>
-        </Link>
-      </div>
-
     </div>
   );
 }

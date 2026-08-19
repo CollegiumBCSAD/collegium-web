@@ -5,6 +5,7 @@ import { ScrimOffer } from "@/types";
 import { scrimsService, ScrimChatMessage as ServerChatMessage } from "@/services";
 import { getStoredTeams, fetchTeamsApi, Team } from "@/lib/teams";
 import { getSocket } from "@/services/socket";
+import { getGameInfo } from "@/lib/games";
 import { CalendarIcon, CrownIcon, FlameIcon, ZapIcon, CheckCircleIcon, UsersIcon } from "@/components/ui/Icons";
 
 interface ChatMessage {
@@ -56,6 +57,10 @@ export default function ScrimWarRoomModal({
       }
     });
   }, []);
+
+  const game = useMemo(() => {
+    return getGameInfo(scrim?.gameTitle || "valo");
+  }, [scrim]);
 
   // Keyboard shortcut to close lineup modal on ESC key
   useEffect(() => {
@@ -173,40 +178,49 @@ export default function ScrimWarRoomModal({
   };
 
   const quickChats = [
-    "Lobby created! Join code above.",
-    "Join our Discord voice channel.",
-    "Pausing 3 mins, reconnecting.",
-    "GLHF! Ready to start.",
+    "🎮 Lobby created! Join code above.",
+    "🎧 Join our Discord voice channel.",
+    "⏱️ Pausing 3 mins, reconnecting.",
+    "🔥 GLHF! Ready to start.",
   ];
 
-  const opponentName = isHost ? (scrim.opponentTeamName || "Challenger Squad") : scrim.hostTeamName;
   const hostInitial = scrim.hostTeamName.charAt(0).toUpperCase();
   const oppInitial = (scrim.opponentTeamName || "C").charAt(0).toUpperCase();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-xl animate-in fade-in duration-200">
-      <div className="w-full max-w-4xl bg-[#090D16] border border-[#1E293B] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-2xl animate-in fade-in duration-200">
+      <div className="w-full max-w-4xl bg-gradient-to-b from-[#12182B]/98 via-[#0A0D18]/95 to-[#060812]/98 border border-[#202E4C] rounded-3xl shadow-[0_30px_70px_rgba(0,0,0,0.85)] overflow-hidden flex flex-col max-h-[92vh] relative backdrop-blur-2xl">
         
+        {/* Top Glowing Accent Line */}
+        <div
+          className="absolute top-0 left-0 right-0 h-[2.5px] z-30"
+          style={{
+            backgroundColor: game.accentColor,
+            boxShadow: `0 0 15px ${game.accentColor}`,
+          }}
+        />
+
         {/* Top Header Navigation Bar */}
-        <div className="p-4 sm:p-5 bg-[#0D121F]/95 border-b border-[#1C2538] flex items-center justify-between gap-4 backdrop-blur-md">
+        <div className="p-4 sm:p-5 bg-gradient-to-r from-[#0F1628]/98 via-[#0B101E]/95 to-[#0F1628]/98 border-b border-[#1F2C46] flex items-center justify-between gap-4 backdrop-blur-xl relative z-20 shadow-md">
           
           {/* Head-to-Head Squad Badge */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center -space-x-2">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-brand to-rose-700 text-white flex items-center justify-center font-display text-sm font-black shadow-md ring-2 ring-[#0D121F]">
+          <div className="flex items-center gap-3.5">
+            <div className="flex items-center -space-x-2.5">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary-brand to-rose-700 text-white flex items-center justify-center font-display text-sm font-black shadow-lg ring-2 ring-[#0D121F] border border-white/20">
                 {hostInitial}
               </div>
-              <div className="w-9 h-9 rounded-xl bg-[#1A2338] text-white flex items-center justify-center font-display text-sm font-black shadow-md ring-2 ring-[#0D121F] border border-white/10">
+              <div className="w-10 h-10 rounded-2xl bg-[#141D30] text-white flex items-center justify-center font-display text-sm font-black shadow-lg ring-2 ring-[#0D121F] border border-white/10">
                 {oppInitial}
               </div>
             </div>
 
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="font-display text-sm sm:text-base font-black uppercase text-white tracking-wide">
+                <h2 className="font-display text-sm sm:text-base font-black uppercase text-white tracking-wide drop-shadow-sm">
                   {scrim.hostTeamName} <span className="text-primary-brand">VS</span> {scrim.opponentTeamName || "Challenger"}
                 </h2>
-                <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#141A29] text-slate-300 border border-[#232D44]">
+                <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#131A2B] text-emerald-400 border border-emerald-500/30 shadow-sm flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   {scrim.status === "CONFIRMED" ? "MATCH BOOKED" : "WAR ROOM ACTIVE"}
                 </span>
               </div>
@@ -218,8 +232,8 @@ export default function ScrimWarRoomModal({
 
           {/* Action Controls */}
           <div className="flex items-center gap-2.5">
-            <div className="hidden sm:flex items-center gap-2 bg-[#141A29] px-3.5 py-1.5 rounded-xl border border-[#232D44]">
-              <span className="text-[10px] font-mono text-slate-400">LOBBY ID:</span>
+            <div className="hidden sm:flex items-center gap-2 bg-[#060912] px-3.5 py-1.5 rounded-xl border border-[#1A263E] shadow-inner">
+              <span className="text-[10px] font-mono text-slate-400 font-semibold">LOBBY ID:</span>
               <code className="font-mono text-xs font-bold text-white tracking-wider">{lobbyCode}</code>
               <button
                 onClick={handleCopyCode}
@@ -232,7 +246,7 @@ export default function ScrimWarRoomModal({
             {/* Lineups Button */}
             <button
               onClick={() => setIsLineupModalOpen(true)}
-              className="h-9 px-4 rounded-xl bg-[#141A29] hover:bg-[#1F273D] text-slate-200 border border-[#232D44] font-sans text-xs font-bold uppercase transition-all cursor-pointer flex items-center gap-1.5 shadow-md"
+              className="h-9 px-4 rounded-xl bg-[#131A2B] hover:bg-[#1C2740] text-slate-200 border border-[#243350] font-sans text-xs font-bold uppercase transition-all cursor-pointer flex items-center gap-1.5 shadow-md active:scale-95"
               title="Open Squad Roster Lineups Window"
             >
               <UsersIcon className="w-4 h-4 text-slate-300" />
@@ -241,7 +255,7 @@ export default function ScrimWarRoomModal({
 
             <button
               onClick={onClose}
-              className="w-9 h-9 rounded-xl bg-[#141A29] hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 flex items-center justify-center text-sm font-bold transition-all cursor-pointer border border-[#232D44]"
+              className="w-9 h-9 rounded-xl bg-[#131A2B] hover:bg-rose-950/50 text-slate-400 hover:text-rose-400 flex items-center justify-center text-sm font-bold transition-all cursor-pointer border border-[#243350] shadow-md active:scale-95"
             >
               ✕
             </button>
@@ -249,7 +263,7 @@ export default function ScrimWarRoomModal({
         </div>
 
         {/* Mobile Room Code Bar */}
-        <div className="sm:hidden px-4 py-2 bg-[#080C14] border-b border-[#1C2538] flex items-center justify-between text-xs font-mono">
+        <div className="sm:hidden px-4 py-2 bg-[#060912] border-b border-[#1A263E] flex items-center justify-between text-xs font-mono relative z-20">
           <span className="text-slate-400">LOBBY CODE: <strong className="text-white font-bold">{lobbyCode}</strong></span>
           <button onClick={handleCopyCode} className="text-primary-brand font-bold">
             {isCopied ? "✓ COPIED" : "COPY CODE"}
@@ -257,15 +271,38 @@ export default function ScrimWarRoomModal({
         </div>
 
         {/* Tactical Stream & Messages Container */}
-        <div className="flex flex-col flex-1 bg-[#060911] overflow-hidden">
+        <div className="flex flex-col flex-1 bg-[#050711] overflow-hidden relative z-10 shadow-inner">
+          
+          {/* Cyber Dot-Grid Background Pattern */}
+          <div className="absolute inset-0 bg-[radial-gradient(#202F4E_1px,transparent_1px)] [background-size:20px_20px] opacity-20 pointer-events-none" />
+
+          {/* Ambient Game Accent Color Radial Aura */}
+          <div
+            className="absolute inset-0 pointer-events-none opacity-25"
+            style={{
+              background: `radial-gradient(circle at center, ${game.accentColor}35 0%, transparent 65%)`,
+            }}
+          />
+
+          {/* Centered Large Game Artwork Watermark */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={game.image}
+            alt=""
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 object-cover opacity-[0.08] grayscale pointer-events-none rounded-full blur-[1px]"
+          />
           
           {/* Chat Messages Stream */}
-          <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 min-h-[300px] max-h-[460px]">
+          <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 min-h-[300px] max-h-[460px] relative z-10">
             {messages.map((msg) => {
               const isSys = msg.senderName === "WAR ROOM SYSTEM" || msg.senderName === "SYSTEM ANNOUNCER";
               if (isSys) {
                 return (
-                  <div key={msg.id} className="mx-auto max-w-xl p-3.5 rounded-2xl bg-[#0D121F] border border-[#1E293B] text-center text-xs font-mono text-slate-300 leading-relaxed shadow-md my-2">
+                  <div key={msg.id} className="mx-auto max-w-xl p-4 rounded-2xl bg-gradient-to-r from-[#0C1322]/95 via-[#10192E]/95 to-[#0C1322]/95 border border-[#213254] text-center text-xs font-mono text-slate-200 leading-relaxed shadow-xl backdrop-blur-xl relative z-10 my-3">
+                    <div className="flex items-center justify-center gap-2 mb-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <span className="text-[10px] font-mono font-bold tracking-widest text-emerald-400 uppercase">TACTICAL WAR ROOM ENCRYPTED</span>
+                    </div>
                     {msg.message}
                   </div>
                 );
@@ -274,7 +311,7 @@ export default function ScrimWarRoomModal({
               const isMyMessage = isHost ? msg.isHostTeam : !msg.isHostTeam;
 
               return (
-                <div key={msg.id} className={`flex flex-col ${isMyMessage ? "items-end" : "items-start"} space-y-1`}>
+                <div key={msg.id} className={`flex flex-col ${isMyMessage ? "items-end" : "items-start"} space-y-1 relative z-10`}>
                   
                   {/* Sender Metadata */}
                   <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400 px-1">
@@ -287,16 +324,16 @@ export default function ScrimWarRoomModal({
                   {/* Speech Bubble */}
                   <div className="flex items-end gap-2 max-w-[80%]">
                     {!isMyMessage && (
-                      <div className="w-8 h-8 rounded-xl bg-[#141A29] border border-[#232D44] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-md">
+                      <div className="w-8 h-8 rounded-xl bg-[#131A2B] border border-[#243350] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-md">
                         {msg.teamName.charAt(0).toUpperCase()}
                       </div>
                     )}
 
                     <div
-                      className={`px-4 py-2.5 rounded-2xl text-xs font-sans leading-relaxed shadow-md ${
+                      className={`px-4 py-2.5 rounded-2xl text-xs font-sans leading-relaxed shadow-lg ${
                         isMyMessage
-                          ? "bg-[#1E273A] border border-[#2D3B58] text-white rounded-tr-xs"
-                          : "bg-[#0D121F] border border-[#1E293B] text-slate-200 rounded-tl-xs"
+                          ? "bg-gradient-to-r from-primary-brand via-rose-600 to-rose-700 text-white border border-white/20 shadow-[0_4px_20px_rgba(229,58,76,0.35)] rounded-tr-xs font-medium"
+                          : "bg-[#0F1626]/95 border border-[#223354] text-slate-100 shadow-md backdrop-blur-md rounded-tl-xs font-medium"
                       }`}
                     >
                       {msg.message}
@@ -309,8 +346,8 @@ export default function ScrimWarRoomModal({
             <div ref={chatBottomRef} />
           </div>
 
-          {/* Quick Send Chips */}
-          <div className="px-4 py-2.5 bg-[#0D121F] border-t border-[#1C2538] flex flex-wrap items-center gap-2">
+          {/* Quick Send Chips with Recessed Dark Glass Bar */}
+          <div className="px-4 py-3 bg-[#060912]/95 border-t border-[#18233A] flex flex-wrap items-center gap-2 relative z-20 shadow-lg backdrop-blur-md">
             <span className="text-[10px] font-mono font-bold text-slate-400 uppercase shrink-0">
               QUICK SEND:
             </span>
@@ -318,7 +355,7 @@ export default function ScrimWarRoomModal({
               <button
                 key={idx}
                 onClick={() => handleSendMessage(qc)}
-                className="px-3.5 py-1 rounded-xl bg-[#141A29] hover:bg-[#1F273D] text-slate-300 hover:text-white text-xs font-sans transition-all cursor-pointer border border-[#232D44]"
+                className="px-3.5 py-1.5 rounded-xl bg-[#12192B] hover:bg-[#1B253D] hover:border-primary-brand/50 text-slate-200 hover:text-white text-xs font-sans transition-all cursor-pointer border border-[#22314E] shadow-sm active:scale-95"
               >
                 {qc}
               </button>
@@ -326,8 +363,8 @@ export default function ScrimWarRoomModal({
           </div>
 
           {/* Input Bar */}
-          <div className="p-4 bg-[#0D121F] border-t border-[#1C2538]">
-            <div className="h-12 px-4 rounded-xl bg-[#141A29] border border-[#232D44] flex items-center gap-3 shadow-inner focus-within:border-slate-400 transition-colors">
+          <div className="p-4 bg-[#050711]/95 border-t border-[#18233A] relative z-20 backdrop-blur-md">
+            <div className="h-12 px-4 rounded-2xl bg-[#0E1424] border border-[#202D49] flex items-center gap-3 shadow-inner focus-within:border-primary-brand/70 focus-within:shadow-[0_0_20px_rgba(229,58,76,0.25)] transition-all">
               <input
                 type="text"
                 value={inputMessage}
@@ -339,7 +376,7 @@ export default function ScrimWarRoomModal({
 
               <button
                 onClick={() => handleSendMessage()}
-                className="h-8 px-5 rounded-lg game-theme-btn font-sans text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-md shrink-0 flex items-center gap-1.5"
+                className="h-8 px-5 rounded-xl game-theme-btn font-sans text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-lg shrink-0 flex items-center gap-1.5 active:scale-95"
               >
                 <span>Send</span>
               </button>

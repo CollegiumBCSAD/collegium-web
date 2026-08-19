@@ -98,7 +98,7 @@ export default function RecruitPage() {
 
           <button
             onClick={() => setIsModalOpen(true)}
-            className="h-11 px-6 rounded-lg game-theme-btn font-sans text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] flex items-center justify-center cursor-pointer shadow-lg"
+            className="h-11 px-6 game-theme-btn text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] flex items-center justify-center cursor-pointer shadow-lg"
           >
             Post LFT / LFP Listing
           </button>

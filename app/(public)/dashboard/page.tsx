@@ -87,89 +87,101 @@ export default function DashboardPage() {
   if (!isLoaded || !isLoggedIn || !user) {
     return (
       <div className="min-h-[85vh] flex items-center justify-center text-xs font-sans text-slate-400 animate-pulse">
-        Loading Athlete Profile...
+        Loading Athlete Dashboard...
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col flex-1 game-theme-bg py-8 sm:py-12 px-4 sm:px-6 lg:px-12 relative">
-      <div className="max-w-6xl mx-auto space-y-8 w-full">
+    <div className="flex flex-col flex-1 game-theme-bg py-8 sm:py-10 px-4 sm:px-6 lg:px-10 relative">
+      <div className="max-w-6xl mx-auto space-y-7 w-full">
         
         {/* Verification Alert Banner */}
         {user.status === "PENDING" && (
-          <div className="p-5 rounded-2xl bg-[#0D121F]/90 border border-[#1E293B] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs font-sans shadow-xl backdrop-blur-md">
+          <div 
+            className="p-4 sm:p-5 bg-[#0A0D18] border border-amber-500/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs font-sans shadow-lg relative"
+            style={{
+              clipPath: "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
+            }}
+          >
             <div className="flex items-center gap-3">
-              <ClockIcon className="w-5 h-5 text-slate-400 shrink-0" />
+              <ClockIcon className="w-5 h-5 text-amber-400 shrink-0" />
               <div>
-                <span className="font-mono font-bold text-slate-200 uppercase tracking-wider block">Account Verification Pending</span>
-                <span className="text-slate-400">Your student email (@{user.university?.domain || "edu"}) is undergoing verification. Match participation requires active approval.</span>
+                <span className="font-mono font-bold text-amber-400 uppercase tracking-wider block">Account Verification Pending</span>
+                <span className="text-slate-300">Your student email (@{user.university?.domain || "edu"}) is undergoing verification. Match participation requires active approval.</span>
               </div>
             </div>
-            <span className="px-3 py-1 rounded-full bg-[#141A29] text-slate-300 font-mono font-bold uppercase text-[10px] tracking-wider shrink-0 border border-[#232D44]">
+            <span 
+              className="px-3.5 py-1 bg-amber-950/60 text-amber-400 font-mono font-bold uppercase text-[10px] tracking-wider shrink-0 border border-amber-500/40"
+              style={{
+                clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
+              }}
+            >
               PENDING VERIFICATION
             </span>
           </div>
         )}
 
-        {(user.status === "REJECTED" || user.status === "SUSPENDED") && (
-          <div className="p-5 rounded-2xl bg-[#0D121F]/90 border border-rose-500/40 flex items-center gap-3 text-xs font-sans text-rose-400 shadow-xl backdrop-blur-md">
-            <AlertTriangleIcon className="w-5 h-5 text-rose-400 shrink-0" />
-            <div>
-              <span className="font-mono font-bold uppercase tracking-wider block">Account {user.status}</span>
-              <span className="text-slate-300">Your access to competitive matchmaking is currently restricted. Please contact league administrators.</span>
-            </div>
-          </div>
-        )}
+        {/* Hero Athlete Banner with Chamfered HUD Geometry */}
+        <AthleteProfileBanner user={user} squadsCount={userTeams.length} />
 
-        {/* Top Integrated Athlete Header */}
-        <AthleteProfileBanner user={user} />
-
-        {/* 2-Column Main Organized Dashboard Canvas */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        {/* 2-Column Dashboard Main Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-7 items-start">
           
-          {/* Left Column: Squad Operations (Span 2) */}
+          {/* Left Column (Span 2): Squad Operations */}
           <div className="lg:col-span-2 space-y-6">
             
-            {/* Captain Roster Inbox Controls */}
+            {/* Captain Console (Only rendered if Captain) */}
             {isCaptain && <CaptainRequestInbox />}
 
-            {/* Pending Squad Join Requests */}
+            {/* Pending Applications Box */}
             {pendingUserTeams.length > 0 && (
-              <div className="p-6 rounded-3xl bg-[#0D121F]/90 border border-[#1E293B] space-y-4 shadow-xl backdrop-blur-xl">
-                <div className="flex items-center justify-between border-b border-[#1C2538] pb-3">
+              <div 
+                className="p-5 bg-[#0A0D18] border border-[#1E293B] space-y-4 shadow-xl relative"
+                style={{
+                  clipPath: "polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px))",
+                }}
+              >
+                <div className="flex items-center justify-between border-b border-[#182338] pb-2.5">
                   <div className="flex items-center gap-2">
                     <ClockIcon className="w-4 h-4 text-slate-400 shrink-0" />
-                    <h3 className="font-display text-base font-bold uppercase tracking-wider text-white">
-                      Pending Squad Join Requests ({pendingUserTeams.length})
+                    <h3 className="font-display text-sm font-black text-white uppercase tracking-wider">
+                      Pending Applications ({pendingUserTeams.length})
                     </h3>
                   </div>
-                  <span className="text-[10px] font-mono font-bold px-3 py-1 rounded-full bg-[#141A29] text-slate-300 uppercase tracking-wider border border-[#232D44]">
-                    Awaiting Captain Approval
+                  <span className="text-[10px] font-mono text-slate-400 font-bold">
+                    AWAITING REVIEW
                   </span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {pendingUserTeams.map((t) => {
                     const game = GAMES[t.gameTitle] || GAMES.valo;
                     return (
-                      <div key={t.id} className="p-4 rounded-2xl bg-[#080C14] border border-[#1C2538] flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3 min-w-0">
+                      <div 
+                        key={t.id} 
+                        className="p-3.5 bg-[#060812] border border-[#182338] flex items-center justify-between gap-3 shadow-inner"
+                        style={{
+                          clipPath: "polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))",
+                        }}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={game.image} alt={game.name} className="w-9 h-9 rounded-xl object-cover ring-1 ring-white/10 shrink-0" />
+                          <img src={game.image} alt={game.name} className="w-8 h-8 object-cover ring-1 ring-white/10 shrink-0" />
                           <div className="min-w-0">
                             <h4 className="font-display text-xs font-bold uppercase text-white truncate">{t.name}</h4>
                             <span className="text-[10px] font-sans text-slate-400 truncate block">Captain: {t.captainName}</span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => handleCancelPendingRequest(t.id)}
-                            className="text-[10px] font-mono font-bold text-slate-300 hover:text-white px-2.5 py-1 rounded-lg bg-[#141A29] border border-[#232D44] cursor-pointer transition-all"
-                          >
-                            Cancel
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleCancelPendingRequest(t.id)}
+                          className="text-[10px] font-mono font-bold text-slate-400 hover:text-white px-2.5 py-1 bg-[#121929] border border-[#202C45] cursor-pointer transition-all shrink-0 active:scale-95"
+                          style={{
+                            clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
+                          }}
+                        >
+                          Cancel
+                        </button>
                       </div>
                     );
                   })}
@@ -177,46 +189,57 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* Active Varsity Squad Roster Section */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between border-b border-[#1E293B] pb-3">
-                <h2 className="font-display text-base font-bold uppercase tracking-wide text-white flex items-center gap-2">
+            {/* Active Varsity Squads */}
+            <div className="space-y-3.5">
+              <div className="flex items-center justify-between border-b border-[#1A253C] pb-2.5">
+                <h2 className="font-display text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
                   <SwordsIcon className="w-4 h-4 text-primary-brand" />
-                  <span>My Active Varsity Squads</span>
+                  <span>My Varsity Squads</span>
                 </h2>
-                <span className="text-xs font-mono font-bold text-slate-400">
+                <span className="text-xs font-mono text-slate-400 font-bold">
                   {userTeams.length} Active {userTeams.length === 1 ? "Squad" : "Squads"}
                 </span>
               </div>
 
               {userTeams.length === 0 ? (
-                <div className="p-8 rounded-3xl bg-[#0D121F]/90 border border-[#1E293B] text-center space-y-4 shadow-xl backdrop-blur-md">
-                  <div className="w-12 h-12 rounded-2xl bg-[#141A29] text-slate-400 border border-[#232D44] flex items-center justify-center mx-auto text-xl">
+                <div 
+                  className="p-8 bg-[#0A0D18] border border-[#1E293B] text-center space-y-4 shadow-xl"
+                  style={{
+                    clipPath: "polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))",
+                  }}
+                >
+                  <div className="w-12 h-12 bg-[#121929] text-slate-400 border border-[#202C45] flex items-center justify-center mx-auto text-xl shadow-inner">
                     <ShieldIcon className="w-6 h-6 text-slate-400" />
                   </div>
                   <div>
-                    <h3 className="font-display text-base font-bold uppercase text-white">No Active Squad Roster</h3>
-                    <p className="text-xs font-sans text-slate-400 max-w-md mx-auto mt-1">
-                      You are not currently listed on any active collegiate squad rosters. Establish a squad or join your university team.
+                    <h3 className="font-display text-base font-bold uppercase text-white">No Active Squad Rosters</h3>
+                    <p className="text-xs font-sans text-slate-400 max-w-sm mx-auto mt-1">
+                      You are not currently listed on any varsity squad rosters.
                     </p>
                   </div>
                   <div className="flex justify-center gap-3 pt-2">
                     <Link
                       href="/team/create"
-                      className="h-10 px-5 rounded-xl game-theme-btn font-sans text-xs font-bold uppercase tracking-wider flex items-center justify-center shadow-lg transition-all active:scale-[0.98]"
+                      className="h-9 px-5 game-theme-btn font-display text-xs font-black uppercase tracking-wider flex items-center justify-center shadow-lg transition-all active:scale-95"
+                      style={{
+                        clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
+                      }}
                     >
                       Establish Squad
                     </Link>
                     <Link
                       href="/team/join"
-                      className="h-10 px-5 rounded-xl bg-[#141A29] hover:bg-[#1F273D] text-white border border-[#232D44] font-sans text-xs font-bold uppercase tracking-wider flex items-center justify-center transition-all active:scale-[0.98] shadow-md"
+                      className="h-9 px-5 bg-[#141A2B] hover:bg-[#1C253B] text-slate-200 border border-[#222E48] font-display text-xs font-bold uppercase tracking-wider flex items-center justify-center transition-all active:scale-95 shadow-md"
+                      style={{
+                        clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
+                      }}
                     >
-                      Browse University Teams
+                      Browse Teams
                     </Link>
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                   {userTeams.map((t) => (
                     <TeamRosterCard key={t.id} team={t} onRosterUpdated={refreshTeams} />
                   ))}
@@ -226,77 +249,110 @@ export default function DashboardPage() {
 
           </div>
 
-          {/* Right Column: Athlete Passport & Quick Links (Span 1) */}
-          <div className="space-y-6">
+          {/* Right Column: Tactical Competitive Launchpad */}
+          <div className="space-y-5">
             
-            {/* Athlete Passport Evaluation Card */}
-            <div className="p-6 rounded-3xl bg-[#0D121F]/90 border border-[#1E293B] space-y-4 shadow-xl backdrop-blur-md">
-              <div className="flex items-center gap-2 border-b border-[#1E2538] pb-3">
-                <ZapIcon className="w-4 h-4 text-slate-400" />
-                <h3 className="font-display text-sm font-bold uppercase text-white tracking-wider">
-                  Athlete Passport Evaluation
+            <div 
+              className="p-5 sm:p-6 bg-[#0A0D18] border border-[#1E293B] space-y-4 shadow-xl relative"
+              style={{
+                clipPath: "polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))",
+              }}
+            >
+              {/* Top Accent Line */}
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary-brand/80 via-primary-brand/20 to-transparent" />
+
+              <div className="border-b border-[#182338] pb-3 relative z-10">
+                <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-primary-brand block">
+                  CIRCUIT ACCESS
+                </span>
+                <h3 className="font-display text-base font-black text-white uppercase tracking-wide mt-0.5">
+                  Competitive Hub
                 </h3>
               </div>
 
-              <div className="space-y-3">
-                <div className="p-3.5 rounded-2xl bg-[#080C14] border border-[#1C2538] flex items-center justify-between">
-                  <span className="text-xs font-mono text-slate-400">GLICKO-2 SCORE</span>
-                  <span className="font-display text-base font-bold text-white">1500.0 <span className="text-[10px] font-mono text-slate-400">±350 RD</span></span>
-                </div>
-
-                <div className="p-3.5 rounded-2xl bg-[#080C14] border border-[#1C2538] flex items-center justify-between">
-                  <span className="text-xs font-mono text-slate-400">INSTITUTION</span>
-                  <span className="text-xs font-sans font-bold text-white truncate max-w-[150px]">{user.university?.name || "University of Makati"}</span>
-                </div>
-
-                <div className="p-3.5 rounded-2xl bg-[#080C14] border border-[#1C2538] flex items-center justify-between">
-                  <span className="text-xs font-mono text-slate-400">LINEUP STATUS</span>
-                  <span className="text-[10px] font-mono font-bold text-slate-300 uppercase bg-[#141A29] px-2.5 py-0.5 rounded-full border border-[#232D44] flex items-center gap-1">
-                    <CheckCircleIcon className="w-3 h-3 text-slate-400" />
-                    VERIFIED
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Competitive Circuit Shortcuts */}
-            <div className="p-6 rounded-3xl bg-[#0D121F]/90 border border-[#1E293B] space-y-4 shadow-xl backdrop-blur-md">
-              <h3 className="font-display text-sm font-bold uppercase text-white tracking-wider border-b border-[#1E2538] pb-3">
-                Competitive Circuit Actions
-              </h3>
-
-              <div className="space-y-2.5">
+              <div className="space-y-2.5 relative z-10">
                 <Link
                   href="/scrims"
-                  className="w-full h-11 px-4 rounded-xl bg-[#141A29] hover:bg-[#1F273D] text-white border border-[#232D44] font-sans text-xs font-bold uppercase tracking-wider flex items-center justify-between transition-all group"
+                  className="w-full p-3.5 bg-[#060812] hover:bg-[#121929] border border-[#182338] hover:border-primary-brand/50 flex items-center justify-between transition-all group cursor-pointer shadow-inner"
+                  style={{
+                    clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+                  }}
                 >
-                  <span className="flex items-center gap-2">
-                    <SwordsIcon className="w-4 h-4 text-primary-brand" />
-                    <span>Book Practice Scrim Match</span>
-                  </span>
-                  <span className="group-hover:translate-x-1 transition-transform">→</span>
+                  <div className="flex items-center gap-3">
+                    <div 
+                      className="w-8 h-8 bg-[#121929] text-primary-brand border border-[#202C45] flex items-center justify-center shrink-0"
+                      style={{
+                        clipPath: "polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%)",
+                      }}
+                    >
+                      <SwordsIcon className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="font-display text-xs font-bold text-white uppercase tracking-wide block group-hover:text-primary-brand transition-colors">
+                        Practice Scrims
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-sans block">
+                        Custom lobbies & match veto
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-xs text-slate-500 group-hover:text-slate-300 group-hover:translate-x-1 transition-all">→</span>
                 </Link>
 
                 <Link
                   href="/tournaments"
-                  className="w-full h-11 px-4 rounded-xl bg-[#141A29] hover:bg-[#1F273D] text-white border border-[#232D44] font-sans text-xs font-bold uppercase tracking-wider flex items-center justify-between transition-all group"
+                  className="w-full p-3.5 bg-[#060812] hover:bg-[#121929] border border-[#182338] hover:border-primary-brand/50 flex items-center justify-between transition-all group cursor-pointer shadow-inner"
+                  style={{
+                    clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+                  }}
                 >
-                  <span className="flex items-center gap-2">
-                    <TrophyIcon className="w-4 h-4 text-slate-300" />
-                    <span>View Tournament Brackets</span>
-                  </span>
-                  <span className="group-hover:translate-x-1 transition-transform">→</span>
+                  <div className="flex items-center gap-3">
+                    <div 
+                      className="w-8 h-8 bg-[#121929] text-amber-400 border border-[#202C45] flex items-center justify-center shrink-0"
+                      style={{
+                        clipPath: "polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%)",
+                      }}
+                    >
+                      <TrophyIcon className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="font-display text-xs font-bold text-white uppercase tracking-wide block group-hover:text-primary-brand transition-colors">
+                        Tournaments & Brackets
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-sans block">
+                        Official collegiate circuit
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-xs text-slate-500 group-hover:text-slate-300 group-hover:translate-x-1 transition-all">→</span>
                 </Link>
 
                 <Link
                   href="/recruit"
-                  className="w-full h-11 px-4 rounded-xl bg-[#141A29] hover:bg-[#1F273D] text-white border border-[#232D44] font-sans text-xs font-bold uppercase tracking-wider flex items-center justify-between transition-all group"
+                  className="w-full p-3.5 bg-[#060812] hover:bg-[#121929] border border-[#182338] hover:border-primary-brand/50 flex items-center justify-between transition-all group cursor-pointer shadow-inner"
+                  style={{
+                    clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+                  }}
                 >
-                  <span className="flex items-center gap-2">
-                    <UsersIcon className="w-4 h-4 text-slate-300" />
-                    <span>Recruit / LFT Board</span>
-                  </span>
-                  <span className="group-hover:translate-x-1 transition-transform">→</span>
+                  <div className="flex items-center gap-3">
+                    <div 
+                      className="w-8 h-8 bg-[#121929] text-slate-300 border border-[#202C45] flex items-center justify-center shrink-0"
+                      style={{
+                        clipPath: "polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%)",
+                      }}
+                    >
+                      <UsersIcon className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="font-display text-xs font-bold text-white uppercase tracking-wide block group-hover:text-primary-brand transition-colors">
+                        Recruitment & LFT
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-sans block">
+                        Find varsity teammates
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-xs text-slate-500 group-hover:text-slate-300 group-hover:translate-x-1 transition-all">→</span>
                 </Link>
               </div>
             </div>

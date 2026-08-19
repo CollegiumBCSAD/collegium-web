@@ -361,7 +361,7 @@ function JoinTeamContent() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-11 rounded-xl game-theme-btn font-sans text-xs font-extrabold uppercase tracking-widest transition-transform active:scale-95 shadow-md flex items-center justify-center cursor-pointer disabled:opacity-50"
+                className="w-full h-11 game-theme-btn text-xs font-extrabold uppercase tracking-wider transition-transform active:scale-95 shadow-md flex items-center justify-center cursor-pointer disabled:opacity-50"
               >
                 {isLoading ? "Submitting Request..." : inviteCodeParam ? "Instant Domain Join Roster" : "Submit Join Request to Captain"}
               </button>

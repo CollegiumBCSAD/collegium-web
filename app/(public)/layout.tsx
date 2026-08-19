@@ -131,12 +131,12 @@ function HeaderAuthControls() {
 
   return (
     <div className="hidden md:flex items-center gap-3">
-      <Link href="/login" className="inline-flex h-10 items-center justify-center rounded-full border border-raised-panel px-5 text-sm font-bold text-foreground transition-colors hover:bg-raised-panel">
+      <Link href="/login" className="inline-flex h-9 items-center justify-center tactical-btn-secondary px-5 text-xs font-bold uppercase tracking-wider text-white">
         Log In
       </Link>
       <Link
         href="/register"
-        className="inline-flex h-10 items-center justify-center rounded-full game-theme-btn px-5 text-sm font-bold transition-all active:scale-[0.98] shadow-md"
+        className="inline-flex h-9 items-center justify-center game-theme-btn px-5 text-xs font-bold uppercase tracking-wider shadow-md"
       >
         Sign Up
       </Link>

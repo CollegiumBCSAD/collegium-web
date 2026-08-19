@@ -439,43 +439,11 @@ export default function ScrimsPage() {
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Game Selector Tabs */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-              {GAME_LIST.map((game) => {
-                const isActive = activeGame === game.id;
-                return (
-                  <button
-                    key={game.id}
-                    onClick={() => selectGame(game.id)}
-                    className={`px-3 py-1.5 rounded-xl font-sans text-xs font-bold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 border ${
-                      isActive
-                        ? "shadow-lg"
-                        : "bg-[#121624] text-secondary-text border-[#222B3F] hover:text-foreground hover:bg-[#182033]"
-                    }`}
-                    style={{
-                      backgroundColor: isActive ? game.accentColor : undefined,
-                      color: isActive
-                        ? game.id === "codm" || game.id === "ml"
-                          ? "#0A0C10"
-                          : "#FFFFFF"
-                        : undefined,
-                      borderColor: isActive ? game.accentColor : undefined,
-                      boxShadow: isActive ? `0 0 12px ${game.accentColor}55` : undefined,
-                    }}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={game.image} alt={game.name} className="w-4 h-4 rounded object-cover" />
-                    <span className="font-mono font-black">{game.shortName}</span>
-                  </button>
-                );
-              })}
-            </div>
-
+          <div className="flex items-center gap-3 shrink-0">
             {isLoggedIn && (
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="h-10 px-5 rounded-xl game-theme-btn font-sans text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer shadow-lg shrink-0"
+                className="h-11 px-6 game-theme-btn font-display text-sm font-black uppercase tracking-wider transition-all active:scale-[0.98] flex items-center justify-center gap-2.5 cursor-pointer shadow-xl shadow-primary-brand/20 shrink-0"
               >
                 <SwordsIcon className="w-4 h-4" />
                 <span>Post Scrim Offer</span>
@@ -492,10 +460,10 @@ export default function ScrimsPage() {
               <button
                 key={fmt}
                 onClick={() => setSelectedFormat(fmt)}
-                className={`px-3 py-1 rounded-lg font-sans text-xs font-bold uppercase tracking-wider transition-all cursor-pointer border ${
+                className={`px-3 py-1 font-sans text-xs font-bold uppercase tracking-wider transition-all cursor-pointer border ${
                   selectedFormat === fmt
-                    ? "shadow-sm font-black"
-                    : "bg-[#080B12] text-slate-400 border-[#1E2538] hover:text-white"
+                    ? "game-theme-btn shadow-sm font-black"
+                    : "tactical-btn-secondary text-slate-400 border-[#1E2538] hover:text-white"
                 }`}
                 style={{
                   backgroundColor: selectedFormat === fmt ? "var(--primary-brand)" : undefined,
@@ -509,12 +477,12 @@ export default function ScrimsPage() {
           </div>
 
           <div className="flex items-center gap-3 text-xs font-mono text-slate-300">
-            <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#080B12] border border-[#1E2538]">
+            <span className="flex items-center gap-1.5 px-3 py-1 bg-[#080B12] border border-[#1E2538]" style={{ clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)" }}>
               <ZapIcon className="w-3.5 h-3.5 text-amber-400" />
               <span>OPEN OFFERS: <strong className="text-white">{enrichedScrims.length}</strong></span>
             </span>
             {bookedScrims.length > 0 && (
-              <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#141A29] text-emerald-400 border border-[#232D44]">
+              <span className="flex items-center gap-1.5 px-3 py-1 bg-[#141A29] text-emerald-400 border border-[#232D44]" style={{ clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)" }}>
                 <CheckCircleIcon className="w-3.5 h-3.5 text-emerald-400" />
                 <span>BOOKED MATCHES: <strong className="text-white">{bookedScrims.length}</strong></span>
               </span>
@@ -524,7 +492,7 @@ export default function ScrimsPage() {
 
         {/* Booked Scrim Compact Notification Toast Bar */}
         {bookedScrims.length > 0 && (
-          <div className="rounded-xl bg-[#0D121F]/95 border border-[#1E293B] px-4 py-2.5 shadow-lg backdrop-blur-md flex items-center justify-between gap-4">
+          <div className="bg-[#0D121F]/95 border border-[#1E293B] px-4 py-2.5 shadow-lg backdrop-blur-md flex items-center justify-between gap-4" style={{ clipPath: "polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))" }}>
             <div className="flex items-center gap-2.5 min-w-0">
               <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
               <span className="text-xs font-sans font-bold text-white truncate">
@@ -537,7 +505,7 @@ export default function ScrimsPage() {
 
             <button
               onClick={() => openWarRoom(bookedScrims[0], isUserHost(bookedScrims[0]))}
-              className="h-8 px-4 rounded-lg game-theme-btn font-sans text-xs font-extrabold uppercase tracking-wider shadow-md shrink-0 flex items-center gap-1.5 cursor-pointer"
+              className="h-8 px-4 game-theme-btn font-sans text-xs font-extrabold uppercase tracking-wider shadow-md shrink-0 flex items-center gap-1.5 cursor-pointer"
             >
               <FlameIcon className="w-3.5 h-3.5 text-white" />
               <span>War Room →</span>
@@ -579,7 +547,7 @@ export default function ScrimsPage() {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
             {enrichedScrims.map((scrim) => (
               <ScrimCard
                 key={scrim.id}
@@ -601,6 +569,7 @@ export default function ScrimsPage() {
         <PostScrimModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
+          defaultGame={activeGame}
           onSubmit={handlePostScrimSubmit}
         />
 

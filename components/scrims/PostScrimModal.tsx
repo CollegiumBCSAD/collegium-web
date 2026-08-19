@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { GAME_LIST } from "@/lib/games";
 import { GameId } from "@/types";
 import { getStoredTeams, fetchTeamsApi, Team } from "@/lib/teams";
@@ -9,6 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 interface PostScrimModalProps {
   isOpen: boolean;
   onClose: () => void;
+  defaultGame?: GameId;
   onSubmit: (data: {
     gameTitle: GameId;
     teamId?: string;
@@ -20,22 +21,17 @@ interface PostScrimModalProps {
   }) => void;
 }
 
-const MAP_OPTIONS = [
-  "Ascent",
-  "Haven",
-  "Split",
-  "Bind",
-  "Sunset",
-  "Lotus",
-  "Pearl",
-  "Summoner's Rift",
-  "Erangel",
-  "Bermuda",
-];
+const GAME_MAP_OPTIONS: Record<GameId, string[]> = {
+  valo: ["Ascent", "Haven", "Split", "Bind", "Sunset", "Lotus", "Pearl", "Icebox", "Abyss"],
+  lol: ["Summoner's Rift", "Howling Abyss"],
+  codm: ["Standoff", "Crash", "Firing Range", "Raid", "Summit", "Takeoff", "Slums"],
+  ml: ["Imperial Sanctuary", "Celestial Palace", "Western Expanse"],
+};
 
 export default function PostScrimModal({
   isOpen,
   onClose,
+  defaultGame = "valo",
   onSubmit,
 }: PostScrimModalProps) {
   const { user } = useAuth();
@@ -60,13 +56,13 @@ export default function PostScrimModal({
         (m) =>
           m.status === "ACCEPTED" &&
           ((myId && m.userId === myId) ||
-           (myEmail && m.email && m.email.toLowerCase().trim() === myEmail) ||
-           (myName && m.displayName && m.displayName.toLowerCase().trim() === myName))
+            (myEmail && m.email && m.email.toLowerCase().trim() === myEmail) ||
+            (myName && m.displayName && m.displayName.toLowerCase().trim() === myName))
       )
     );
   }, [user, allTeams]);
 
-  const [formGame, setFormGame] = useState<GameId>("valo");
+  const [formGame, setFormGame] = useState<GameId>(defaultGame);
   const [selectedTeamId, setSelectedTeamId] = useState<string>("");
   const [formTeamName, setFormTeamName] = useState<string>("");
   const [formFormat, setFormFormat] = useState("BO3");
@@ -74,16 +70,52 @@ export default function PostScrimModal({
   const [formMap, setFormMap] = useState("Ascent");
   const [formNotes, setFormNotes] = useState("");
 
+  // Sync formGame and formMap when defaultGame or isOpen changes
   useEffect(() => {
-    if (userTeams.length > 0) {
-      if (!selectedTeamId || !userTeams.some((t) => t.id === selectedTeamId)) {
-        setSelectedTeamId(userTeams[0].id);
-        setFormTeamName(userTeams[0].name);
+    if (isOpen) {
+      setFormGame(defaultGame);
+      const maps = GAME_MAP_OPTIONS[defaultGame] || GAME_MAP_OPTIONS.valo;
+      setFormMap(maps[0]);
+    }
+  }, [isOpen, defaultGame]);
+
+  const userTeamsForGame = useMemo(() => {
+    const matching = userTeams.filter((t) => t.gameTitle === formGame);
+    return matching.length > 0 ? matching : userTeams;
+  }, [userTeams, formGame]);
+
+  useEffect(() => {
+    if (userTeamsForGame.length > 0) {
+      if (!selectedTeamId || !userTeamsForGame.some((t) => t.id === selectedTeamId)) {
+        setSelectedTeamId(userTeamsForGame[0].id);
+        setFormTeamName(userTeamsForGame[0].name);
       }
     } else if (!formTeamName) {
-      setFormTeamName(user?.university?.name ? `${user.university.name} Varsity` : `${user?.displayName || "Varsity"} Squad`);
+      setFormTeamName(
+        user?.university?.name ? `${user.university.name} Varsity` : `${user?.displayName || "Varsity"} Squad`
+      );
     }
-  }, [userTeams, user, selectedTeamId, formTeamName]);
+  }, [userTeamsForGame, user, selectedTeamId, formTeamName]);
+
+  const handleGameChange = (game: GameId) => {
+    setFormGame(game);
+    const maps = GAME_MAP_OPTIONS[game] || GAME_MAP_OPTIONS.valo;
+    setFormMap(maps[0]);
+
+    const matchingTeam = userTeams.find((t) => t.gameTitle === game);
+    if (matchingTeam) {
+      setSelectedTeamId(matchingTeam.id);
+      setFormTeamName(matchingTeam.name);
+    } else if (userTeams.length > 0) {
+      setSelectedTeamId(userTeams[0].id);
+      setFormTeamName(userTeams[0].name);
+    } else {
+      setSelectedTeamId("");
+      setFormTeamName(
+        user?.university?.name ? `${user.university.name} Varsity` : `${user?.displayName || "Varsity"} Squad`
+      );
+    }
+  };
 
   // Modal lifecycle listeners
   useEffect(() => {
@@ -106,7 +138,7 @@ export default function PostScrimModal({
 
   const handleTeamChange = (teamId: string) => {
     setSelectedTeamId(teamId);
-    const found = userTeams.find((t) => t.id === teamId);
+    const found = userTeamsForGame.find((t) => t.id === teamId);
     if (found) {
       setFormTeamName(found.name);
     }
@@ -130,6 +162,8 @@ export default function PostScrimModal({
     onClose();
   };
 
+  const currentMapOptions = GAME_MAP_OPTIONS[formGame] || GAME_MAP_OPTIONS.valo;
+
   return (
     <div
       onClick={(e) => {
@@ -145,11 +179,9 @@ export default function PostScrimModal({
           <button
             onClick={onClose}
             aria-label="Close Modal"
-            className="w-8 h-8 rounded-full bg-[#141A29] hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 flex items-center justify-center text-sm font-bold transition-all cursor-pointer border border-[#232D44]"
+            className="text-secondary-text hover:text-foreground text-sm cursor-pointer"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            ✕
           </button>
         </div>
 
@@ -160,8 +192,8 @@ export default function PostScrimModal({
             </label>
             <select
               value={formGame}
-              onChange={(e) => setFormGame(e.target.value as GameId)}
-              className="w-full h-11 px-3 rounded-lg bg-background border border-panel-border text-foreground text-xs font-sans focus:outline-none"
+              onChange={(e) => handleGameChange(e.target.value as GameId)}
+              className="w-full h-11 px-3 rounded-lg bg-background border border-panel-border text-foreground text-xs font-sans focus:outline-none cursor-pointer"
             >
               {GAME_LIST.map((g) => (
                 <option key={g.id} value={g.id}>
@@ -175,13 +207,13 @@ export default function PostScrimModal({
             <label className="block text-xs font-sans font-semibold uppercase tracking-wider text-secondary-text mb-1">
               Host Squad / Team
             </label>
-            {userTeams.length > 0 ? (
+            {userTeamsForGame.length > 0 ? (
               <select
                 value={selectedTeamId}
                 onChange={(e) => handleTeamChange(e.target.value)}
-                className="w-full h-11 px-3 rounded-lg bg-background border border-panel-border text-foreground text-xs font-sans focus:outline-none"
+                className="w-full h-11 px-3 rounded-lg bg-background border border-panel-border text-foreground text-xs font-sans focus:outline-none cursor-pointer"
               >
-                {userTeams.map((t) => (
+                {userTeamsForGame.map((t) => (
                   <option key={t.id} value={t.id}>
                     {t.name} ({t.universityName})
                   </option>
@@ -234,9 +266,9 @@ export default function PostScrimModal({
             <select
               value={formMap}
               onChange={(e) => setFormMap(e.target.value)}
-              className="w-full h-11 px-3 rounded-lg bg-background border border-panel-border text-foreground text-xs font-sans focus:outline-none"
+              className="w-full h-11 px-3 rounded-lg bg-background border border-panel-border text-foreground text-xs font-sans focus:outline-none cursor-pointer"
             >
-              {MAP_OPTIONS.map((m) => (
+              {currentMapOptions.map((m) => (
                 <option key={m} value={m}>
                   {m}
                 </option>
@@ -267,7 +299,7 @@ export default function PostScrimModal({
             </button>
             <button
               type="submit"
-              className="h-10 px-6 rounded-lg bg-gradient-to-r from-[#E53A4C] to-[#B91C1C] hover:from-[#EF4444] hover:to-[#991B1B] text-foreground text-xs font-bold uppercase transition-all active:scale-[0.98] shadow-md shadow-primary-brand/20 cursor-pointer"
+              className="h-10 px-6 rounded-lg game-theme-btn font-sans text-xs font-bold uppercase transition-all active:scale-[0.98] shadow-md shadow-primary-brand/20 cursor-pointer"
             >
               Publish Scrim Offer
             </button>
