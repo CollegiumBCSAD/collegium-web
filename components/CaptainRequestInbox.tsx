@@ -125,7 +125,7 @@ export default function CaptainRequestInbox() {
   };
 
   return (
-    <div className="relative group">
+    <div className="relative">
       {/* 6-Sided Faceted Tactical War Room Console */}
       <div 
         className="relative overflow-hidden bg-[#0A0D18] border border-[#1E293B] shadow-2xl p-6 sm:p-7 space-y-6"
@@ -177,10 +177,10 @@ export default function CaptainRequestInbox() {
             </div>
           </div>
 
-          {/* Team Switcher Tabs & Quick Invite Link */}
+          {/* Team Switcher Tabs (Square Corners) & Quick Invite Link */}
           <div className="flex flex-wrap items-center gap-3 shrink-0">
             {captainTeams.length > 1 && (
-              <div className="flex items-center gap-1.5 p-1 bg-[#060812] border border-[#182338]">
+              <div className="flex items-center gap-1.5 p-1 bg-[#060812] border border-[#182338] rounded-none">
                 {captainTeams.map((t) => {
                   const isActive = t.id === activeTeam.id;
                   const g = GAMES[t.gameTitle as keyof typeof GAMES] || GAMES.valo;
@@ -188,17 +188,14 @@ export default function CaptainRequestInbox() {
                     <button
                       key={t.id}
                       onClick={() => setSelectedTeamId(t.id)}
-                      className={`px-3.5 py-1.5 text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2 ${
+                      className={`px-3.5 py-1.5 text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2 rounded-none border ${
                         isActive
-                          ? "game-theme-btn shadow-md scale-105"
-                          : "bg-[#101626] text-slate-400 hover:text-white border border-[#1E293B]"
+                          ? "game-theme-btn shadow-md border-primary-brand/80"
+                          : "bg-[#101626] text-slate-400 hover:text-white border-[#1E293B] hover:border-[#2E3C5B]"
                       }`}
-                      style={{
-                        clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-                      }}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={g.image} alt="" className="w-3.5 h-3.5 rounded-full object-cover" />
+                      <img src={g.image} alt="" className="w-3.5 h-3.5 rounded-sm object-cover" />
                       <span>{t.name}</span>
                     </button>
                   );
@@ -210,10 +207,7 @@ export default function CaptainRequestInbox() {
             <button
               type="button"
               onClick={handleCopyInvite}
-              className="h-8.5 px-3.5 text-xs font-mono font-bold text-slate-300 hover:text-white bg-[#101626] hover:bg-[#1A253D] border border-[#22314E] transition-all cursor-pointer flex items-center gap-2 shadow-inner active:scale-95"
-              style={{
-                clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-              }}
+              className="h-8.5 px-3.5 text-xs font-mono font-bold text-slate-300 hover:text-white bg-[#101626] hover:bg-[#1A253D] border border-[#22314E] transition-all cursor-pointer flex items-center gap-2 shadow-inner active:scale-95 rounded-none"
             >
               <span className="text-slate-400">Invite:</span>
               <strong className="text-primary-brand font-mono">{activeTeam.inviteCode}</strong>
@@ -222,7 +216,6 @@ export default function CaptainRequestInbox() {
           </div>
         </div>
 
-        {/* Action Status Toast */}
         {actionMessage && (
           <div className="p-3 bg-[#060812] border border-emerald-500/40 text-xs font-sans font-bold text-emerald-400 flex items-center gap-2 shadow-inner">
             <CheckCircleIcon className="w-4 h-4 text-emerald-400 shrink-0" />
@@ -247,7 +240,7 @@ export default function CaptainRequestInbox() {
             {acceptedMembers.map((m, idx) => (
               <div 
                 key={m.id} 
-                className="p-4 bg-[#060812] border border-[#1E293B] shadow-inner flex items-center justify-between gap-3 hover:border-primary-brand/50 transition-all duration-200 group relative"
+                className="p-4 bg-[#060812] border border-[#1E293B] shadow-inner flex items-center justify-between gap-3 hover:border-primary-brand/70 hover:bg-[#0A0F1D] transition-all duration-200 group/slot relative"
                 style={{
                   clipPath: "polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%)",
                 }}
@@ -255,7 +248,7 @@ export default function CaptainRequestInbox() {
                 <div className="flex items-center gap-3 min-w-0">
                   {/* Octagonal Avatar */}
                   <div 
-                    className="w-10 h-10 bg-[#121929] text-white flex items-center justify-center font-display font-black text-xs border border-white/10 shrink-0 group-hover:border-primary-brand/60"
+                    className="w-10 h-10 bg-[#121929] text-white flex items-center justify-center font-display font-black text-xs border border-white/10 shrink-0 group-hover/slot:border-primary-brand/60"
                     style={{
                       clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
                     }}
@@ -265,7 +258,7 @@ export default function CaptainRequestInbox() {
 
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <span className="font-display text-xs font-bold uppercase text-white truncate group-hover:text-primary-brand transition-colors">
+                      <span className="font-display text-xs font-bold uppercase text-white truncate group-hover/slot:text-primary-brand transition-colors">
                         {m.displayName}
                       </span>
                       {idx === 0 && <CrownIcon className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
@@ -281,7 +274,7 @@ export default function CaptainRequestInbox() {
                 </div>
 
                 <span 
-                  className="text-[9px] font-mono font-bold text-slate-300 bg-[#101626] px-2 py-0.5 border border-[#202C45] shrink-0"
+                  className="text-[9px] font-mono font-bold text-slate-300 bg-[#101626] px-2 py-0.5 border border-[#202C45] shrink-0 group-hover/slot:border-primary-brand/40"
                   style={{
                     clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
                   }}
@@ -299,14 +292,14 @@ export default function CaptainRequestInbox() {
                 <div
                   key={`empty-${i}`}
                   onClick={handleCopyInvite}
-                  className="p-4 bg-[#050711]/60 border border-dashed border-[#1E293B] hover:border-primary-brand/60 flex items-center justify-between gap-3 transition-all duration-200 cursor-pointer group hover:bg-[#0A0E1A]"
+                  className="p-4 bg-[#050711]/60 border border-dashed border-[#1E293B] hover:border-primary-brand/60 hover:bg-[#0A0E1A] flex items-center justify-between gap-3 transition-all duration-200 cursor-pointer group/slot"
                   style={{
                     clipPath: "polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%)",
                   }}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div 
-                      className="w-10 h-10 bg-[#0A0D18] text-slate-500 group-hover:text-primary-brand flex items-center justify-center font-black text-sm border border-dashed border-[#202C45] group-hover:border-primary-brand/50 shrink-0 transition-colors"
+                      className="w-10 h-10 bg-[#0A0D18] text-slate-500 group-hover/slot:text-primary-brand flex items-center justify-center font-black text-sm border border-dashed border-[#202C45] group-hover/slot:border-primary-brand/50 shrink-0 transition-colors"
                       style={{
                         clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
                       }}
@@ -315,17 +308,17 @@ export default function CaptainRequestInbox() {
                     </div>
 
                     <div className="min-w-0">
-                      <span className="font-display text-xs font-bold uppercase text-slate-400 group-hover:text-white block truncate transition-colors">
+                      <span className="font-display text-xs font-bold uppercase text-slate-400 group-hover/slot:text-white block truncate transition-colors">
                         Empty Slot #{slotIdx + 1}
                       </span>
-                      <span className="text-[10px] font-mono text-slate-500 block truncate group-hover:text-slate-300">
+                      <span className="text-[10px] font-mono text-slate-500 block truncate group-hover/slot:text-slate-300">
                         {expectedRole}
                       </span>
                     </div>
                   </div>
 
                   <span 
-                    className="text-[9px] font-mono font-bold text-slate-400 group-hover:text-primary-brand bg-[#0C101E] px-2 py-0.5 border border-[#1A253C] group-hover:border-primary-brand/40 shrink-0 transition-colors"
+                    className="text-[9px] font-mono font-bold text-slate-400 group-hover/slot:text-primary-brand bg-[#0C101E] px-2 py-0.5 border border-[#1A253C] group-hover/slot:border-primary-brand/40 shrink-0 transition-colors"
                     style={{
                       clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
                     }}
