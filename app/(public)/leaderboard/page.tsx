@@ -37,7 +37,7 @@ function mapUniversitiesToLeaderboard(universities: University[], game: string):
 }
 
 export default function LeaderboardPage() {
-  const { selectedGame: globalGame, selectGame } = useGame();
+  const { selectedGame: globalGame, selectedGameInfo, selectGame } = useGame();
   const activeGame = globalGame || "valo";
   const gameDisplayName = GAME_ID_TO_DISPLAY[activeGame] || "VALORANT";
   const enumValue = GAME_ID_TO_ENUM[activeGame] || "VALORANT";
@@ -100,11 +100,17 @@ export default function LeaderboardPage() {
                 <button
                   key={game.id}
                   onClick={() => selectGame(game.id)}
-                  className={`px-4 py-2 rounded-xl font-mono text-xs font-bold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 border ${
+                  className={`px-4 py-2 rounded-xl font-mono text-xs font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 border ${
                     isActive
-                      ? "bg-primary-brand text-white border-primary-brand shadow-lg shadow-red-950/40"
+                      ? "shadow-lg scale-105"
                       : "bg-[#0D121F] text-slate-400 border-[#1E293B] hover:text-white hover:bg-[#141A29]"
                   }`}
+                  style={{
+                    backgroundColor: isActive ? game.accentColor : undefined,
+                    color: isActive ? (game.id === "codm" || game.id === "ml" ? "#0A0C10" : "#FFFFFF") : undefined,
+                    borderColor: isActive ? game.accentColor : undefined,
+                    boxShadow: isActive ? `0 0 12px ${game.accentColor}55` : undefined,
+                  }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={game.image} alt={game.name} className="w-4 h-4 rounded object-cover ring-1 ring-white/10" />

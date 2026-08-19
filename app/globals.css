@@ -163,3 +163,34 @@ h1, h2, h3, h4, .font-display, .font-oswald {
 .animate-nav-glow {
   animation: navGlowPulse 2s ease-in-out infinite;
 }
+
+/* Arena Smart Animation Roll-In */
+@keyframes arenaRollIn {
+  0% {
+    opacity: 0;
+    transform: translateY(45px) scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes arenaHeaderDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-25px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-arena-roll-in {
+  animation: arenaRollIn 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-arena-header-down {
+  animation: arenaHeaderDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}

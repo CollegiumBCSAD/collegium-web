@@ -450,13 +450,23 @@ export default function ScrimsPage() {
                     onClick={() => selectGame(game.id)}
                     className={`px-3 py-1.5 rounded-xl font-sans text-xs font-bold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 border ${
                       isActive
-                        ? "bg-primary-brand text-white border-primary-brand shadow-lg shadow-primary-brand/30"
+                        ? "shadow-lg"
                         : "bg-[#121624] text-secondary-text border-[#222B3F] hover:text-foreground hover:bg-[#182033]"
                     }`}
+                    style={{
+                      backgroundColor: isActive ? game.accentColor : undefined,
+                      color: isActive
+                        ? game.id === "codm" || game.id === "ml"
+                          ? "#0A0C10"
+                          : "#FFFFFF"
+                        : undefined,
+                      borderColor: isActive ? game.accentColor : undefined,
+                      boxShadow: isActive ? `0 0 12px ${game.accentColor}55` : undefined,
+                    }}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={game.image} alt={game.name} className="w-4 h-4 rounded object-cover" />
-                    <span>{game.shortName}</span>
+                    <span className="font-mono font-black">{game.shortName}</span>
                   </button>
                 );
               })}
@@ -484,9 +494,14 @@ export default function ScrimsPage() {
                 onClick={() => setSelectedFormat(fmt)}
                 className={`px-3 py-1 rounded-lg font-sans text-xs font-bold uppercase tracking-wider transition-all cursor-pointer border ${
                   selectedFormat === fmt
-                    ? "bg-primary-brand text-white border-primary-brand shadow-sm"
+                    ? "shadow-sm font-black"
                     : "bg-[#080B12] text-slate-400 border-[#1E2538] hover:text-white"
                 }`}
+                style={{
+                  backgroundColor: selectedFormat === fmt ? "var(--primary-brand)" : undefined,
+                  color: selectedFormat === fmt ? "var(--game-btn-text, #FFFFFF)" : undefined,
+                  borderColor: selectedFormat === fmt ? "var(--primary-brand)" : undefined,
+                }}
               >
                 {fmt}
               </button>

@@ -8,8 +8,10 @@ import { TournamentCardSkeleton } from "@/components/ui/Skeleton";
 import { TrophyIcon } from "@/components/ui/Icons";
 import { Tournament } from "@/types";
 import { tournamentsService } from "@/services";
+import { useGame } from "@/context/GameContext";
 
 export default function TournamentsPage() {
+  const { selectedGameInfo } = useGame();
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);

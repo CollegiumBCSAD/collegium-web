@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { GameProvider } from "@/context/GameContext";
+import { GameProvider, useGame } from "@/context/GameContext";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { NotificationProvider } from "@/context/NotificationContext";
 import { WarRoomProvider, useWarRoom } from "@/context/WarRoomContext";
@@ -14,6 +14,7 @@ import ChatQuickAccess from "@/components/ChatQuickAccess";
 import ScrimWarRoomModal from "@/components/scrims/ScrimWarRoomModal";
 import GameSelectorModal from "@/components/GameSelectorModal";
 import HeaderGameSwitcher from "@/components/HeaderGameSwitcher";
+import ActiveArenaBanner from "@/components/ActiveArenaBanner";
 import { HomeIcon, PlusIcon, UsersIcon, SwordsIcon } from "@/components/ui/Icons";
 
 function HeaderAuthControls() {

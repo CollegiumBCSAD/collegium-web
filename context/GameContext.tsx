@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { GameId, GameInfo, GAMES, STORAGE_KEY } from "@/lib/games";
 
 interface GameContextType {
@@ -16,7 +17,7 @@ interface GameContextType {
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
-  const [selectedGame, setSelectedGame] = useState<GameId | null>(null);
+  const [selectedGame, setSelectedGame] = useState<GameId | null>("valo");
   const [isSelectorOpen, setIsSelectorOpen] = useState<boolean>(false);
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
 
@@ -32,10 +33,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     queueMicrotask(() => {
       if (storedGame) {
         setSelectedGame(storedGame);
-        setIsSelectorOpen(false);
       } else {
-        setIsSelectorOpen(true);
+        setSelectedGame("valo");
       }
+      setIsSelectorOpen(false);
       setIsLoaded(true);
     });
   }, []);
@@ -59,8 +60,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         rgb = "255, 255, 255";
         btnText = "#0A0C10";
       } else if (selectedGame === "ml") {
-        rgb = "168, 85, 247";
-        btnText = "#FFFFFF";
+        rgb = "245, 158, 11";
+        btnText = "#0A0C10";
       }
 
       document.documentElement.style.setProperty("--game-glow-rgb", rgb);

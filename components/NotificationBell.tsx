@@ -71,7 +71,13 @@ export default function NotificationBell() {
       >
         <span className="text-base group-hover:scale-110 group-hover:rotate-12 transition-transform duration-200">🔔</span>
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-primary-brand text-white text-[10px] font-mono font-bold flex items-center justify-center ring-2 ring-[#0A0C10] animate-pulse shadow-md">
+          <span
+            className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full text-[10px] font-mono font-black flex items-center justify-center ring-2 ring-[#0A0C10] animate-pulse shadow-md"
+            style={{
+              backgroundColor: "var(--primary-brand)",
+              color: "var(--game-btn-text, #FFFFFF)",
+            }}
+          >
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}

@@ -18,7 +18,7 @@ interface DisplayMatch {
 }
 
 export default function LandingPage() {
-  const { selectedGame, selectedGameInfo, openGameSelector } = useGame();
+  const { selectedGame, selectedGameInfo, selectGame, openGameSelector } = useGame();
   const activeGame: GameId = selectedGame || "valo";
 
   const [universities, setUniversities] = useState<University[]>([]);
@@ -144,22 +144,52 @@ export default function LandingPage() {
       <section className="mx-auto max-w-[1800px] w-full px-4 sm:px-6 md:px-10 lg:px-16 py-10 sm:py-16 lg:py-20">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16 items-start">
           <div className="lg:col-span-7 flex flex-col items-start text-left">
-            <div className="flex items-center gap-3 mb-4 sm:mb-6 flex-wrap">
-              <span className="font-sans text-xs font-normal tracking-widest text-secondary-brand uppercase flex items-center gap-2">
+            <div className="w-full mb-6">
+              <span className="font-sans text-xs font-normal tracking-widest text-secondary-brand uppercase flex items-center gap-2 mb-3">
                 <span className="h-0.5 w-6 bg-secondary-brand shrink-0" />
                 PHILIPPINE COLLEGIATE ESPORTS CIRCUIT
               </span>
+
               {selectedGameInfo && (
-                <span
-                  className="text-[10px] font-sans font-bold tracking-widest uppercase px-2.5 py-1 rounded-full flex items-center gap-1.5"
+                <div
+                  className="inline-flex items-center p-3 sm:p-3.5 pr-5 rounded-2xl bg-gradient-to-r from-[#0F1422]/98 via-[#0A0D17]/95 to-[#0F1422]/98 border-2 shadow-2xl backdrop-blur-xl transition-all duration-300"
                   style={{
-                    backgroundColor: selectedGameInfo.accentColor,
-                    color: selectedGameInfo.id === "codm" ? "#0A0C10" : "#FFFFFF",
+                    borderColor: `${selectedGameInfo.accentColor}AA`,
+                    boxShadow: `0 0 25px ${selectedGameInfo.accentColor}25`,
                   }}
                 >
-                  <span>MAIN:</span>
-                  <span>{selectedGameInfo.shortName}</span>
-                </span>
+                  <div className="flex items-center gap-3">
+                    <div className="relative w-11 h-11 rounded-xl overflow-hidden shrink-0 border-2 border-white/20 shadow-md">
+                      <Image
+                        src={selectedGameInfo.image}
+                        alt={selectedGameInfo.name}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono font-extrabold tracking-widest text-slate-400 uppercase">
+                          ACTIVE BATTLEGROUND
+                        </span>
+                        <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded bg-[#161E30] text-slate-300 border border-[#27344D]">
+                          {selectedGameInfo.genre}
+                        </span>
+                      </div>
+                      <h3
+                        className="font-display text-lg sm:text-xl font-black uppercase tracking-wide leading-tight flex items-center gap-2"
+                        style={{ color: selectedGameInfo.accentColor }}
+                      >
+                        <span
+                          className="w-2 h-2 rounded-full animate-pulse shrink-0"
+                          style={{ backgroundColor: selectedGameInfo.accentColor }}
+                        />
+                        {selectedGameInfo.name}
+                      </h3>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
 
@@ -178,12 +208,6 @@ export default function LandingPage() {
               >
                 Explore Tournaments
               </Link>
-              <button
-                onClick={openGameSelector}
-                className="inline-flex h-12 items-center justify-center rounded border border-raised-panel bg-gradient-to-r from-[#191D27] to-[#121520] hover:from-[#232836] hover:to-[#191D27] px-6 text-sm font-bold uppercase tracking-wider text-foreground transition-all active:scale-[0.98] w-full sm:w-auto text-center cursor-pointer font-display"
-              >
-                Switch Game Title
-              </button>
             </div>
 
             <div className="mt-10 sm:mt-16 w-full pt-6 sm:pt-8 border-t border-raised-panel/30 sm:border-t-0">
@@ -213,7 +237,7 @@ export default function LandingPage() {
                 className="w-full h-full object-cover object-center opacity-45 group-hover:scale-105 transition-transform duration-500"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#080C14] via-[#080C14]/70 to-transparent" />
-              
+
               {/* Header Title & Game Switcher Selector */}
               <div className="absolute inset-0 p-4 flex flex-col justify-between">
                 <div className="flex items-center justify-between gap-2">
@@ -376,8 +400,8 @@ export default function LandingPage() {
                 <div
                   key={game.id}
                   className={`relative flex flex-col justify-between rounded-xl border bg-card-bg p-4 transition-all duration-300 ${isSelected
-                      ? `${game.borderColor} border-2`
-                      : "border-raised-panel hover:border-raised-panel/80"
+                    ? `${game.borderColor} border-2`
+                    : "border-raised-panel hover:border-raised-panel/80"
                     }`}
                 >
                   {isSelected && (

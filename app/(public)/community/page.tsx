@@ -4,8 +4,10 @@ import React, { useState } from "react";
 import { mockNewsArticles, NewsArticle } from "@/lib/mock/news";
 import Link from "next/link";
 import { TrophyIcon, FlameIcon, ZapIcon, CalendarIcon, ClockIcon } from "@/components/ui/Icons";
+import { useGame } from "@/context/GameContext";
 
 export default function CommunityPage() {
+  const { selectedGameInfo } = useGame();
   const [activeCategory, setActiveCategory] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
@@ -60,11 +62,16 @@ export default function CommunityPage() {
                   <button
                     key={cat}
                     onClick={() => setActiveCategory(cat)}
-                    className={`px-3.5 py-2 rounded-xl font-sans text-xs font-extrabold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap border ${
+                    className={`px-3.5 py-2 rounded-xl font-sans text-xs font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap border ${
                       isActive
-                        ? "bg-primary-brand text-white border-primary-brand shadow-lg shadow-red-950/50"
+                        ? "shadow-lg"
                         : "bg-[#0D121F] text-slate-400 border-[#1E293B] hover:text-white hover:bg-[#141A29]"
                     }`}
+                    style={{
+                      backgroundColor: isActive ? "var(--primary-brand)" : undefined,
+                      color: isActive ? "var(--game-btn-text, #FFFFFF)" : undefined,
+                      borderColor: isActive ? "var(--primary-brand)" : undefined,
+                    }}
                   >
                     {cat}
                   </button>
@@ -90,7 +97,13 @@ export default function CommunityPage() {
                 <div className="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
                 
                 <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
-                  <span className="font-mono text-[10px] font-extrabold tracking-widest text-white uppercase px-3 py-1 rounded-full bg-primary-brand/90 shadow-md">
+                  <span
+                    className="font-mono text-[10px] font-black tracking-widest uppercase px-3 py-1 rounded-full shadow-md"
+                    style={{
+                      backgroundColor: "var(--primary-brand)",
+                      color: "var(--game-btn-text, #FFFFFF)",
+                    }}
+                  >
                     FEATURED STORY
                   </span>
                   <span className="font-mono text-xs font-bold text-slate-200 flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">

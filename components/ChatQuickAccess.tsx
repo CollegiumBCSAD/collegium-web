@@ -104,7 +104,13 @@ export default function ChatQuickAccess() {
       >
         <SwordsIcon className="w-4 h-4 text-slate-300 group-hover:scale-110 group-hover:text-primary-brand transition-all duration-200" />
         {chats.length > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-primary-brand text-white text-[10px] font-mono font-bold flex items-center justify-center ring-2 ring-[#0A0C10] animate-pulse shadow-md">
+          <span
+            className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full text-[10px] font-mono font-black flex items-center justify-center ring-2 ring-[#0A0C10] animate-pulse shadow-md"
+            style={{
+              backgroundColor: "var(--primary-brand)",
+              color: "var(--game-btn-text, #FFFFFF)",
+            }}
+          >
             {chats.length > 9 ? "9+" : chats.length}
           </span>
         )}
