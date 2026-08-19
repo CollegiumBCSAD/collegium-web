@@ -1,7 +1,6 @@
 import { LeaderboardEntry } from "@/types";
 export type { LeaderboardEntry };
 
-
 export const mockLeaderboards: Record<string, LeaderboardEntry[]> = {
   VALORANT: [
     {
@@ -12,7 +11,6 @@ export const mockLeaderboards: Record<string, LeaderboardEntry[]> = {
       winRate: 81,
       streak: "9W",
       game: "VALORANT",
-      icon: "👑",
     },
     {
       id: "2",
@@ -22,7 +20,6 @@ export const mockLeaderboards: Record<string, LeaderboardEntry[]> = {
       winRate: 72,
       streak: "4W",
       game: "VALORANT",
-      icon: "🥈",
     },
     {
       id: "3",
@@ -32,7 +29,6 @@ export const mockLeaderboards: Record<string, LeaderboardEntry[]> = {
       winRate: 68,
       streak: "3W",
       game: "VALORANT",
-      icon: "🥉",
     },
     {
       id: "4",
@@ -62,7 +58,6 @@ export const mockLeaderboards: Record<string, LeaderboardEntry[]> = {
       winRate: 78,
       streak: "6W",
       game: "LEAGUE OF LEGENDS",
-      icon: "👑",
     },
     {
       id: "2",
@@ -72,7 +67,6 @@ export const mockLeaderboards: Record<string, LeaderboardEntry[]> = {
       winRate: 75,
       streak: "5W",
       game: "LEAGUE OF LEGENDS",
-      icon: "🥈",
     },
     {
       id: "3",
@@ -82,7 +76,6 @@ export const mockLeaderboards: Record<string, LeaderboardEntry[]> = {
       winRate: 64,
       streak: "1L",
       game: "LEAGUE OF LEGENDS",
-      icon: "🥉",
     },
   ],
   "MOBILE LEGENDS: BANG BANG": [
@@ -94,7 +87,6 @@ export const mockLeaderboards: Record<string, LeaderboardEntry[]> = {
       winRate: 83,
       streak: "12W",
       game: "MOBILE LEGENDS: BANG BANG",
-      icon: "👑",
     },
     {
       id: "2",
@@ -104,7 +96,6 @@ export const mockLeaderboards: Record<string, LeaderboardEntry[]> = {
       winRate: 79,
       streak: "6W",
       game: "MOBILE LEGENDS: BANG BANG",
-      icon: "🥈",
     },
     {
       id: "3",
@@ -114,7 +105,6 @@ export const mockLeaderboards: Record<string, LeaderboardEntry[]> = {
       winRate: 70,
       streak: "2W",
       game: "MOBILE LEGENDS: BANG BANG",
-      icon: "🥉",
     },
   ],
   "CALL OF DUTY: MOBILE": [
@@ -126,7 +116,6 @@ export const mockLeaderboards: Record<string, LeaderboardEntry[]> = {
       winRate: 80,
       streak: "8W",
       game: "CALL OF DUTY: MOBILE",
-      icon: "👑",
     },
     {
       id: "2",
@@ -136,7 +125,6 @@ export const mockLeaderboards: Record<string, LeaderboardEntry[]> = {
       winRate: 71,
       streak: "1L",
       game: "CALL OF DUTY: MOBILE",
-      icon: "🥈",
     },
     {
       id: "3",
@@ -146,7 +134,6 @@ export const mockLeaderboards: Record<string, LeaderboardEntry[]> = {
       winRate: 67,
       streak: "4W",
       game: "CALL OF DUTY: MOBILE",
-      icon: "🥉",
     },
   ],
 };

@@ -96,21 +96,20 @@ export default function CaptainRequestInbox() {
     saveStoredTeams(updatedTeams);
     setApiRequests((prev) => prev.filter((r) => r.id !== memberId));
 
-    // Refetch latest live teams from server
     fetchTeamsApi().then((fresh) => setTeams(fresh));
 
     setTimeout(() => setActionMessage(null), 3000);
   };
 
   return (
-    <div className="w-full bg-card-bg border border-raised-panel rounded-2xl p-6 shadow-xl space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-raised-panel pb-4">
+    <div className="w-full bg-[#0D121F]/90 border border-[#1E293B] rounded-3xl p-6 shadow-xl backdrop-blur-xl space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#1E2538] pb-4">
         <div>
-          <span className="text-[10px] font-sans font-extrabold uppercase tracking-widest text-secondary-brand block">
-            Team Captain Roster Control
+          <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-400 block">
+            CAPTAIN ROSTER CONTROL
           </span>
-          <h3 className="font-display text-xl font-bold uppercase text-foreground">
-            {activeTeam.name} Inbox
+          <h3 className="font-display text-lg font-bold uppercase text-white mt-0.5">
+            {activeTeam.name} Roster Inbox
           </h3>
         </div>
 
@@ -120,10 +119,10 @@ export default function CaptainRequestInbox() {
               <button
                 key={t.id}
                 onClick={() => setSelectedTeamId(t.id)}
-                className={`px-3 py-1 rounded text-xs font-sans font-bold uppercase ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold uppercase transition-all ${
                   t.id === activeTeam.id
-                    ? "bg-primary-brand text-white"
-                    : "bg-background text-secondary-text border border-panel-border"
+                    ? "bg-primary-brand text-white shadow-md"
+                    : "bg-[#141A29] text-slate-400 border border-[#232D44] hover:text-white"
                 }`}
               >
                 {t.name}
@@ -133,30 +132,30 @@ export default function CaptainRequestInbox() {
         )}
 
         <div className="flex items-center gap-2">
-          <span className="text-xs font-sans text-secondary-text">Active Roster:</span>
-          <span className="text-xs font-display font-bold text-foreground bg-background px-2.5 py-1 rounded border border-panel-border">
+          <span className="text-xs font-sans text-slate-400">Active Roster:</span>
+          <span className="text-xs font-mono font-bold text-white bg-[#141A29] px-3 py-1 rounded-full border border-[#232D44]">
             {acceptedMembers.length} Athletes
           </span>
         </div>
       </div>
 
       {actionMessage && (
-        <div className="p-3 rounded-lg bg-primary-brand/10 border border-primary-brand/30 text-xs font-sans font-semibold text-primary-brand">
+        <div className="p-3.5 rounded-xl bg-[#141A29] border border-[#232D44] text-xs font-sans font-bold text-slate-200 shadow-sm">
           {actionMessage}
         </div>
       )}
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-sans font-semibold uppercase tracking-wider text-secondary-text">
-            Pending Roster Join Requests ({pendingMembers.length + apiRequests.length})
+          <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
+            Pending Join Requests ({pendingMembers.length + apiRequests.length})
           </h4>
-          {loading && <span className="text-[10px] font-sans text-secondary-text animate-pulse">Syncing...</span>}
+          {loading && <span className="text-[10px] font-mono text-slate-400 animate-pulse">Syncing...</span>}
         </div>
 
         {pendingMembers.length === 0 && apiRequests.length === 0 ? (
-          <div className="p-6 rounded-xl bg-background/50 border border-panel-border text-center">
-            <p className="text-xs font-sans text-secondary-text">
+          <div className="p-5 rounded-2xl bg-[#080C14] border border-[#1C2538] text-center">
+            <p className="text-xs font-sans text-slate-400">
               No pending join requests. Share your team invite link to invite university peers!
             </p>
           </div>
@@ -165,21 +164,21 @@ export default function CaptainRequestInbox() {
             {pendingMembers.map((applicant: TeamMember) => (
               <div
                 key={applicant.id}
-                className="p-4 rounded-xl bg-background border border-panel-border flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                className="p-4 rounded-2xl bg-[#080C14] border border-[#1C2538] flex flex-col sm:flex-row sm:items-center justify-between gap-4"
               >
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-display text-sm font-bold text-foreground uppercase">
+                    <span className="font-display text-sm font-bold text-white uppercase">
                       {applicant.displayName}
                     </span>
-                    <span className="text-[10px] font-sans font-bold px-2 py-0.5 rounded bg-primary-brand/10 text-primary-brand border border-primary-brand/20">
+                    <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#141A29] text-slate-300 border border-[#232D44]">
                       {applicant.gameHandle}
                     </span>
                   </div>
-                  <div className="text-xs font-sans text-secondary-text flex items-center gap-3">
+                  <div className="text-xs font-sans text-slate-400 flex items-center gap-3">
                     <span>{applicant.email}</span>
                     {applicant.preferredRole && (
-                      <span className="text-foreground font-semibold">
+                      <span className="text-slate-300 font-bold">
                         Role: {applicant.preferredRole}
                       </span>
                     )}
@@ -189,13 +188,13 @@ export default function CaptainRequestInbox() {
                 <div className="flex items-center gap-2 shrink-0">
                   <button
                     onClick={() => handleDecision(applicant.id, true)}
-                    className="h-9 px-4 rounded-lg bg-success/20 hover:bg-success/30 text-success border border-success/30 text-xs font-sans font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                    className="h-8 px-4 rounded-xl game-theme-btn text-white text-xs font-sans font-bold uppercase tracking-wider transition-all cursor-pointer shadow-md"
                   >
                     Accept
                   </button>
                   <button
                     onClick={() => handleDecision(applicant.id, false)}
-                    className="h-9 px-4 rounded-lg bg-error/10 hover:bg-error/20 text-error border border-error/20 text-xs font-sans font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                    className="h-8 px-4 rounded-xl bg-[#141A29] hover:bg-[#1F273D] text-slate-400 hover:text-white border border-[#232D44] text-xs font-sans font-bold uppercase transition-all cursor-pointer"
                   >
                     Decline
                   </button>
@@ -206,18 +205,20 @@ export default function CaptainRequestInbox() {
         )}
       </div>
 
-      <div className="space-y-3 pt-4 border-t border-raised-panel">
-        <h4 className="text-xs font-sans font-semibold uppercase tracking-wider text-secondary-text">
-          Confirmed Roster ({acceptedMembers.length})
+      <div className="space-y-3 pt-4 border-t border-[#1E2538]">
+        <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
+          Confirmed Varsity Lineup ({acceptedMembers.length})
         </h4>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {acceptedMembers.map((m) => (
-            <div key={m.id} className="p-3 rounded-lg bg-background/50 border border-panel-border/60 flex items-center justify-between">
+            <div key={m.id} className="p-3.5 rounded-xl bg-[#080C14] border border-[#1C2538] flex items-center justify-between">
               <div>
-                <span className="font-display text-xs font-bold text-foreground block">{m.displayName}</span>
-                <span className="text-[10px] font-sans text-secondary-text">{m.gameHandle} {m.preferredRole ? `· ${m.preferredRole}` : ""}</span>
+                <span className="font-display text-xs font-bold text-white block">{m.displayName}</span>
+                <span className="text-[10px] font-mono text-slate-400">{m.gameHandle} {m.preferredRole ? `· ${m.preferredRole}` : ""}</span>
               </div>
-              <span className="text-[10px] font-sans font-bold text-success uppercase">Active</span>
+              <span className="text-[10px] font-mono font-bold text-slate-300 uppercase bg-[#141A29] px-2.5 py-0.5 rounded-full border border-[#232D44]">
+                ACTIVE
+              </span>
             </div>
           ))}
         </div>

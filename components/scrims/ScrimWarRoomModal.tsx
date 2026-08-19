@@ -5,6 +5,7 @@ import { ScrimOffer } from "@/types";
 import { scrimsService, ScrimChatMessage as ServerChatMessage } from "@/services";
 import { getStoredTeams, fetchTeamsApi, Team } from "@/lib/teams";
 import { getSocket } from "@/services/socket";
+import { CrownIcon, CheckCircleIcon, UsersIcon } from "@/components/ui/Icons";
 
 interface ChatMessage {
   id: string;
@@ -43,6 +44,8 @@ export default function ScrimWarRoomModal({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isCopied, setIsCopied] = useState(false);
+  const [isLineupModalOpen, setIsLineupModalOpen] = useState<boolean>(false);
+  const [activeRosterTab, setActiveRosterTab] = useState<"ALL" | "HOST" | "CHALLENGER">("ALL");
   const [teams, setTeams] = useState<Team[]>(() => getStoredTeams());
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
@@ -53,6 +56,21 @@ export default function ScrimWarRoomModal({
       }
     });
   }, []);
+
+  // Keyboard shortcut to close lineup modal on ESC key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (isLineupModalOpen) {
+          setIsLineupModalOpen(false);
+        } else if (isOpen) {
+          onClose();
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isLineupModalOpen, isOpen, onClose]);
 
   const hostSquad = useMemo(() => {
     if (!scrim) return null;
@@ -72,12 +90,10 @@ export default function ScrimWarRoomModal({
     );
   }, [scrim, teams]);
 
-  // Deterministic lobby code shared across ALL players & windows
   const lobbyCode = scrim
     ? getDeterministicLobbyCode(scrim.id, scrim.hostTeamName, scrim.opponentTeamName)
     : "";
 
-  // Live War Room chat: history hydration + WebSocket push, no polling
   useEffect(() => {
     if (!isOpen || !scrim) return;
 
@@ -86,10 +102,10 @@ export default function ScrimWarRoomModal({
 
     const systemMsg: ChatMessage = {
       id: `sys-${scrimId}`,
-      senderName: "SYSTEM ANNOUNCER",
-      teamName: "COLLEGIUM SYSTEM",
+      senderName: "WAR ROOM SYSTEM",
+      teamName: "COLLEGIUM",
       isHostTeam: true,
-      message: `🎮 WAR ROOM UNLOCKED! ${scrim.hostTeamName} vs ${scrim.opponentTeamName || "Challenger Squad"}. Use this space to exchange custom lobby IDs and coordinate game servers.`,
+      message: `WAR ROOM ONLINE · ${scrim.hostTeamName} vs ${scrim.opponentTeamName || "Challenger Squad"}. Exchange lobby codes, coordinate voice channels, and confirm map veto.`,
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
 
@@ -132,7 +148,6 @@ export default function ScrimWarRoomModal({
     };
   }, [isOpen, scrim]);
 
-  // Auto-scroll chat
   useEffect(() => {
     chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -158,252 +173,421 @@ export default function ScrimWarRoomModal({
   };
 
   const quickChats = [
-    "🎮 Lobby created! Join code above.",
-    "🎧 Join our Discord voice channel.",
-    "⏸️ Pausing for 3 mins, player reconnecting.",
-    "⚔️ GLHF! Ready to start map 1.",
+    "Lobby created! Join code above.",
+    "Join our Discord voice channel.",
+    "Pausing 3 mins, reconnecting.",
+    "GLHF! Ready to start.",
   ];
 
+  const hostInitial = scrim.hostTeamName.charAt(0).toUpperCase();
+  const oppInitial = (scrim.opponentTeamName || "C").charAt(0).toUpperCase();
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in zoom-in-95 duration-200">
-      <div className="w-full max-w-4xl bg-[#11141C] border border-[#1E2433] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-xl animate-in fade-in duration-200">
+      <div className="w-full max-w-4xl bg-[#090D16] border border-[#1E293B] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] relative">
         
-        {/* Top War Room Header */}
-        <div className="p-5 bg-gradient-to-r from-[#171C28] via-[#11141C] to-[#171C28] border-b border-[#1E2433] flex items-center justify-between gap-4">
+        {/* Top Header Navigation Bar */}
+        <div className="p-4 sm:p-5 bg-[#0D121F]/95 border-b border-[#1C2538] flex items-center justify-between gap-4 backdrop-blur-md">
+          
+          {/* Head-to-Head Squad Badge */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF4655] to-[#E63946] flex items-center justify-center text-xl shadow-lg shadow-red-950/40">
-              🔥
+            <div className="flex items-center -space-x-2">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-brand to-rose-700 text-white flex items-center justify-center font-display text-sm font-black shadow-md ring-2 ring-[#0D121F]">
+                {hostInitial}
+              </div>
+              <div className="w-9 h-9 rounded-xl bg-[#1A2338] text-white flex items-center justify-center font-display text-sm font-black shadow-md ring-2 ring-[#0D121F] border border-white/10">
+                {oppInitial}
+              </div>
             </div>
+
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="font-display text-base font-extrabold uppercase text-[#F8FAFC]">
-                  SCRIM WAR ROOM
+                <h2 className="font-display text-sm sm:text-base font-black uppercase text-white tracking-wide">
+                  {scrim.hostTeamName} <span className="text-primary-brand">VS</span> {scrim.opponentTeamName || "Challenger"}
                 </h2>
-                <span className="px-2 py-0.5 rounded-full bg-[#10B981]/20 border border-[#10B981]/40 text-[#34D399] text-[10px] font-sans font-bold uppercase tracking-wider">
-                  🟢 MATCH CONFIRMED
+                <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#141A29] text-slate-300 border border-[#232D44]">
+                  {scrim.status === "CONFIRMED" ? "MATCH BOOKED" : "WAR ROOM ACTIVE"}
                 </span>
               </div>
-              <p className="text-xs font-sans text-[#64748B]">
-                {scrim.gameTitle.toUpperCase()} • {scrim.format} • {scrim.mapPreference || "Ascent"}
+              <p className="text-xs font-mono text-slate-400 mt-0.5">
+                {scrim.gameTitle.toUpperCase()} · {scrim.format} · MAP: {scrim.mapPreference || "Ascent"}
               </p>
             </div>
           </div>
 
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-xl bg-[#1E2433] hover:bg-[#EF4444]/20 text-[#64748B] hover:text-[#F87171] flex items-center justify-center text-sm font-bold transition-all cursor-pointer border border-[#2B3245]"
-          >
-            ✕
+          {/* Action Controls */}
+          <div className="flex items-center gap-2.5">
+            <div className="hidden sm:flex items-center gap-2 bg-[#141A29] px-3.5 py-1.5 rounded-xl border border-[#232D44]">
+              <span className="text-[10px] font-mono text-slate-400">LOBBY ID:</span>
+              <code className="font-mono text-xs font-bold text-white tracking-wider">{lobbyCode}</code>
+              <button
+                onClick={handleCopyCode}
+                className="text-[10px] font-mono font-bold text-primary-brand hover:text-white transition-colors cursor-pointer pl-1"
+              >
+                {isCopied ? "✓ COPIED" : "COPY"}
+              </button>
+            </div>
+
+            {/* Lineups Button */}
+            <button
+              onClick={() => setIsLineupModalOpen(true)}
+              className="h-9 px-4 rounded-xl bg-[#141A29] hover:bg-[#1F273D] text-slate-200 border border-[#232D44] font-sans text-xs font-bold uppercase transition-all cursor-pointer flex items-center gap-1.5 shadow-md"
+              title="Open Squad Roster Lineups Window"
+            >
+              <UsersIcon className="w-4 h-4 text-slate-300" />
+              <span>Lineups</span>
+            </button>
+
+            <button
+              onClick={onClose}
+              className="w-9 h-9 rounded-xl bg-[#141A29] hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 flex items-center justify-center text-sm font-bold transition-all cursor-pointer border border-[#232D44]"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Room Code Bar */}
+        <div className="sm:hidden px-4 py-2 bg-[#080C14] border-b border-[#1C2538] flex items-center justify-between text-xs font-mono">
+          <span className="text-slate-400">LOBBY CODE: <strong className="text-white font-bold">{lobbyCode}</strong></span>
+          <button onClick={handleCopyCode} className="text-primary-brand font-bold">
+            {isCopied ? "✓ COPIED" : "COPY CODE"}
           </button>
         </div>
 
-        {/* Lobby Code & Match Banner */}
-        <div className="px-6 py-3 bg-[#090C12] border-b border-[#191D28] flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-sans text-[#94A3B8]">Custom Room ID:</span>
-            <code className="px-2.5 py-1 rounded-lg bg-[#11141C] border border-[#2B3245] font-mono text-xs font-bold text-[#34D399] tracking-wider">
-              {lobbyCode}
-            </code>
-            <button
-              onClick={handleCopyCode}
-              className="h-7 px-2.5 rounded-lg bg-[#1E2433] hover:bg-[#2A3142] text-[#E2E8F0] font-sans text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer border border-[#2B3245] flex items-center gap-1"
-            >
-              {isCopied ? "✓ Copied!" : "📋 Copy Code"}
-            </button>
-          </div>
-
-          <div className="text-xs font-sans text-[#64748B]">
-            📅 Match Schedule:{" "}
-            <span className="text-[#E2E8F0] font-semibold">
-              {new Date(scrim.scheduledAt).toLocaleDateString()} at{" "}
-              {new Date(scrim.scheduledAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-            </span>
-          </div>
-        </div>
-
-        {/* Middle Split: Teams Roster vs Chat */}
-        <div className="grid grid-cols-1 md:grid-cols-3 flex-1 overflow-hidden">
+        {/* Tactical Stream & Messages Container */}
+        <div className="flex flex-col flex-1 bg-[#060911] overflow-hidden">
           
-          {/* Left 1/3: Squads Roster */}
-          <div className="p-5 bg-[#0D1017] border-r border-[#191D28] flex flex-col gap-4 overflow-y-auto">
-            {/* Host Squad */}
-            <div className="p-3.5 rounded-2xl bg-[#11141C] border border-[#10B981]/30 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-sans font-extrabold uppercase tracking-widest text-[#10B981]">
-                  HOST SQUAD
-                </span>
-                {isHost && (
-                  <span className="px-1.5 py-0.5 rounded bg-[#10B981]/20 text-[#34D399] text-[9px] font-bold">
-                    YOUR TEAM
-                  </span>
-                )}
-              </div>
-              <h3 className="font-display text-sm font-bold uppercase text-[#F8FAFC]">
-                {scrim.hostTeamName}
-              </h3>
-              <p className="text-[11px] font-sans text-[#64748B]">
-                {scrim.universityName}
-              </p>
-
-              <div className="pt-2 border-t border-[#1E2433] space-y-1">
-                {hostSquad && hostSquad.members && hostSquad.members.length > 0 ? (
-                  hostSquad.members.map((m, idx) => {
-                    const isCapt = m.userId === hostSquad.captainId || idx === 0;
-                    return (
-                      <div key={m.id || idx} className="flex items-center justify-between text-xs font-sans text-[#CBD5E1]">
-                        <span className={isCapt ? "font-semibold text-[#34D399]" : "text-[#94A3B8]"}>
-                          {isCapt ? "👑 " : ""}{m.displayName || m.gameHandle || `Player ${idx + 1}`}
-                        </span>
-                        <span className="text-[10px] text-[#64748B]">
-                          {m.preferredRole || "Varsity"}
-                        </span>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="flex items-center justify-between text-xs font-sans text-[#CBD5E1]">
-                    <span className="font-semibold text-[#34D399]">👑 {scrim.hostTeamName} Captain</span>
-                    <span className="text-[10px] text-[#64748B]">Varsity</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* VS Divider */}
-            <div className="flex items-center justify-center my-1">
-              <span className="px-3 py-1 rounded-full bg-[#1E2433] border border-[#2B3245] font-display text-xs font-extrabold text-[#38BDF8] tracking-widest">
-                ⚡ VS ⚡
-              </span>
-            </div>
-
-            {/* Opponent Squad */}
-            <div className="p-3.5 rounded-2xl bg-[#11141C] border border-[#3B82F6]/30 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-sans font-extrabold uppercase tracking-widest text-[#3B82F6]">
-                  CHALLENGER SQUAD
-                </span>
-                {!isHost && (
-                  <span className="px-1.5 py-0.5 rounded bg-[#3B82F6]/20 text-[#60A5FA] text-[9px] font-bold">
-                    YOUR TEAM
-                  </span>
-                )}
-              </div>
-              <h3 className="font-display text-sm font-bold uppercase text-[#F8FAFC]">
-                {scrim.opponentTeamName || "Challenger Squad"}
-              </h3>
-              <p className="text-[11px] font-sans text-[#64748B]">
-                {opponentSquad?.universityName || "Challenger Varsity"}
-              </p>
-
-              <div className="pt-2 border-t border-[#1E2433] space-y-1">
-                {opponentSquad && opponentSquad.members && opponentSquad.members.length > 0 ? (
-                  opponentSquad.members.map((m, idx) => {
-                    const isCapt = m.userId === opponentSquad.captainId || idx === 0;
-                    return (
-                      <div key={m.id || idx} className="flex items-center justify-between text-xs font-sans text-[#CBD5E1]">
-                        <span className={isCapt ? "font-semibold text-[#60A5FA]" : "text-[#94A3B8]"}>
-                          {isCapt ? "👑 " : ""}{m.displayName || m.gameHandle || `Player ${idx + 1}`}
-                        </span>
-                        <span className="text-[10px] text-[#64748B]">
-                          {m.preferredRole || "Varsity"}
-                        </span>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="flex items-center justify-between text-xs font-sans text-[#CBD5E1]">
-                    <span className="font-semibold text-[#60A5FA]">👑 {scrim.opponentTeamName || "Challenger"} Captain</span>
-                    <span className="text-[10px] text-[#64748B]">Varsity</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Right 2/3: Live Communication Feed */}
-          <div className="md:col-span-2 flex flex-col bg-[#11141C]">
-            
-            {/* Chat Feed */}
-            <div className="flex-1 p-4 overflow-y-auto space-y-3 min-h-[250px] max-h-[380px]">
-              {messages.map((msg) => {
-                const isSys = msg.senderName === "SYSTEM ANNOUNCER";
-                if (isSys) {
-                  return (
-                    <div key={msg.id} className="p-3 rounded-xl bg-[#090C12] border border-[#191D28] text-xs font-sans text-[#34D399] leading-relaxed">
-                      {msg.message}
-                    </div>
-                  );
-                }
-
-                const isHostMsg = msg.isHostTeam;
-
+          {/* Chat Messages Stream */}
+          <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 min-h-[300px] max-h-[460px]">
+            {messages.map((msg) => {
+              const isSys = msg.senderName === "WAR ROOM SYSTEM" || msg.senderName === "SYSTEM ANNOUNCER";
+              if (isSys) {
                 return (
-                  <div key={msg.id} className="space-y-1">
-                    <div className="flex items-center gap-2 text-[10px] font-sans">
-                      <span
-                        className={`font-bold uppercase ${
-                          isHostMsg ? "text-[#10B981]" : "text-[#3B82F6]"
-                        }`}
-                      >
-                        [{msg.teamName}] {msg.senderName}
-                      </span>
-                      <span className="text-[#64748B]">
-                        {msg.timestamp}
-                      </span>
-                    </div>
+                  <div key={msg.id} className="mx-auto max-w-xl p-3.5 rounded-2xl bg-[#0D121F] border border-[#1E293B] text-center text-xs font-mono text-slate-300 leading-relaxed shadow-md my-2">
+                    {msg.message}
+                  </div>
+                );
+              }
+
+              const isMyMessage = isHost ? msg.isHostTeam : !msg.isHostTeam;
+
+              return (
+                <div key={msg.id} className={`flex flex-col ${isMyMessage ? "items-end" : "items-start"} space-y-1`}>
+                  
+                  {/* Sender Metadata */}
+                  <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400 px-1">
+                    <span className="font-bold uppercase text-slate-300">
+                      [{msg.teamName}] {msg.senderName}
+                    </span>
+                    <span>{msg.timestamp}</span>
+                  </div>
+
+                  {/* Speech Bubble */}
+                  <div className="flex items-end gap-2 max-w-[80%]">
+                    {!isMyMessage && (
+                      <div className="w-8 h-8 rounded-xl bg-[#141A29] border border-[#232D44] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-md">
+                        {msg.teamName.charAt(0).toUpperCase()}
+                      </div>
+                    )}
 
                     <div
-                      className={`p-3 rounded-2xl text-xs font-sans max-w-[85%] ${
-                        isHostMsg
-                          ? "bg-[#0F221B] border border-[#10B981]/30 text-[#E2E8F0] rounded-tl-none"
-                          : "bg-[#172554] border border-[#3B82F6]/30 text-[#E2E8F0] rounded-tr-none ml-auto"
+                      className={`px-4 py-2.5 rounded-2xl text-xs font-sans leading-relaxed shadow-md ${
+                        isMyMessage
+                          ? "bg-[#1E273A] border border-[#2D3B58] text-white rounded-tr-xs"
+                          : "bg-[#0D121F] border border-[#1E293B] text-slate-200 rounded-tl-xs"
                       }`}
                     >
                       {msg.message}
                     </div>
                   </div>
-                );
-              })}
-              <div ref={chatBottomRef} />
-            </div>
 
-            {/* Quick Chat Chips */}
-            <div className="px-4 py-2 bg-[#090C12] border-t border-[#191D28] flex items-center gap-2 overflow-x-auto no-scrollbar">
-              <span className="text-[10px] font-sans text-[#64748B] uppercase shrink-0 font-bold">
-                Quick Send:
-              </span>
-              {quickChats.map((qc, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleSendMessage(qc)}
-                  className="px-2.5 py-1 rounded-lg bg-[#181D29] hover:bg-[#252D3F] text-[#94A3B8] hover:text-[#F8FAFC] text-[11px] font-sans transition-all whitespace-nowrap cursor-pointer border border-[#272E3F]"
-                >
-                  {qc}
-                </button>
-              ))}
-            </div>
+                </div>
+              );
+            })}
+            <div ref={chatBottomRef} />
+          </div>
 
-            {/* Chat Input Bar */}
-            <div className="p-3 bg-[#0D1017] border-t border-[#191D28] flex items-center gap-2">
+          {/* Quick Send Chips */}
+          <div className="px-4 py-2.5 bg-[#0D121F] border-t border-[#1C2538] flex flex-wrap items-center gap-2">
+            <span className="text-[10px] font-mono font-bold text-slate-400 uppercase shrink-0">
+              QUICK SEND:
+            </span>
+            {quickChats.map((qc, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleSendMessage(qc)}
+                className="px-3.5 py-1 rounded-xl bg-[#141A29] hover:bg-[#1F273D] text-slate-300 hover:text-white text-xs font-sans transition-all cursor-pointer border border-[#232D44]"
+              >
+                {qc}
+              </button>
+            ))}
+          </div>
+
+          {/* Input Bar */}
+          <div className="p-4 bg-[#0D121F] border-t border-[#1C2538]">
+            <div className="h-12 px-4 rounded-xl bg-[#141A29] border border-[#232D44] flex items-center gap-3 shadow-inner focus-within:border-slate-400 transition-colors">
               <input
                 type="text"
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
                 placeholder="Type a message to both teams..."
-                className="flex-1 h-10 px-4 rounded-xl bg-[#11141C] border border-[#2B3245] text-xs text-[#F8FAFC] placeholder-[#64748B] focus:outline-none focus:border-[#38BDF8] transition-all font-sans"
+                className="flex-1 bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none font-sans"
               />
+
               <button
                 onClick={() => handleSendMessage()}
-                className="h-10 px-5 rounded-xl bg-gradient-to-r from-[#2563EB] to-[#1D4ED8] hover:from-[#3B82F6] hover:to-[#2563EB] text-white font-sans text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer shadow-md shadow-blue-950/40"
+                className="h-8 px-5 rounded-lg game-theme-btn font-sans text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-md shrink-0 flex items-center gap-1.5"
               >
-                Send 💬
+                <span>Send</span>
               </button>
             </div>
           </div>
+
         </div>
 
       </div>
+
+      {/* Roster Lineups Popup Modal */}
+      {isLineupModalOpen && (
+        <div
+          onClick={() => setIsLineupModalOpen(false)}
+          className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl animate-in fade-in duration-200"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-3xl bg-[#0D121F] border border-[#1E293B] rounded-3xl shadow-2xl overflow-hidden flex flex-col p-6 sm:p-8 space-y-6 relative"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-[#1C2538] pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#141A29] border border-[#232D44] flex items-center justify-center text-white shadow-md">
+                  <UsersIcon className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-display text-base font-bold uppercase text-white tracking-wide">
+                    VARSITY ATHLETE LINEUPS
+                  </h3>
+                  <p className="text-xs font-mono text-slate-400">
+                    Match Verification · {scrim.gameTitle.toUpperCase()} · {scrim.format}
+                  </p>
+                </div>
+              </div>
+
+              {/* Roster Filter Tabs Switcher */}
+              <div className="flex items-center gap-2">
+                <div className="hidden sm:flex items-center gap-1 p-1 rounded-xl bg-[#080C14] border border-[#1C2538]">
+                  <button
+                    onClick={() => setActiveRosterTab("ALL")}
+                    className={`px-3 py-1 rounded-lg text-xs font-mono font-bold uppercase transition-all ${
+                      activeRosterTab === "ALL"
+                        ? "bg-primary-brand text-white shadow-sm"
+                        : "text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    BOTH
+                  </button>
+                  <button
+                    onClick={() => setActiveRosterTab("HOST")}
+                    className={`px-3 py-1 rounded-lg text-xs font-mono font-bold uppercase transition-all ${
+                      activeRosterTab === "HOST"
+                        ? "bg-primary-brand text-white shadow-sm"
+                        : "text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    HOST
+                  </button>
+                  <button
+                    onClick={() => setActiveRosterTab("CHALLENGER")}
+                    className={`px-3 py-1 rounded-lg text-xs font-mono font-bold uppercase transition-all ${
+                      activeRosterTab === "CHALLENGER"
+                        ? "bg-primary-brand text-white shadow-sm"
+                        : "text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    CHALLENGER
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => setIsLineupModalOpen(false)}
+                  className="w-9 h-9 rounded-xl bg-[#141A29] hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 flex items-center justify-center text-sm font-bold transition-all cursor-pointer border border-[#232D44]"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Roster Cards Container */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-h-[60vh] overflow-y-auto">
+              
+              {/* Host Squad Roster Card */}
+              {(activeRosterTab === "ALL" || activeRosterTab === "HOST") && (
+                <div className="p-5 rounded-2xl bg-[#080C14] border border-[#1C2538] space-y-4 shadow-xl">
+                  <div className="flex items-center justify-between border-b border-[#1C2538] pb-3">
+                    <div>
+                      <span className="text-[9px] font-mono font-bold text-slate-400 uppercase tracking-widest block">
+                        HOST SQUAD
+                      </span>
+                      <h4 className="font-display text-base font-bold uppercase text-white mt-0.5">
+                        {scrim.hostTeamName}
+                      </h4>
+                      <p className="text-[11px] font-sans text-slate-400">
+                        {scrim.universityName || "University of Makati"}
+                      </p>
+                    </div>
+
+                    {isHost && (
+                      <span className="px-2.5 py-1 rounded-full bg-[#141A29] text-slate-300 border border-[#232D44] text-[9px] font-mono font-bold">
+                        YOUR SQUAD
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    {hostSquad && hostSquad.members && hostSquad.members.length > 0 ? (
+                      hostSquad.members.map((m, idx) => {
+                        const isCapt = m.userId === hostSquad.captainId || idx === 0;
+                        const initial = (m.displayName || m.gameHandle || "P").charAt(0).toUpperCase();
+
+                        return (
+                          <div
+                            key={m.id || idx}
+                            className="flex items-center justify-between p-3 rounded-xl bg-[#0D121F] border border-[#1E293B] transition-all hover:border-slate-500/40"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-xl bg-[#141A29] text-white flex items-center justify-center font-bold text-xs border border-white/10">
+                                {initial}
+                              </div>
+                              <div>
+                                <span className={`text-xs font-sans flex items-center gap-1.5 ${isCapt ? "font-bold text-white" : "text-slate-200"}`}>
+                                  {isCapt && <CrownIcon className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+                                  <span>{m.displayName || m.gameHandle || `Player ${idx + 1}`}</span>
+                                </span>
+                                <span className="text-[10px] font-mono text-slate-400 flex items-center gap-1 mt-0.5">
+                                  <CheckCircleIcon className="w-3 h-3 text-slate-400" /> Verified Athlete
+                                </span>
+                              </div>
+                            </div>
+
+                            <span className="text-[10px] font-mono text-slate-300 bg-[#141A29] px-2.5 py-1 rounded-lg border border-[#232D44]">
+                              {m.preferredRole || "Varsity"}
+                            </span>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="flex items-center justify-between p-3 rounded-xl bg-[#0D121F] border border-[#1E293B]">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-xl bg-[#141A29] text-white flex items-center justify-center font-bold text-xs">
+                            H
+                          </div>
+                          <span className="font-bold text-white text-xs flex items-center gap-1.5">
+                            <CrownIcon className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                            <span>{scrim.hostTeamName} Captain</span>
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-mono text-slate-300 bg-[#141A29] px-2.5 py-1 rounded-lg border border-[#232D44]">
+                          Varsity
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Challenger Squad Roster Card */}
+              {(activeRosterTab === "ALL" || activeRosterTab === "CHALLENGER") && (
+                <div className="p-5 rounded-2xl bg-[#080C14] border border-[#1C2538] space-y-4 shadow-xl">
+                  <div className="flex items-center justify-between border-b border-[#1C2538] pb-3">
+                    <div>
+                      <span className="text-[9px] font-mono font-bold text-slate-400 uppercase tracking-widest block">
+                        CHALLENGER SQUAD
+                      </span>
+                      <h4 className="font-display text-base font-bold uppercase text-white mt-0.5">
+                        {scrim.opponentTeamName || "Challenger Squad"}
+                      </h4>
+                      <p className="text-[11px] font-sans text-slate-400">
+                        {opponentSquad?.universityName || "Challenger Varsity"}
+                      </p>
+                    </div>
+
+                    {!isHost && (
+                      <span className="px-2.5 py-1 rounded-full bg-[#141A29] text-slate-300 border border-[#232D44] text-[9px] font-mono font-bold">
+                        YOUR SQUAD
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    {opponentSquad && opponentSquad.members && opponentSquad.members.length > 0 ? (
+                      opponentSquad.members.map((m, idx) => {
+                        const isCapt = m.userId === opponentSquad.captainId || idx === 0;
+                        const initial = (m.displayName || m.gameHandle || "P").charAt(0).toUpperCase();
+
+                        return (
+                          <div
+                            key={m.id || idx}
+                            className="flex items-center justify-between p-3 rounded-xl bg-[#0D121F] border border-[#1E293B] transition-all hover:border-slate-500/40"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-xl bg-[#141A29] text-white flex items-center justify-center font-bold text-xs border border-white/10">
+                                {initial}
+                              </div>
+                              <div>
+                                <span className={`text-xs font-sans flex items-center gap-1.5 ${isCapt ? "font-bold text-white" : "text-slate-200"}`}>
+                                  {isCapt && <CrownIcon className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+                                  <span>{m.displayName || m.gameHandle || `Player ${idx + 1}`}</span>
+                                </span>
+                                <span className="text-[10px] font-mono text-slate-400 flex items-center gap-1 mt-0.5">
+                                  <CheckCircleIcon className="w-3 h-3 text-slate-400" /> Verified Athlete
+                                </span>
+                              </div>
+                            </div>
+
+                            <span className="text-[10px] font-mono text-slate-300 bg-[#141A29] px-2.5 py-1 rounded-lg border border-[#232D44]">
+                              {m.preferredRole || "Varsity"}
+                            </span>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="flex items-center justify-between p-3 rounded-xl bg-[#0D121F] border border-[#1E293B]">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-xl bg-[#141A29] text-white flex items-center justify-center font-bold text-xs">
+                            C
+                          </div>
+                          <span className="font-bold text-white text-xs flex items-center gap-1.5">
+                            <CrownIcon className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                            <span>{scrim.opponentTeamName || "Challenger"} Captain</span>
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-mono text-slate-300 bg-[#141A29] px-2.5 py-1 rounded-lg border border-[#232D44]">
+                          Varsity
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+            </div>
+
+            {/* Bottom Modal Actions */}
+            <div className="pt-4 border-t border-[#1C2538] flex items-center justify-end">
+              <button
+                onClick={() => setIsLineupModalOpen(false)}
+                className="h-10 px-6 rounded-xl bg-[#141A29] hover:bg-[#1F273D] text-white font-sans text-xs font-bold uppercase tracking-wider transition-all border border-[#232D44] cursor-pointer"
+              >
+                Close Lineup Window
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

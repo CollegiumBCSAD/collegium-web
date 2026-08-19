@@ -2,6 +2,7 @@
 
 import React, { useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { CheckCircleIcon } from "@/components/ui/Icons";
 
 function AuthPendingContent() {
   const searchParams = useSearchParams();
@@ -26,8 +27,8 @@ function AuthPendingContent() {
   return (
     <div className="min-h-[85vh] flex flex-col items-center justify-center px-4 py-12 bg-background">
       <div className="w-full max-w-md bg-card-bg border border-raised-panel rounded-2xl p-6 sm:p-8 shadow-2xl text-center space-y-6">
-        <div className="w-14 h-14 rounded-2xl bg-success/10 border border-success/30 text-success inline-flex items-center justify-center text-2xl font-bold">
-          ✓
+        <div className="w-14 h-14 rounded-2xl bg-success/10 border border-success/30 text-success inline-flex items-center justify-center font-bold">
+          <CheckCircleIcon className="w-8 h-8 text-success" />
         </div>
 
         <div>

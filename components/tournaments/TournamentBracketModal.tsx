@@ -5,6 +5,7 @@ import MatchBoxScoreModal from "@/components/MatchBoxScoreModal";
 import MatchCard from "@/components/tournaments/MatchCard";
 import { BracketMatch, BracketRound, TournamentBracketModalProps } from "@/types";
 import { tournamentsService } from "@/services/tournamentsService";
+import { SwordsIcon } from "@/components/ui/Icons";
 
 export default function TournamentBracketModal({
   isOpen,
@@ -141,8 +142,8 @@ export default function TournamentBracketModal({
               </div>
             ) : normalizedRounds.length === 0 ? (
               <div className="flex flex-col items-center justify-center text-center py-16 px-4 max-w-md mx-auto space-y-4 rounded-xl border border-panel-border bg-card-bg/60 p-8 shadow-xl">
-                <div className="w-16 h-16 rounded-full bg-raised-panel border border-panel-border flex items-center justify-center text-3xl shadow-inner">
-                  ⚔️
+                <div className="w-16 h-16 rounded-2xl bg-[#141A29] border border-[#232D44] flex items-center justify-center shadow-inner">
+                  <SwordsIcon className="w-8 h-8 text-primary-brand" />
                 </div>
                 <div className="space-y-1">
                   <h3 className="font-display text-xl font-bold text-foreground uppercase tracking-wide">
