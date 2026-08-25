@@ -204,6 +204,31 @@ export const tournamentsService = {
     }
   },
 
+  getPendingTournaments: async (): Promise<Tournament[]> => {
+    try {
+      const response = await apiClient.get<unknown>("/tournaments?status=PENDING_APPROVAL");
+      // An empty result here is a real "nothing pending" state, not a reason to
+      // fall back to demo data the way parseServerTournamentsResponse does for
+      // the public tournaments page — map directly instead.
+      if (!Array.isArray(response)) return [];
+      return response.map((raw, idx) => {
+        const t = raw as { id?: string; name?: string; image?: string };
+        return {
+          id: t.id ?? `pending-${idx}`,
+          title: t.name ?? "Untitled Tournament",
+          game: "",
+          status: "UPCOMING" as const,
+          statusText: "Awaiting admin approval",
+          bulletPoints: [],
+          image: t.image,
+          bgGradient: "",
+        };
+      });
+    } catch {
+      return [];
+    }
+  },
+
   getBracket: async (tournamentId: string): Promise<BracketRound[]> => {
     try {
       const response = await apiClient.get<unknown>(`/tournaments/${tournamentId}/bracket`);
@@ -213,8 +238,8 @@ export const tournamentsService = {
     }
   },
 
-  createTournament: (name: string): Promise<unknown> => {
-    return apiClient.post("/tournaments", { name });
+  createTournament: (name: string, image?: string): Promise<unknown> => {
+    return apiClient.post("/tournaments", { name, image });
   },
 
   registerTournament: (tournamentId: string): Promise<unknown> => {
