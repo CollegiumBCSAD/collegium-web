@@ -36,6 +36,18 @@ export default function TournamentApplicationsModal({
   const [isLoading, setIsLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
 
+  const fetchApps = async () => {
+    setIsLoading(true);
+    try {
+      const data = await tournamentsService.getApplications(tournamentId);
+      setApplications(Array.isArray(data) ? (data as TournamentApplication[]) : []);
+    } catch {
+      setApplications([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!isOpen || !tournamentId) return;
     let isMounted = true;
