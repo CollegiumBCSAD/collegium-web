@@ -65,6 +65,26 @@ export default function TournamentModerationPanel({
                   </span>
                 </div>
 
+                {(t.bracketFormat || t.teamQuota) && (
+                  <div className="mt-4 grid grid-cols-2 gap-4 text-[13px] font-sans text-foreground">
+                    <div className="rounded-[10px] border border-panel-border bg-background px-3 py-2">
+                      <p className="text-[11px] text-secondary-text mb-1">Bracket Format</p>
+                      {t.bracketFormat || "Not specified"}
+                    </div>
+                    <div className="rounded-[10px] border border-panel-border bg-background px-3 py-2">
+                      <p className="text-[11px] text-secondary-text mb-1">University Quota</p>
+                      {t.teamQuota ? `${t.teamQuota} universities` : "Not specified"}
+                    </div>
+                  </div>
+                )}
+
+                {t.rules && (
+                  <div className="mt-3 rounded-[10px] border border-panel-border bg-background px-3 py-2 text-[13px] font-sans text-foreground">
+                    <p className="text-[11px] text-secondary-text mb-1">Rules & Schedule Notes</p>
+                    {t.rules}
+                  </div>
+                )}
+
                 <div className="mt-4 flex justify-end gap-3">
                   <button
                     onClick={() => handleReject(t.id)}

@@ -28,7 +28,7 @@ export default function OrganizerDashboardView({ user }: OrganizerDashboardViewP
 
   const fetchTourneys = async () => {
     try {
-      const data = await tournamentsService.getTournaments();
+      const data = await tournamentsService.getMyTournaments();
       setTournaments(data);
     } catch {
       setTournaments([]);
@@ -40,7 +40,7 @@ export default function OrganizerDashboardView({ user }: OrganizerDashboardViewP
   useEffect(() => {
     let isMounted = true;
     tournamentsService
-      .getTournaments()
+      .getMyTournaments()
       .then((data) => {
         if (isMounted) {
           setTournaments(data);
@@ -237,10 +237,14 @@ export default function OrganizerDashboardView({ user }: OrganizerDashboardViewP
                             ? "bg-slate-800 text-slate-300"
                             : t.status === "LIVE"
                             ? "bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 animate-pulse"
+                            : t.status === "PENDING_APPROVAL"
+                            ? "bg-amber-950/40 text-amber-300 border border-amber-500/30"
+                            : t.status === "REJECTED"
+                            ? "bg-rose-950/40 text-rose-300 border border-rose-500/30"
                             : "bg-amber-950/40 text-amber-300 border border-amber-500/30"
                         }`}
                       >
-                        {t.status}
+                        {t.status === "PENDING_APPROVAL" ? "PENDING APPROVAL" : t.status}
                       </span>
                       <button
                         type="button"
@@ -258,13 +262,13 @@ export default function OrganizerDashboardView({ user }: OrganizerDashboardViewP
                     {t.title}
                   </h4>
 
-                  <p className="text-xs font-sans text-slate-400">
+                  <p className={`text-xs font-sans ${t.status === "REJECTED" ? "text-rose-300" : "text-slate-400"}`}>
                     {t.statusText}
                   </p>
                 </div>
 
-                {/* Organizer Applications Review Panel — only for non-completed tournaments */}
-                {t.status !== "COMPLETED" && (
+                {/* Organizer Applications Review Panel — only for approved, non-completed tournaments */}
+                {t.status !== "COMPLETED" && t.status !== "PENDING_APPROVAL" && t.status !== "REJECTED" && (
                   <div className="p-3.5 bg-[#070A14] border border-[#162034] rounded-xl space-y-2.5">
                     <div className="flex items-center justify-between text-[10px] font-mono">
                       <span className="text-slate-400 font-bold uppercase">
@@ -308,7 +312,7 @@ export default function OrganizerDashboardView({ user }: OrganizerDashboardViewP
                       </button>
                     </div>
                   </div>
-                ) : (
+                ) : t.status === "PENDING_APPROVAL" || t.status === "REJECTED" ? null : (
                   <div className="pt-2 flex items-center gap-2">
                     <button
                       type="button"

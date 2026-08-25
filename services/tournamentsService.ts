@@ -1,5 +1,5 @@
 import { apiClient } from "./apiClient";
-import { Tournament, TournamentStatus, BracketRound, MatchBoxScore } from "@/types";
+import { Tournament, TournamentApprovalStatus, BracketRound, MatchBoxScore } from "@/types";
 import { 
   mockTournaments, 
   mockBoxScore 
@@ -12,10 +12,12 @@ const GAME_DISPLAY: Record<string, { label: string; gradient: string }> = {
   MLBB: { label: "MOBILE LEGENDS: BANG BANG", gradient: "from-[#8E6519] via-[#42300E] to-[#11141C]" },
 };
 
-const STATUS_DISPLAY: Record<string, TournamentStatus> = {
+const STATUS_DISPLAY: Record<string, TournamentApprovalStatus> = {
   UPCOMING: "UPCOMING",
   ONGOING: "LIVE",
   COMPLETED: "COMPLETED",
+  PENDING_APPROVAL: "PENDING_APPROVAL",
+  REJECTED: "REJECTED",
 };
 
 function detectGameFromText(text: string): { label: string; gradient: string } {
@@ -32,35 +34,42 @@ function detectGameFromText(text: string): { label: string; gradient: string } {
   return GAME_DISPLAY.VALORANT;
 }
 
-function parseServerTournamentsResponse(data: unknown): Tournament[] {
-  if (!Array.isArray(data) || data.length === 0) {
-    return mockTournaments;
-  }
+interface RawTournament {
+  id?: string;
+  name?: string;
+  gameTitle?: string;
+  status?: string;
+  image?: string;
+  bracketFormat?: string;
+  teamQuota?: number;
+  rules?: string;
+  rejectionReason?: string;
+  matches?: Array<{ title?: string; gameTitle?: string }>;
+  universities?: Array<{ id?: string; name?: string }>;
+}
 
-  const parsed = data.map((raw, idx) => {
-    const t = raw as {
-      id?: string;
-      name?: string;
-      gameTitle?: string;
-      status?: string;
-      matches?: Array<{ title?: string; gameTitle?: string }>;
-      universities?: Array<{ id?: string }>;
-    };
-
+function mapTournaments(data: RawTournament[]): Tournament[] {
+  return data.map((t, idx) => {
     const matches = t.matches ?? [];
     const universities = t.universities ?? [];
     const nameString = (t.name || "") + " " + (t.gameTitle || "") + " " + (matches[0]?.title || "") + " " + (matches[0]?.gameTitle || "");
     const gameDisplay = detectGameFromText(nameString);
-    const status = STATUS_DISPLAY[t.status ?? "UPCOMING"] ?? "UPCOMING";
+    const status: TournamentApprovalStatus = STATUS_DISPLAY[t.status ?? "UPCOMING"] ?? "UPCOMING";
 
     const statusText =
-      status === "COMPLETED"
-        ? "Final standings published"
-        : status === "LIVE"
-          ? "Bracket in progress"
-          : universities.length > 0
-            ? `${universities.length} universities registered`
-            : "Open for registrations (0 registered)";
+      status === "PENDING_APPROVAL"
+        ? "Awaiting admin approval"
+        : status === "REJECTED"
+          ? t.rejectionReason
+            ? `Rejected: ${t.rejectionReason}`
+            : "Rejected by admin"
+          : status === "COMPLETED"
+            ? "Final standings published"
+            : status === "LIVE"
+              ? "Bracket in progress"
+              : universities.length > 0
+                ? `${universities.length} universities registered`
+                : "Open for registrations (0 registered)";
 
     const bulletPoints = [
       universities.length > 0
@@ -80,11 +89,21 @@ function parseServerTournamentsResponse(data: unknown): Tournament[] {
       status,
       statusText,
       bulletPoints,
+      image: t.image,
+      bracketFormat: t.bracketFormat,
+      teamQuota: t.teamQuota,
+      rules: t.rules,
+      rejectionReason: t.rejectionReason,
       bgGradient: gameDisplay.gradient,
     };
   });
+}
 
-  return parsed;
+function parseServerTournamentsResponse(data: unknown): Tournament[] {
+  if (!Array.isArray(data) || data.length === 0) {
+    return mockTournaments;
+  }
+  return mapTournaments(data as RawTournament[]);
 }
 
 function parseServerBracketResponse(data: unknown): BracketRound[] {
@@ -204,26 +223,22 @@ export const tournamentsService = {
     }
   },
 
+  // An empty result from these two is a real "nothing here" state, not a
+  // reason to fall back to demo data the way parseServerTournamentsResponse
+  // does for the public tournaments page — use mapTournaments() directly.
   getPendingTournaments: async (): Promise<Tournament[]> => {
     try {
       const response = await apiClient.get<unknown>("/tournaments?status=PENDING_APPROVAL");
-      // An empty result here is a real "nothing pending" state, not a reason to
-      // fall back to demo data the way parseServerTournamentsResponse does for
-      // the public tournaments page — map directly instead.
-      if (!Array.isArray(response)) return [];
-      return response.map((raw, idx) => {
-        const t = raw as { id?: string; name?: string; image?: string };
-        return {
-          id: t.id ?? `pending-${idx}`,
-          title: t.name ?? "Untitled Tournament",
-          game: "",
-          status: "UPCOMING" as const,
-          statusText: "Awaiting admin approval",
-          bulletPoints: [],
-          image: t.image,
-          bgGradient: "",
-        };
-      });
+      return Array.isArray(response) ? mapTournaments(response as RawTournament[]) : [];
+    } catch {
+      return [];
+    }
+  },
+
+  getMyTournaments: async (): Promise<Tournament[]> => {
+    try {
+      const response = await apiClient.get<unknown>("/tournaments/mine");
+      return Array.isArray(response) ? mapTournaments(response as RawTournament[]) : [];
     } catch {
       return [];
     }
@@ -238,10 +253,19 @@ export const tournamentsService = {
     }
   },
 
-  createTournament: (name: string, imageFile?: File): Promise<unknown> => {
+  createTournament: (params: {
+    name: string;
+    imageFile?: File;
+    bracketFormat?: string;
+    teamQuota?: number;
+    rules?: string;
+  }): Promise<unknown> => {
     const formData = new FormData();
-    formData.append("name", name);
-    if (imageFile) formData.append("image", imageFile);
+    formData.append("name", params.name);
+    if (params.imageFile) formData.append("image", params.imageFile);
+    if (params.bracketFormat) formData.append("bracketFormat", params.bracketFormat);
+    if (params.teamQuota) formData.append("teamQuota", String(params.teamQuota));
+    if (params.rules) formData.append("rules", params.rules);
     return apiClient.postForm("/tournaments", formData);
   },
 

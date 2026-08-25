@@ -57,7 +57,13 @@ export default function PostTournamentModal({
     setErrorMsg("");
 
     try {
-      await tournamentsService.createTournament(name.trim(), imageFile || undefined);
+      await tournamentsService.createTournament({
+        name: name.trim(),
+        imageFile: imageFile || undefined,
+        bracketFormat: format,
+        teamQuota: parseInt(teamQuota, 10) || undefined,
+        rules: rules.trim() || undefined,
+      });
       setName("");
       setRules("");
       setImagePreview("");
