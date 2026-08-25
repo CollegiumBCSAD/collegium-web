@@ -4,24 +4,17 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { adminService } from "@/services";
 import {
-  mockUniversityVerifications,
   mockScrimBoardPosts,
   mockPendingTournamentPosts,
   mockPendingTeamRegistrations,
   mockFlaggedMatches,
 } from "@/lib/mock/admin";
 
-const pendingUniversities = mockUniversityVerifications.filter((u) => u.status === "PENDING").length;
 const pendingScrimPosts = mockScrimBoardPosts.length;
 const pendingTournamentItems = mockPendingTournamentPosts.length + mockPendingTeamRegistrations.length;
 const flaggedMatches = mockFlaggedMatches.length;
 
 const TRIAGE_ROWS = [
-  {
-    label: `${pendingUniversities} universities awaiting domain verification`,
-    href: "/admin/universities",
-    dot: "bg-success",
-  },
   {
     label: `${pendingScrimPosts} Scrim Board posts pending moderation`,
     href: "/admin/scrim-board",
@@ -50,7 +43,6 @@ export default function AdminDashboardOverview() {
   }, []);
 
   const statCards = [
-    { icon: "📋", value: pendingUniversities, label: "Pending University Verifications" },
     { icon: "⏱️", value: pendingScrimPosts + pendingTournamentItems, label: "Pending Scrim / Tournament Posts" },
     { icon: "🚩", value: flaggedMatches, label: "Flagged Matches" },
     { icon: "👤", value: totalUsers ?? "—", label: "Total Registered Users" },
@@ -58,7 +50,7 @@ export default function AdminDashboardOverview() {
 
   return (
     <div>
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         {statCards.map((card) => (
           <div key={card.label} className="rounded-[15px] border border-panel-border bg-card-bg p-5">
             <span className="text-xl">{card.icon}</span>

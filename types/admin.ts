@@ -11,14 +11,6 @@ export interface AdminUser {
   } | null;
 }
 
-export interface UniversityVerification {
-  id: string;
-  name: string;
-  domain: string;
-  status: "PENDING" | "VERIFIED";
-  detail: string;
-}
-
 export interface PendingTournamentPost {
   id: string;
   name: string;

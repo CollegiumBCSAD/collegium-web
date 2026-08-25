@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import {
-  mockUniversityVerifications,
   mockScrimBoardPosts,
   mockPendingTournamentPosts,
   mockPendingTeamRegistrations,
@@ -20,12 +19,7 @@ interface AdminNavItem {
 
 const NAV_ITEMS: AdminNavItem[] = [
   { label: "Dashboard", href: "/admin", icon: "📊" },
-  {
-    label: "Universities",
-    href: "/admin/universities",
-    icon: "🎓",
-    badge: mockUniversityVerifications.filter((u) => u.status === "PENDING").length,
-  },
+  { label: "Universities", href: "/admin/universities", icon: "🎓" },
   { label: "Scrim Board", href: "/admin/scrim-board", icon: "📅", badge: mockScrimBoardPosts.length },
   {
     label: "Tournaments",
