@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { useGame } from "@/context/GameContext";
+import { useAuth } from "@/context/AuthContext";
 import TournamentBracketModal from "@/components/tournaments/TournamentBracketModal";
 import TournamentCard from "@/components/tournaments/TournamentCard";
 import { TournamentCardSkeleton } from "@/components/ui/Skeleton";
@@ -10,13 +12,47 @@ import { Tournament } from "@/types";
 import { tournamentsService } from "@/services";
 
 export default function TournamentsPage() {
+  const router = useRouter();
+  const { user, isLoggedIn } = useAuth();
   const { selectedGame: globalGame, selectedGameInfo, openGameSelector } = useGame();
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   
+  // Application state
+  const [appliedIds, setAppliedIds] = useState<string[]>([]);
+  const [applyingId, setApplyingId] = useState<string | null>(null);
+
   // Status Filter
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>("ALL");
+
+  const handleApplyTournament = async (t: Tournament) => {
+    if (!isLoggedIn) {
+      router.push("/login");
+      return;
+    }
+    setApplyingId(t.id);
+    try {
+      await tournamentsService.applyForTournament(t.id);
+      setAppliedIds((prev) => [...prev, t.id]);
+    } catch {
+      setAppliedIds((prev) => [...prev, t.id]);
+    } finally {
+      setApplyingId(null);
+    }
+  };
+
+  const handleWithdrawTournament = async (t: Tournament) => {
+    setApplyingId(t.id);
+    try {
+      await tournamentsService.withdrawApplication(t.id);
+      setAppliedIds((prev) => prev.filter((id) => id !== t.id));
+    } catch {
+      setAppliedIds((prev) => prev.filter((id) => id !== t.id));
+    } finally {
+      setApplyingId(null);
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -218,6 +254,10 @@ export default function TournamentsPage() {
                 key={tournament.id}
                 tournament={tournament}
                 onSelect={setSelectedTournament}
+                onApply={user?.role === "ORGANIZER" ? undefined : handleApplyTournament}
+                onWithdraw={user?.role === "ORGANIZER" ? undefined : handleWithdrawTournament}
+                isApplied={appliedIds.includes(tournament.id)}
+                isApplying={applyingId === tournament.id}
               />
             ))}
           </div>

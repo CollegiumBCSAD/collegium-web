@@ -93,7 +93,7 @@ function HeaderAuthControls() {
                 <HomeIcon className="w-3.5 h-3.5 text-primary-brand" />
                 <span>My Dashboard</span>
               </Link>
-              {user.role !== "ADMIN" && (
+              {user.role !== "ADMIN" && user.role !== "ORGANIZER" && (
                 <>
                   <Link
                     href="/team/create"
@@ -113,14 +113,26 @@ function HeaderAuthControls() {
                   </Link>
                 </>
               )}
-              <Link
-                href="/scrims"
-                onClick={() => setDropdownOpen(false)}
-                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-mono font-bold uppercase tracking-wider text-slate-300 hover:text-white hover:bg-[#141A29] hover:translate-x-1 transition-all duration-150"
-              >
-                <SwordsIcon className="w-3.5 h-3.5 text-primary-brand" />
-                <span>Scrims Board</span>
-              </Link>
+              {user.role !== "ORGANIZER" && (
+                <Link
+                  href="/scrims"
+                  onClick={() => setDropdownOpen(false)}
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-mono font-bold uppercase tracking-wider text-slate-300 hover:text-white hover:bg-[#141A29] hover:translate-x-1 transition-all duration-150"
+                >
+                  <SwordsIcon className="w-3.5 h-3.5 text-primary-brand" />
+                  <span>Scrims Board</span>
+                </Link>
+              )}
+              {user.role === "ORGANIZER" && (
+                <Link
+                  href="/tournaments"
+                  onClick={() => setDropdownOpen(false)}
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-mono font-bold uppercase tracking-wider text-amber-400 hover:text-white hover:bg-[#141A29] hover:translate-x-1 transition-all duration-150"
+                >
+                  <ShieldIcon className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Manage Tournaments</span>
+                </Link>
+              )}
               {user.role === "ADMIN" && (
                 <Link
                   href="/admin"
@@ -135,12 +147,12 @@ function HeaderAuthControls() {
             <div className="pt-1 border-t border-[#182338] px-2 mt-1">
               <button
                 onClick={() => {
-                  logoutUser();
                   setDropdownOpen(false);
+                  logoutUser();
                 }}
-                className="w-full text-left px-3 py-1.5 text-xs font-mono font-bold uppercase tracking-wider text-rose-400 hover:bg-rose-950/30 transition-colors cursor-pointer"
+                className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-mono font-bold uppercase tracking-wider text-rose-400 hover:bg-rose-950/40 hover:text-rose-300 transition-all rounded-lg cursor-pointer"
               >
-                Log Out
+                Sign Out
               </button>
             </div>
           </div>
@@ -165,14 +177,15 @@ function HeaderAuthControls() {
 }
 
 function NavigationLinks({ mobile = false, onClose }: { mobile?: boolean; onClose?: () => void }) {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
   const pathname = usePathname();
+  const isOrganizer = user?.role === "ORGANIZER";
 
   const navItems = [
     { name: "Home", href: "/" },
     { name: "Tournaments", href: "/tournaments" },
     { name: "Rankings", href: "/leaderboard" },
-    ...(isLoggedIn ? [{ name: "Scrims", href: "/scrims" }] : []),
+    ...(isLoggedIn && !isOrganizer ? [{ name: "Scrims", href: "/scrims" }] : []),
     { name: "News", href: "/community" },
   ];
 

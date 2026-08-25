@@ -11,17 +11,9 @@ import { fetchTeamsApi, Team } from "@/lib/teams";
 import { University, ScrimOffer, Tournament, GameId } from "@/types";
 import { GamepadIcon, CheckCircleIcon } from "@/components/ui/Icons";
 
-interface DisplayMatch {
-  title: string;
-  stage: string;
-  team1: { code: string; name: string; score: number };
-  team2: { code: string; name: string; score: number };
-  statusText: string;
-}
-
 export default function LandingPage() {
   const { selectedGame, selectedGameInfo, openGameSelector, selectGame } = useGame();
-  const { isLoggedIn } = useAuth();
+  const { user } = useAuth();
   const activeGame: GameId = selectedGame || "valo";
 
   const [universities, setUniversities] = useState<University[]>([]);
@@ -65,9 +57,9 @@ export default function LandingPage() {
     ];
   }, [universities, teams, scrims]);
 
-  // Compute dynamic featured matches for the selected game
-  const featuredMatches = useMemo((): DisplayMatch[] => {
-    const filteredScrims = scrims.filter((s) => {
+  // Game-scoped scrims
+  const gameScrims = useMemo(() => {
+    return scrims.filter((s) => {
       if (!s.gameTitle) return true;
       const title = s.gameTitle.toLowerCase();
       if (activeGame === "valo") return title.includes("val");
@@ -76,43 +68,7 @@ export default function LandingPage() {
       if (activeGame === "ml") return title.includes("ml") || title.includes("mobile");
       return true;
     });
-
-    if (filteredScrims.length > 0) {
-      return filteredScrims.slice(0, 2).map((s) => {
-        const team1Code = s.hostTeamName ? s.hostTeamName.slice(0, 4).toUpperCase() : "HOST";
-        const team2Code = s.opponentTeamName ? s.opponentTeamName.slice(0, 4).toUpperCase() : "TBD";
-        return {
-          title: `${selectedGameInfo?.name || "COLLEGIATE"} MATCH BOARD`,
-          stage: s.status === "CONFIRMED" ? "MATCH BOOKED" : s.status === "PENDING" ? "REQUEST PENDING" : "OPEN CHALLENGE",
-          team1: { code: team1Code, name: s.hostTeamName || "Varsity Squad", score: 0 },
-          team2: { code: team2Code, name: s.opponentTeamName || "Open Opponent", score: 0 },
-          statusText: s.format || "BO3",
-        };
-      });
-    }
-
-    const gameTeams = teams.filter((t) => {
-      const g = (t.gameTitle || "").toLowerCase();
-      if (activeGame === "valo") return g.includes("val");
-      if (activeGame === "lol") return g.includes("lol") || g.includes("league");
-      if (activeGame === "codm") return g.includes("cod") || g.includes("call");
-      if (activeGame === "ml") return g.includes("ml") || g.includes("mobile");
-      return true;
-    });
-
-    const t1 = gameTeams[0] || { name: "Varsity Alpha", universityName: "UMAK" };
-    const t2 = gameTeams[1] || { name: "Varsity Beta", universityName: "UST" };
-
-    return [
-      {
-        title: `${selectedGameInfo?.name || "ESPORTS"} MATCHMAKING`,
-        stage: "MATCH SCHEDULED",
-        team1: { code: (t1.universityName || "UMAK").slice(0, 4), name: t1.name, score: 0 },
-        team2: { code: (t2.universityName || "UST").slice(0, 4), name: t2.name, score: 0 },
-        statusText: "BO3",
-      },
-    ];
-  }, [scrims, teams, activeGame, selectedGameInfo]);
+  }, [scrims, activeGame]);
 
   // Compute dynamic per-game metrics
   const gameStats = useMemo(() => {
@@ -266,7 +222,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Unified High-Tech Esports Console & Live Matchday Hub */}
+          {/* Unified High-Tech Esports Console & Live Matchmaking Hub */}
           <div className="lg:col-span-5 w-full mt-6 lg:mt-0">
             <div 
               className="relative overflow-hidden bg-[#0A0D18] border border-[#1E293B] shadow-2xl transition-all duration-300 hover:border-primary-brand/50"
@@ -294,7 +250,7 @@ export default function LandingPage() {
                       }}
                     >
                       <span className="w-1.5 h-1.5 rounded-full bg-primary-brand animate-pulse" />
-                      LIVE MATCHDAY SHOWCASE
+                      CIRCUIT TELEMETRY
                     </span>
 
                     <button
@@ -325,87 +281,104 @@ export default function LandingPage() {
                         clipPath: "polygon(2px 0, 100% 0, calc(100% - 2px) 100%, 0 100%)",
                       }}
                     >
-                      MATCHMAKING ACTIVE
+                      MATCHMAKING ONLINE
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* Console Body: Duel Stage + Standings + War Room CTA */}
+              {/* Console Body: Live Matchmaking Hub */}
               <div className="p-4 sm:p-5 space-y-4 bg-gradient-to-b from-[#0A0D18] via-[#080B14] to-[#0A0D18]">
-                
-                {/* Featured Head-to-Head Duel Stage */}
                 <div 
-                  className="p-3.5 bg-[#060912] border border-[#182338] shadow-inner"
+                  className="p-4 bg-[#060912] border border-[#182338] shadow-inner space-y-3.5"
                   style={{
                     clipPath: "polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))",
                   }}
                 >
-                  <div className="flex items-center justify-between text-[9px] font-mono text-slate-400 border-b border-[#141A29] pb-2 mb-3">
-                    <span className="text-slate-300 font-bold uppercase tracking-wider flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary-brand" />
-                      FEATURED MATCHDAY • BO3
-                    </span>
-                    <span className="text-emerald-400 font-bold">MATCH READY</span>
-                  </div>
-
-                  <div className="flex items-center justify-between gap-3">
-                    {/* Team 1 Crest */}
-                    <div className="flex flex-col items-center text-center space-y-1 flex-1 min-w-0">
-                      <div 
-                        className="w-11 h-11 bg-gradient-to-br from-primary-brand/90 to-[#141A29] text-white flex items-center justify-center font-display text-sm font-black shadow-lg border border-white/20 shrink-0"
-                        style={{
-                          clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
-                        }}
-                      >
-                        UMAK
+                  {user?.role === "ORGANIZER" ? (
+                    <>
+                      <div className="flex items-center justify-between text-[9px] font-mono text-slate-400 border-b border-[#141A29] pb-2">
+                        <span className="text-amber-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                          ORGANIZER CONTROL HUB
+                        </span>
+                        <span className="text-emerald-400 font-bold">SANCTIONED ACCESS</span>
                       </div>
-                      <span className="font-display text-xs font-black text-white truncate max-w-full block uppercase">
-                        UMAK Herons
-                      </span>
-                      <span className="text-[8px] font-mono text-emerald-400 uppercase">DEFENDING #1</span>
-                    </div>
 
-                    {/* Score Center Indicator */}
-                    <div className="flex flex-col items-center px-3 shrink-0">
-                      <div className="flex items-center gap-2.5 font-display text-2xl sm:text-3xl font-black text-white tracking-wider">
-                        <span className="text-primary-brand">{featuredMatches[0]?.team1.score ?? 0}</span>
-                        <span className="text-slate-600 text-lg">:</span>
-                        <span className="text-slate-300">{featuredMatches[0]?.team2.score ?? 0}</span>
+                      <div className="space-y-1.5 py-1">
+                        <span className="text-xs font-display font-black uppercase text-white tracking-wide block">
+                          Host & Direct Tournaments
+                        </span>
+                        <p className="text-xs font-sans text-slate-400 leading-relaxed">
+                          Establish official collegiate brackets, manage varsity registrations, oversee live scores, and sanction championship matches.
+                        </p>
                       </div>
-                      <span className="text-[8px] font-mono text-slate-400 font-bold mt-1 tracking-wider uppercase">
-                        WAR ROOM OPEN
-                      </span>
-                    </div>
 
-                    {/* Team 2 Crest */}
-                    <div className="flex flex-col items-center text-center space-y-1 flex-1 min-w-0">
-                      <div 
-                        className="w-11 h-11 bg-[#141A29] text-slate-400 flex items-center justify-center font-display text-sm font-black shadow-md border border-[#232D44] shrink-0"
-                        style={{
-                          clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
-                        }}
-                      >
-                        DLSU
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <Link
+                          href="/dashboard"
+                          className="flex items-center justify-center gap-1.5 h-10 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-mono text-xs font-black uppercase tracking-wider transition-all shadow-md shadow-amber-500/20"
+                          style={{
+                            clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
+                          }}
+                        >
+                          <span>Host Tournament</span>
+                        </Link>
+
+                        <Link
+                          href="/tournaments"
+                          className="flex items-center justify-center gap-1.5 h-10 bg-[#141A29] hover:bg-[#1E293B] text-slate-200 border border-[#232D44] font-mono text-xs font-bold uppercase tracking-wider transition-all"
+                          style={{
+                            clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
+                          }}
+                        >
+                          <span>Explore Brackets</span>
+                        </Link>
                       </div>
-                      <span className="font-display text-xs font-black text-white truncate max-w-full block uppercase">
-                        DLSU Archers
-                      </span>
-                      <span className="text-[8px] font-mono text-slate-500 uppercase">CHALLENGER</span>
-                    </div>
-                  </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center justify-between text-[9px] font-mono text-slate-400 border-b border-[#141A29] pb-2">
+                        <span className="text-slate-300 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                          {selectedGameInfo?.name || "COLLEGIATE"} MATCHMAKING
+                        </span>
+                        <span className="text-emerald-400 font-bold">READY FOR MATCHES</span>
+                      </div>
+
+                      <div className="space-y-1.5 py-1">
+                        <span className="text-xs font-display font-black uppercase text-white tracking-wide block">
+                          Collegiate Practice & Warm-ups
+                        </span>
+                        <p className="text-xs font-sans text-slate-400 leading-relaxed">
+                          Find verified collegiate opponents for {selectedGameInfo?.name || "VALORANT"} custom lobby practice, veto testing, and tournament preparation.
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <Link
+                          href="/scrims"
+                          className="flex items-center justify-center gap-1.5 h-10 game-theme-btn font-mono text-xs font-bold uppercase tracking-wider transition-all"
+                          style={{
+                            clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
+                          }}
+                        >
+                          <span>Open Scrim Board</span>
+                        </Link>
+
+                        <Link
+                          href="/tournaments"
+                          className="flex items-center justify-center gap-1.5 h-10 bg-[#141A29] hover:bg-[#1E293B] text-slate-200 border border-[#232D44] font-mono text-xs font-bold uppercase tracking-wider transition-all"
+                          style={{
+                            clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
+                          }}
+                        >
+                          <span>Tournaments</span>
+                        </Link>
+                      </div>
+                    </>
+                  )}
                 </div>
-
-                {/* Match CTA */}
-                <Link
-                  href="/scrims"
-                  className="flex items-center justify-center gap-2 w-full h-10 bg-primary-brand hover:bg-primary-brand/90 text-black font-black uppercase text-xs tracking-widest transition-all"
-                  style={{
-                    clipPath: "polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%)",
-                  }}
-                >
-                  Enter War Room
-                </Link>
               </div>
             </div>
           </div>

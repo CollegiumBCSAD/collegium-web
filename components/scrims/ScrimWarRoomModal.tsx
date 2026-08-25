@@ -46,9 +46,28 @@ export default function ScrimWarRoomModal({
   const [inputMessage, setInputMessage] = useState("");
   const [isCopied, setIsCopied] = useState(false);
   const [isLineupModalOpen, setIsLineupModalOpen] = useState<boolean>(false);
+  const [completeConfirmOpen, setCompleteConfirmOpen] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
   const [activeRosterTab, setActiveRosterTab] = useState<"ALL" | "HOST" | "CHALLENGER">("ALL");
   const [teams, setTeams] = useState<Team[]>(() => getStoredTeams());
   const chatBottomRef = useRef<HTMLDivElement>(null);
+
+  const handleCompleteScrim = async () => {
+    if (!scrim) return;
+    setIsCompleting(true);
+    try {
+      await scrimsService.completeScrim(scrim.id);
+    } catch {
+      // best effort
+    } finally {
+      setIsCompleting(false);
+      setCompleteConfirmOpen(false);
+      onClose();
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("scrim:completed"));
+      }
+    }
+  };
 
   useEffect(() => {
     fetchTeamsApi().then((data) => {
@@ -249,6 +268,18 @@ export default function ScrimWarRoomModal({
               </button>
             </div>
 
+            {isHost && (
+              <button
+                type="button"
+                onClick={() => setCompleteConfirmOpen(true)}
+                className="h-9 px-3 sm:px-4 rounded-xl bg-emerald-950/70 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-500/50 font-mono text-xs font-bold uppercase transition-all cursor-pointer flex items-center gap-1.5 shadow-md active:scale-95"
+                title="Conclude scrimmage and close War Room"
+              >
+                <CheckCircleIcon className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Complete Match</span>
+              </button>
+            )}
+
             <button
               onClick={() => setIsLineupModalOpen(true)}
               className="h-9 px-4 rounded-xl bg-[#131A2B] hover:bg-[#1C2740] text-slate-200 border border-[#243350] font-sans text-xs font-bold uppercase transition-all cursor-pointer flex items-center gap-1.5 shadow-md active:scale-95"
@@ -266,6 +297,33 @@ export default function ScrimWarRoomModal({
             </button>
           </div>
         </div>
+
+        {/* Complete Match Confirmation Banner */}
+        {completeConfirmOpen && (
+          <div className="p-3 sm:p-4 bg-emerald-950/90 border-b border-emerald-500/40 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono relative z-30 shadow-lg animate-fade-in">
+            <span className="text-emerald-200 font-bold flex items-center gap-2">
+              <CheckCircleIcon className="w-4 h-4 text-emerald-400 shrink-0" />
+              Conclude scrimmage and mark this match as completed?
+            </span>
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+              <button
+                type="button"
+                onClick={handleCompleteScrim}
+                disabled={isCompleting}
+                className="flex-1 sm:flex-initial h-8 px-4 bg-emerald-500 hover:bg-emerald-400 text-black font-mono text-xs font-black uppercase rounded-lg shadow-md cursor-pointer disabled:opacity-50 transition-colors"
+              >
+                {isCompleting ? "Closing..." : "Yes, Close Match"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setCompleteConfirmOpen(false)}
+                className="flex-1 sm:flex-initial h-8 px-3.5 bg-[#141A29] hover:bg-[#1E293B] text-slate-300 font-mono text-xs font-bold uppercase rounded-lg border border-[#232D44] cursor-pointer transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="sm:hidden px-4 py-2 bg-[#060912] border-b border-[#1A263E] flex items-center justify-between text-xs font-mono relative z-20">
           <span className="text-slate-400">LOBBY CODE: <strong className="text-white font-bold">{lobbyCode}</strong></span>

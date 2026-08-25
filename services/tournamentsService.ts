@@ -62,9 +62,15 @@ function parseServerTournamentsResponse(data: unknown): Tournament[] {
         ? "Final standings published"
         : status === "LIVE"
           ? "Bracket in progress"
-          : `${universities.length || 8} universities registered`;
+          : universities.length > 0
+            ? `${universities.length} universities registered`
+            : "Open for registrations (0 registered)";
 
-    const bulletPoints = [`${universities.length || 8} participating universities`];
+    const bulletPoints = [
+      universities.length > 0
+        ? `${universities.length} participating universities`
+        : "Open registration — 0 squads",
+    ];
     if (matches.length > 0) {
       bulletPoints.push(`${matches.length} matches played`);
     } else {
@@ -82,7 +88,7 @@ function parseServerTournamentsResponse(data: unknown): Tournament[] {
     };
   });
 
-  return parsed.length > 0 ? parsed : mockTournaments;
+  return parsed;
 }
 
 function parseServerBracketResponse(data: unknown): BracketRound[] {
@@ -189,7 +195,7 @@ function parseServerBracketResponse(data: unknown): BracketRound[] {
     }
   }
 
-  return mockBracket;
+  return [];
 }
 
 export const tournamentsService = {
@@ -198,7 +204,7 @@ export const tournamentsService = {
       const response = await apiClient.get<unknown>("/tournaments");
       return parseServerTournamentsResponse(response);
     } catch {
-      return mockTournaments;
+      return [];
     }
   },
 
@@ -207,11 +213,40 @@ export const tournamentsService = {
       const response = await apiClient.get<unknown>(`/tournaments/${tournamentId}/bracket`);
       return parseServerBracketResponse(response);
     } catch {
-      const tourney = mockTournaments.find((t) => t.id === tournamentId);
-      if (tourney?.status === "LIVE") return mockLiveBracket;
-      if (tourney?.status === "UPCOMING") return mockUpcomingBracket;
-      return mockCompletedBracket;
+      return [];
     }
+  },
+
+  createTournament: (name: string): Promise<unknown> => {
+    return apiClient.post("/tournaments", { name });
+  },
+
+  registerTournament: (tournamentId: string): Promise<unknown> => {
+    return apiClient.post(`/tournaments/${tournamentId}/register`, {});
+  },
+
+  applyForTournament: (tournamentId: string): Promise<unknown> => {
+    return apiClient.post(`/tournaments/${tournamentId}/apply`, {});
+  },
+
+  withdrawApplication: (tournamentId: string): Promise<unknown> => {
+    return apiClient.post(`/tournaments/${tournamentId}/withdraw`, {});
+  },
+
+  getApplications: (tournamentId: string): Promise<unknown[]> => {
+    return apiClient.get<unknown[]>(`/tournaments/${tournamentId}/applications`).catch(() => []);
+  },
+
+  approveApplication: (tournamentId: string, appId: string): Promise<unknown> => {
+    return apiClient.post(`/tournaments/${tournamentId}/applications/${appId}/approve`, {});
+  },
+
+  rejectApplication: (tournamentId: string, appId: string): Promise<unknown> => {
+    return apiClient.post(`/tournaments/${tournamentId}/applications/${appId}/reject`, {});
+  },
+
+  deleteTournament: (tournamentId: string): Promise<void> => {
+    return apiClient.delete<void>(`/tournaments/${tournamentId}`);
   },
 
   getBoxScore: (matchId: string): Promise<MatchBoxScore> => {

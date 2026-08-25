@@ -8,11 +8,19 @@ import { GAMES } from "@/lib/games";
 interface TournamentCardProps {
   tournament: Tournament;
   onSelect: (tournament: Tournament) => void;
+  onApply?: (tournament: Tournament) => void;
+  onWithdraw?: (tournament: Tournament) => void;
+  isApplied?: boolean;
+  isApplying?: boolean;
 }
 
 export default function TournamentCard({
   tournament,
   onSelect,
+  onApply,
+  onWithdraw,
+  isApplied = false,
+  isApplying = false,
 }: TournamentCardProps) {
   const isCompleted = tournament.status?.toLowerCase() === "completed";
   const gameStr = (tournament.game || "").toLowerCase();
@@ -124,13 +132,55 @@ export default function TournamentCard({
             <span>Verified Tournament Payload</span>
           </div>
 
-          <button
-            onClick={() => onSelect(tournament)}
-            className="h-10 px-6 game-theme-btn text-xs font-bold uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 cursor-pointer shrink-0"
-          >
-            <span>View Bracket & Details</span>
-            <span>→</span>
-          </button>
+          <div className="flex items-center gap-2.5 flex-wrap">
+            {!isCompleted && isApplied && (
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-mono font-bold px-3 py-2 rounded bg-amber-950/60 text-amber-300 border border-amber-500/30 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                  Application Pending Organizer Approval
+                </span>
+                {onWithdraw && (
+                  <button
+                    type="button"
+                    disabled={isApplying}
+                    onClick={() => onWithdraw(tournament)}
+                    className="h-10 px-3.5 bg-rose-950/40 hover:bg-rose-900/50 text-rose-300 border border-rose-500/30 rounded text-xs font-mono font-bold uppercase transition-colors cursor-pointer"
+                  >
+                    Undo Application
+                  </button>
+                )}
+              </div>
+            )}
+
+            {!isCompleted && !isApplied && onApply && (
+              <button
+                type="button"
+                disabled={isApplying}
+                onClick={() => onApply(tournament)}
+                className="h-10 px-5 text-xs font-mono font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md bg-[#141A29] hover:bg-[#1E293B] text-slate-200 border border-[#232D44]"
+                style={{
+                  clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
+                }}
+              >
+                {isApplying ? (
+                  <span>Submitting...</span>
+                ) : (
+                  <span>+ Apply / Register Squad</span>
+                )}
+              </button>
+            )}
+
+            <button
+              onClick={() => onSelect(tournament)}
+              className="h-10 px-6 game-theme-btn text-xs font-bold uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 cursor-pointer shrink-0"
+              style={{
+                clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
+              }}
+            >
+              <span>View Bracket & Details</span>
+              <span>→</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

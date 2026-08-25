@@ -10,6 +10,7 @@ import {
   LockIcon,
   TrashIcon,
   ZapIcon,
+  CheckCircleIcon,
 } from "@/components/ui/Icons";
 
 interface ScrimCardProps {
@@ -50,7 +51,17 @@ export default function ScrimCard({
     ? [{ teamId: scrim.opponentTeamId || "op-id", teamName: scrim.opponentTeamName, universityName: undefined }]
     : [{ teamId: "op-default", teamName: "Challenger Squad", universityName: undefined }];
 
-  const formattedTime = new Date(scrim.scheduledAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const scheduleDateObj = new Date(scrim.scheduledAt);
+  const isValidDate = !isNaN(scheduleDateObj.getTime());
+  const formattedTime = isValidDate
+    ? scheduleDateObj.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    : "TBD";
+  const formattedDate = isValidDate
+    ? scheduleDateObj.toLocaleDateString([], { month: "short", day: "numeric" })
+    : "";
+  const displaySchedule = formattedDate
+    ? `${scrim.mapPreference ? `${scrim.mapPreference} @ ` : ""}${formattedDate}, ${formattedTime}`
+    : `${scrim.mapPreference ? `${scrim.mapPreference} @ ` : ""}${formattedTime}`;
 
   return (
     <div
@@ -79,7 +90,7 @@ export default function ScrimCard({
         }}
       />
 
-      <div className="space-y-5">
+      <div className="space-y-4">
         {/* Header: Team & Status Telemetry */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3.5 min-w-0">
@@ -137,8 +148,9 @@ export default function ScrimCard({
             {/* Trash Bin for Host */}
             {isHost && onDelete && (
               <button
+                type="button"
                 onClick={() => setDeleteConfirmOpen(true)}
-                className="w-7 h-7 bg-[#141A29] border border-[#232D44] text-slate-400 hover:text-rose-400 flex items-center justify-center transition-colors cursor-pointer"
+                className="w-7 h-7 bg-[#141A29] border border-[#232D44] hover:border-rose-500/50 text-slate-400 hover:text-rose-400 flex items-center justify-center transition-colors cursor-pointer rounded"
                 title="Delete Scrim Offer"
               >
                 <TrashIcon className="w-3.5 h-3.5" />
@@ -146,6 +158,35 @@ export default function ScrimCard({
             )}
           </div>
         </div>
+
+        {/* In-Card Delete Confirmation Banner */}
+        {deleteConfirmOpen && (
+          <div className="p-3 bg-rose-950/95 border border-rose-500/50 rounded-xl space-y-2 text-left animate-fade-in shadow-xl">
+            <span className="text-xs font-mono font-bold text-rose-300 flex items-center gap-1.5">
+              <TrashIcon className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+              Are you sure you want to delete this scrimmage?
+            </span>
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setDeleteConfirmOpen(false);
+                  if (onDelete) onDelete(scrim.id);
+                }}
+                className="flex-1 h-8 bg-rose-600 hover:bg-rose-500 text-white font-mono text-xs font-black uppercase rounded-lg shadow-md cursor-pointer transition-colors"
+              >
+                Yes, Delete
+              </button>
+              <button
+                type="button"
+                onClick={() => setDeleteConfirmOpen(false)}
+                className="flex-1 h-8 bg-[#141A29] hover:bg-[#1E293B] text-slate-300 font-mono text-xs font-bold uppercase rounded-lg border border-[#232D44] cursor-pointer transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Versus Duel Split HUD */}
         {(isBooked || isPending) && (
@@ -182,8 +223,8 @@ export default function ScrimCard({
             <div className="flex items-center gap-2 min-w-0 text-right justify-end">
               <div className="min-w-0">
                 <span className="text-[8px] font-mono text-slate-500 block uppercase">CHALLENGER</span>
-                <span className="text-xs font-sans font-bold text-slate-200 truncate block">
-                  {scrim.opponentTeamName || "TBD CHALLENGER"}
+                <span className="text-xs font-sans font-bold text-white truncate block">
+                  {scrim.opponentTeamName || (isBooked ? "Varsity Opponent" : "Pending Selection")}
                 </span>
               </div>
               <div 
@@ -192,7 +233,7 @@ export default function ScrimCard({
                   clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
                 }}
               >
-                {(scrim.opponentTeamName || "TBD").slice(0, 3).toUpperCase()}
+                {(scrim.opponentTeamName || "OPP").slice(0, 3).toUpperCase()}
               </div>
             </div>
           </div>
@@ -213,10 +254,10 @@ export default function ScrimCard({
             <span className="text-[8px] text-slate-400 uppercase tracking-wider font-semibold">TARGET TIER</span>
             <span className="font-bold text-white text-xs mt-0.5">{scrim.rankRange}</span>
           </div>
-          <div className="flex flex-col">
+          <div className="flex flex-col min-w-0">
             <span className="text-[8px] text-slate-400 uppercase tracking-wider font-semibold">MAP & SCHEDULE</span>
-            <span className="font-bold text-white text-xs mt-0.5 truncate">
-              {scrim.mapPreference ? `${scrim.mapPreference} @ ` : ""}{formattedTime}
+            <span className="font-bold text-white text-xs mt-0.5 truncate" title={displaySchedule}>
+              {displaySchedule}
             </span>
           </div>
         </div>
@@ -235,7 +276,11 @@ export default function ScrimCard({
           <div className="text-xs font-sans text-rose-400 font-semibold flex items-center justify-between">
             <span>Scrim offer cancelled</span>
             {isHost && (
-              <button onClick={() => setDeleteConfirmOpen(true)} className="hover:underline font-bold text-rose-400 cursor-pointer">
+              <button 
+                type="button"
+                onClick={() => setDeleteConfirmOpen(true)} 
+                className="hover:underline font-bold text-rose-400 cursor-pointer"
+              >
                 Delete
               </button>
             )}
@@ -259,92 +304,104 @@ export default function ScrimCard({
                     }}
                   >
                     <div className="min-w-0">
-                      <span className="text-xs font-sans font-bold text-white block truncate">{req.teamName}</span>
+                      <span className="font-sans text-xs font-bold text-white block truncate">{req.teamName}</span>
                       {req.universityName && (
-                        <span className="text-[10px] font-sans text-slate-400 block truncate">{req.universityName}</span>
+                        <span className="text-[10px] font-mono text-slate-400 block truncate">{req.universityName}</span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button
-                        onClick={() => onDeclineRequest ? onDeclineRequest(scrim.id, req.teamId) : onCancel && onCancel(scrim.id)}
-                        className="px-3 py-1.5 bg-[#141A29] hover:bg-[#1C263C] text-slate-300 hover:text-rose-400 text-[10px] font-mono font-bold uppercase transition-all border border-[#232D44] cursor-pointer"
-                        style={{
-                          clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-                        }}
-                      >
-                        Decline
-                      </button>
-                      <button
-                        onClick={() => onConfirmBooking && onConfirmBooking(scrim.id, req.teamId)}
-                        className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-mono font-black uppercase tracking-wider transition-all shadow-md cursor-pointer"
-                        style={{
-                          clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-                        }}
-                      >
-                        Accept
-                      </button>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {onConfirmBooking && (
+                        <button
+                          type="button"
+                          onClick={() => onConfirmBooking(scrim.id, req.teamId)}
+                          className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-[10px] font-bold uppercase transition-colors shadow-sm cursor-pointer"
+                          style={{
+                            clipPath: "polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)",
+                          }}
+                        >
+                          Accept
+                        </button>
+                      )}
+                      {onDeclineRequest && (
+                        <button
+                          type="button"
+                          onClick={() => onDeclineRequest(scrim.id, req.teamId)}
+                          className="px-2.5 py-1 bg-[#141A29] hover:bg-rose-950/50 text-slate-400 hover:text-rose-300 font-mono text-[10px] font-bold uppercase border border-[#232D44] transition-colors cursor-pointer"
+                          style={{
+                            clipPath: "polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)",
+                          }}
+                        >
+                          ✕
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
               </div>
             </div>
           ) : isOpponent ? (
-            <div className="flex items-center justify-between gap-3 text-xs font-sans">
-              <span className="text-amber-400 font-bold flex items-center gap-1.5">
-                <ClockIcon className="w-3.5 h-3.5 animate-pulse" />
-                Awaiting Host Captain Approval
+            <div className="flex items-center justify-between text-xs font-mono">
+              <span className="text-amber-400 flex items-center gap-1.5">
+                <ClockIcon className="w-4 h-4 text-amber-400 animate-spin" />
+                <span>Request sent. Waiting for Host...</span>
               </span>
               {onCancel && (
                 <button
+                  type="button"
                   onClick={() => onCancel(scrim.id)}
-                  className="px-3 py-1.5 bg-[#141A29] hover:bg-rose-950/40 text-slate-300 hover:text-rose-400 text-[10px] font-mono font-bold uppercase border border-[#232D44] cursor-pointer"
-                  style={{
-                    clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-                  }}
+                  className="text-slate-400 hover:text-rose-400 underline font-semibold text-[11px] cursor-pointer"
                 >
-                  Cancel
+                  Withdraw Request
                 </button>
               )}
             </div>
           ) : (
-            <button
-              onClick={() => onAccept(scrim.id)}
-              className="w-full h-10 game-theme-btn font-display text-xs font-black uppercase tracking-wider transition-all active:scale-[0.98] shadow-xl flex items-center justify-center gap-2 cursor-pointer"
-              style={{
-                clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
-              }}
-            >
-              <SwordsIcon className="w-4 h-4" />
-              <span>Request Scrim Match</span>
-            </button>
-          )
-        ) : isBooked ? (
-          isHost || isChosenOpponent ? (
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <span className="text-[9px] font-mono font-bold text-emerald-400 block uppercase">MATCH CONFIRMED</span>
-                <span className="text-xs font-sans font-bold text-white truncate block">
-                  VS {isHost ? (scrim.opponentTeamName || "Opponent Squad") : scrim.hostTeamName}
-                </span>
-              </div>
+            <div className="flex items-center justify-between text-xs font-mono text-slate-400">
+              <span className="flex items-center gap-1.5 text-amber-400">
+                <ClockIcon className="w-3.5 h-3.5" />
+                <span>Pending host review</span>
+              </span>
               <button
-                onClick={() => onOpenWarRoom && onOpenWarRoom(scrim)}
-                className="h-10 px-5 game-theme-btn font-display text-xs font-black uppercase tracking-wider transition-all shrink-0 shadow-xl flex items-center gap-2 cursor-pointer"
-                style={{
-                  clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
-                }}
+                type="button"
+                onClick={() => onAccept(scrim.id)}
+                className="px-3 py-1 bg-[#141A29] hover:bg-[#1E293B] text-slate-200 font-mono text-[10px] font-bold uppercase border border-[#232D44] cursor-pointer"
               >
-                <FlameIcon className="w-4 h-4 text-white" />
-                <span>Enter War Room →</span>
+                Join Queue
               </button>
             </div>
+          )
+        ) : isBooked ? (
+          isHost || isOpponent || isChosenOpponent ? (
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              <div className="text-xs font-sans text-emerald-400 font-bold flex items-center gap-1.5">
+                <CheckCircleIcon className="w-4 h-4 text-emerald-400" />
+                <span>Match Confirmed</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {onOpenWarRoom && (
+                  <button
+                    type="button"
+                    onClick={() => onOpenWarRoom(scrim)}
+                    className="flex-1 sm:flex-initial h-9 px-5 game-theme-btn font-display text-xs font-black uppercase tracking-wider transition-all active:scale-[0.98] shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
+                    style={{
+                      clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
+                    }}
+                  >
+                    <SwordsIcon className="w-3.5 h-3.5" />
+                    <span>Enter War Room →</span>
+                  </button>
+                )}
+              </div>
+            </div>
           ) : (
-            <div className="flex items-center justify-between text-xs font-sans text-slate-400">
+            <div className="text-xs font-mono text-slate-400 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
-                <LockIcon className="w-3.5 h-3.5 text-slate-400" />
+                <LockIcon className="w-3.5 h-3.5 text-slate-500" />
                 Booked by another varsity squad
               </span>
-              <span className="text-[9px] font-mono font-bold uppercase text-emerald-400">CONFIRMED</span>
+              <span className="text-[10px] font-mono font-bold text-slate-400 uppercase">
+                CONFIRMED
+              </span>
             </div>
           )
         ) : isHost ? (
@@ -356,6 +413,7 @@ export default function ScrimCard({
           </div>
         ) : (
           <button
+            type="button"
             onClick={() => onAccept(scrim.id)}
             className="w-full h-10 game-theme-btn font-display text-xs font-black uppercase tracking-wider transition-all active:scale-[0.98] shadow-xl flex items-center justify-center gap-2 cursor-pointer"
             style={{
@@ -367,56 +425,6 @@ export default function ScrimCard({
           </button>
         )}
       </div>
-
-      {/* Delete Confirmation Modal */}
-      {deleteConfirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="w-full max-w-sm bg-[#0A0D18] border border-[#1E293B] p-6 shadow-2xl space-y-4 text-left"
-            style={{
-              clipPath: "polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px))",
-            }}
-          >
-            <div className="flex items-center gap-3 border-b border-[#182338] pb-3">
-              <div className="w-8 h-8 bg-[#141A29] text-rose-400 flex items-center justify-center border border-rose-500/30"
-                style={{
-                  clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
-                }}
-              >
-                <TrashIcon className="w-4 h-4" />
-              </div>
-              <h3 className="font-display text-base font-bold uppercase text-white">
-                Delete Scrim Offer?
-              </h3>
-            </div>
-            <p className="font-sans text-xs text-slate-300 leading-relaxed">
-              Are you sure you want to delete this scrimmage post?
-            </p>
-            <div className="flex items-center justify-end gap-3 pt-2">
-              <button
-                onClick={() => setDeleteConfirmOpen(false)}
-                className="h-9 px-4 bg-[#141A29] text-slate-300 font-sans text-xs font-bold uppercase border border-[#232D44] cursor-pointer"
-                style={{
-                  clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  setDeleteConfirmOpen(false);
-                  if (onDelete) onDelete(scrim.id);
-                }}
-                className="h-9 px-4 bg-rose-600 hover:bg-rose-500 text-white font-sans text-xs font-bold uppercase shadow-lg cursor-pointer"
-                style={{
-                  clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-                }}
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

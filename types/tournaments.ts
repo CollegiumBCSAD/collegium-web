@@ -16,6 +16,8 @@ export interface Tournament {
   bulletPoints: string[];
   image?: string;
   bgGradient: string;
+  universities?: { id: string; name: string }[];
+  applications?: any[];
 }
 
 export interface TournamentMatch {
