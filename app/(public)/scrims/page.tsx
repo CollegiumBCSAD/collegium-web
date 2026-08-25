@@ -239,8 +239,10 @@ export default function ScrimsPage() {
     };
   }, [activeGame]);
 
+  const [referenceTime] = useState(() => Date.now());
+
   const filteredScrims = useMemo(() => {
-    const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+    const oneDayAgo = referenceTime - 24 * 60 * 60 * 1000;
     return scrims.filter((s) => {
       // Completed scrims are archived and hidden from the active matchmaking board
       if (s.status === "COMPLETED") return false;

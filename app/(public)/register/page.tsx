@@ -158,12 +158,12 @@ export default function RegisterPage() {
             {isOrganizer ? (
               <span className="text-[10px] font-mono font-extrabold uppercase tracking-widest text-amber-400 flex items-center gap-1">
                 <ShieldIcon className="w-3.5 h-3.5 text-amber-400" />
-                // COLLEGIATE TOURNAMENT COMMISSION
+                {"// COLLEGIATE TOURNAMENT COMMISSION"}
               </span>
             ) : (
               <span className="text-[10px] font-mono font-extrabold uppercase tracking-widest text-primary-brand flex items-center gap-1">
                 <ShieldIcon className="w-3.5 h-3.5 text-primary-brand" />
-                // PHILIPPINE COLLEGIATE ESPORTS
+                {"// PHILIPPINE COLLEGIATE ESPORTS"}
               </span>
             )}
           </div>

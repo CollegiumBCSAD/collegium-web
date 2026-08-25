@@ -36,22 +36,26 @@ export default function TournamentApplicationsModal({
   const [isLoading, setIsLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
 
-  const fetchApps = async () => {
-    setIsLoading(true);
-    try {
-      const data = await tournamentsService.getApplications(tournamentId);
-      setApplications(Array.isArray(data) ? (data as TournamentApplication[]) : []);
-    } catch {
-      setApplications([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
-    if (isOpen && tournamentId) {
-      fetchApps();
-    }
+    if (!isOpen || !tournamentId) return;
+    let isMounted = true;
+    tournamentsService
+      .getApplications(tournamentId)
+      .then((data) => {
+        if (isMounted) {
+          setApplications(Array.isArray(data) ? (data as TournamentApplication[]) : []);
+          setIsLoading(false);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setApplications([]);
+          setIsLoading(false);
+        }
+      });
+    return () => {
+      isMounted = false;
+    };
   }, [isOpen, tournamentId]);
 
   if (!isOpen) return null;
@@ -111,7 +115,7 @@ export default function TournamentApplicationsModal({
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-400">
-                // ORGANIZER VERIFICATION PORTAL
+                {"// ORGANIZER VERIFICATION PORTAL"}
               </span>
               <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-amber-950/60 text-amber-300 border border-amber-500/30 font-bold">
                 {gameTitle}

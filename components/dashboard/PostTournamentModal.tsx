@@ -76,7 +76,7 @@ export default function PostTournamentModal({
             </div>
             <div>
               <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-400 block">
-                // ORGANIZER PORTAL
+                {"// ORGANIZER PORTAL"}
               </span>
               <h3 className="font-display text-lg font-black uppercase text-white">
                 Host Collegiate Tournament

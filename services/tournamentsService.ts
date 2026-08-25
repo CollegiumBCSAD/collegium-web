@@ -2,10 +2,6 @@ import { apiClient } from "./apiClient";
 import { Tournament, TournamentStatus, BracketRound, MatchBoxScore } from "@/types";
 import { 
   mockTournaments, 
-  mockCompletedBracket, 
-  mockLiveBracket, 
-  mockUpcomingBracket, 
-  mockBracket, 
   mockBoxScore 
 } from "@/lib/mock/tournaments";
 

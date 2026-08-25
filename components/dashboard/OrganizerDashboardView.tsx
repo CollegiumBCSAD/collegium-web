@@ -26,20 +26,25 @@ export default function OrganizerDashboardView({ user }: OrganizerDashboardViewP
   const [activeBoxScoreTourney, setActiveBoxScoreTourney] = useState<Tournament | null>(null);
   const [activeApplicationsTourney, setActiveApplicationsTourney] = useState<Tournament | null>(null);
 
-  const fetchTourneys = async () => {
-    setIsLoading(true);
-    try {
-      const data = await tournamentsService.getTournaments();
-      setTournaments(data);
-    } catch {
-      setTournaments([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchTourneys();
+    let isMounted = true;
+    tournamentsService
+      .getTournaments()
+      .then((data) => {
+        if (isMounted) {
+          setTournaments(data);
+          setIsLoading(false);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setTournaments([]);
+          setIsLoading(false);
+        }
+      });
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const gameTournaments = useMemo(() => {
@@ -81,7 +86,7 @@ export default function OrganizerDashboardView({ user }: OrganizerDashboardViewP
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-400">
-                // TOURNAMENT DIRECTOR WORKSPACE
+                {"// TOURNAMENT DIRECTOR WORKSPACE"}
               </span>
               <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 font-bold">
                 SANCTIONED

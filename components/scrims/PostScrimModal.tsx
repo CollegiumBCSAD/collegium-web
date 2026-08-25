@@ -177,7 +177,7 @@ export default function PostScrimModal({
         <div className="flex items-center justify-between border-b border-[#1C2538] pb-3">
           <div>
             <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-primary-brand block">
-              // VARSITY MATCHMAKING
+              {"// VARSITY MATCHMAKING"}
             </span>
             <h3 className="font-display text-lg font-black uppercase text-white">
               Post Scrim Offer
