@@ -59,7 +59,18 @@ export default function OrganizerDashboardView({ user }: OrganizerDashboardViewP
   }, []);
 
   const gameTournaments = useMemo(() => {
+    const gameIdToEnum: Record<string, string> = {
+      valo: "VALORANT",
+      lol: "LOL",
+      ml: "MLBB",
+      codm: "CODM",
+    };
     return tournaments.filter((t) => {
+      // Prefer the real gameTitle field; fall back to the guessed display
+      // label only for tournaments created before that field existed.
+      if (t.gameTitle) {
+        return !selectedGame || t.gameTitle === gameIdToEnum[selectedGame];
+      }
       const g = (t.game || "").toLowerCase();
       if (selectedGame === "valo") return g.includes("val");
       if (selectedGame === "lol") return g.includes("league") || g.includes("lol");

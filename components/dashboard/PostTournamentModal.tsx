@@ -5,6 +5,13 @@ import { useGame } from "@/context/GameContext";
 import { TrophyIcon, ShieldIcon } from "@/components/ui/Icons";
 import { tournamentsService } from "@/services/tournamentsService";
 
+const GAME_ID_TO_ENUM: Record<string, string> = {
+  valo: "VALORANT",
+  lol: "LOL",
+  ml: "MLBB",
+  codm: "CODM",
+};
+
 interface PostTournamentModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -16,7 +23,7 @@ export default function PostTournamentModal({
   onClose,
   onTournamentCreated,
 }: PostTournamentModalProps) {
-  const { selectedGameInfo } = useGame();
+  const { selectedGame, selectedGameInfo } = useGame();
   const [name, setName] = useState("");
   const [format, setFormat] = useState("Single Elimination");
   const [teamQuota, setTeamQuota] = useState("8 Universities");
@@ -59,6 +66,7 @@ export default function PostTournamentModal({
     try {
       await tournamentsService.createTournament({
         name: name.trim(),
+        gameTitle: selectedGame ? GAME_ID_TO_ENUM[selectedGame] : undefined,
         imageFile: imageFile || undefined,
         bracketFormat: format,
         teamQuota: parseInt(teamQuota, 10) || undefined,

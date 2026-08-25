@@ -18,6 +18,7 @@ export interface Tournament {
   id: string;
   title: string;
   game: string;
+  gameTitle?: string;
   status: TournamentApprovalStatus;
   statusText: string;
   bulletPoints: string[];
@@ -95,5 +96,18 @@ export interface TournamentBracketModalProps {
 export interface MatchCardProps {
   match: BracketMatch;
   onViewBoxScore: () => void;
+}
+
+export interface PendingSquadApplication {
+  id: string;
+  tournamentId: string;
+  tournamentName: string;
+  gameTitle: string | null;
+  universityId: string;
+  universityName: string;
+  userId: string;
+  applicantName: string;
+  status: string;
+  appliedAt: string;
 }
 

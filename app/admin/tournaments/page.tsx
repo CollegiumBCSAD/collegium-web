@@ -1,20 +1,28 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { mockPendingTeamRegistrations } from "@/lib/mock/admin";
 import { tournamentsService } from "@/services";
-import { Tournament } from "@/types";
+import { Tournament, PendingSquadApplication } from "@/types";
 import TournamentModerationPanel from "@/components/admin/TournamentModerationPanel";
 
 export default function AdminTournamentsPage() {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  const [applications, setApplications] = useState<PendingSquadApplication[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    tournamentsService
-      .getPendingTournaments()
-      .then(setTournaments)
-      .catch(() => setTournaments([]))
+    Promise.all([
+      tournamentsService.getPendingTournaments(),
+      tournamentsService.getAllPendingApplications(),
+    ])
+      .then(([tourneys, apps]) => {
+        setTournaments(tourneys);
+        setApplications(apps);
+      })
+      .catch(() => {
+        setTournaments([]);
+        setApplications([]);
+      })
       .finally(() => setIsLoading(false));
   }, []);
 
@@ -33,7 +41,7 @@ export default function AdminTournamentsPage() {
         ) : (
           <TournamentModerationPanel
             initialTournaments={tournaments}
-            initialRegistrations={mockPendingTeamRegistrations}
+            initialApplications={applications}
           />
         )}
       </div>

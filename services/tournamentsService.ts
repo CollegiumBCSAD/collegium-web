@@ -1,5 +1,5 @@
 import { apiClient } from "./apiClient";
-import { Tournament, TournamentApprovalStatus, BracketRound, MatchBoxScore } from "@/types";
+import { Tournament, TournamentApprovalStatus, BracketRound, MatchBoxScore, PendingSquadApplication } from "@/types";
 import { 
   mockTournaments, 
   mockBoxScore 
@@ -52,8 +52,10 @@ function mapTournaments(data: RawTournament[]): Tournament[] {
   return data.map((t, idx) => {
     const matches = t.matches ?? [];
     const universities = t.universities ?? [];
-    const nameString = (t.name || "") + " " + (t.gameTitle || "") + " " + (matches[0]?.title || "") + " " + (matches[0]?.gameTitle || "");
-    const gameDisplay = detectGameFromText(nameString);
+    // Prefer the real gameTitle field; only guess from text for tournaments
+    // that predate it (or were created without a game selection).
+    const nameString = (t.name || "") + " " + (matches[0]?.title || "") + " " + (matches[0]?.gameTitle || "");
+    const gameDisplay = (t.gameTitle && GAME_DISPLAY[t.gameTitle]) || detectGameFromText(nameString);
     const status: TournamentApprovalStatus = STATUS_DISPLAY[t.status ?? "UPCOMING"] ?? "UPCOMING";
 
     const statusText =
@@ -86,6 +88,7 @@ function mapTournaments(data: RawTournament[]): Tournament[] {
       id: t.id ?? `tournament-${idx}`,
       title: t.name ?? "Untitled Tournament",
       game: gameDisplay.label,
+      gameTitle: t.gameTitle,
       status,
       statusText,
       bulletPoints,
@@ -244,6 +247,12 @@ export const tournamentsService = {
     }
   },
 
+  getAllPendingApplications: async (): Promise<PendingSquadApplication[]> => {
+    return apiClient
+      .get<PendingSquadApplication[]>("/tournaments/applications/pending")
+      .catch(() => []);
+  },
+
   getBracket: async (tournamentId: string): Promise<BracketRound[]> => {
     try {
       const response = await apiClient.get<unknown>(`/tournaments/${tournamentId}/bracket`);
@@ -255,6 +264,7 @@ export const tournamentsService = {
 
   createTournament: (params: {
     name: string;
+    gameTitle?: string;
     imageFile?: File;
     bracketFormat?: string;
     teamQuota?: number;
@@ -262,6 +272,7 @@ export const tournamentsService = {
   }): Promise<unknown> => {
     const formData = new FormData();
     formData.append("name", params.name);
+    if (params.gameTitle) formData.append("gameTitle", params.gameTitle);
     if (params.imageFile) formData.append("image", params.imageFile);
     if (params.bracketFormat) formData.append("bracketFormat", params.bracketFormat);
     if (params.teamQuota) formData.append("teamQuota", String(params.teamQuota));
