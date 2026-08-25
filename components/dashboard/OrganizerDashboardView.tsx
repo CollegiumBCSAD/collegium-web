@@ -26,6 +26,17 @@ export default function OrganizerDashboardView({ user }: OrganizerDashboardViewP
   const [activeBoxScoreTourney, setActiveBoxScoreTourney] = useState<Tournament | null>(null);
   const [activeApplicationsTourney, setActiveApplicationsTourney] = useState<Tournament | null>(null);
 
+  const fetchTourneys = async () => {
+    try {
+      const data = await tournamentsService.getTournaments();
+      setTournaments(data);
+    } catch {
+      setTournaments([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     let isMounted = true;
     tournamentsService
