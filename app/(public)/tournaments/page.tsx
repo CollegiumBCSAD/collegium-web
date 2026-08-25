@@ -14,7 +14,7 @@ import { tournamentsService } from "@/services";
 export default function TournamentsPage() {
   const router = useRouter();
   const { user, isLoggedIn } = useAuth();
-  const { selectedGame: globalGame, selectedGameInfo, openGameSelector } = useGame();
+  const { selectedGame: globalGame, selectedGameInfo } = useGame();
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -155,7 +155,6 @@ export default function TournamentsPage() {
           </div>
 
           {/* Integrated Tactical Status Segmented Controls */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <div 
               className="flex items-center gap-1 p-1 bg-[#0A0D18] border border-[#1E293B] shadow-xl"
               style={{
@@ -192,18 +191,6 @@ export default function TournamentsPage() {
                 );
               })}
             </div>
-
-            <button
-              onClick={openGameSelector}
-              className="h-9 px-3.5 tactical-btn-secondary text-[10px] font-mono font-bold tracking-wider uppercase text-slate-300 hover:text-white shrink-0 cursor-pointer flex items-center gap-1.5"
-              style={{
-                clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-              }}
-            >
-              <span>{selectedGameInfo?.shortName || "GAME"}</span>
-              <span className="text-primary-brand">▾</span>
-            </button>
-          </div>
         </div>
 
         {/* Tournament Cards List */}
