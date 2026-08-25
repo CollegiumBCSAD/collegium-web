@@ -6,6 +6,7 @@ import { teamsService } from "@/services/teamsService";
 import { fetchTeamsApi, saveStoredTeams, Team, TeamMember } from "@/lib/teams";
 import { JoinRequest } from "@/types";
 import { useAuth } from "@/context/AuthContext";
+import { useGame } from "@/context/GameContext";
 import { GAMES } from "@/lib/games";
 import { UsersIcon, ShieldIcon, CheckCircleIcon, CrownIcon, SwordsIcon, PlusIcon, ZapIcon } from "@/components/ui/Icons";
 
@@ -18,6 +19,9 @@ const DEFAULT_ROLES: Record<string, string[]> = {
 
 export default function CaptainRequestInbox() {
   const { user } = useAuth();
+  const { selectedGame } = useGame();
+  const activeGame = selectedGame || "valo";
+
   const [teams, setTeams] = useState<Team[]>([]);
   const [apiRequests, setApiRequests] = useState<JoinRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,10 +42,11 @@ export default function CaptainRequestInbox() {
 
     return teams.filter(
       (t) =>
-        (myId && t.captainId === myId) ||
-        (myName && t.captainName && t.captainName.toLowerCase().trim() === myName)
+        t.gameTitle === activeGame &&
+        ((myId && t.captainId === myId) ||
+          (myName && t.captainName && t.captainName.toLowerCase().trim() === myName))
     );
-  }, [user, teams]);
+  }, [user, teams, activeGame]);
 
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
 

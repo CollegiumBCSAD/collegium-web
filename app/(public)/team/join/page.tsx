@@ -7,13 +7,37 @@ import { Team, GameId } from "@/types";
 import { GAMES } from "@/lib/games";
 import { teamsService } from "@/services";
 import { useAuth } from "@/context/AuthContext";
+import { useGame } from "@/context/GameContext";
 import { PlusIcon, UsersIcon, ShieldIcon, AlertTriangleIcon } from "@/components/ui/Icons";
+
+const GAME_SPECIFIC_PLACEHOLDERS: Record<string, { tag: string; role: string }> = {
+  valo: {
+    tag: "e.g. TenZ#NA1",
+    role: "e.g. Duelist",
+  },
+  lol: {
+    tag: "e.g. Faker#KR1",
+    role: "e.g. Mid Laner",
+  },
+  ml: {
+    tag: "e.g. 12345678 (1234)",
+    role: "e.g. Jungler",
+  },
+  codm: {
+    tag: "e.g. Ghost#1234",
+    role: "e.g. Main Slayer",
+  },
+};
 
 function JoinTeamContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const inviteCodeParam = searchParams.get("invite");
   const { user } = useAuth();
+  const { selectedGame: globalGame } = useGame();
+  const activeGame: GameId = globalGame || "valo";
+  const activeGameInfo = GAMES[activeGame as keyof typeof GAMES] || GAMES.valo;
+  const placeholders = GAME_SPECIFIC_PLACEHOLDERS[activeGame] || GAME_SPECIFIC_PLACEHOLDERS.valo;
 
   const [teams, setTeams] = useState<Team[]>([]);
   const [inviteTeam, setInviteTeam] = useState<Team | null>(null);
@@ -88,6 +112,10 @@ function JoinTeamContent() {
     }
   }, [inviteCodeParam, mapServerTeam]);
 
+  const gameTeams = useMemo(() => {
+    return teams.filter((t) => t.gameTitle === activeGame);
+  }, [teams, activeGame]);
+
   const selectedTeam = userSelectedTeam || inviteTeam;
 
   const alreadyMemberInfo = useMemo(() => {
@@ -98,13 +126,16 @@ function JoinTeamContent() {
     const existing = selectedTeam.members.find(
       (m) =>
         (currentId && m.userId === currentId) ||
-        (currentEmail && m.email && m.email.toLowerCase() === currentEmail)
+        (currentEmail && m.email && m.email.toLowerCase() === currentEmail) ||
+        (user.displayName && m.displayName && m.displayName.toLowerCase() === user.displayName.toLowerCase())
     );
+
     if (existing) {
       if (existing.status === "ACCEPTED") {
-        return `You are already an active verified athlete on ${selectedTeam.name}.`;
-      } else if (existing.status === "PENDING") {
-        return `You already have a pending join request awaiting Captain approval for ${selectedTeam.name}.`;
+        return "You are already an active athlete on this roster.";
+      }
+      if (existing.status === "PENDING") {
+        return "Your application to join this squad is currently pending Captain review.";
       }
     }
     return null;
@@ -115,11 +146,11 @@ function JoinTeamContent() {
     setError("");
 
     if (!selectedTeam) {
-      setError("Please select a team to join.");
+      setError("Please select a varsity squad to join.");
       return;
     }
     if (!gameHandle.trim()) {
-      setError("Please enter your exact in-game handle (Riot ID / MLBB ID).");
+      setError(`Please enter your exact in-game tag (${placeholders.tag.split(" (")[0]}).`);
       return;
     }
     if (!user?.id) {
@@ -131,15 +162,16 @@ function JoinTeamContent() {
     try {
       const res = await teamsService.joinTeam(selectedTeam.id, {
         userId: user.id,
-        inviteCode: inviteCodeParam || undefined,
         gameHandle: gameHandle.trim(),
         preferredRole: preferredRole.trim(),
+        inviteCode: inviteCodeParam || undefined,
       });
 
+      const isInstant = res.status === "ACCEPTED" || Boolean(inviteCodeParam);
       setResultMessage({
-        success: res.success,
-        isInstant: res.status === "ACCEPTED" || !!inviteCodeParam,
-        message: res.message
+        success: true,
+        isInstant,
+        message: res.message || (isInstant ? "Successfully joined roster!" : "Application sent to Team Captain."),
       });
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
@@ -155,9 +187,15 @@ function JoinTeamContent() {
 
   return (
     <div className="flex flex-col flex-1 items-center justify-center px-4 py-8 sm:py-12 game-theme-bg min-h-[calc(100vh-4rem)]">
-      <div className="w-full max-w-xl bg-[#0D121F]/98 border border-[#1E293B] rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 relative flex flex-col justify-between backdrop-blur-xl">
-        {/* Top Accent Line */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-primary-brand rounded-t-3xl" />
+      <div className="w-full max-w-xl bg-[#0D121F]/98 border border-[#1E293B] rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 relative flex flex-col justify-between backdrop-blur-xl overflow-hidden">
+        {/* Top Accent Gradient Border (Contained within modal) */}
+        <div 
+          className="absolute top-0 left-0 right-0 h-[3px]"
+          style={{
+            background: `linear-gradient(90deg, transparent 0%, var(--primary-brand) 30%, var(--primary-brand) 70%, transparent 100%)`,
+            boxShadow: `0 0 10px var(--primary-brand)`,
+          }}
+        />
 
         <button
           type="button"
@@ -191,15 +229,15 @@ function JoinTeamContent() {
         <div className="border-b border-[#1C2538] pb-4">
           <span className="text-xs font-mono font-extrabold uppercase tracking-widest text-amber-400 block mb-1 flex items-center gap-1.5">
             <ShieldIcon className="w-4 h-4 text-amber-400" />
-            {user?.university?.name || "University"} Circuit
+            {user?.university?.name || "University"} Varsity Hub
           </span>
           <h1 className="font-display text-2xl sm:text-3xl font-black uppercase tracking-wider text-white">
-            {inviteCodeParam ? "JOIN TEAM VIA INVITE" : "BROWSE & JOIN SQUAD"}
+            JOIN VARSITY ROSTER
           </h1>
           <p className="font-sans text-xs text-slate-400 mt-1 leading-relaxed">
             {inviteCodeParam
               ? "Instant domain-verified join link detected."
-              : "Select a squad under your university to submit a join request to the Captain."}
+              : `Select an active ${activeGameInfo.name} squad under your university to submit a join request.`}
           </p>
         </div>
 
@@ -273,13 +311,13 @@ function JoinTeamContent() {
             {!inviteCodeParam && (
               <div>
                 <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-2">
-                  Select University Squad
+                  Select {activeGameInfo.name} Squad
                 </label>
                 <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                  {teams.length === 0 ? (
-                    <p className="text-xs text-slate-400">No active squads found for your university.</p>
+                  {gameTeams.length === 0 ? (
+                    <p className="text-xs text-slate-400">No active {activeGameInfo.name} squads found for your university.</p>
                   ) : (
-                    teams.map((t) => {
+                    gameTeams.map((t) => {
                       const isSel = selectedTeam?.id === t.id;
                       const game = GAMES[t.gameTitle];
                       return (
@@ -338,8 +376,8 @@ function JoinTeamContent() {
                   type="text"
                   value={gameHandle}
                   onChange={(e) => setGameHandle(e.target.value)}
-                  placeholder="Riot ID / MLBB ID"
-                  className="w-full h-11 px-4 rounded-xl bg-[#080C14] border border-[#1C2538] focus:border-primary-brand text-white text-sm font-sans focus:outline-none transition-colors"
+                  placeholder={placeholders.tag}
+                  className="w-full h-11 px-4 rounded-xl bg-[#080C14] border border-[#1C2538] focus:border-primary-brand text-white text-sm font-sans focus:outline-none transition-colors placeholder:text-slate-500 text-xs sm:text-sm"
                 />
               </div>
 
@@ -351,8 +389,8 @@ function JoinTeamContent() {
                   type="text"
                   value={preferredRole}
                   onChange={(e) => setPreferredRole(e.target.value)}
-                  placeholder="e.g. Duelist, Jungler"
-                  className="w-full h-11 px-4 rounded-xl bg-[#080C14] border border-[#1C2538] focus:border-primary-brand text-white text-sm font-sans focus:outline-none transition-colors"
+                  placeholder={placeholders.role}
+                  className="w-full h-11 px-4 rounded-xl bg-[#080C14] border border-[#1C2538] focus:border-primary-brand text-white text-sm font-sans focus:outline-none transition-colors placeholder:text-slate-500 text-xs sm:text-sm"
                 />
               </div>
             </div>

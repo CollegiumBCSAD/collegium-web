@@ -4,6 +4,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useGame } from "@/context/GameContext";
 import { getStoredTeams, fetchTeamsApi, Team } from "@/lib/teams";
 import { teamsService } from "@/services/teamsService";
 import { GAMES } from "@/lib/games";
@@ -15,6 +16,10 @@ import { TrophyIcon, SwordsIcon, UsersIcon, ShieldIcon, ClockIcon } from "@/comp
 export default function DashboardPage() {
   const router = useRouter();
   const { user, isLoggedIn, isLoaded } = useAuth();
+  const { selectedGame } = useGame();
+  const activeGame = selectedGame || "valo";
+  const activeGameInfo = GAMES[activeGame as keyof typeof GAMES] || GAMES.valo;
+
   const [allTeams, setAllTeams] = useState<Team[]>(() => getStoredTeams());
 
   const refreshTeams = () => {
@@ -52,6 +57,11 @@ export default function DashboardPage() {
     );
   }, [user, allTeams]);
 
+  // Strictly filter rosters to the selected game (no outside game rosters displayed)
+  const userGameTeams = useMemo(() => {
+    return userTeams.filter((t) => t.gameTitle === activeGame);
+  }, [userTeams, activeGame]);
+
   const pendingUserTeams = useMemo(() => {
     if (!user) return [];
     const myId = user.id;
@@ -68,6 +78,10 @@ export default function DashboardPage() {
       )
     );
   }, [user, allTeams]);
+
+  const pendingGameTeams = useMemo(() => {
+    return pendingUserTeams.filter((t) => t.gameTitle === activeGame);
+  }, [pendingUserTeams, activeGame]);
 
   const isCaptain = useMemo(() => {
     if (!user) return false;
@@ -123,7 +137,7 @@ export default function DashboardPage() {
         )}
 
         {/* Hero Athlete Banner with Chamfered HUD Geometry */}
-        <AthleteProfileBanner user={user} squadsCount={userTeams.length} />
+        <AthleteProfileBanner user={user} squadsCount={userGameTeams.length} />
 
         {/* 2-Column Dashboard Main Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-7 items-start">
@@ -135,7 +149,7 @@ export default function DashboardPage() {
             {isCaptain && <CaptainRequestInbox />}
 
             {/* Pending Applications Box */}
-            {pendingUserTeams.length > 0 && (
+            {pendingGameTeams.length > 0 && (
               <div 
                 className="p-5 bg-[#0A0D18] border border-[#1E293B] space-y-4 shadow-xl relative"
                 style={{
@@ -146,7 +160,7 @@ export default function DashboardPage() {
                   <div className="flex items-center gap-2">
                     <ClockIcon className="w-4 h-4 text-slate-400 shrink-0" />
                     <h3 className="font-display text-sm font-black text-white uppercase tracking-wider">
-                      Pending Applications ({pendingUserTeams.length})
+                      Pending {activeGameInfo.name} Applications ({pendingGameTeams.length})
                     </h3>
                   </div>
                   <span className="text-[10px] font-mono text-slate-400 font-bold">
@@ -154,7 +168,7 @@ export default function DashboardPage() {
                   </span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {pendingUserTeams.map((t) => {
+                  {pendingGameTeams.map((t) => {
                     const game = GAMES[t.gameTitle] || GAMES.valo;
                     return (
                       <div 
@@ -194,14 +208,14 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between border-b border-[#1A253C] pb-2.5">
                 <h2 className="font-display text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
                   <SwordsIcon className="w-4 h-4 text-primary-brand" />
-                  <span>My Varsity Squads</span>
+                  <span>{activeGameInfo.name} Varsity Squads</span>
                 </h2>
                 <span className="text-xs font-mono text-slate-400 font-bold">
-                  {userTeams.length} Active {userTeams.length === 1 ? "Squad" : "Squads"}
+                  {userGameTeams.length} Active {userGameTeams.length === 1 ? "Squad" : "Squads"}
                 </span>
               </div>
 
-              {userTeams.length === 0 ? (
+              {userGameTeams.length === 0 ? (
                 <div 
                   className="p-8 bg-[#0A0D18] border border-[#1E293B] text-center space-y-4 shadow-xl"
                   style={{
@@ -212,9 +226,9 @@ export default function DashboardPage() {
                     <ShieldIcon className="w-6 h-6 text-slate-400" />
                   </div>
                   <div>
-                    <h3 className="font-display text-base font-bold uppercase text-white">No Active Squad Rosters</h3>
+                    <h3 className="font-display text-base font-bold uppercase text-white">No Active {activeGameInfo.name} Squad</h3>
                     <p className="text-xs font-sans text-slate-400 max-w-sm mx-auto mt-1">
-                      You are not currently listed on any varsity squad rosters.
+                      You are not currently listed on a {activeGameInfo.name} roster. Switch game titles or establish a squad.
                     </p>
                   </div>
                   <div className="flex justify-center gap-3 pt-2">
@@ -225,7 +239,7 @@ export default function DashboardPage() {
                         clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
                       }}
                     >
-                      Establish Squad
+                      Establish {activeGameInfo.shortName} Squad
                     </Link>
                     <Link
                       href="/team/join"
@@ -240,7 +254,7 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                  {userTeams.map((t) => (
+                  {userGameTeams.map((t) => (
                     <TeamRosterCard key={t.id} team={t} onRosterUpdated={refreshTeams} />
                   ))}
                 </div>

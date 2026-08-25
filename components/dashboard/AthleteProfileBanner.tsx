@@ -83,13 +83,19 @@ export default function AthleteProfileBanner({ user, squadsCount = 0 }: AthleteP
                   {user.displayName}
                 </h1>
                 <span 
-                  className="text-[9px] font-mono font-bold uppercase tracking-wider px-2.5 py-0.5 bg-[#121929] text-slate-300 border border-[#243350] flex items-center gap-1.5 shrink-0"
+                  className={`text-[9px] font-mono font-bold uppercase tracking-wider px-2.5 py-0.5 border flex items-center gap-1.5 shrink-0 ${
+                    user.role === "ATHLETE"
+                      ? "bg-emerald-950/40 text-emerald-300 border-emerald-500/30"
+                      : user.role === "ADMIN"
+                      ? "bg-purple-950/40 text-purple-300 border-purple-500/30"
+                      : "bg-[#121929] text-slate-400 border-[#243350]"
+                  }`}
                   style={{
                     clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
                   }}
                 >
-                  <CheckCircleIcon className="w-3 h-3 text-emerald-400" />
-                  VERIFIED ATHLETE
+                  <CheckCircleIcon className={`w-3 h-3 ${user.role === "ATHLETE" ? "text-emerald-400" : user.role === "ADMIN" ? "text-purple-400" : "text-slate-400"}`} />
+                  {user.role === "ATHLETE" ? "VERIFIED ATHLETE" : user.role === "ADMIN" ? "ADMINISTRATOR" : "STUDENT MEMBER"}
                 </span>
               </div>
 
