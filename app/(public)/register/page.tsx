@@ -1,11 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import { authService } from "@/services/authService";
 import { TrophyIcon, UsersIcon, ShieldIcon, ZapIcon, CheckCircleIcon, AlertTriangleIcon } from "@/components/ui/Icons";
 
 export default function RegisterPage() {
+  const router = useRouter();
+  const { user, isLoggedIn, isLoaded } = useAuth();
+
   // Role Selection: "ATHLETE" (registered as NON_ATHLETE until joining roster) vs "ORGANIZER" (Instant Tournament Host)
   const [accountType, setAccountType] = useState<"ATHLETE" | "ORGANIZER">("ATHLETE");
 
@@ -38,6 +43,20 @@ export default function RegisterPage() {
 
   const detectedUniversity = getUniversityFromEmail(email);
   const isEduPh = email.toLowerCase().includes("@") && email.toLowerCase().split("@")[1]?.endsWith(".edu.ph");
+
+  useEffect(() => {
+    if (isLoaded && isLoggedIn) {
+      router.replace(user?.role === "ADMIN" ? "/admin" : "/dashboard");
+    }
+  }, [isLoaded, isLoggedIn, user, router]);
+
+  if (!isLoaded || isLoggedIn) {
+    return (
+      <div className="flex flex-1 items-center justify-center px-4 py-12 game-theme-bg">
+        <div className="w-8 h-8 border-2 border-primary-brand/30 border-t-primary-brand rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   const handleGoogleAuth = () => {
     setIsGoogleLoading(true);
