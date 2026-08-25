@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useNotifications, AppNotification } from "@/context/NotificationContext";
-import { CheckCircleIcon, XCircleIcon, AlertTriangleIcon, ClockIcon, UsersIcon, SwordsIcon } from "@/components/ui/Icons";
+import { CheckCircleIcon, XCircleIcon, AlertTriangleIcon, ClockIcon, UsersIcon, SwordsIcon, TrophyIcon } from "@/components/ui/Icons";
 
 export default function NotificationBell() {
+  const router = useRouter();
   const { isLoggedIn } = useAuth();
   const { notifications, unreadCount, markAsRead, markAllAsRead, clearAll } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
@@ -27,6 +29,10 @@ export default function NotificationBell() {
 
   const getIcon = (type: AppNotification["type"]) => {
     switch (type) {
+      case "TOURNAMENT_APPROVED":
+        return <TrophyIcon className="w-4 h-4 text-emerald-400" />;
+      case "TOURNAMENT_REJECTED":
+        return <AlertTriangleIcon className="w-4 h-4 text-rose-400" />;
       case "SCRIM_REQUEST_ACCEPTED":
       case "TEAM_REQUEST_ACCEPTED":
         return <CheckCircleIcon className="w-4 h-4 text-emerald-400" />;
@@ -41,6 +47,20 @@ export default function NotificationBell() {
         return <UsersIcon className="w-4 h-4 text-purple-400" />;
       default:
         return <SwordsIcon className="w-4 h-4 text-slate-300" />;
+    }
+  };
+
+  const handleNotificationClick = (n: AppNotification) => {
+    markAsRead(n.id);
+    setIsOpen(false);
+    if (n.link) {
+      router.push(n.link);
+    } else if (n.category === "TOURNAMENT" || n.type?.startsWith("TOURNAMENT")) {
+      router.push("/tournaments");
+    } else if (n.category === "TEAM" || n.type?.startsWith("TEAM")) {
+      router.push("/dashboard");
+    } else if (n.category === "SCRIM" || n.type?.startsWith("SCRIM")) {
+      router.push("/scrims");
     }
   };
 
@@ -106,7 +126,7 @@ export default function NotificationBell() {
               notifications.map((n) => (
                 <div
                   key={n.id}
-                  onClick={() => markAsRead(n.id)}
+                  onClick={() => handleNotificationClick(n)}
                   className={`p-3.5 hover:bg-[#101524] transition-colors cursor-pointer flex items-start gap-3 group ${
                     !n.read ? "bg-[#0E1424]/60" : ""
                   }`}

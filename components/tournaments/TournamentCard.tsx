@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { Tournament } from "@/types";
 import { TrophyIcon, ShieldIcon } from "@/components/ui/Icons";
@@ -22,6 +23,7 @@ export default function TournamentCard({
   isApplied = false,
   isApplying = false,
 }: TournamentCardProps) {
+  const [showUndoConfirm, setShowUndoConfirm] = useState(false);
   const isCompleted = tournament.status?.toLowerCase() === "completed";
   const gameStr = (tournament.game || "").toLowerCase();
   const gameKey = 
@@ -132,22 +134,52 @@ export default function TournamentCard({
             <span>Verified Tournament Payload</span>
           </div>
 
-          <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="flex items-center gap-2.5 flex-wrap w-full sm:w-auto">
             {!isCompleted && isApplied && (
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] font-mono font-bold px-3 py-2 rounded bg-amber-950/60 text-amber-300 border border-amber-500/30 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                  Application Pending Organizer Approval
-                </span>
-                {onWithdraw && (
-                  <button
-                    type="button"
-                    disabled={isApplying}
-                    onClick={() => onWithdraw(tournament)}
-                    className="h-10 px-3.5 bg-rose-950/40 hover:bg-rose-900/50 text-rose-300 border border-rose-500/30 rounded text-xs font-mono font-bold uppercase transition-colors cursor-pointer"
-                  >
-                    Undo Application
-                  </button>
+              <div className="w-full sm:w-auto">
+                {showUndoConfirm ? (
+                  <div className="p-3 bg-rose-950/70 border border-rose-500/40 rounded-xl space-y-2 animate-fade-in w-full">
+                    <p className="text-[11px] font-sans text-rose-200">
+                      Are you sure you want to withdraw your squad registration application?
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        disabled={isApplying}
+                        onClick={() => {
+                          setShowUndoConfirm(false);
+                          if (onWithdraw) onWithdraw(tournament);
+                        }}
+                        className="flex-1 h-8 bg-rose-600 hover:bg-rose-500 text-white rounded text-[11px] font-mono font-bold uppercase transition-colors cursor-pointer"
+                      >
+                        {isApplying ? "Withdrawing..." : "Yes, Withdraw"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowUndoConfirm(false)}
+                        className="flex-1 h-8 bg-[#121828] text-slate-300 hover:text-white rounded text-[11px] font-mono font-bold uppercase transition-colors cursor-pointer border border-[#222E48]"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[11px] font-mono font-bold px-3 py-2 rounded bg-amber-950/60 text-amber-300 border border-amber-500/30 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                      Application Pending Organizer Approval
+                    </span>
+                    {onWithdraw && (
+                      <button
+                        type="button"
+                        disabled={isApplying}
+                        onClick={() => setShowUndoConfirm(true)}
+                        className="h-10 px-3.5 bg-rose-950/40 hover:bg-rose-900/50 text-rose-300 border border-rose-500/30 rounded text-xs font-mono font-bold uppercase transition-colors cursor-pointer"
+                      >
+                        Undo Application
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             )}

@@ -23,7 +23,10 @@ export default function PostTournamentModal({
   onClose,
   onTournamentCreated,
 }: PostTournamentModalProps) {
-  const { selectedGame, selectedGameInfo } = useGame();
+  const { selectedGame } = useGame();
+  const [selectedGameTitle, setSelectedGameTitle] = useState<string>(
+    selectedGame ? GAME_ID_TO_ENUM[selectedGame] || "VALORANT" : "VALORANT"
+  );
   const [name, setName] = useState("");
   const [format, setFormat] = useState("Single Elimination");
   const [teamQuota, setTeamQuota] = useState("8 Universities");
@@ -32,6 +35,7 @@ export default function PostTournamentModal({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -66,7 +70,7 @@ export default function PostTournamentModal({
     try {
       await tournamentsService.createTournament({
         name: name.trim(),
-        gameTitle: selectedGame ? GAME_ID_TO_ENUM[selectedGame] : undefined,
+        gameTitle: selectedGameTitle,
         imageFile: imageFile || undefined,
         bracketFormat: format,
         teamQuota: parseInt(teamQuota, 10) || undefined,
@@ -165,14 +169,16 @@ export default function PostTournamentModal({
               <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-1">
                 Esports Title
               </label>
-              <div className="w-full h-11 px-3.5 rounded-xl bg-[#060912] border border-[#1C2538] flex items-center justify-between">
-                <span className="font-display text-xs font-black uppercase text-white tracking-wider">
-                  {selectedGameInfo?.name || "VALORANT"}
-                </span>
-                <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30">
-                  ACTIVE
-                </span>
-              </div>
+              <select
+                value={selectedGameTitle}
+                onChange={(e) => setSelectedGameTitle(e.target.value)}
+                className="w-full h-11 px-3.5 rounded-xl bg-[#060912] border border-[#1C2538] text-white text-xs font-mono focus:border-amber-500 focus:outline-none cursor-pointer"
+              >
+                <option value="VALORANT">VALORANT</option>
+                <option value="LOL">LEAGUE OF LEGENDS</option>
+                <option value="MLBB">MOBILE LEGENDS</option>
+                <option value="CODM">CALL OF DUTY: MOBILE</option>
+              </select>
             </div>
 
             <div>

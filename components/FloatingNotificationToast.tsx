@@ -26,6 +26,7 @@ export default function FloatingNotificationToast() {
 
   const getBorderColor = (type: AppNotification["type"]) => {
     switch (type) {
+      case "TOURNAMENT_APPROVED":
       case "SCRIM_REQUEST_ACCEPTED":
       case "TEAM_REQUEST_ACCEPTED":
         return "border-[#10B981] bg-gradient-to-r from-[#0F221B] to-[#11141C]";
@@ -34,6 +35,7 @@ export default function FloatingNotificationToast() {
       case "SCRIM_REQUEST_DECLINED":
       case "TEAM_REQUEST_DECLINED":
         return "border-[#F59E0B] bg-gradient-to-r from-[#221B10] to-[#11141C]";
+      case "TOURNAMENT_REJECTED":
       case "SCRIM_UNBOOKED":
         return "border-[#EF4444] bg-gradient-to-r from-[#24171A] to-[#11141C]";
       case "TEAM_JOIN_REQUEST":
@@ -45,8 +47,11 @@ export default function FloatingNotificationToast() {
 
   const getIcon = (type: AppNotification["type"]) => {
     switch (type) {
+      case "TOURNAMENT_APPROVED":
       case "SCRIM_REQUEST_ACCEPTED":
         return <TrophyIcon className="w-4 h-4 text-emerald-400" />;
+      case "TOURNAMENT_REJECTED":
+        return <AlertTriangleIcon className="w-4 h-4 text-rose-400" />;
       case "SCRIM_REQUEST_RECEIVED":
         return <ClockIcon className="w-4 h-4 text-blue-400" />;
       case "SCRIM_REQUEST_DECLINED":
@@ -141,11 +146,18 @@ export default function FloatingNotificationToast() {
                   Mark Read
                 </button>
                 <Link
-                  href={item.link || "/dashboard"}
+                  href={item.link || (item.category === "TOURNAMENT" || item.type?.startsWith("TOURNAMENT") ? "/tournaments" : "/dashboard")}
                   onClick={() => markAsRead(item.id)}
-                  className="h-8 px-3 rounded-lg bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-sans text-[11px] font-bold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer shadow-md shadow-blue-950/40 flex items-center justify-center"
+                  className="h-8 px-3.5 rounded-lg bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-sans text-[11px] font-bold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer shadow-md shadow-blue-950/40 flex items-center justify-center whitespace-nowrap"
                 >
-                  {item.category === "TEAM" ? "View Roster" : "View Scrim"}
+                  {item.category === "TOURNAMENT" ||
+                  item.type === "TOURNAMENT_APPROVED" ||
+                  item.type === "TOURNAMENT_REJECTED" ||
+                  item.title?.toLowerCase().includes("tournament")
+                    ? "View Tournament"
+                    : item.category === "TEAM" || item.type?.startsWith("TEAM")
+                    ? "View Roster"
+                    : "View Scrim"}
                 </Link>
               </div>
             </div>
