@@ -3,16 +3,44 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { GAME_LIST, GameId, GAMES } from "@/lib/games";
+import { GameId, GAMES } from "@/lib/games";
 import { Team } from "@/types";
 import { teamsService } from "@/services";
 import { useAuth } from "@/context/AuthContext";
+import { useGame } from "@/context/GameContext";
 import { PlusIcon, UsersIcon, ShieldIcon, AlertTriangleIcon, CheckCircleIcon, TrophyIcon } from "@/components/ui/Icons";
+
+const GAME_SPECIFIC_PLACEHOLDERS: Record<string, { tag: string; role: string; squadName: string }> = {
+  valo: {
+    tag: "e.g. TenZ#NA1",
+    role: "e.g. Duelist",
+    squadName: "e.g. UMAK Herons",
+  },
+  lol: {
+    tag: "e.g. Faker#KR1",
+    role: "e.g. Mid Laner",
+    squadName: "e.g. UMAK Herons",
+  },
+  ml: {
+    tag: "e.g. 12345678 (1234)",
+    role: "e.g. Jungler",
+    squadName: "e.g. UMAK Herons",
+  },
+  codm: {
+    tag: "e.g. Ghost#1234",
+    role: "e.g. Main Slayer",
+    squadName: "e.g. UMAK Herons",
+  },
+};
 
 export default function CreateTeamPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const [selectedGame, setSelectedGame] = useState<GameId>("valo");
+  const { selectedGame: globalGame } = useGame();
+  const activeGame: GameId = globalGame || "valo";
+  const activeGameInfo = GAMES[activeGame as keyof typeof GAMES] || GAMES.valo;
+  const placeholders = GAME_SPECIFIC_PLACEHOLDERS[activeGame] || GAME_SPECIFIC_PLACEHOLDERS.valo;
+
   const [teamName, setTeamName] = useState("");
   const [gameHandle, setGameHandle] = useState("");
   const [preferredRole, setPreferredRole] = useState("");
@@ -30,7 +58,7 @@ export default function CreateTeamPage() {
       return;
     }
     if (!gameHandle.trim()) {
-      setError("Please enter your exact in-game handle (Riot ID / MLBB ID).");
+      setError(`Please enter your exact in-game tag (${placeholders.tag.split(" (")[0]}).`);
       return;
     }
 
@@ -67,7 +95,7 @@ export default function CreateTeamPage() {
 
       const res = (await teamsService.createTeam({
         name: teamName.trim(),
-        gameTitle: (gameTitleMap[selectedGame] || "VALORANT") as unknown as GameId,
+        gameTitle: (gameTitleMap[activeGame] || "VALORANT") as unknown as GameId,
         universityId: user.universityId,
         captainId: user.id,
         gameHandle: gameHandle.trim(),
@@ -77,7 +105,7 @@ export default function CreateTeamPage() {
       const mappedTeam: Team = {
         id: res.id,
         name: res.name,
-        gameTitle: selectedGame,
+        gameTitle: activeGame,
         universityId: res.universityId,
         universityName: res.university?.name || user.university?.name || "Unknown University",
         captainId: res.captainId,
@@ -123,9 +151,15 @@ export default function CreateTeamPage() {
 
   return (
     <div className="flex flex-col flex-1 items-center justify-center px-4 py-8 sm:py-12 game-theme-bg min-h-[calc(100vh-4rem)]">
-      <div className="w-full max-w-xl bg-[#0D121F]/98 border border-[#1E293B] rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 relative flex flex-col justify-between backdrop-blur-xl">
-        {/* Top Accent Line */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-primary-brand rounded-t-3xl" />
+      <div className="w-full max-w-xl bg-[#0D121F]/98 border border-[#1E293B] rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 relative flex flex-col justify-between backdrop-blur-xl overflow-hidden">
+        {/* Top Accent Gradient Border (Contained within modal) */}
+        <div 
+          className="absolute top-0 left-0 right-0 h-[3px]"
+          style={{
+            background: `linear-gradient(90deg, transparent 0%, var(--primary-brand) 30%, var(--primary-brand) 70%, transparent 100%)`,
+            boxShadow: `0 0 10px var(--primary-brand)`,
+          }}
+        />
 
         <button
           type="button"
@@ -165,7 +199,7 @@ export default function CreateTeamPage() {
             CREATE VARSITY SQUAD
           </h1>
           <p className="font-sans text-xs text-slate-400 mt-1 leading-relaxed">
-            Establish a 5-man varsity team under your university banner. (Limit: 1 active squad per title).
+            Establish a 5-man {activeGameInfo.name} varsity team under your university banner.
           </p>
         </div>
 
@@ -234,23 +268,18 @@ export default function CreateTeamPage() {
               <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-2">
                 Target Esports Title
               </label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {GAME_LIST.map((game) => (
-                  <button
-                    key={game.id}
-                    type="button"
-                    onClick={() => setSelectedGame(game.id)}
-                    className={`p-2.5 rounded-xl border text-left flex flex-col items-center justify-center transition-all cursor-pointer ${
-                      selectedGame === game.id
-                        ? "border-primary-brand border-2 bg-[#141A29] shadow-lg shadow-black/40"
-                        : "border-[#1C2538] bg-[#080C14] opacity-70 hover:opacity-100 hover:border-[#232D44]"
-                    }`}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={game.image} alt={game.name} className="w-8 h-8 rounded-md object-cover mb-1 shadow" />
-                    <span className="font-display text-xs font-bold uppercase text-white">{game.shortName}</span>
-                  </button>
-                ))}
+              <div className="flex items-center gap-3 p-3 rounded-xl border border-primary-brand bg-[#141A29] shadow-lg shadow-black/40">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={activeGameInfo.image} alt={activeGameInfo.name} className="w-10 h-10 rounded-lg object-cover shadow ring-1 ring-white/10 shrink-0" />
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-display text-sm font-black uppercase text-white tracking-wide">{activeGameInfo.name}</span>
+                    <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-primary-brand/20 text-primary-brand border border-primary-brand/40">
+                      ACTIVE TITLE
+                    </span>
+                  </div>
+                  <span className="text-[11px] font-sans text-slate-400 block mt-0.5">{activeGameInfo.genre} • {activeGameInfo.publisher}</span>
+                </div>
               </div>
             </div>
 
@@ -262,7 +291,7 @@ export default function CreateTeamPage() {
                 type="text"
                 value={teamName}
                 onChange={(e) => setTeamName(e.target.value)}
-                placeholder="e.g. UMAK Herons Alpha"
+                placeholder={placeholders.squadName}
                 className="w-full h-11 px-4 rounded-xl bg-[#080C14] border border-[#1C2538] focus:border-primary-brand text-white text-sm font-sans focus:outline-none transition-colors"
               />
             </div>
@@ -276,8 +305,8 @@ export default function CreateTeamPage() {
                   type="text"
                   value={gameHandle}
                   onChange={(e) => setGameHandle(e.target.value)}
-                  placeholder="Riot ID / MLBB ID"
-                  className="w-full h-11 px-4 rounded-xl bg-[#080C14] border border-[#1C2538] focus:border-primary-brand text-white text-sm font-sans focus:outline-none transition-colors"
+                  placeholder={placeholders.tag}
+                  className="w-full h-11 px-4 rounded-xl bg-[#080C14] border border-[#1C2538] focus:border-primary-brand text-white text-sm font-sans focus:outline-none transition-colors placeholder:text-slate-500 text-xs sm:text-sm"
                 />
               </div>
 
@@ -289,8 +318,8 @@ export default function CreateTeamPage() {
                   type="text"
                   value={preferredRole}
                   onChange={(e) => setPreferredRole(e.target.value)}
-                  placeholder="e.g. Duelist, Jungler"
-                  className="w-full h-11 px-4 rounded-xl bg-[#080C14] border border-[#1C2538] focus:border-primary-brand text-white text-sm font-sans focus:outline-none transition-colors"
+                  placeholder={placeholders.role}
+                  className="w-full h-11 px-4 rounded-xl bg-[#080C14] border border-[#1C2538] focus:border-primary-brand text-white text-sm font-sans focus:outline-none transition-colors placeholder:text-slate-500 text-xs sm:text-sm"
                 />
               </div>
             </div>
