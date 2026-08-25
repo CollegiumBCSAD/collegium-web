@@ -238,8 +238,11 @@ export const tournamentsService = {
     }
   },
 
-  createTournament: (name: string, image?: string): Promise<unknown> => {
-    return apiClient.post("/tournaments", { name, image });
+  createTournament: (name: string, imageFile?: File): Promise<unknown> => {
+    const formData = new FormData();
+    formData.append("name", name);
+    if (imageFile) formData.append("image", imageFile);
+    return apiClient.postForm("/tournaments", formData);
   },
 
   registerTournament: (tournamentId: string): Promise<unknown> => {

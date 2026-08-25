@@ -22,44 +22,16 @@ export default function PostTournamentModal({
   const [teamQuota, setTeamQuota] = useState("8 Universities");
   const [rules, setRules] = useState("");
   const [imagePreview, setImagePreview] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
-  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const uploadToCloudinary = async (file: File): Promise<string> => {
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", uploadPreset || "");
-
-    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-      method: "POST",
-      body: formData,
-    });
-    if (!res.ok) throw new Error("Image upload failed");
-    const data = await res.json();
-    return data.secure_url as string;
-  };
-
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setImagePreview(URL.createObjectURL(file));
-    setImageUrl("");
-    setIsUploadingImage(true);
-    setErrorMsg("");
-
-    try {
-      const url = await uploadToCloudinary(file);
-      setImageUrl(url);
-    } catch {
-      setErrorMsg("Cover image upload failed. You can still post without one.");
-    } finally {
-      setIsUploadingImage(false);
-    }
+    setImageFile(file);
   };
 
   useEffect(() => {
@@ -85,11 +57,11 @@ export default function PostTournamentModal({
     setErrorMsg("");
 
     try {
-      await tournamentsService.createTournament(name.trim(), imageUrl || undefined);
+      await tournamentsService.createTournament(name.trim(), imageFile || undefined);
       setName("");
       setRules("");
       setImagePreview("");
-      setImageUrl("");
+      setImageFile(null);
       onTournamentCreated();
       onClose();
     } catch {
@@ -155,7 +127,7 @@ export default function PostTournamentModal({
               )}
               <label className="flex-1 h-11 px-4 rounded-xl bg-[#060912] border border-[#1C2538] text-slate-400 text-xs font-sans flex items-center cursor-pointer hover:border-amber-500/50 transition-colors">
                 <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
-                {isUploadingImage ? "Uploading..." : imageUrl ? "Cover image set — click to change" : "Choose a cover image (optional)"}
+                {imageFile ? "Cover image set — click to change" : "Choose a cover image (optional)"}
               </label>
             </div>
           </div>
@@ -250,7 +222,7 @@ export default function PostTournamentModal({
             </button>
             <button
               type="submit"
-              disabled={isSubmitting || isUploadingImage}
+              disabled={isSubmitting}
               className="h-11 px-6 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-mono text-xs font-black uppercase tracking-wider transition-all active:scale-[0.98] shadow-lg shadow-amber-500/20 cursor-pointer disabled:opacity-50 flex items-center gap-2"
             >
               {isSubmitting ? (
