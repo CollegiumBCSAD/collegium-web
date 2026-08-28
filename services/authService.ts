@@ -22,8 +22,20 @@ export const authService = {
     return apiClient.post<AuthTokens>("/auth/login", dto, true);
   },
 
-  register: (dto: RegisterDto): Promise<AuthTokens> => {
-    return apiClient.post<AuthTokens>("/auth/register", dto, true);
+  register: (dto: RegisterDto): Promise<{ message: string }> => {
+    return apiClient.post<{ message: string }>("/auth/register", dto, true);
+  },
+
+  verifyEmail: (token: string): Promise<AuthTokens> => {
+    return apiClient.get<AuthTokens>(`/auth/verify-email?token=${encodeURIComponent(token)}`);
+  },
+
+  resendVerification: (email: string): Promise<{ message: string }> => {
+    return apiClient.post<{ message: string }>(
+      "/auth/resend-verification",
+      { email },
+      true,
+    );
   },
 
   getMe: (): Promise<UserProfile> => {

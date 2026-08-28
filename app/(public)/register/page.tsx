@@ -1,15 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { api } from "@/lib/api";
+import { authService } from "@/services/authService";
 import { TrophyIcon, UsersIcon, ShieldIcon, ZapIcon, CheckCircleIcon, AlertTriangleIcon } from "@/components/ui/Icons";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { loginWithToken } = useAuth();
+  const { user, isLoggedIn, isLoaded } = useAuth();
 
   // Role Selection: "ATHLETE" (registered as NON_ATHLETE until joining roster) vs "ORGANIZER" (Instant Tournament Host)
   const [accountType, setAccountType] = useState<"ATHLETE" | "ORGANIZER">("ATHLETE");
@@ -25,6 +25,11 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
+  // Set once registration succeeds — swaps the form for a "check your email" state
+  const [registeredEmail, setRegisteredEmail] = useState("");
+  const [isResending, setIsResending] = useState(false);
+  const [resendMessage, setResendMessage] = useState("");
+
   const getUniversityFromEmail = (emailStr: string) => {
     const domain = emailStr.split("@")[1]?.toLowerCase() || "";
     if (domain === "umak.edu.ph") return "University of Makati (UMAK)";
@@ -38,6 +43,20 @@ export default function RegisterPage() {
 
   const detectedUniversity = getUniversityFromEmail(email);
   const isEduPh = email.toLowerCase().includes("@") && email.toLowerCase().split("@")[1]?.endsWith(".edu.ph");
+
+  useEffect(() => {
+    if (isLoaded && isLoggedIn) {
+      router.replace(user?.role === "ADMIN" ? "/admin" : "/dashboard");
+    }
+  }, [isLoaded, isLoggedIn, user, router]);
+
+  if (!isLoaded || isLoggedIn) {
+    return (
+      <div className="flex flex-1 items-center justify-center px-4 py-12 game-theme-bg">
+        <div className="w-8 h-8 border-2 border-primary-brand/30 border-t-primary-brand rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   const handleGoogleAuth = () => {
     setIsGoogleLoading(true);
@@ -73,23 +92,14 @@ export default function RegisterPage() {
         ? `${displayName.trim()} [${orgName.trim()}]`
         : displayName.trim();
 
-      const res = await api.post<{ access_token: string }>(
-        "/auth/register",
-        {
-          displayName: finalDisplayName,
-          email: email.trim(),
-          password,
-          role: accountType === "ORGANIZER" ? "ORGANIZER" : "NON_ATHLETE",
-        },
-        true
-      );
-      await loginWithToken(res.access_token);
-      
-      if (accountType === "ORGANIZER") {
-        router.push("/tournaments");
-      } else {
-        router.push("/dashboard");
-      }
+      await authService.register({
+        displayName: finalDisplayName,
+        email: email.trim(),
+        password,
+        role: accountType === "ORGANIZER" ? "ORGANIZER" : "NON_ATHLETE",
+      });
+
+      setRegisteredEmail(email.trim());
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Registration failed. Please try again.");
     } finally {
@@ -97,7 +107,74 @@ export default function RegisterPage() {
     }
   };
 
+  const handleResend = async () => {
+    setIsResending(true);
+    setResendMessage("");
+    try {
+      const res = await authService.resendVerification(registeredEmail);
+      setResendMessage(res.message);
+    } catch {
+      setResendMessage("Failed to resend. Please try again in a moment.");
+    } finally {
+      setIsResending(false);
+    }
+  };
+
   const isOrganizer = accountType === "ORGANIZER";
+
+  if (registeredEmail) {
+    return (
+      <div className="flex flex-col flex-1 items-center justify-center px-4 py-10 sm:py-16 game-theme-bg relative overflow-hidden">
+        <div className="w-full max-w-lg bg-[#0D121F]/98 border border-[#1E293B] rounded-3xl p-6 sm:p-8 shadow-2xl space-y-5 relative backdrop-blur-xl overflow-hidden z-10 text-center">
+          <div
+            className="absolute top-0 left-0 right-0 h-[3px]"
+            style={{
+              background: "linear-gradient(90deg, transparent 0%, var(--primary-brand) 30%, var(--primary-brand) 70%, transparent 100%)",
+              boxShadow: "0 0 12px var(--primary-brand)",
+            }}
+          />
+
+          <CheckCircleIcon className="w-12 h-12 text-emerald-400 mx-auto" />
+
+          <div className="space-y-1.5">
+            <h1 className="font-display text-2xl font-black uppercase tracking-wide text-white">
+              Check Your Email
+            </h1>
+            <p className="font-sans text-sm text-slate-400">
+              We sent a verification link to <span className="text-white font-bold">{registeredEmail}</span>.
+              Click it to activate your account — this page won&apos;t log you in until you do.
+            </p>
+          </div>
+
+          {resendMessage && (
+            <div className="p-3 rounded-xl bg-[#080C14] border border-[#1C2538] text-xs font-sans text-slate-300">
+              {resendMessage}
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={handleResend}
+            disabled={isResending}
+            className="w-full h-11 rounded-xl bg-[#141A29] hover:bg-[#1C253B] text-slate-200 border border-[#222E48] text-xs font-mono font-bold uppercase tracking-wider transition-colors cursor-pointer disabled:opacity-50"
+          >
+            {isResending ? "Resending..." : "Resend Verification Email"}
+          </button>
+
+          <div className="text-center text-xs font-sans text-slate-400">
+            Wrong email?{" "}
+            <button
+              type="button"
+              onClick={() => setRegisteredEmail("")}
+              className="text-primary-brand hover:underline font-bold cursor-pointer"
+            >
+              Register again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col flex-1 items-center justify-center px-4 py-10 sm:py-16 game-theme-bg relative overflow-hidden">
