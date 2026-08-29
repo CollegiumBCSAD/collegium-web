@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useGame } from "@/context/GameContext";
 import { GAME_LIST, GAMES, GameId, GameInfo } from "@/lib/games";
 import { ShieldIcon, TrophyIcon, SwordsIcon } from "@/components/ui/Icons";
@@ -35,7 +34,6 @@ const ARENA_DETAILS: Record<string, { num: string; initial: string; genre: strin
 };
 
 export default function GameSelectorLanding() {
-  const router = useRouter();
   const { selectedGame, selectGame } = useGame();
   const [hoveredGame, setHoveredGame] = useState<GameId | null>(null);
   const [isSelecting, setIsSelecting] = useState<GameId | null>(null);

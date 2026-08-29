@@ -15,10 +15,6 @@ import GameSelectorLanding from "@/components/GameSelectorLanding";
 export default function LandingPage() {
   const { selectedGame, selectedGameInfo, openGameSelector, selectGame, isLoaded } = useGame();
   const { user } = useAuth();
-  
-  if (isLoaded && !selectedGame) {
-    return <GameSelectorLanding />;
-  }
 
   const activeGame: GameId = selectedGame || "valo";
 
@@ -103,6 +99,10 @@ export default function LandingPage() {
 
     return map;
   }, [teams, tournaments]);
+
+  if (isLoaded && !selectedGame) {
+    return <GameSelectorLanding />;
+  }
 
   return (
     <div className="flex flex-col flex-1 game-theme-bg">
