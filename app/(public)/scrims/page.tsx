@@ -138,30 +138,16 @@ export default function ScrimsPage() {
       // 1. Match direct user ID (if posted as individual user)
       if (scrim.teamId && scrim.teamId === user.id) return true;
 
-      // 2. Match captain team ID (ONLY if user is captain of the host team)
-      const captainTeamIds = myTeams
-        .filter(
-          (t: Team) =>
-            t.captainId === user.id ||
-            (user.displayName && t.captainName?.toLowerCase().trim() === user.displayName.toLowerCase().trim())
-        )
-        .map((t: Team) => t.id);
+      // 2. Match any team ID the user belongs to (captain or member)
+      const myTeamIds = myTeams.map((t: Team) => t.id);
+      if (scrim.teamId && myTeamIds.includes(scrim.teamId)) return true;
 
-      if (scrim.teamId && captainTeamIds.includes(scrim.teamId)) return true;
-
-      // 3. Match captain team name (ONLY if user is captain of that team)
-      const captainTeamNames = myTeams
-        .filter(
-          (t: Team) =>
-            t.captainId === user.id ||
-            (user.displayName && t.captainName?.toLowerCase().trim() === user.displayName.toLowerCase().trim())
-        )
-        .map((t: Team) => t.name.toLowerCase().trim());
-
+      // 3. Match any team name the user belongs to
+      const myTeamNames = myTeams.map((t: Team) => t.name.toLowerCase().trim());
       if (
         scrim.hostTeamName &&
         scrim.hostTeamName !== "Varsity Squad" &&
-        captainTeamNames.includes(scrim.hostTeamName.toLowerCase().trim())
+        myTeamNames.includes(scrim.hostTeamName.toLowerCase().trim())
       ) {
         return true;
       }

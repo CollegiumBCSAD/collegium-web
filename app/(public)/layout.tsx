@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { GameProvider } from "@/context/GameContext";
+import { GameProvider, useGame } from "@/context/GameContext";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { NotificationProvider } from "@/context/NotificationContext";
 import { WarRoomProvider, useWarRoom } from "@/context/WarRoomContext";
@@ -261,70 +261,82 @@ function GlobalWarRoomModal() {
   );
 }
 
+function PublicLayoutContent({ children }: { children: React.ReactNode }) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
+  const { selectedGame, isLoaded } = useGame();
+
+  const showNavbar = !(pathname === "/" && !selectedGame && isLoaded);
+
+  return (
+    <div className="flex min-h-screen flex-col bg-background text-foreground relative">
+      <GameSelectorModal />
+
+      {showNavbar && (
+        <header className="sticky top-0 z-40 border-b border-[#182338] bg-[#070912]/95 backdrop-blur-md">
+          <div className="flex h-16 items-center justify-between px-4 sm:px-6 md:px-10">
+            <div className="flex items-center gap-6 sm:gap-8">
+              <Link href="/" className="flex items-center gap-2.5 font-display text-xl font-black tracking-wider text-white group">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logo.png" alt="Collegium Logo" className="w-7 h-7 object-contain rounded-md shadow-md shadow-primary-brand/30 transition-transform duration-200 group-hover:scale-110" />
+                <span className="group-hover:text-primary-brand transition-colors">COLLEGIUM</span>
+              </Link>
+              <NavigationLinks />
+            </div>
+
+            <div className="flex items-center gap-2.5 sm:gap-3.5">
+              <HeaderGameSwitcher />
+              <ChatQuickAccess />
+              <NotificationBell />
+              <HeaderAuthControls />
+
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="flex md:hidden h-9 w-9 items-center justify-center rounded-xl bg-[#141A29] border border-[#232D44] text-slate-300 hover:text-white"
+                aria-label="Toggle mobile navigation menu"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {mobileMenuOpen ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  )}
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {mobileMenuOpen && (
+            <div className="border-b border-[#182338] bg-[#0A0D18] p-4 md:hidden animate-page-slide-in">
+              <NavigationLinks mobile onClose={() => setMobileMenuOpen(false)} />
+              <div className="mt-4 pt-4 border-t border-[#182338] flex flex-col gap-2">
+                <HeaderAuthControls />
+              </div>
+            </div>
+          )}
+        </header>
+      )}
+
+      <main className="flex flex-1 flex-col">{children}</main>
+
+      <GlobalWarRoomModal />
+      <FloatingNotificationToast />
+    </div>
+  );
+}
+
 export default function PublicLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
   return (
     <AuthProvider>
       <GameProvider>
         <NotificationProvider>
-        <WarRoomProvider>
-          <div className="flex min-h-screen flex-col bg-background text-foreground relative">
-            <GameSelectorModal />
-
-            <header className="sticky top-0 z-40 border-b border-[#182338] bg-[#070912]/95 backdrop-blur-md">
-              <div className="flex h-16 items-center justify-between px-4 sm:px-6 md:px-10">
-                <div className="flex items-center gap-6 sm:gap-8">
-                  <Link href="/" className="flex items-center gap-2.5 font-display text-xl font-black tracking-wider text-white group">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/logo.png" alt="Collegium Logo" className="w-7 h-7 object-contain rounded-md shadow-md shadow-primary-brand/30 transition-transform duration-200 group-hover:scale-110" />
-                    <span className="group-hover:text-primary-brand transition-colors">COLLEGIUM</span>
-                  </Link>
-                  <NavigationLinks />
-                </div>
-
-                <div className="flex items-center gap-2.5 sm:gap-3.5">
-                  <HeaderGameSwitcher />
-                  <ChatQuickAccess />
-                  <NotificationBell />
-                  <HeaderAuthControls />
-
-                  <button
-                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                    className="flex md:hidden h-9 w-9 items-center justify-center rounded-xl bg-[#141A29] border border-[#232D44] text-slate-300 hover:text-white"
-                    aria-label="Toggle mobile navigation menu"
-                  >
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      {mobileMenuOpen ? (
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      ) : (
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                      )}
-                    </svg>
-                  </button>
-                </div>
-              </div>
-
-              {mobileMenuOpen && (
-                <div className="border-b border-[#182338] bg-[#0A0D18] p-4 md:hidden animate-page-slide-in">
-                  <NavigationLinks mobile onClose={() => setMobileMenuOpen(false)} />
-                  <div className="mt-4 pt-4 border-t border-[#182338] flex flex-col gap-2">
-                    <HeaderAuthControls />
-                  </div>
-                </div>
-              )}
-            </header>
-
-            <main className="flex flex-1 flex-col">{children}</main>
-
-            <GlobalWarRoomModal />
-            <FloatingNotificationToast />
-          </div>
-        </WarRoomProvider>
+          <WarRoomProvider>
+            <PublicLayoutContent>{children}</PublicLayoutContent>
+          </WarRoomProvider>
         </NotificationProvider>
       </GameProvider>
     </AuthProvider>

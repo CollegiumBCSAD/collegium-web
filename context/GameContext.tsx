@@ -9,6 +9,7 @@ interface GameContextType {
   isSelectorOpen: boolean;
   isLoaded: boolean;
   selectGame: (gameId: GameId) => void;
+  clearSelectedGame: () => void;
   openGameSelector: () => void;
   closeGameSelector: () => void;
 }
@@ -16,7 +17,7 @@ interface GameContextType {
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
-  const [selectedGame, setSelectedGame] = useState<GameId | null>("valo");
+  const [selectedGame, setSelectedGame] = useState<GameId | null>(null);
   const [isSelectorOpen, setIsSelectorOpen] = useState<boolean>(false);
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
 
@@ -33,7 +34,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       if (storedGame) {
         setSelectedGame(storedGame);
       } else {
-        setSelectedGame("valo");
+        setSelectedGame(null);
       }
       setIsSelectorOpen(false);
       setIsLoaded(true);
@@ -41,24 +42,25 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (selectedGame && GAMES[selectedGame]) {
-      const accent = GAMES[selectedGame].accentColor;
+    const activeId = selectedGame || "valo";
+    if (GAMES[activeId]) {
+      const accent = GAMES[activeId].accentColor;
       document.documentElement.style.setProperty("--primary-brand", accent);
       document.documentElement.style.setProperty("--color-primary-brand", accent);
 
       let rgb = "229, 58, 76";
       let btnText = "#FFFFFF";
 
-      if (selectedGame === "valo") {
+      if (activeId === "valo") {
         rgb = "229, 58, 76";
         btnText = "#FFFFFF";
-      } else if (selectedGame === "lol") {
+      } else if (activeId === "lol") {
         rgb = "0, 163, 255";
         btnText = "#FFFFFF";
-      } else if (selectedGame === "codm") {
+      } else if (activeId === "codm") {
         rgb = "255, 255, 255";
         btnText = "#0A0C10";
-      } else if (selectedGame === "ml") {
+      } else if (activeId === "ml") {
         rgb = "245, 158, 11";
         btnText = "#0A0C10";
       }
@@ -76,8 +78,16 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     } catch {}
   };
 
+  const clearSelectedGame = () => {
+    setSelectedGame(null);
+    setIsSelectorOpen(false);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {}
+  };
+
   const openGameSelector = () => {
-    setIsSelectorOpen(true);
+    clearSelectedGame();
   };
 
   const closeGameSelector = () => {
@@ -96,6 +106,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         isSelectorOpen,
         isLoaded,
         selectGame,
+        clearSelectedGame,
         openGameSelector,
         closeGameSelector,
       }}

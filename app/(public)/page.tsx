@@ -10,10 +10,16 @@ import { universitiesService, scrimsService, tournamentsService } from "@/servic
 import { fetchTeamsApi, Team } from "@/lib/teams";
 import { University, ScrimOffer, Tournament, GameId } from "@/types";
 import { GamepadIcon, CheckCircleIcon } from "@/components/ui/Icons";
+import GameSelectorLanding from "@/components/GameSelectorLanding";
 
 export default function LandingPage() {
-  const { selectedGame, selectedGameInfo, openGameSelector, selectGame } = useGame();
+  const { selectedGame, selectedGameInfo, openGameSelector, selectGame, isLoaded } = useGame();
   const { user } = useAuth();
+  
+  if (isLoaded && !selectedGame) {
+    return <GameSelectorLanding />;
+  }
+
   const activeGame: GameId = selectedGame || "valo";
 
   const [universities, setUniversities] = useState<University[]>([]);
@@ -120,13 +126,13 @@ export default function LandingPage() {
                   }}
                 >
                   {/* Subtle dynamic ambient background glow */}
-                  <div 
+                  <div
                     className="absolute -right-4 -bottom-4 w-24 h-24 rounded-full opacity-20 blur-xl pointer-events-none group-hover:opacity-40 transition-opacity"
                     style={{ backgroundColor: selectedGameInfo.accentColor }}
                   />
 
                   {/* Game Crest */}
-                  <div 
+                  <div
                     className="relative w-9 h-9 overflow-hidden shrink-0 border border-white/20 shadow-md group-hover:scale-105 transition-transform"
                     style={{
                       clipPath: "polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)",
@@ -143,8 +149,8 @@ export default function LandingPage() {
 
                   <div className="flex flex-col text-left">
                     <div className="flex items-center gap-1.5 leading-none mb-1">
-                      <span 
-                        className="w-1.5 h-1.5 rounded-full animate-ping shrink-0" 
+                      <span
+                        className="w-1.5 h-1.5 rounded-full animate-ping shrink-0"
                         style={{ backgroundColor: selectedGameInfo.accentColor }}
                       />
                       <span className="text-[8px] font-mono font-black tracking-widest text-slate-400 uppercase">
@@ -224,7 +230,7 @@ export default function LandingPage() {
 
           {/* Unified High-Tech Esports Console & Live Matchmaking Hub */}
           <div className="lg:col-span-5 w-full mt-6 lg:mt-0">
-            <div 
+            <div
               className="relative overflow-hidden bg-[#0A0D18] border border-[#1E293B] shadow-2xl transition-all duration-300 hover:border-primary-brand/50"
               style={{
                 clipPath: "polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))",
@@ -243,7 +249,7 @@ export default function LandingPage() {
                 {/* Banner Header Overlay */}
                 <div className="absolute inset-0 p-4 flex flex-col justify-between z-10">
                   <div className="flex items-center justify-between gap-2">
-                    <span 
+                    <span
                       className="text-[9px] font-mono font-black tracking-widest text-primary-brand bg-black/80 backdrop-blur-md px-2.5 py-1 border border-primary-brand/40 flex items-center gap-1.5 shadow-md"
                       style={{
                         clipPath: "polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)",
@@ -275,7 +281,7 @@ export default function LandingPage() {
                       </span>
                     </div>
 
-                    <span 
+                    <span
                       className="text-[8px] font-mono font-bold text-emerald-400 bg-emerald-950/40 px-2 py-0.5 border border-emerald-800/50"
                       style={{
                         clipPath: "polygon(2px 0, 100% 0, calc(100% - 2px) 100%, 0 100%)",
@@ -289,7 +295,7 @@ export default function LandingPage() {
 
               {/* Console Body: Live Matchmaking Hub */}
               <div className="p-4 sm:p-5 space-y-4 bg-gradient-to-b from-[#0A0D18] via-[#080B14] to-[#0A0D18]">
-                <div 
+                <div
                   className="p-4 bg-[#060912] border border-[#182338] shadow-inner space-y-3.5"
                   style={{
                     clipPath: "polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))",
@@ -391,7 +397,7 @@ export default function LandingPage() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-7xl h-[500px] bg-primary-brand/5 blur-[120px] pointer-events-none rounded-full" />
 
         <div className="mx-auto max-w-[1800px] w-full px-4 sm:px-6 md:px-10 lg:px-16 relative z-10 space-y-8 sm:space-y-12">
-          
+
           {/* Header Bar */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-[#182338]">
             <div className="space-y-2">
@@ -434,11 +440,10 @@ export default function LandingPage() {
                 <div
                   key={game.id}
                   onClick={() => selectGame(game.id)}
-                  className={`group relative flex flex-col justify-between overflow-hidden bg-[#0A0D18] border transition-all duration-300 cursor-pointer ${
-                    isSelected
+                  className={`group relative flex flex-col justify-between overflow-hidden bg-[#0A0D18] border transition-all duration-300 cursor-pointer ${isSelected
                       ? "border-primary-brand shadow-2xl shadow-primary-brand/10 -translate-y-1"
                       : "border-[#1E293B] hover:border-slate-500/60 hover:-translate-y-1 hover:shadow-xl"
-                  }`}
+                    }`}
                   style={{
                     clipPath: "polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))",
                   }}
@@ -479,7 +484,7 @@ export default function LandingPage() {
                         className="object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-[#0A0D18] via-transparent to-black/20" />
-                      
+
                       {/* Genre Pill Tag */}
                       <span className="absolute bottom-2 left-2 px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wider bg-black/80 backdrop-blur-md text-slate-300 border border-white/15">
                         {game.genre}
@@ -528,11 +533,10 @@ export default function LandingPage() {
                         e.stopPropagation();
                         selectGame(game.id);
                       }}
-                      className={`w-full h-9 font-display text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                        isSelected
+                      className={`w-full h-9 font-display text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer ${isSelected
                           ? "game-theme-btn shadow-md"
                           : "bg-[#121828] hover:bg-[#1A253D] text-slate-300 hover:text-white border border-[#202C48]"
-                      }`}
+                        }`}
                       style={{
                         clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
                       }}
