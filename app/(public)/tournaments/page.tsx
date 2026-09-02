@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import TournamentBracketModal from "@/components/tournaments/TournamentBracketModal";
 import TournamentCard from "@/components/tournaments/TournamentCard";
 import { TournamentCardSkeleton } from "@/components/ui/Skeleton";
-import { TrophyIcon, FlameIcon } from "@/components/ui/Icons";
+import { TrophyIcon } from "@/components/ui/Icons";
 import { Tournament } from "@/types";
 import { tournamentsService } from "@/services";
 

@@ -3,7 +3,14 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Tournament } from "@/types";
-import { TrophyIcon, ShieldIcon } from "@/components/ui/Icons";
+import { 
+  TrophyIcon, 
+  ShieldIcon, 
+  ClockIcon, 
+  PlusIcon, 
+  AlertTriangleIcon, 
+  XCircleIcon 
+} from "@/components/ui/Icons";
 import { GAMES } from "@/lib/games";
 
 interface TournamentCardProps {
@@ -134,49 +141,77 @@ export default function TournamentCard({
             <span>Verified Tournament Payload</span>
           </div>
 
-          <div className="flex items-center gap-2.5 flex-wrap w-full sm:w-auto">
+          <div className="flex items-center gap-2.5 flex-wrap w-full sm:w-auto justify-end">
             {!isCompleted && isApplied && (
               <div className="w-full sm:w-auto">
                 {showUndoConfirm ? (
-                  <div className="p-3 bg-rose-950/70 border border-rose-500/40 rounded-xl space-y-2 animate-fade-in w-full">
-                    <p className="text-[11px] font-sans text-rose-200">
-                      Are you sure you want to withdraw your squad registration application?
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        disabled={isApplying}
-                        onClick={() => {
-                          setShowUndoConfirm(false);
-                          if (onWithdraw) onWithdraw(tournament);
-                        }}
-                        className="flex-1 h-8 bg-rose-600 hover:bg-rose-500 text-white rounded text-[11px] font-mono font-bold uppercase transition-colors cursor-pointer"
-                      >
-                        {isApplying ? "Withdrawing..." : "Yes, Withdraw"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setShowUndoConfirm(false)}
-                        className="flex-1 h-8 bg-[#121828] text-slate-300 hover:text-white rounded text-[11px] font-mono font-bold uppercase transition-colors cursor-pointer border border-[#222E48]"
-                      >
-                        Cancel
-                      </button>
-                    </div>
+                  <div 
+                    className="flex items-center gap-2 p-1.5 bg-rose-950/80 border border-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.15)] animate-fade-in"
+                    style={{
+                      clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
+                    }}
+                  >
+                    <span className="text-[11px] font-mono font-bold text-rose-200 px-2 flex items-center gap-1.5">
+                      <AlertTriangleIcon className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                      <span>Withdraw squad registration?</span>
+                    </span>
+                    <button
+                      type="button"
+                      disabled={isApplying}
+                      onClick={() => {
+                        setShowUndoConfirm(false);
+                        if (onWithdraw) onWithdraw(tournament);
+                      }}
+                      className="h-7 px-3 bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-mono font-black uppercase transition-colors cursor-pointer shadow-sm"
+                      style={{
+                        clipPath: "polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)",
+                      }}
+                    >
+                      {isApplying ? "Withdrawing..." : "Confirm"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowUndoConfirm(false)}
+                      className="h-7 px-2.5 bg-[#141A29] hover:bg-[#1E293B] text-slate-300 hover:text-white text-[10px] font-mono font-bold uppercase transition-colors border border-[#232D44] cursor-pointer"
+                      style={{
+                        clipPath: "polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)",
+                      }}
+                    >
+                      Cancel
+                    </button>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[11px] font-mono font-bold px-3 py-2 rounded bg-amber-950/60 text-amber-300 border border-amber-500/30 flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                      Application Pending Organizer Approval
-                    </span>
+                    {/* Tactical Status HUD Badge */}
+                    <div 
+                      className="h-10 px-3.5 bg-gradient-to-r from-amber-500/15 via-amber-950/30 to-[#0A0D18] text-amber-300 border border-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.1)] flex items-center gap-2"
+                      style={{
+                        clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
+                      }}
+                    >
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
+                      </span>
+                      <span className="text-[11px] font-mono font-black tracking-wider uppercase">
+                        Application Pending Approval
+                      </span>
+                    </div>
+
+                    {/* Integrated Undo / Withdraw Action */}
                     {onWithdraw && (
                       <button
                         type="button"
                         disabled={isApplying}
                         onClick={() => setShowUndoConfirm(true)}
-                        className="h-10 px-3.5 bg-rose-950/40 hover:bg-rose-900/50 text-rose-300 border border-rose-500/30 rounded text-xs font-mono font-bold uppercase transition-colors cursor-pointer"
+                        className="h-10 px-3.5 bg-[#101524] hover:bg-rose-950/40 text-slate-400 hover:text-rose-300 border border-[#232D44] hover:border-rose-500/40 text-xs font-mono font-bold uppercase transition-all duration-200 cursor-pointer flex items-center gap-1.5 active:scale-95"
+                        style={{
+                          clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
+                        }}
+                        title="Withdraw squad application"
                       >
-                        Undo Application
+                        <XCircleIcon className="w-3.5 h-3.5 text-slate-400 group-hover:text-rose-400" />
+                        <span>Undo</span>
                       </button>
                     )}
                   </div>
@@ -189,28 +224,34 @@ export default function TournamentCard({
                 type="button"
                 disabled={isApplying}
                 onClick={() => onApply(tournament)}
-                className="h-10 px-5 text-xs font-mono font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md bg-[#141A29] hover:bg-[#1E293B] text-slate-200 border border-[#232D44]"
+                className="h-10 px-4 text-xs font-mono font-black uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_15px_rgba(16,185,129,0.15)] bg-gradient-to-r from-emerald-950/80 via-emerald-900/40 to-[#0A0D18] hover:from-emerald-900/90 hover:via-emerald-800/50 hover:to-emerald-950/90 text-emerald-300 hover:text-emerald-100 border border-emerald-500/50 hover:border-emerald-400 active:scale-95 group/apply"
                 style={{
                   clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
                 }}
               >
                 {isApplying ? (
-                  <span>Submitting...</span>
+                  <>
+                    <ClockIcon className="w-3.5 h-3.5 text-emerald-400 animate-spin" />
+                    <span>Registering...</span>
+                  </>
                 ) : (
-                  <span>+ Apply / Register Squad</span>
+                  <>
+                    <PlusIcon className="w-3.5 h-3.5 text-emerald-400 group-hover/apply:scale-110 transition-transform" />
+                    <span>Apply / Register Squad</span>
+                  </>
                 )}
               </button>
             )}
 
             <button
               onClick={() => onSelect(tournament)}
-              className="h-10 px-6 game-theme-btn text-xs font-bold uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 cursor-pointer shrink-0"
+              className="h-10 px-6 game-theme-btn text-xs font-display font-black uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 cursor-pointer shrink-0 active:scale-95 transition-transform group/btn"
               style={{
                 clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
               }}
             >
               <span>View Bracket & Details</span>
-              <span>→</span>
+              <span className="group-hover/btn:translate-x-0.5 transition-transform">→</span>
             </button>
           </div>
         </div>
