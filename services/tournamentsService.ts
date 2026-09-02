@@ -1,11 +1,7 @@
 import { apiClient } from "./apiClient";
-import { Tournament, TournamentStatus, BracketRound, MatchBoxScore } from "@/types";
+import { Tournament, TournamentApprovalStatus, BracketRound, MatchBoxScore, PendingSquadApplication } from "@/types";
 import { 
   mockTournaments, 
-  mockCompletedBracket, 
-  mockLiveBracket, 
-  mockUpcomingBracket, 
-  mockBracket, 
   mockBoxScore 
 } from "@/lib/mock/tournaments";
 
@@ -16,10 +12,12 @@ const GAME_DISPLAY: Record<string, { label: string; gradient: string }> = {
   MLBB: { label: "MOBILE LEGENDS: BANG BANG", gradient: "from-[#8E6519] via-[#42300E] to-[#11141C]" },
 };
 
-const STATUS_DISPLAY: Record<string, TournamentStatus> = {
+const STATUS_DISPLAY: Record<string, TournamentApprovalStatus> = {
   UPCOMING: "UPCOMING",
   ONGOING: "LIVE",
   COMPLETED: "COMPLETED",
+  PENDING_APPROVAL: "PENDING_APPROVAL",
+  REJECTED: "REJECTED",
 };
 
 function detectGameFromText(text: string): { label: string; gradient: string } {
@@ -36,35 +34,50 @@ function detectGameFromText(text: string): { label: string; gradient: string } {
   return GAME_DISPLAY.VALORANT;
 }
 
-function parseServerTournamentsResponse(data: unknown): Tournament[] {
-  if (!Array.isArray(data) || data.length === 0) {
-    return mockTournaments;
-  }
+interface RawTournament {
+  id?: string;
+  name?: string;
+  gameTitle?: string;
+  status?: string;
+  image?: string;
+  bracketFormat?: string;
+  teamQuota?: number;
+  rules?: string;
+  rejectionReason?: string;
+  matches?: Array<{ title?: string; gameTitle?: string }>;
+  universities?: Array<{ id?: string; name?: string }>;
+}
 
-  const parsed = data.map((raw, idx) => {
-    const t = raw as {
-      id?: string;
-      name?: string;
-      gameTitle?: string;
-      status?: string;
-      matches?: Array<{ title?: string; gameTitle?: string }>;
-      universities?: Array<{ id?: string }>;
-    };
-
+function mapTournaments(data: RawTournament[]): Tournament[] {
+  return data.map((t, idx) => {
     const matches = t.matches ?? [];
     const universities = t.universities ?? [];
-    const nameString = (t.name || "") + " " + (t.gameTitle || "") + " " + (matches[0]?.title || "") + " " + (matches[0]?.gameTitle || "");
-    const gameDisplay = detectGameFromText(nameString);
-    const status = STATUS_DISPLAY[t.status ?? "UPCOMING"] ?? "UPCOMING";
+    // Prefer the real gameTitle field; only guess from text for tournaments
+    // that predate it (or were created without a game selection).
+    const nameString = (t.name || "") + " " + (matches[0]?.title || "") + " " + (matches[0]?.gameTitle || "");
+    const gameDisplay = (t.gameTitle && GAME_DISPLAY[t.gameTitle]) || detectGameFromText(nameString);
+    const status: TournamentApprovalStatus = STATUS_DISPLAY[t.status ?? "UPCOMING"] ?? "UPCOMING";
 
     const statusText =
-      status === "COMPLETED"
-        ? "Final standings published"
-        : status === "LIVE"
-          ? "Bracket in progress"
-          : `${universities.length || 8} universities registered`;
+      status === "PENDING_APPROVAL"
+        ? "Awaiting admin approval"
+        : status === "REJECTED"
+          ? t.rejectionReason
+            ? `Rejected: ${t.rejectionReason}`
+            : "Rejected by admin"
+          : status === "COMPLETED"
+            ? "Final standings published"
+            : status === "LIVE"
+              ? "Bracket in progress"
+              : universities.length > 0
+                ? `${universities.length} universities registered`
+                : "Open for registrations (0 registered)";
 
-    const bulletPoints = [`${universities.length || 8} participating universities`];
+    const bulletPoints = [
+      universities.length > 0
+        ? `${universities.length} participating universities`
+        : "Open registration — 0 squads",
+    ];
     if (matches.length > 0) {
       bulletPoints.push(`${matches.length} matches played`);
     } else {
@@ -75,14 +88,25 @@ function parseServerTournamentsResponse(data: unknown): Tournament[] {
       id: t.id ?? `tournament-${idx}`,
       title: t.name ?? "Untitled Tournament",
       game: gameDisplay.label,
+      gameTitle: t.gameTitle,
       status,
       statusText,
       bulletPoints,
+      image: t.image,
+      bracketFormat: t.bracketFormat,
+      teamQuota: t.teamQuota,
+      rules: t.rules,
+      rejectionReason: t.rejectionReason,
       bgGradient: gameDisplay.gradient,
     };
   });
+}
 
-  return parsed.length > 0 ? parsed : mockTournaments;
+function parseServerTournamentsResponse(data: unknown): Tournament[] {
+  if (!Array.isArray(data) || data.length === 0) {
+    return mockTournaments;
+  }
+  return mapTournaments(data as RawTournament[]);
 }
 
 function parseServerBracketResponse(data: unknown): BracketRound[] {
@@ -189,7 +213,7 @@ function parseServerBracketResponse(data: unknown): BracketRound[] {
     }
   }
 
-  return mockBracket;
+  return [];
 }
 
 export const tournamentsService = {
@@ -198,8 +222,35 @@ export const tournamentsService = {
       const response = await apiClient.get<unknown>("/tournaments");
       return parseServerTournamentsResponse(response);
     } catch {
-      return mockTournaments;
+      return [];
     }
+  },
+
+  // An empty result from these two is a real "nothing here" state, not a
+  // reason to fall back to demo data the way parseServerTournamentsResponse
+  // does for the public tournaments page — use mapTournaments() directly.
+  getPendingTournaments: async (): Promise<Tournament[]> => {
+    try {
+      const response = await apiClient.get<unknown>("/tournaments?status=PENDING_APPROVAL");
+      return Array.isArray(response) ? mapTournaments(response as RawTournament[]) : [];
+    } catch {
+      return [];
+    }
+  },
+
+  getMyTournaments: async (): Promise<Tournament[]> => {
+    try {
+      const response = await apiClient.get<unknown>("/tournaments/mine");
+      return Array.isArray(response) ? mapTournaments(response as RawTournament[]) : [];
+    } catch {
+      return [];
+    }
+  },
+
+  getAllPendingApplications: async (): Promise<PendingSquadApplication[]> => {
+    return apiClient
+      .get<PendingSquadApplication[]>("/tournaments/applications/pending")
+      .catch(() => []);
   },
 
   getBracket: async (tournamentId: string): Promise<BracketRound[]> => {
@@ -207,11 +258,54 @@ export const tournamentsService = {
       const response = await apiClient.get<unknown>(`/tournaments/${tournamentId}/bracket`);
       return parseServerBracketResponse(response);
     } catch {
-      const tourney = mockTournaments.find((t) => t.id === tournamentId);
-      if (tourney?.status === "LIVE") return mockLiveBracket;
-      if (tourney?.status === "UPCOMING") return mockUpcomingBracket;
-      return mockCompletedBracket;
+      return [];
     }
+  },
+
+  createTournament: (params: {
+    name: string;
+    gameTitle?: string;
+    imageFile?: File;
+    bracketFormat?: string;
+    teamQuota?: number;
+    rules?: string;
+  }): Promise<unknown> => {
+    const formData = new FormData();
+    formData.append("name", params.name);
+    if (params.gameTitle) formData.append("gameTitle", params.gameTitle);
+    if (params.imageFile) formData.append("image", params.imageFile);
+    if (params.bracketFormat) formData.append("bracketFormat", params.bracketFormat);
+    if (params.teamQuota) formData.append("teamQuota", String(params.teamQuota));
+    if (params.rules) formData.append("rules", params.rules);
+    return apiClient.postForm("/tournaments", formData);
+  },
+
+  registerTournament: (tournamentId: string): Promise<unknown> => {
+    return apiClient.post(`/tournaments/${tournamentId}/register`, {});
+  },
+
+  applyForTournament: (tournamentId: string): Promise<unknown> => {
+    return apiClient.post(`/tournaments/${tournamentId}/apply`, {});
+  },
+
+  withdrawApplication: (tournamentId: string): Promise<unknown> => {
+    return apiClient.post(`/tournaments/${tournamentId}/withdraw`, {});
+  },
+
+  getApplications: (tournamentId: string): Promise<unknown[]> => {
+    return apiClient.get<unknown[]>(`/tournaments/${tournamentId}/applications`).catch(() => []);
+  },
+
+  approveApplication: (tournamentId: string, appId: string): Promise<unknown> => {
+    return apiClient.post(`/tournaments/${tournamentId}/applications/${appId}/approve`, {});
+  },
+
+  rejectApplication: (tournamentId: string, appId: string): Promise<unknown> => {
+    return apiClient.post(`/tournaments/${tournamentId}/applications/${appId}/reject`, {});
+  },
+
+  deleteTournament: (tournamentId: string): Promise<void> => {
+    return apiClient.delete<void>(`/tournaments/${tournamentId}`);
   },
 
   getBoxScore: (matchId: string): Promise<MatchBoxScore> => {

@@ -138,30 +138,16 @@ export default function ScrimsPage() {
       // 1. Match direct user ID (if posted as individual user)
       if (scrim.teamId && scrim.teamId === user.id) return true;
 
-      // 2. Match captain team ID (ONLY if user is captain of the host team)
-      const captainTeamIds = myTeams
-        .filter(
-          (t: Team) =>
-            t.captainId === user.id ||
-            (user.displayName && t.captainName?.toLowerCase().trim() === user.displayName.toLowerCase().trim())
-        )
-        .map((t: Team) => t.id);
+      // 2. Match any team ID the user belongs to (captain or member)
+      const myTeamIds = myTeams.map((t: Team) => t.id);
+      if (scrim.teamId && myTeamIds.includes(scrim.teamId)) return true;
 
-      if (scrim.teamId && captainTeamIds.includes(scrim.teamId)) return true;
-
-      // 3. Match captain team name (ONLY if user is captain of that team)
-      const captainTeamNames = myTeams
-        .filter(
-          (t: Team) =>
-            t.captainId === user.id ||
-            (user.displayName && t.captainName?.toLowerCase().trim() === user.displayName.toLowerCase().trim())
-        )
-        .map((t: Team) => t.name.toLowerCase().trim());
-
+      // 3. Match any team name the user belongs to
+      const myTeamNames = myTeams.map((t: Team) => t.name.toLowerCase().trim());
       if (
         scrim.hostTeamName &&
         scrim.hostTeamName !== "Varsity Squad" &&
-        captainTeamNames.includes(scrim.hostTeamName.toLowerCase().trim())
+        myTeamNames.includes(scrim.hostTeamName.toLowerCase().trim())
       ) {
         return true;
       }
@@ -229,16 +215,32 @@ export default function ScrimsPage() {
     fetchLatest();
     const interval = setInterval(fetchLatest, 4000);
 
+    const handleCompletedEvent = () => fetchLatest();
+    window.addEventListener("scrim:completed", handleCompletedEvent);
+
     return () => {
       isMounted = false;
       clearInterval(interval);
+      window.removeEventListener("scrim:completed", handleCompletedEvent);
     };
   }, [activeGame]);
 
+  const [referenceTime] = useState(() => Date.now());
+
   const filteredScrims = useMemo(() => {
+    const oneDayAgo = referenceTime - 24 * 60 * 60 * 1000;
     return scrims.filter((s) => {
+      // Completed scrims are archived and hidden from the active matchmaking board
+      if (s.status === "COMPLETED") return false;
+
       // Cancelled scrims are only visible to the host captain who posted them
       if (s.status === "CANCELLED" && !isUserHost(s)) return false;
+
+      // Only filter out ancient unaccepted slots older than 24 hours
+      const scheduledTime = new Date(s.scheduledAt).getTime();
+      if (!isNaN(scheduledTime) && scheduledTime < oneDayAgo && !isUserHost(s)) {
+        return false;
+      }
 
       if (selectedFormat !== "ALL") {
         if (s.format && !s.format.toUpperCase().includes(selectedFormat)) return false;
@@ -256,7 +258,7 @@ export default function ScrimsPage() {
 
   const enrichedScrims = useMemo(() => {
     const map = getPendingScrimRequestsMap();
-    return filteredScrims.map((s) => {
+    const list = filteredScrims.map((s) => {
       const serverReqs = Array.isArray(s.pendingRequests) ? s.pendingRequests : [];
       const localReqs = map[s.id] || [];
       const opponentReq = s.opponentTeamName
@@ -275,6 +277,15 @@ export default function ScrimsPage() {
         pendingRequests: merged,
       };
     });
+
+    // Chronological sorting: earliest upcoming match time first (e.g. 1:00 PM -> 2:00 PM -> 3:00 PM)
+    return list.sort((a, b) => {
+      const timeA = new Date(a.scheduledAt).getTime();
+      const timeB = new Date(b.scheduledAt).getTime();
+      if (isNaN(timeA)) return 1;
+      if (isNaN(timeB)) return -1;
+      return timeA - timeB;
+    });
   }, [filteredScrims]);
 
   const handlePostScrimSubmit = async (data: {
@@ -284,6 +295,7 @@ export default function ScrimsPage() {
     format: string;
     rankRange: string;
     mapPreference?: string;
+    scheduledAt: string;
     notes: string;
   }) => {
     const userTeam = myTeams.find((t: Team) => t.gameTitle === data.gameTitle) || myTeams[0];
@@ -298,7 +310,7 @@ export default function ScrimsPage() {
       format: data.format,
       rankRange: data.rankRange,
       mapPreference: data.mapPreference,
-      scheduledAt: new Date(Date.now() + 86400000).toISOString(),
+      scheduledAt: data.scheduledAt,
       notes: data.notes,
       status: "OPEN",
     };
@@ -311,7 +323,7 @@ export default function ScrimsPage() {
         format: data.format,
         rankRange: data.rankRange,
         mapPreference: data.mapPreference,
-        scheduledAt: optimistic.scheduledAt,
+        scheduledAt: data.scheduledAt,
         notes: data.notes,
       });
     } catch {
@@ -329,34 +341,48 @@ export default function ScrimsPage() {
     );
   }, [scrims, isUserHost, myTeams]);
 
+  const handleOpenWarRoom = (scrim: ScrimOffer) => {
+    openWarRoom(scrim, isUserHost(scrim));
+  };
+
   const handleConfirmBooking = async (id: string, selectedOpponentId?: string) => {
-    setScrimError("");
     try {
       await scrimsService.confirmScrim(id, selectedOpponentId);
       const data = await scrimsService.getScrims(activeGame);
       setScrims(data);
-    } catch (err: unknown) {
-      const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
-      setScrimError(errorObj?.response?.data?.message || errorObj?.message || "Failed to confirm booking.");
+    } catch {
+      setScrims((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, status: "CONFIRMED" as const } : s))
+      );
     }
   };
 
-  const handleDeclineRequest = (scrimId: string, opponentId?: string) => {
-    removePendingScrimRequest(scrimId, opponentId);
-    if (opponentId) {
-      removeMyRequestedScrim(scrimId, opponentId);
+  const handleDeclineRequest = async (id: string, opponentId?: string) => {
+    removePendingScrimRequest(id, opponentId);
+    try {
+      await scrimsService.cancelScrim(id);
+      const data = await scrimsService.getScrims(activeGame);
+      setScrims(data);
+    } catch {
+      setScrims((prev) =>
+        prev.map((s) =>
+          s.id === id
+            ? {
+                ...s,
+                pendingRequests: (s.pendingRequests || []).filter((r) => r.teamId !== opponentId),
+              }
+            : s
+        )
+      );
     }
-    scrimsService.getScrims(activeGame).then(setScrims);
   };
 
   const handleAcceptScrim = async (id: string) => {
     setScrimError("");
-    if (user?.role === "ADMIN") {
-      setScrimError("Admin accounts cannot accept scrim offers.");
-      return;
-    }
-    const targetScrim = scrims.find((s) => s.id === id);
-    if (targetScrim && isUserHost(targetScrim)) {
+    const scrim = scrims.find((s) => s.id === id);
+    if (!scrim) return;
+
+    if (isUserHost(scrim)) {
       setScrimError("You cannot book a scrim offer posted by your own team.");
       return;
     }
@@ -404,11 +430,17 @@ export default function ScrimsPage() {
   };
 
   const handleDeleteScrim = async (id: string) => {
+    // Instant optimistic deletion from UI
+    setScrims((prev) => prev.filter((s) => s.id !== id));
     try {
       await scrimsService.deleteScrim(id);
-      setScrims((prev) => prev.filter((s) => s.id !== id));
+      setTimeout(() => {
+        scrimsService.getScrims(activeGame).then((data) => {
+          if (Array.isArray(data)) setScrims(data);
+        });
+      }, 500);
     } catch {
-      setScrims((prev) => prev.filter((s) => s.id !== id));
+      // Kept deleted optimistically
     }
   };
 

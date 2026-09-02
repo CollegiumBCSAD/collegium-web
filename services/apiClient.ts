@@ -21,8 +21,11 @@ async function request<T>(
   options: RequestInit = {},
   skipAuth = false
 ): Promise<T> {
+  // Don't force JSON content-type for FormData bodies — the browser needs to
+  // set its own multipart boundary, which a manual Content-Type header breaks.
+  const isFormData = options.body instanceof FormData;
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
     ...(options.headers as Record<string, string>),
   };
 
@@ -104,6 +107,8 @@ export const apiClient = {
   get: <T>(path: string) => request<T>(path),
   post: <T>(path: string, body?: unknown, skipAuth = false) =>
     request<T>(path, { method: "POST", body: body !== undefined ? JSON.stringify(body) : undefined }, skipAuth),
+  postForm: <T>(path: string, formData: FormData) =>
+    request<T>(path, { method: "POST", body: formData }),
   patch: <T>(path: string, body?: unknown) =>
     request<T>(path, { method: "PATCH", body: body !== undefined ? JSON.stringify(body) : undefined }),
   delete: <T>(path: string) => request<T>(path, { method: "DELETE" }),

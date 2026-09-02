@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { GAME_LIST } from "@/lib/games";
+import { getGameInfo } from "@/lib/games";
 import { GameId } from "@/types";
 import { getStoredTeams, fetchTeamsApi, Team } from "@/lib/teams";
 import { useAuth } from "@/context/AuthContext";
@@ -17,6 +17,7 @@ interface PostScrimModalProps {
     format: string;
     rankRange: string;
     mapPreference?: string;
+    scheduledAt: string;
     notes: string;
   }) => void;
 }
@@ -28,6 +29,13 @@ const GAME_MAP_OPTIONS: Record<GameId, string[]> = {
   ml: ["Imperial Sanctuary", "Celestial Palace", "Western Expanse"],
 };
 
+const GAME_RANK_OPTIONS: Record<GameId, string[]> = {
+  valo: ["Ascendant+", "Immortal / Radiant", "Diamond+", "Platinum+", "Gold+", "Open / Any Tier"],
+  lol: ["Master / Challenger", "Diamond+", "Emerald+", "Platinum+", "Gold+", "Open / Any Tier"],
+  codm: ["Legendary", "Grandmaster+", "Master+", "Pro+", "Open / Any Tier"],
+  ml: ["Mythical Immortal", "Mythical Glory", "Mythic+", "Legend+", "Epic+", "Open / Any Tier"],
+};
+
 export default function PostScrimModal({
   isOpen,
   onClose,
@@ -36,6 +44,7 @@ export default function PostScrimModal({
 }: PostScrimModalProps) {
   const { user } = useAuth();
   const [allTeams, setAllTeams] = useState<Team[]>(() => getStoredTeams());
+  const gameInfo = useMemo(() => getGameInfo(defaultGame), [defaultGame]);
 
   useEffect(() => {
     fetchTeamsApi().then((teams) => {
@@ -62,30 +71,31 @@ export default function PostScrimModal({
     );
   }, [user, allTeams]);
 
-  const [manualGame, setManualGame] = useState<GameId | null>(null);
   const [manualTeamId, setManualTeamId] = useState<string>("");
   const [manualTeamName, setManualTeamName] = useState<string>("");
   const [formFormat, setFormFormat] = useState("BO3");
-  const [formRank, setFormRank] = useState("Ascendant+");
+  const [formRank, setFormRank] = useState(() => (GAME_RANK_OPTIONS[defaultGame] || GAME_RANK_OPTIONS.valo)[0]);
   const [formMap, setFormMap] = useState(() => (GAME_MAP_OPTIONS[defaultGame] || GAME_MAP_OPTIONS.valo)[0]);
+  
+  const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
+  const [formDate, setFormDate] = useState(todayStr);
+  const [formTime, setFormTime] = useState("14:00");
   const [formNotes, setFormNotes] = useState("");
 
-  // Reset the form's game/map defaults each time the modal is (re)opened
+  // Reset the form defaults each time the modal is (re)opened
   const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
   if (isOpen !== prevIsOpen) {
     setPrevIsOpen(isOpen);
     if (isOpen) {
-      setManualGame(null);
       setFormMap((GAME_MAP_OPTIONS[defaultGame] || GAME_MAP_OPTIONS.valo)[0]);
+      setFormRank((GAME_RANK_OPTIONS[defaultGame] || GAME_RANK_OPTIONS.valo)[0]);
     }
   }
 
-  const formGame = manualGame ?? defaultGame;
-
   const userTeamsForGame = useMemo(() => {
-    const matching = userTeams.filter((t) => t.gameTitle === formGame);
+    const matching = userTeams.filter((t) => t.gameTitle === defaultGame);
     return matching.length > 0 ? matching : userTeams;
-  }, [userTeams, formGame]);
+  }, [userTeams, defaultGame]);
 
   const selectedTeamId =
     manualTeamId && userTeamsForGame.some((t) => t.id === manualTeamId)
@@ -100,14 +110,6 @@ export default function PostScrimModal({
     userTeamsForGame.length > 0
       ? userTeamsForGame.find((t) => t.id === selectedTeamId)?.name ?? ""
       : manualTeamName || defaultTeamName;
-
-  const handleGameChange = (game: GameId) => {
-    setManualGame(game);
-    const maps = GAME_MAP_OPTIONS[game] || GAME_MAP_OPTIONS.valo;
-    setFormMap(maps[0]);
-    setManualTeamId("");
-    setManualTeamName("");
-  };
 
   // Modal lifecycle listeners
   useEffect(() => {
@@ -136,13 +138,22 @@ export default function PostScrimModal({
     e.preventDefault();
     if (!formTeamName.trim()) return;
 
+    let scheduledIso = new Date().toISOString();
+    if (formDate && formTime) {
+      const parsed = new Date(`${formDate}T${formTime}`);
+      if (!isNaN(parsed.getTime())) {
+        scheduledIso = parsed.toISOString();
+      }
+    }
+
     onSubmit({
-      gameTitle: formGame,
+      gameTitle: defaultGame,
       teamId: selectedTeamId || undefined,
       hostTeamName: formTeamName.trim(),
       format: formFormat,
       rankRange: formRank,
       mapPreference: formMap,
+      scheduledAt: scheduledIso,
       notes: formNotes,
     });
 
@@ -150,7 +161,8 @@ export default function PostScrimModal({
     onClose();
   };
 
-  const currentMapOptions = GAME_MAP_OPTIONS[formGame] || GAME_MAP_OPTIONS.valo;
+  const currentMapOptions = GAME_MAP_OPTIONS[defaultGame] || GAME_MAP_OPTIONS.valo;
+  const currentRankOptions = GAME_RANK_OPTIONS[defaultGame] || GAME_RANK_OPTIONS.valo;
 
   return (
     <div
@@ -159,47 +171,59 @@ export default function PostScrimModal({
       }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
     >
-      <div className="w-full max-w-md bg-card-bg border border-raised-panel rounded-2xl p-6 shadow-2xl space-y-5">
-        <div className="flex items-center justify-between border-b border-raised-panel pb-3">
-          <h3 className="font-display text-lg font-bold uppercase text-foreground">
-            Post Scrim Offer
-          </h3>
+      <div className="w-full max-w-md bg-[#0D121F]/98 border border-[#1E293B] rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 relative overflow-hidden backdrop-blur-xl">
+        <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-primary-brand" />
+
+        <div className="flex items-center justify-between border-b border-[#1C2538] pb-3">
+          <div>
+            <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-primary-brand block">
+              {"// VARSITY MATCHMAKING"}
+            </span>
+            <h3 className="font-display text-lg font-black uppercase text-white">
+              Post Scrim Offer
+            </h3>
+          </div>
           <button
             onClick={onClose}
             aria-label="Close Modal"
-            className="text-secondary-text hover:text-foreground text-sm cursor-pointer"
+            className="w-7 h-7 rounded-full bg-[#141A29] border border-[#232D44] text-slate-400 hover:text-white flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"
           >
             ✕
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Locked Current Game Badge */}
           <div>
-            <label className="block text-xs font-sans font-semibold uppercase tracking-wider text-secondary-text mb-1">
+            <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-1">
               Esports Title
             </label>
-            <select
-              value={formGame}
-              onChange={(e) => handleGameChange(e.target.value as GameId)}
-              className="w-full h-11 px-3 rounded-lg bg-background border border-panel-border text-foreground text-xs font-sans focus:outline-none cursor-pointer"
-            >
-              {GAME_LIST.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.name}
-                </option>
-              ))}
-            </select>
+            <div className="w-full h-11 px-3.5 rounded-xl bg-[#080C14] border border-[#1C2538] flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <img
+                  src={gameInfo.image}
+                  alt={gameInfo.name}
+                  className="w-6 h-6 rounded-md object-cover border border-[#1E293B]"
+                />
+                <span className="font-display text-xs font-black uppercase text-white tracking-wider">
+                  {gameInfo.name}
+                </span>
+              </div>
+              <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded bg-primary-brand/10 text-primary-brand border border-primary-brand/30">
+                ACTIVE GAME
+              </span>
+            </div>
           </div>
 
           <div>
-            <label className="block text-xs font-sans font-semibold uppercase tracking-wider text-secondary-text mb-1">
+            <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-1">
               Host Squad / Team
             </label>
             {userTeamsForGame.length > 0 ? (
               <select
                 value={selectedTeamId}
                 onChange={(e) => handleTeamChange(e.target.value)}
-                className="w-full h-11 px-3 rounded-lg bg-background border border-panel-border text-foreground text-xs font-sans focus:outline-none cursor-pointer"
+                className="w-full h-11 px-3.5 rounded-xl bg-[#080C14] border border-[#1C2538] text-white text-xs font-mono focus:border-primary-brand focus:outline-none cursor-pointer"
               >
                 {userTeamsForGame.map((t) => (
                   <option key={t.id} value={t.id}>
@@ -214,47 +238,82 @@ export default function PostScrimModal({
                 value={formTeamName}
                 onChange={(e) => setManualTeamName(e.target.value)}
                 placeholder="e.g. UMAK Herons Alpha"
-                className="w-full h-11 px-4 rounded-lg bg-background border border-panel-border text-foreground text-sm font-sans focus:outline-none"
+                className="w-full h-11 px-4 rounded-xl bg-[#080C14] border border-[#1C2538] text-white text-sm font-sans focus:border-primary-brand focus:outline-none"
               />
             )}
           </div>
 
+          {/* Schedule Date & Time Row */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-sans font-semibold uppercase tracking-wider text-secondary-text mb-1">
-                Format
+              <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-1">
+                Match Date
               </label>
               <input
-                type="text"
-                value={formFormat}
-                onChange={(e) => setFormFormat(e.target.value)}
-                placeholder="BO1 / BO3 / BO5"
-                className="w-full h-11 px-3 rounded-lg bg-background border border-panel-border text-foreground text-xs font-sans focus:outline-none"
+                type="date"
+                required
+                value={formDate}
+                onChange={(e) => setFormDate(e.target.value)}
+                className="w-full h-11 px-3.5 rounded-xl bg-[#080C14] border border-[#1C2538] text-white text-xs font-mono focus:border-primary-brand focus:outline-none cursor-pointer"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-sans font-semibold uppercase tracking-wider text-secondary-text mb-1">
-                Target Rank
+              <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-1">
+                Match Time
               </label>
               <input
-                type="text"
-                value={formRank}
-                onChange={(e) => setFormRank(e.target.value)}
-                placeholder="e.g. Ascendant+"
-                className="w-full h-11 px-3 rounded-lg bg-background border border-panel-border text-foreground text-xs font-sans focus:outline-none"
+                type="time"
+                required
+                value={formTime}
+                onChange={(e) => setFormTime(e.target.value)}
+                className="w-full h-11 px-3.5 rounded-xl bg-[#080C14] border border-[#1C2538] text-white text-xs font-mono focus:border-primary-brand focus:outline-none cursor-pointer"
               />
             </div>
           </div>
 
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-1">
+                Format
+              </label>
+              <select
+                value={formFormat}
+                onChange={(e) => setFormFormat(e.target.value)}
+                className="w-full h-11 px-3.5 rounded-xl bg-[#080C14] border border-[#1C2538] text-white text-xs font-mono focus:border-primary-brand focus:outline-none cursor-pointer"
+              >
+                <option value="BO1">BO1 (Best of 1)</option>
+                <option value="BO3">BO3 (Best of 3)</option>
+                <option value="BO5">BO5 (Best of 5)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-1">
+                Target Rank
+              </label>
+              <select
+                value={formRank}
+                onChange={(e) => setFormRank(e.target.value)}
+                className="w-full h-11 px-3.5 rounded-xl bg-[#080C14] border border-[#1C2538] text-white text-xs font-mono focus:border-primary-brand focus:outline-none cursor-pointer"
+              >
+                {currentRankOptions.map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <div>
-            <label className="block text-xs font-sans font-semibold uppercase tracking-wider text-secondary-text mb-1">
+            <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-1">
               Map Preference
             </label>
             <select
               value={formMap}
               onChange={(e) => setFormMap(e.target.value)}
-              className="w-full h-11 px-3 rounded-lg bg-background border border-panel-border text-foreground text-xs font-sans focus:outline-none cursor-pointer"
+              className="w-full h-11 px-3.5 rounded-xl bg-[#080C14] border border-[#1C2538] text-white text-xs font-mono focus:border-primary-brand focus:outline-none cursor-pointer"
             >
               {currentMapOptions.map((m) => (
                 <option key={m} value={m}>
@@ -265,7 +324,7 @@ export default function PostScrimModal({
           </div>
 
           <div>
-            <label className="block text-xs font-sans font-semibold uppercase tracking-wider text-secondary-text mb-1">
+            <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-1">
               Notes / Rules
             </label>
             <textarea
@@ -273,7 +332,7 @@ export default function PostScrimModal({
               value={formNotes}
               onChange={(e) => setFormNotes(e.target.value)}
               placeholder="Map veto preferences or warm-up objectives..."
-              className="w-full p-3 rounded-lg bg-background border border-panel-border text-foreground text-xs font-sans focus:outline-none"
+              className="w-full p-3 rounded-xl bg-[#080C14] border border-[#1C2538] text-white text-xs font-mono focus:border-primary-brand focus:outline-none"
             />
           </div>
 
@@ -281,13 +340,13 @@ export default function PostScrimModal({
             <button
               type="button"
               onClick={onClose}
-              className="h-10 px-4 rounded-lg border border-raised-panel text-secondary-text hover:text-foreground text-xs font-bold uppercase cursor-pointer"
+              className="h-11 px-5 rounded-xl bg-[#141A29] text-slate-300 hover:text-white border border-[#232D44] text-xs font-mono font-bold uppercase cursor-pointer transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="h-10 px-6 rounded-lg game-theme-btn font-sans text-xs font-bold uppercase transition-all active:scale-[0.98] shadow-md shadow-primary-brand/20 cursor-pointer"
+              className="h-11 px-6 rounded-xl game-theme-btn font-mono text-xs font-black uppercase tracking-wider transition-all active:scale-[0.98] shadow-md cursor-pointer"
             >
               Publish Scrim Offer
             </button>

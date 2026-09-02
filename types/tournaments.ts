@@ -1,5 +1,12 @@
 export type TournamentStatus = "COMPLETED" | "UPCOMING" | "LIVE";
 
+// A tournament's own approval lifecycle is broader than a match's status —
+// only the tournament itself can be PENDING_APPROVAL/REJECTED.
+export type TournamentApprovalStatus =
+  | TournamentStatus
+  | "PENDING_APPROVAL"
+  | "REJECTED";
+
 export interface TeamInMatch {
   name: string;
   code: string;
@@ -11,11 +18,18 @@ export interface Tournament {
   id: string;
   title: string;
   game: string;
-  status: TournamentStatus;
+  gameTitle?: string;
+  status: TournamentApprovalStatus;
   statusText: string;
   bulletPoints: string[];
   image?: string;
   bgGradient: string;
+  universities?: { id: string; name: string }[];
+  applications?: unknown[];
+  bracketFormat?: string;
+  teamQuota?: number;
+  rules?: string;
+  rejectionReason?: string;
 }
 
 export interface TournamentMatch {
@@ -82,5 +96,18 @@ export interface TournamentBracketModalProps {
 export interface MatchCardProps {
   match: BracketMatch;
   onViewBoxScore: () => void;
+}
+
+export interface PendingSquadApplication {
+  id: string;
+  tournamentId: string;
+  tournamentName: string;
+  gameTitle: string | null;
+  universityId: string;
+  universityName: string;
+  userId: string;
+  applicantName: string;
+  status: string;
+  appliedAt: string;
 }
 

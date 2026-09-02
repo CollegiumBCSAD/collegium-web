@@ -1,43 +1,52 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { adminService } from "@/services";
 import { AdminUser } from "@/types";
+import { adminService } from "@/services";
 import UserManagementTable from "@/components/admin/UserManagementTable";
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<AdminUser[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     adminService
       .getUsers()
-      .then(setUsers)
-      .catch(() => setUsers([]))
-      .finally(() => setIsLoading(false));
+      .then((data) => setUsers(data))
+      .catch((err) => console.error("Failed to load users:", err))
+      .finally(() => setLoading(false));
   }, []);
 
-  const handleUpdateStatus = (id: string, status: string) => {
-    setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, status } : u)));
-    adminService.updateUserStatus(id, status).catch(() => {
-      adminService.getUsers().then(setUsers).catch(() => {});
-    });
+  const handleUpdateStatus = async (id: string, status: string) => {
+    try {
+      const updated = await adminService.updateUserStatus(id, status);
+      setUsers((prev) => prev.map((u) => (u.id === id ? updated : u)));
+    } catch (err) {
+      console.error("Failed to update status:", err);
+    }
   };
 
   return (
-    <div className="px-12 py-10">
-      <h1 className="font-display text-3xl font-bold text-foreground">User Management</h1>
-      <p className="mt-2 text-base font-sans text-secondary-text">
-        Search, edit, suspend, or reassign the role of any user on the platform.
-      </p>
-
-      <div className="mt-8">
-        {isLoading ? (
-          <p className="text-sm font-sans text-secondary-text">Loading users…</p>
-        ) : (
-          <UserManagementTable users={users} onUpdateStatus={handleUpdateStatus} />
-        )}
+    <div className="p-6 sm:p-8 lg:p-10 space-y-6 max-w-7xl">
+      <div className="border-b border-[#1A1A1A] pb-5">
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="text-[10px] font-mono font-bold tracking-widest text-emerald-400 uppercase px-3 py-0.5 bg-emerald-500/10 border border-emerald-500/30 rounded-full">
+            USER DIRECTORY &amp; RBAC
+          </span>
+        </div>
+        <h1 className="font-display text-2xl sm:text-3xl font-black tracking-tight text-white uppercase">
+          User &amp; Roster Management
+        </h1>
+        <p className="font-sans text-xs sm:text-sm text-neutral-400 mt-1 max-w-2xl leading-relaxed">
+          Search, filter, manage permissions, suspend, or reactivate user accounts across all universities.
+        </p>
       </div>
+
+      {loading ? (
+        <div className="p-12 text-center text-xs font-mono text-neutral-400">Loading user registry...</div>
+      ) : (
+        <UserManagementTable users={users} onUpdateStatus={handleUpdateStatus} />
+      )}
     </div>
   );
 }

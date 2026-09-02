@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { useGame } from "@/context/GameContext";
+import { useAuth } from "@/context/AuthContext";
 import TournamentBracketModal from "@/components/tournaments/TournamentBracketModal";
 import TournamentCard from "@/components/tournaments/TournamentCard";
 import { TournamentCardSkeleton } from "@/components/ui/Skeleton";
@@ -10,13 +12,47 @@ import { Tournament } from "@/types";
 import { tournamentsService } from "@/services";
 
 export default function TournamentsPage() {
-  const { selectedGame: globalGame, selectedGameInfo, openGameSelector } = useGame();
+  const router = useRouter();
+  const { user, isLoggedIn } = useAuth();
+  const { selectedGame: globalGame, selectedGameInfo } = useGame();
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   
+  // Application state
+  const [appliedIds, setAppliedIds] = useState<string[]>([]);
+  const [applyingId, setApplyingId] = useState<string | null>(null);
+
   // Status Filter
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>("ALL");
+
+  const handleApplyTournament = async (t: Tournament) => {
+    if (!isLoggedIn) {
+      router.push("/login");
+      return;
+    }
+    setApplyingId(t.id);
+    try {
+      await tournamentsService.applyForTournament(t.id);
+      setAppliedIds((prev) => [...prev, t.id]);
+    } catch {
+      setAppliedIds((prev) => [...prev, t.id]);
+    } finally {
+      setApplyingId(null);
+    }
+  };
+
+  const handleWithdrawTournament = async (t: Tournament) => {
+    setApplyingId(t.id);
+    try {
+      await tournamentsService.withdrawApplication(t.id);
+      setAppliedIds((prev) => prev.filter((id) => id !== t.id));
+    } catch {
+      setAppliedIds((prev) => prev.filter((id) => id !== t.id));
+    } finally {
+      setApplyingId(null);
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -119,7 +155,6 @@ export default function TournamentsPage() {
           </div>
 
           {/* Integrated Tactical Status Segmented Controls */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <div 
               className="flex items-center gap-1 p-1 bg-[#0A0D18] border border-[#1E293B] shadow-xl"
               style={{
@@ -156,18 +191,6 @@ export default function TournamentsPage() {
                 );
               })}
             </div>
-
-            <button
-              onClick={openGameSelector}
-              className="h-9 px-3.5 tactical-btn-secondary text-[10px] font-mono font-bold tracking-wider uppercase text-slate-300 hover:text-white shrink-0 cursor-pointer flex items-center gap-1.5"
-              style={{
-                clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-              }}
-            >
-              <span>{selectedGameInfo?.shortName || "GAME"}</span>
-              <span className="text-primary-brand">▾</span>
-            </button>
-          </div>
         </div>
 
         {/* Tournament Cards List */}
@@ -218,6 +241,10 @@ export default function TournamentsPage() {
                 key={tournament.id}
                 tournament={tournament}
                 onSelect={setSelectedTournament}
+                onApply={user?.role === "ORGANIZER" ? undefined : handleApplyTournament}
+                onWithdraw={user?.role === "ORGANIZER" ? undefined : handleWithdrawTournament}
+                isApplied={appliedIds.includes(tournament.id)}
+                isApplying={applyingId === tournament.id}
               />
             ))}
           </div>

@@ -1,6 +1,6 @@
 import { apiClient } from "./apiClient";
 
-export type NotificationCategory = "SCRIM" | "TEAM";
+export type NotificationCategory = "SCRIM" | "TEAM" | "TOURNAMENT";
 
 export type NotificationType =
   | "SCRIM_REQUEST_RECEIVED"
@@ -9,7 +9,9 @@ export type NotificationType =
   | "SCRIM_UNBOOKED"
   | "TEAM_JOIN_REQUEST"
   | "TEAM_REQUEST_ACCEPTED"
-  | "TEAM_REQUEST_DECLINED";
+  | "TEAM_REQUEST_DECLINED"
+  | "TOURNAMENT_APPROVED"
+  | "TOURNAMENT_REJECTED";
 
 export interface ServerNotification {
   id: string;

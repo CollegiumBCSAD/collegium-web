@@ -7,7 +7,7 @@ import Link from "next/link";
 import { FlameIcon, CalendarIcon, ClockIcon } from "@/components/ui/Icons";
 
 export default function CommunityPage() {
-  const { selectedGame: globalGame, selectedGameInfo, openGameSelector } = useGame();
+  const { selectedGame: globalGame, selectedGameInfo } = useGame();
   const [activeCategory, setActiveCategory] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
@@ -69,31 +69,18 @@ export default function CommunityPage() {
             </p>
           </div>
 
-          {/* Integrated Search & Switcher Controls */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            <div className="w-full sm:w-64">
-              <input
-                type="text"
-                placeholder={`Search ${selectedGameInfo?.shortName || "game"} news...`}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-9 px-3.5 bg-[#0A0D18] border border-[#1E293B] text-white text-xs font-sans placeholder-slate-500 focus:outline-none focus:border-primary-brand"
-                style={{
-                  clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-                }}
-              />
-            </div>
-
-            <button
-              onClick={openGameSelector}
-              className="h-9 px-3.5 tactical-btn-secondary text-[10px] font-mono font-bold tracking-wider uppercase text-slate-300 hover:text-white shrink-0 cursor-pointer flex items-center gap-1.5"
+          {/* Integrated Search Control */}
+          <div className="w-full sm:w-72">
+            <input
+              type="text"
+              placeholder={`Search ${selectedGameInfo?.shortName || "game"} news...`}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full h-9 px-3.5 bg-[#0A0D18] border border-[#1E293B] text-white text-xs font-sans placeholder-slate-500 focus:outline-none focus:border-primary-brand"
               style={{
                 clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
               }}
-            >
-              <span>{selectedGameInfo?.shortName || "GAME"}</span>
-              <span className="text-primary-brand">▾</span>
-            </button>
+            />
           </div>
         </div>
 

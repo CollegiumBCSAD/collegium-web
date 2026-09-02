@@ -78,6 +78,37 @@ html {
   background: #070912;
 }
 
+/* Custom Green & Black Scrollbar for Admin */
+.admin-theme,
+.admin-theme * {
+  scrollbar-width: thin;
+  scrollbar-color: #14472F #050505;
+}
+
+.admin-theme::-webkit-scrollbar,
+.admin-theme *::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.admin-theme::-webkit-scrollbar-track,
+.admin-theme *::-webkit-scrollbar-track {
+  background: #050505;
+}
+
+.admin-theme::-webkit-scrollbar-thumb,
+.admin-theme *::-webkit-scrollbar-thumb {
+  background: #153826;
+  border-radius: 9999px;
+  border: 1px solid #050505;
+  transition: background 0.2s ease;
+}
+
+.admin-theme::-webkit-scrollbar-thumb:hover,
+.admin-theme *::-webkit-scrollbar-thumb:hover {
+  background: #10B981;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

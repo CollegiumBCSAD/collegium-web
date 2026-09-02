@@ -10,6 +10,7 @@ import { teamsService } from "@/services/teamsService";
 import { GAMES } from "@/lib/games";
 import AthleteProfileBanner from "@/components/dashboard/AthleteProfileBanner";
 import TeamRosterCard from "@/components/dashboard/TeamRosterCard";
+import OrganizerDashboardView from "@/components/dashboard/OrganizerDashboardView";
 import CaptainRequestInbox from "@/components/CaptainRequestInbox";
 import { TrophyIcon, SwordsIcon, UsersIcon, ShieldIcon, ClockIcon } from "@/components/ui/Icons";
 
@@ -139,8 +140,11 @@ export default function DashboardPage() {
         {/* Hero Athlete Banner with Chamfered HUD Geometry */}
         <AthleteProfileBanner user={user} squadsCount={userGameTeams.length} />
 
-        {/* 2-Column Dashboard Main Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-7 items-start">
+        {user.role === "ORGANIZER" ? (
+          <OrganizerDashboardView user={user} />
+        ) : (
+          /* 2-Column Dashboard Main Layout */
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-7 items-start">
           
           {/* Left Column (Span 2): Squad Operations */}
           <div className="lg:col-span-2 space-y-6">
@@ -388,6 +392,7 @@ export default function DashboardPage() {
 
           </div>
         </div>
+        )}
 
       </div>
     </div>
