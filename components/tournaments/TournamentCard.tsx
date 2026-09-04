@@ -10,7 +10,8 @@ import {
   ClockIcon, 
   PlusIcon, 
   AlertTriangleIcon, 
-  XCircleIcon 
+  XCircleIcon,
+  CheckCircleIcon
 } from "@/components/ui/Icons";
 import { GAMES } from "@/lib/games";
 
@@ -49,6 +50,35 @@ export default function TournamentCard({
       
   const gameInfo = GAMES[gameKey as keyof typeof GAMES] || GAMES.valo;
   const cardImage = tournament.image || gameInfo.image;
+
+  const isOrganizerOrHost = user?.role === "ORGANIZER" || user?.role === "ADMIN" || isMyTournament;
+
+  const userApplication = (
+    tournament.applications as Array<{ userId?: string; status?: string }> | undefined
+  )?.find((app) => app.userId === user?.id);
+
+  const applicationStatus = userApplication?.status || (isApplied ? "PENDING" : null);
+  const isApproved = !isOrganizerOrHost && applicationStatus === "APPROVED";
+  const isPending = !isOrganizerOrHost && (applicationStatus === "PENDING" || (isApplied && !userApplication));
+  const userApplied = isApproved || isPending;
+
+  const formatDateDisplay = (dateStr?: string) => {
+    if (!dateStr) return null;
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      return d.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    } catch {
+      return dateStr;
+    }
+  };
 
   return (
     <div 
@@ -146,8 +176,44 @@ export default function TournamentCard({
             {tournament.statusText || "Philippine Collegiate Championship Playoff Series"}
           </p>
 
-          {/* Telemetry Bullet Chips */}
+          {/* Schedule Date/Time and Telemetry Bullet Chips */}
           <div className="mt-4 flex flex-wrap gap-2">
+            {tournament.startDate && (
+              <span 
+                className="inline-flex items-center gap-1.5 px-3 py-1 bg-cyan-950/40 border border-cyan-500/40 text-xs font-mono font-bold text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.15)]"
+                style={{
+                  clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
+                }}
+              >
+                <ClockIcon className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Starts: {formatDateDisplay(tournament.startDate)}</span>
+              </span>
+            )}
+
+            {tournament.bracketFormat && (
+              <span 
+                className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#141A29] border border-[#232D44] text-xs font-mono font-medium text-slate-300"
+                style={{
+                  clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
+                }}
+              >
+                <span className="text-primary-brand font-bold">•</span>
+                <span>{tournament.bracketFormat}</span>
+              </span>
+            )}
+
+            {tournament.teamQuota && (
+              <span 
+                className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#141A29] border border-[#232D44] text-xs font-mono font-medium text-slate-300"
+                style={{
+                  clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
+                }}
+              >
+                <span className="text-primary-brand font-bold">•</span>
+                <span>Max {tournament.teamQuota} Squads</span>
+              </span>
+            )}
+
             {tournament.bulletPoints.map((pt) => (
               <span 
                 key={pt} 
@@ -171,7 +237,21 @@ export default function TournamentCard({
           </div>
 
           <div className="flex items-center gap-2.5 flex-wrap w-full sm:w-auto justify-end">
-            {!isCompleted && isApplied && (
+            {!isCompleted && isApproved && (
+              <div 
+                className="h-10 px-4 bg-gradient-to-r from-emerald-500/15 via-emerald-950/30 to-[#0A0D18] text-emerald-300 border border-emerald-500/40 shadow-[0_0_12px_rgba(16,185,129,0.15)] flex items-center gap-2"
+                style={{
+                  clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
+                }}
+              >
+                <CheckCircleIcon className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span className="text-[11px] font-mono font-black tracking-wider uppercase">
+                  Squad Confirmed & Sanctioned
+                </span>
+              </div>
+            )}
+
+            {!isCompleted && isPending && (
               <div className="w-full sm:w-auto">
                 {showUndoConfirm ? (
                   <div 
@@ -248,7 +328,7 @@ export default function TournamentCard({
               </div>
             )}
 
-            {!isCompleted && !isApplied && onApply && (
+            {!isCompleted && !userApplied && onApply && (
               <button
                 type="button"
                 disabled={isApplying}

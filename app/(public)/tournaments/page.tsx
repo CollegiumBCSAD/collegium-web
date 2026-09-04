@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import PostTournamentModal from "@/components/dashboard/PostTournamentModal";
 import TournamentBracketModal from "@/components/tournaments/TournamentBracketModal";
+import SquadRegistrationModal from "@/components/tournaments/SquadRegistrationModal";
 import TournamentCard from "@/components/tournaments/TournamentCard";
 import { TournamentCardSkeleton } from "@/components/ui/Skeleton";
 import { TrophyIcon, PlusIcon } from "@/components/ui/Icons";
@@ -18,6 +19,7 @@ export default function TournamentsPage() {
   const { user, isLoggedIn } = useAuth();
   const { selectedGame: globalGame, selectedGameInfo } = useGame();
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
+  const [registeringTournament, setRegisteringTournament] = useState<Tournament | null>(null);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isHostModalOpen, setIsHostModalOpen] = useState(false);
@@ -60,14 +62,20 @@ export default function TournamentsPage() {
       });
   };
 
-  const handleApplyTournament = async (t: Tournament) => {
+  const handleApplyTournament = (t: Tournament) => {
     if (!isLoggedIn) {
       router.push("/login");
       return;
     }
+    setRegisteringTournament(t);
+  };
+
+  const handleConfirmApplication = async (teamId?: string) => {
+    if (!registeringTournament) return;
+    const t = registeringTournament;
     setApplyingId(t.id);
     try {
-      await tournamentsService.applyForTournament(t.id);
+      await tournamentsService.applyForTournament(t.id, teamId);
       setAppliedIds((prev) => [...prev, t.id]);
     } catch {
       setAppliedIds((prev) => [...prev, t.id]);
@@ -111,12 +119,28 @@ export default function TournamentsPage() {
         publicList.forEach((t) => map.set(t.id, t));
         myList.forEach((t) => map.set(t.id, t));
 
-        setTournaments(Array.from(map.values()));
+        const allTourneys = Array.from(map.values());
+        setTournaments(allTourneys);
+
+        if (user?.id && user?.role !== "ORGANIZER" && user?.role !== "ADMIN") {
+          const applied = allTourneys
+            .filter((t) =>
+              (t.applications as Array<{ userId?: string; universityId?: string; status?: string }>)?.some(
+                (app) => app.userId === user.id && app.status !== "REJECTED"
+              )
+            )
+            .map((t) => t.id);
+          setAppliedIds(applied);
+        } else {
+          setAppliedIds([]);
+        }
+
         setIsLoading(false);
       })
       .catch(() => {
         if (isMounted) {
           setTournaments([]);
+          setAppliedIds([]);
           setIsLoading(false);
         }
       });
@@ -371,6 +395,18 @@ export default function TournamentsPage() {
         tournamentId={selectedTournament?.id}
         title={selectedTournament?.title ? `${selectedTournament.title} BRACKET` : "TOURNAMENT BRACKET"}
         subtitle="SINGLE ELIMINATION"
+      />
+
+      <SquadRegistrationModal
+        isOpen={!!registeringTournament}
+        onClose={() => setRegisteringTournament(null)}
+        tournament={registeringTournament}
+        onSuccess={handleConfirmApplication}
+        onViewBracket={() => {
+          if (registeringTournament) {
+            setSelectedTournament(registeringTournament);
+          }
+        }}
       />
 
       <PostTournamentModal

@@ -29,6 +29,7 @@ export interface Tournament {
   bracketFormat?: string;
   teamQuota?: number;
   rules?: string;
+  startDate?: string;
   rejectionReason?: string;
   organizerId?: string;
   organizer?: { id?: string; displayName?: string };
@@ -112,4 +113,32 @@ export interface PendingSquadApplication {
   status: string;
   appliedAt: string;
 }
+
+export interface TournamentRosterMember {
+  id: string;
+  userId: string;
+  displayName: string;
+  gameHandle: string;
+  preferredRole?: string;
+  isCaptain?: boolean;
+}
+
+export interface ParticipatingTeamDetail {
+  id: string;
+  name: string;
+  universityId: string;
+  universityName: string;
+  gameTitle: string;
+  captainName?: string;
+  captainId?: string;
+  status: "APPROVED" | "PENDING" | "CONFIRMED";
+  seed?: number;
+  members: TournamentRosterMember[];
+}
+
+export interface TournamentDetail extends Tournament {
+  participatingTeams?: ParticipatingTeamDetail[];
+  createdAt?: string;
+}
+
 
