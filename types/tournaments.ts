@@ -30,6 +30,8 @@ export interface Tournament {
   teamQuota?: number;
   rules?: string;
   rejectionReason?: string;
+  organizerId?: string;
+  organizer?: { id?: string; displayName?: string };
 }
 
 export interface TournamentMatch {

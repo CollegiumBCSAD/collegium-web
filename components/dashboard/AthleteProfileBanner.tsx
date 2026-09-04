@@ -3,9 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { UserProfile } from "@/types";
-import { useGame } from "@/context/GameContext";
-import { GAMES } from "@/lib/games";
-import { CheckCircleIcon, ShieldIcon, PlusIcon, UsersIcon, ZapIcon, TrophyIcon } from "@/components/ui/Icons";
+import { CheckCircleIcon, ShieldIcon, PlusIcon, UsersIcon, TrophyIcon } from "@/components/ui/Icons";
 
 interface AthleteProfileBannerProps {
   user: UserProfile;
@@ -13,8 +11,6 @@ interface AthleteProfileBannerProps {
 }
 
 export default function AthleteProfileBanner({ user, squadsCount = 0 }: AthleteProfileBannerProps) {
-  const { selectedGame } = useGame();
-  const game = GAMES[selectedGame as keyof typeof GAMES] || GAMES.valo;
   const initial = (user.displayName || "A").charAt(0).toUpperCase();
 
   return (

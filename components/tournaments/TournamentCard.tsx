@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Tournament } from "@/types";
+import { useAuth } from "@/context/AuthContext";
 import { 
   TrophyIcon, 
   ShieldIcon, 
@@ -30,8 +31,12 @@ export default function TournamentCard({
   isApplied = false,
   isApplying = false,
 }: TournamentCardProps) {
+  const { user } = useAuth();
   const [showUndoConfirm, setShowUndoConfirm] = useState(false);
   const isCompleted = tournament.status?.toLowerCase() === "completed";
+  const isMyTournament = Boolean(
+    user?.id && (tournament.organizerId === user.id || tournament.organizer?.id === user.id)
+  );
   const gameStr = (tournament.game || "").toLowerCase();
   const gameKey = 
     gameStr.includes("lol") || gameStr.includes("league") 
@@ -47,13 +52,21 @@ export default function TournamentCard({
 
   return (
     <div 
-      className="group relative flex flex-col md:flex-row bg-[#0A0D18] border border-[#1E293B] hover:border-primary-brand/60 shadow-2xl transition-all duration-300 overflow-hidden"
+      className={`group relative flex flex-col md:flex-row bg-[#0A0D18] border shadow-2xl transition-all duration-300 overflow-hidden ${
+        isMyTournament
+          ? "border-amber-500/60 shadow-amber-500/10"
+          : "border-[#1E293B] hover:border-primary-brand/60"
+      }`}
       style={{
         clipPath: "polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px))",
       }}
     >
       {/* Top Neutral Highlight Bevel */}
-      <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-primary-brand/80 via-primary-brand/20 to-transparent" />
+      <div className={`absolute top-0 left-0 right-0 h-[1.5px] ${
+        isMyTournament
+          ? "bg-gradient-to-r from-amber-500 via-amber-400 to-transparent"
+          : "bg-gradient-to-r from-primary-brand/80 via-primary-brand/20 to-transparent"
+      }`} />
 
       {/* Left Game Artwork Banner */}
       <div className="w-full md:w-72 lg:w-80 h-48 md:h-auto shrink-0 relative overflow-hidden bg-[#060812] p-6 flex flex-col justify-between border-b md:border-b-0 md:border-r border-[#182338]">
@@ -64,9 +77,9 @@ export default function TournamentCard({
         <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-[#0A0D18] via-transparent to-transparent pointer-events-none" />
 
         {/* Game Tag & Status */}
-        <div className="relative z-10 flex items-center justify-between">
+        <div className="relative z-10 flex items-center justify-between gap-1 flex-wrap">
           <span 
-            className="font-mono text-[10px] font-bold text-white uppercase px-3 py-1 bg-[#141A29]/90 border border-white/20 shadow-md"
+            className="font-mono text-[10px] font-bold text-white uppercase px-2.5 py-1 bg-[#141A29]/90 border border-white/20 shadow-md"
             style={{
               clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
             }}
@@ -74,18 +87,34 @@ export default function TournamentCard({
             {tournament.game}
           </span>
           
-          <span 
-            className={`font-mono text-[9px] font-bold uppercase px-2.5 py-0.5 border ${
-              isCompleted 
-                ? "bg-[#141A29] text-slate-300 border-[#232D44]" 
-                : "bg-emerald-950/80 text-emerald-400 border-emerald-500/40 animate-pulse"
-            }`}
-            style={{
-              clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-            }}
-          >
-            {isCompleted ? "COMPLETED" : "LIVE CIRCUIT"}
-          </span>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {isMyTournament && (
+              <span 
+                className="font-mono text-[9px] font-black uppercase px-2 py-0.5 bg-gradient-to-r from-amber-500/25 to-amber-600/25 text-amber-300 border border-amber-500/50 shadow-[0_0_10px_rgba(245,158,11,0.2)] flex items-center gap-1"
+                style={{
+                  clipPath: "polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)",
+                }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                YOUR TOURNAMENT
+              </span>
+            )}
+
+            <span 
+              className={`font-mono text-[9px] font-bold uppercase px-2.5 py-0.5 border ${
+                tournament.status === "PENDING_APPROVAL"
+                  ? "bg-amber-950/90 text-amber-300 border-amber-500/50 animate-pulse"
+                  : isCompleted 
+                  ? "bg-[#141A29] text-slate-300 border-[#232D44]" 
+                  : "bg-emerald-950/80 text-emerald-400 border-emerald-500/40 animate-pulse"
+              }`}
+              style={{
+                clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
+              }}
+            >
+              {tournament.status === "PENDING_APPROVAL" ? "PENDING APPROVAL" : isCompleted ? "COMPLETED" : "LIVE CIRCUIT"}
+            </span>
+          </div>
         </div>
 
         {/* Large Game Watermark */}

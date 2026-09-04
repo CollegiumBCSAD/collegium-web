@@ -44,6 +44,8 @@ interface RawTournament {
   teamQuota?: number;
   rules?: string;
   rejectionReason?: string;
+  organizerId?: string;
+  organizer?: { id?: string; displayName?: string };
   matches?: Array<{ title?: string; gameTitle?: string }>;
   universities?: Array<{ id?: string; name?: string }>;
 }
@@ -97,6 +99,8 @@ function mapTournaments(data: RawTournament[]): Tournament[] {
       teamQuota: t.teamQuota,
       rules: t.rules,
       rejectionReason: t.rejectionReason,
+      organizerId: t.organizerId,
+      organizer: t.organizer,
       bgGradient: gameDisplay.gradient,
     };
   });

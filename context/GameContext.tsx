@@ -34,7 +34,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       if (storedGame) {
         setSelectedGame(storedGame);
       } else {
-        setSelectedGame(null);
+        setSelectedGame("valo");
+        try {
+          localStorage.setItem(STORAGE_KEY, "valo");
+        } catch {}
       }
       setIsSelectorOpen(false);
       setIsLoaded(true);
@@ -87,13 +90,14 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   };
 
   const openGameSelector = () => {
-    clearSelectedGame();
+    setIsSelectorOpen(true);
   };
 
   const closeGameSelector = () => {
-    if (selectedGame) {
-      setIsSelectorOpen(false);
+    if (!selectedGame) {
+      setSelectedGame("valo");
     }
+    setIsSelectorOpen(false);
   };
 
   const selectedGameInfo = selectedGame ? GAMES[selectedGame] : null;

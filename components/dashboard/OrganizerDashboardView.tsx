@@ -24,7 +24,7 @@ function getTournamentImage(t: Tournament): string {
   return "/valorant-art-1.png";
 }
 
-export default function OrganizerDashboardView({ user: _user }: OrganizerDashboardViewProps) {
+export default function OrganizerDashboardView({ user }: OrganizerDashboardViewProps) {
   const { selectedGame, selectedGameInfo } = useGame();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -151,10 +151,10 @@ export default function OrganizerDashboardView({ user: _user }: OrganizerDashboa
               </span>
             </div>
             <h2 className="font-display text-2xl sm:text-3xl font-black text-white uppercase tracking-tight">
-              Collegiate Tournaments Hub
+              {user.displayName ? `${user.displayName}'s Tournament Command Center` : "Collegiate Tournaments Hub"}
             </h2>
             <p className="text-xs sm:text-sm font-sans text-slate-400 leading-relaxed">
-              Design, sanction, and administer official university esports brackets. Manage squad rosters, review participant applications, and broadcast verified match logs.
+              Design, sanction, and administer official university esports brackets for {user.university?.name || "your institution"}. Manage squad rosters, review participant applications, and broadcast verified match logs.
             </p>
           </div>
 

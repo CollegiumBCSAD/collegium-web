@@ -17,6 +17,7 @@ export default function RosterDetailsModal({ team, isOpen, onClose, onRosterUpda
   const { user } = useAuth();
   const [copied, setCopied] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
+  const [confirmLeave, setConfirmLeave] = useState(false);
   const [leaveError, setLeaveError] = useState("");
 
   if (!isOpen || !team) return null;
@@ -188,19 +189,45 @@ export default function RosterDetailsModal({ team, isOpen, onClose, onRosterUpda
         )}
 
         {isMember && (
-          <div className="pt-3 border-t border-raised-panel flex items-center justify-between">
-            <span className="text-xs font-sans text-secondary-text">Need to exit this squad?</span>
-            <button
-              type="button"
-              onClick={handleLeaveTeam}
-              disabled={isLeaving}
-              className="h-9 px-4 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 hover:text-white border border-rose-500/40 text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer disabled:opacity-50"
-              style={{
-                clipPath: "polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%)",
-              }}
-            >
-              {isLeaving ? "Leaving Roster..." : "Leave Squad Roster"}
-            </button>
+          <div className="pt-3 border-t border-raised-panel">
+            {confirmLeave ? (
+              <div className="p-3.5 bg-rose-950/40 border border-rose-500/40 rounded-xl space-y-2 animate-fade-in">
+                <p className="text-xs font-sans text-rose-200">
+                  Are you sure you want to leave <strong>{team.name}</strong>? If you are the last member or captain, leadership will be transferred or the roster disbanded.
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleLeaveTeam}
+                    disabled={isLeaving}
+                    className="flex-1 h-8 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-mono font-bold uppercase transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    {isLeaving ? "Leaving..." : "Yes, Confirm Leave"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmLeave(false)}
+                    className="flex-1 h-8 bg-[#121828] text-slate-300 hover:text-white rounded-lg text-xs font-mono font-bold uppercase transition-colors border border-[#222E48] cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-sans text-secondary-text">Need to exit this squad?</span>
+                <button
+                  type="button"
+                  onClick={() => setConfirmLeave(true)}
+                  className="h-9 px-4 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 hover:text-white border border-rose-500/40 text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer"
+                  style={{
+                    clipPath: "polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%)",
+                  }}
+                >
+                  Leave Squad Roster
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
