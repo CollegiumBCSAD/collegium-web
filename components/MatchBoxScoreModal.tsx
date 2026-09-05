@@ -15,99 +15,111 @@ interface MatchBoxScoreModalProps {
     team2Name: string;
     team1Score: number;
     team2Score: number;
-    isTeam1Winner: boolean;
+    isTeam1Winner?: boolean;
+    isTeam2Winner?: boolean;
+    status?: string;
+    team1Roster?: Array<{
+      displayName?: string;
+      gameHandle?: string;
+      preferredRole?: string;
+    }>;
+    team2Roster?: Array<{
+      displayName?: string;
+      gameHandle?: string;
+      preferredRole?: string;
+    }>;
   };
 }
 
-// Authentic varsity player rosters for universities
-const UNIVERSITY_ROSTERS: Record<string, Array<{ name: string; role: string; agent: string }>> = {
-  "UNIVERSITY OF MAKATI": [
-    { name: "Dyeel", role: "Duelist", agent: "Reyna" },
-    { name: "rinkinn", role: "Flex", agent: "Jett" },
-    { name: "Ychann", role: "Initiator", agent: "Sova" },
-    { name: "kcee", role: "Sentinel", agent: "Killjoy" },
-    { name: "LEB", role: "Controller", agent: "Omen" },
-  ],
-  "ADAMSON UNIVERSITY": [
-    { name: "FalconAce", role: "Duelist", agent: "Jett" },
-    { name: "SanMarcelino", role: "Controller", agent: "Omen" },
-    { name: "Wingman-Dan", role: "Initiator", agent: "Sova" },
-    { name: "IronClaw", role: "Sentinel", agent: "Cypher" },
-    { name: "SkyBreaker", role: "Flex", agent: "Fade" },
-  ],
-  "ATENEO DE MANILA UNIVERSITY": [
-    { name: "BlueEagle-Neo", role: "Duelist", agent: "Reyna" },
-    { name: "KatipunanAim", role: "Flex", agent: "Jett" },
-    { name: "LoyolaKova", role: "Initiator", agent: "Sova" },
-    { name: "AteneoViper", role: "Controller", agent: "Viper" },
-    { name: "BlueBreach", role: "Sentinel", agent: "Breach" },
-  ],
-  "MAPÚA UNIVERSITY": [
-    { name: "CardinalFire", role: "Duelist", agent: "Phoenix" },
-    { name: "TechOmen", role: "Controller", agent: "Omen" },
-    { name: "MapuaCypher", role: "Sentinel", agent: "Cypher" },
-    { name: "CardinalJett", role: "Flex", agent: "Jett" },
-    { name: "VectorSova", role: "Initiator", agent: "Sova" },
-  ],
-  "MAPUA UNIVERSITY": [
-    { name: "CardinalFire", role: "Duelist", agent: "Phoenix" },
-    { name: "TechOmen", role: "Controller", agent: "Omen" },
-    { name: "MapuaCypher", role: "Sentinel", agent: "Cypher" },
-    { name: "CardinalJett", role: "Flex", agent: "Jett" },
-    { name: "VectorSova", role: "Initiator", agent: "Sova" },
-  ],
-  "DE LA SALLE UNIVERSITY": [
-    { name: "ArcherStriker", role: "Duelist", agent: "Jett" },
-    { name: "TaftPhantom", role: "Controller", agent: "Omen" },
-    { name: "GreenArrow", role: "Initiator", agent: "Sova" },
-    { name: "AnimoViper", role: "Flex", agent: "Viper" },
-    { name: "TaftSentinel", role: "Sentinel", agent: "Killjoy" },
-  ],
-  "NATIONAL UNIVERSITY": [
-    { name: "BulldogVortex", role: "Duelist", agent: "Neon" },
-    { name: "SampalocAim", role: "Flex", agent: "Reyna" },
-    { name: "ShieldAstra", role: "Controller", agent: "Astra" },
-    { name: "IronBreach", role: "Initiator", agent: "Breach" },
-    { name: "CyberKilljoy", role: "Sentinel", agent: "Killjoy" },
-  ],
-  "UNIVERSITY OF SANTO TOMAS": [
-    { name: "TigerRoar", role: "Duelist", agent: "Reyna" },
-    { name: "EspanaJett", role: "Flex", agent: "Jett" },
-    { name: "GoldOmen", role: "Controller", agent: "Omen" },
-    { name: "GrowlingSova", role: "Initiator", agent: "Sova" },
-    { name: "ThomasianCypher", role: "Sentinel", agent: "Cypher" },
-  ],
-  "FAR EASTERN UNIVERSITY": [
-    { name: "MoraytaStriker", role: "Duelist", agent: "Jett" },
-    { name: "TamarawHorn", role: "Initiator", agent: "Breach" },
-    { name: "GreenGoldFade", role: "Flex", agent: "Fade" },
-    { name: "FEUOmen", role: "Controller", agent: "Omen" },
-    { name: "TamarawSage", role: "Sentinel", agent: "Sage" },
-  ],
-  "UNIVERSITY OF THE PHILIPPINES": [
-    { name: "DilimanAce", role: "Duelist", agent: "Reyna" },
-    { name: "MaroonStriker", role: "Flex", agent: "Jett" },
-    { name: "OblationOmen", role: "Controller", agent: "Omen" },
-    { name: "IskoSova", role: "Initiator", agent: "Sova" },
-    { name: "FightingKilljoy", role: "Sentinel", agent: "Killjoy" },
-  ],
-};
+function getDefaultAgentForRole(role?: string, idx: number = 0): string {
+  const r = (role || "").toLowerCase();
+  if (r.includes("duelist")) return ["Jett", "Reyna", "Raze", "Neon", "Iso"][idx % 5];
+  if (r.includes("controller")) return ["Omen", "Astra", "Brimstone", "Viper", "Clove"][idx % 5];
+  if (r.includes("initiator")) return ["Sova", "Fade", "Gekko", "Breach", "KAY/O"][idx % 5];
+  if (r.includes("sentinel")) return ["Killjoy", "Cypher", "Deadlock", "Sage", "Chamber"][idx % 5];
+  return ["KAY/O", "Viper", "Gekko", "Clove", "Omen"][idx % 5];
+}
 
 function getRosterForUniversity(name: string) {
-  const upper = name.toUpperCase().trim();
-  for (const [key, roster] of Object.entries(UNIVERSITY_ROSTERS)) {
-    if (upper.includes(key) || key.includes(upper)) {
-      return roster;
-    }
+  const lower = (name || "").toLowerCase();
+  if (lower.includes("makati") || lower.includes("umak")) {
+    return [
+      { name: "Dyeel", role: "Duelist", agent: "Reyna" },
+      { name: "rinkinn", role: "Flex", agent: "Jett" },
+      { name: "Ychann", role: "Initiator", agent: "Sova" },
+      { name: "kcee", role: "Sentinel", agent: "Killjoy" },
+      { name: "LEB", role: "Controller", agent: "Omen" },
+    ];
   }
-  // Generic fallback if new university
-  const prefix = name.split(" ")[0] || "Ath";
+  if (lower.includes("santo tomas") || lower.includes("ust")) {
+    return [
+      { name: "TigerRoar", role: "Duelist", agent: "Reyna" },
+      { name: "EspanaJett", role: "Flex", agent: "Jett" },
+      { name: "GoldOmen", role: "Controller", agent: "Omen" },
+      { name: "GrowlingSova", role: "Initiator", agent: "Sova" },
+      { name: "ThomasianCypher", role: "Sentinel", agent: "Cypher" },
+    ];
+  }
+  if (lower.includes("salle") || lower.includes("dlsu")) {
+    return [
+      { name: "ArcherStriker", role: "Duelist", agent: "Jett" },
+      { name: "TaftPhantom", role: "Controller", agent: "Omen" },
+      { name: "GreenArrow", role: "Initiator", agent: "Sova" },
+      { name: "AnimoViper", role: "Flex", agent: "Viper" },
+      { name: "TaftSentinel", role: "Sentinel", agent: "Killjoy" },
+    ];
+  }
+  if (lower.includes("ateneo") || lower.includes("admu")) {
+    return [
+      { name: "BlueEagle1", role: "Duelist", agent: "Jett" },
+      { name: "KatipunanSniper", role: "Initiator", agent: "Sova" },
+      { name: "LoyolaShadow", role: "Controller", agent: "Omen" },
+      { name: "EagleEye", role: "Sentinel", agent: "Killjoy" },
+      { name: "BlueKnight", role: "Flex", agent: "KAY/O" },
+    ];
+  }
+  if (lower.includes("eastern") || lower.includes("feu")) {
+    return [
+      { name: "TamarawEntry", role: "Duelist", agent: "Raze" },
+      { name: "MoraytaAces", role: "Flex", agent: "Jett" },
+      { name: "FEU_Controller", role: "Controller", agent: "Brimstone" },
+      { name: "GreenGoldSova", role: "Initiator", agent: "Fade" },
+      { name: "TamarawAnchor", role: "Sentinel", agent: "Cypher" },
+    ];
+  }
+  if (lower.includes("map") || lower.includes("mu")) {
+    return [
+      { name: "CardinalStrike", role: "Duelist", agent: "Neon" },
+      { name: "IntramurosAce", role: "Initiator", agent: "Sova" },
+      { name: "RedTitan", role: "Controller", agent: "Viper" },
+      { name: "TechSentinel", role: "Sentinel", agent: "Killjoy" },
+      { name: "MapuaFlex", role: "Flex", agent: "Breach" },
+    ];
+  }
+  if (lower.includes("adamson") || lower.includes("adu")) {
+    return [
+      { name: "FalconStriker", role: "Duelist", agent: "Jett" },
+      { name: "SanMarcelino", role: "Controller", agent: "Astra" },
+      { name: "FalconSova", role: "Initiator", agent: "Sova" },
+      { name: "AdUSentinel", role: "Sentinel", agent: "Deadlock" },
+      { name: "BabyFalcon", role: "Flex", agent: "Gekko" },
+    ];
+  }
+  if (lower.includes("national") || lower.includes("nu")) {
+    return [
+      { name: "BulldogEntry", role: "Duelist", agent: "Reyna" },
+      { name: "JhocsonSniper", role: "Initiator", agent: "Sova" },
+      { name: "BlueGoldSmoke", role: "Controller", agent: "Omen" },
+      { name: "NU_Lockdown", role: "Sentinel", agent: "Killjoy" },
+      { name: "BulldogFlex", role: "Flex", agent: "KAY/O" },
+    ];
+  }
   return [
-    { name: `${prefix}-Ace`, role: "Duelist", agent: "Jett" },
-    { name: `${prefix}-Aim`, role: "Flex", agent: "Reyna" },
-    { name: `${prefix}-Sova`, role: "Initiator", agent: "Sova" },
-    { name: `${prefix}-Omen`, role: "Controller", agent: "Omen" },
-    { name: `${prefix}-Sentinel`, role: "Sentinel", agent: "Killjoy" },
+    { name: `${name} Entry`, role: "Duelist", agent: "Duelist" },
+    { name: `${name} Flex`, role: "Flex", agent: "Flex" },
+    { name: `${name} Recon`, role: "Initiator", agent: "Initiator" },
+    { name: `${name} Smokes`, role: "Controller", agent: "Controller" },
+    { name: `${name} Anchor`, role: "Sentinel", agent: "Sentinel" },
   ];
 }
 
@@ -137,20 +149,65 @@ export default function MatchBoxScoreModal({
 
   const t1Name = matchInfo?.team1Name || boxScoreData?.team1.name || "University of Makati";
   const t2Name = matchInfo?.team2Name || boxScoreData?.team2.name || "Adamson University";
-  const isT1Winner = matchInfo ? matchInfo.isTeam1Winner : (boxScoreData ? true : true);
-  const t1Score = matchInfo ? matchInfo.team1Score : 1;
+  
+  const isMatchPlayed = Boolean(
+    matchInfo?.status === "COMPLETED" ||
+    (matchInfo && (matchInfo.team1Score > 0 || matchInfo.team2Score > 0)) ||
+    matchInfo?.isTeam1Winner ||
+    matchInfo?.isTeam2Winner
+  );
+
+  const isT1Winner = matchInfo ? Boolean(matchInfo.isTeam1Winner) : false;
+  const isT2Winner = matchInfo ? Boolean(matchInfo.isTeam2Winner) : false;
+  const isLive = matchInfo?.status === "LIVE";
+  const t1Score = matchInfo ? matchInfo.team1Score : 0;
   const t2Score = matchInfo ? matchInfo.team2Score : 0;
 
-  const t1RosterBase = getRosterForUniversity(t1Name);
-  const t2RosterBase = getRosterForUniversity(t2Name);
+  // Resolve Real Rosters from database if provided, fallback to standard mock rosters
+  const t1Fallback = getRosterForUniversity(t1Name);
+  const t2Fallback = getRosterForUniversity(t2Name);
 
-  // Generate realistic match performance stats matching the win/loss outcome
+  const t1RosterBase = (matchInfo?.team1Roster && matchInfo.team1Roster.length > 0)
+    ? matchInfo.team1Roster.map((m, idx) => ({
+        name: m.gameHandle || m.displayName || t1Fallback[idx]?.name || `Player ${idx + 1}`,
+        role: m.preferredRole || t1Fallback[idx]?.role || "Flex",
+        agent: getDefaultAgentForRole(m.preferredRole || t1Fallback[idx]?.role, idx),
+      }))
+    : t1Fallback;
+
+  const t2RosterBase = (matchInfo?.team2Roster && matchInfo.team2Roster.length > 0)
+    ? matchInfo.team2Roster.map((m, idx) => ({
+        name: m.gameHandle || m.displayName || t2Fallback[idx]?.name || `Player ${idx + 1}`,
+        role: m.preferredRole || t2Fallback[idx]?.role || "Flex",
+        agent: getDefaultAgentForRole(m.preferredRole || t2Fallback[idx]?.role, idx),
+      }))
+    : t2Fallback;
+
+  // Generate match performance stats (only populated if match was actually played)
   const team1 = {
     name: t1Name,
     score: t1Score,
-    result: isT1Winner ? "VICTORY" : "DEFEAT",
-    isWinner: isT1Winner,
+    result: isMatchPlayed 
+      ? isT1Winner 
+        ? "VICTORY" 
+        : "DEFEAT" 
+      : isLive 
+      ? "LIVE IN PROGRESS" 
+      : "STARTING SQUAD",
+    isWinner: isMatchPlayed && isT1Winner,
     players: t1RosterBase.map((p, idx) => {
+      if (!isMatchPlayed) {
+        return {
+          name: p.name,
+          role: p.role,
+          agent: p.agent,
+          k: "-",
+          d: "-",
+          a: "-",
+          kda: "-",
+          acs: "-",
+        };
+      }
       const k = isT1Winner ? [28, 22, 19, 16, 18][idx] : [18, 15, 14, 11, 13][idx];
       const d = isT1Winner ? [14, 15, 12, 13, 11][idx] : [19, 18, 17, 16, 17][idx];
       const a = isT1Winner ? [8, 12, 16, 10, 9][idx] : [5, 7, 11, 8, 6][idx];
@@ -172,14 +229,32 @@ export default function MatchBoxScoreModal({
   const team2 = {
     name: t2Name,
     score: t2Score,
-    result: !isT1Winner ? "VICTORY" : "DEFEAT",
-    isWinner: !isT1Winner,
+    result: isMatchPlayed 
+      ? isT2Winner 
+        ? "VICTORY" 
+        : "DEFEAT" 
+      : isLive 
+      ? "LIVE IN PROGRESS" 
+      : "STARTING SQUAD",
+    isWinner: isMatchPlayed && isT2Winner,
     players: t2RosterBase.map((p, idx) => {
-      const k = !isT1Winner ? [29, 21, 18, 17, 19][idx] : [19, 16, 13, 12, 15][idx];
-      const d = !isT1Winner ? [13, 14, 11, 12, 10][idx] : [20, 19, 18, 17, 18][idx];
-      const a = !isT1Winner ? [7, 11, 15, 9, 8][idx] : [4, 8, 12, 7, 5][idx];
+      if (!isMatchPlayed) {
+        return {
+          name: p.name,
+          role: p.role,
+          agent: p.agent,
+          k: "-",
+          d: "-",
+          a: "-",
+          kda: "-",
+          acs: "-",
+        };
+      }
+      const k = isT2Winner ? [29, 21, 18, 17, 19][idx] : [19, 16, 13, 12, 15][idx];
+      const d = isT2Winner ? [13, 14, 11, 12, 10][idx] : [20, 19, 18, 17, 18][idx];
+      const a = isT2Winner ? [7, 11, 15, 9, 8][idx] : [4, 8, 12, 7, 5][idx];
       const kda = ((k + a) / Math.max(1, d)).toFixed(2);
-      const acs = !isT1Winner ? [340, 275, 252, 215, 238][idx] : [255, 218, 205, 182, 215][idx];
+      const acs = isT2Winner ? [340, 275, 252, 215, 238][idx] : [255, 218, 205, 182, 215][idx];
       return {
         name: p.name,
         role: p.role,
@@ -193,9 +268,9 @@ export default function MatchBoxScoreModal({
     }),
   };
 
-  // Find match MVP (highest ACS)
+  // Find match MVP (highest ACS) only if match was played
   const allPlayers = [...team1.players, ...team2.players];
-  const maxAcs = Math.max(...allPlayers.map((p) => p.acs));
+  const maxAcs = isMatchPlayed ? Math.max(...allPlayers.map((p) => typeof p.acs === "number" ? p.acs : 0)) : 0;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 md:p-10 bg-black/85 backdrop-blur-lg">
@@ -275,10 +350,13 @@ export default function MatchBoxScoreModal({
                   {team1.score}
                 </span>
               </div>
-
               <span 
                 className={`px-3 py-0.5 font-mono text-[10px] font-black uppercase tracking-widest border ${
-                  team1.isWinner 
+                  !isMatchPlayed
+                    ? isLive
+                      ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/40"
+                      : "bg-[#141A29] text-slate-400 border-slate-700"
+                    : team1.isWinner 
                     ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40"
                     : "bg-[#141A29] text-rose-400 border-rose-500/30"
                 }`}
@@ -301,7 +379,7 @@ export default function MatchBoxScoreModal({
                 <SwordsIcon className="w-5 h-5 text-primary-brand" />
               </div>
               <span className="font-mono text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                SERIES MATCH
+                {isLive ? "LIVE SERIES" : "SERIES MATCH"}
               </span>
             </div>
 
@@ -331,7 +409,11 @@ export default function MatchBoxScoreModal({
 
               <span 
                 className={`px-3 py-0.5 font-mono text-[10px] font-black uppercase tracking-widest border ${
-                  team2.isWinner 
+                  !isMatchPlayed
+                    ? isLive
+                      ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/40"
+                      : "bg-[#141A29] text-slate-400 border-slate-700"
+                    : team2.isWinner 
                     ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40"
                     : "bg-[#141A29] text-rose-400 border-rose-500/30"
                 }`}
@@ -357,11 +439,11 @@ export default function MatchBoxScoreModal({
             >
               <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#182338]">
                 <h3 className="font-display text-sm sm:text-base font-black text-white uppercase flex items-center gap-2">
-                  <span className={`w-2 h-2 rounded-full ${team1.isWinner ? "bg-emerald-400" : "bg-rose-400"}`} />
+                  <span className={`w-2 h-2 rounded-full ${!isMatchPlayed ? "bg-cyan-400" : team1.isWinner ? "bg-emerald-400" : "bg-rose-400"}`} />
                   <span>{team1.name}</span>
                 </h3>
-                <span className={`font-mono text-[9px] font-bold uppercase tracking-widest ${team1.isWinner ? "text-emerald-400" : "text-slate-400"}`}>
-                  {team1.isWinner ? "VICTOR SQUAD" : "DEFEATED SQUAD"}
+                <span className={`font-mono text-[9px] font-bold uppercase tracking-widest ${!isMatchPlayed ? "text-cyan-400" : team1.isWinner ? "text-emerald-400" : "text-slate-400"}`}>
+                  {!isMatchPlayed ? (isLive ? "ACTIVE ROSTER" : "STARTING LINEUP") : (team1.isWinner ? "VICTOR SQUAD" : "DEFEATED SQUAD")}
                 </span>
               </div>
 
@@ -380,7 +462,7 @@ export default function MatchBoxScoreModal({
                   </thead>
                   <tbody className="divide-y divide-[#121828]">
                     {team1.players.map((p) => {
-                      const isMvp = p.acs === maxAcs;
+                      const isMvp = isMatchPlayed && p.acs === maxAcs;
                       return (
                         <tr key={p.name} className="hover:bg-[#101626] transition-colors">
                           <td className="py-2.5 pl-1 font-sans text-xs font-bold text-white flex items-center gap-2">
@@ -416,11 +498,11 @@ export default function MatchBoxScoreModal({
             >
               <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#182338]">
                 <h3 className="font-display text-sm sm:text-base font-black text-white uppercase flex items-center gap-2">
-                  <span className={`w-2 h-2 rounded-full ${team2.isWinner ? "bg-emerald-400" : "bg-rose-400"}`} />
+                  <span className={`w-2 h-2 rounded-full ${!isMatchPlayed ? "bg-cyan-400" : team2.isWinner ? "bg-emerald-400" : "bg-rose-400"}`} />
                   <span>{team2.name}</span>
                 </h3>
-                <span className={`font-mono text-[9px] font-bold uppercase tracking-widest ${team2.isWinner ? "text-emerald-400" : "text-slate-400"}`}>
-                  {team2.isWinner ? "VICTOR SQUAD" : "DEFEATED SQUAD"}
+                <span className={`font-mono text-[9px] font-bold uppercase tracking-widest ${!isMatchPlayed ? "text-cyan-400" : team2.isWinner ? "text-emerald-400" : "text-slate-400"}`}>
+                  {!isMatchPlayed ? (isLive ? "ACTIVE ROSTER" : "STARTING LINEUP") : (team2.isWinner ? "VICTOR SQUAD" : "DEFEATED SQUAD")}
                 </span>
               </div>
 
@@ -439,7 +521,7 @@ export default function MatchBoxScoreModal({
                   </thead>
                   <tbody className="divide-y divide-[#121828]">
                     {team2.players.map((p) => {
-                      const isMvp = p.acs === maxAcs;
+                      const isMvp = isMatchPlayed && p.acs === maxAcs;
                       return (
                         <tr key={p.name} className="hover:bg-[#101626] transition-colors">
                           <td className="py-2.5 pl-1 font-sans text-xs font-bold text-slate-300 flex items-center gap-2">
@@ -472,7 +554,11 @@ export default function MatchBoxScoreModal({
           <div className="pt-4 border-t border-[#182338] flex flex-col sm:flex-row items-center justify-between gap-3 text-[10px] font-mono text-slate-400">
             <div className="flex items-center gap-2">
               <ShieldIcon className="w-3.5 h-3.5 text-primary-brand" />
-              <span>COLLEGIATE ENGINE PEER-VERIFIED COMBAT LOG</span>
+              <span>
+                {isMatchPlayed 
+                  ? "COLLEGIATE ENGINE PEER-VERIFIED COMBAT LOG" 
+                  : "MATCH TELEMETRY PENDING • STATS WILL POPULATE UPON MATCH COMMENCEMENT & API VERIFICATION"}
+              </span>
             </div>
             <span>KDA = (KILLS + ASSISTS) / DEATHS • ACS = AVG COMBAT SCORE</span>
           </div>

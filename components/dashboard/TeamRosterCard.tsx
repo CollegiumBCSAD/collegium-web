@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { GAMES } from "@/lib/games";
 import { Team } from "@/types";
-import { UsersIcon, CrownIcon, ShieldIcon, CheckCircleIcon, SwordsIcon } from "@/components/ui/Icons";
+import { UsersIcon, CrownIcon } from "@/components/ui/Icons";
 import RosterDetailsModal from "./RosterDetailsModal";
 
 interface TeamRosterCardProps {

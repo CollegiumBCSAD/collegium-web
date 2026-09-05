@@ -5,10 +5,10 @@ import Image from "next/image";
 import { teamsService } from "@/services/teamsService";
 import { fetchTeamsApi, saveStoredTeams, Team, TeamMember } from "@/lib/teams";
 import { JoinRequest } from "@/types";
+import { GAMES } from "@/lib/games";
 import { useAuth } from "@/context/AuthContext";
 import { useGame } from "@/context/GameContext";
-import { GAMES } from "@/lib/games";
-import { UsersIcon, ShieldIcon, CheckCircleIcon, CrownIcon, SwordsIcon, PlusIcon, ZapIcon } from "@/components/ui/Icons";
+import { UsersIcon, ShieldIcon, CheckCircleIcon, CrownIcon, PlusIcon } from "@/components/ui/Icons";
 
 const DEFAULT_ROLES: Record<string, string[]> = {
   valo: ["Duelist", "Initiator", "Controller", "Sentinel", "Flex"],

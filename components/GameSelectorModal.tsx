@@ -42,13 +42,20 @@ export default function GameSelectorModal() {
   useEffect(() => {
     if (isSelectorOpen) {
       document.body.style.overflow = "hidden";
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") {
+          closeGameSelector();
+        }
+      };
+      window.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.body.style.overflow = "unset";
+        window.removeEventListener("keydown", handleKeyDown);
+      };
     } else {
       document.body.style.overflow = "unset";
     }
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, [isSelectorOpen]);
+  }, [isSelectorOpen, closeGameSelector]);
 
   if (!isLoaded || !isSelectorOpen) return null;
 

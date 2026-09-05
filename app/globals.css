@@ -43,7 +43,6 @@
 /* Prevent scrollbar layout shifts across page transitions */
 html {
   scrollbar-gutter: stable;
-  overflow-y: scroll;
 }
 
 /* Custom Global Dark Esports Scrollbar for All Scrollable Elements */

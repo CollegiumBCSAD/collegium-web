@@ -4,10 +4,13 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useGame } from "@/context/GameContext";
 import { useAuth } from "@/context/AuthContext";
+import Link from "next/link";
+import PostTournamentModal from "@/components/dashboard/PostTournamentModal";
 import TournamentBracketModal from "@/components/tournaments/TournamentBracketModal";
+import SquadRegistrationModal from "@/components/tournaments/SquadRegistrationModal";
 import TournamentCard from "@/components/tournaments/TournamentCard";
 import { TournamentCardSkeleton } from "@/components/ui/Skeleton";
-import { TrophyIcon, FlameIcon } from "@/components/ui/Icons";
+import { TrophyIcon, PlusIcon } from "@/components/ui/Icons";
 import { Tournament } from "@/types";
 import { tournamentsService } from "@/services";
 
@@ -16,8 +19,10 @@ export default function TournamentsPage() {
   const { user, isLoggedIn } = useAuth();
   const { selectedGame: globalGame, selectedGameInfo } = useGame();
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
+  const [registeringTournament, setRegisteringTournament] = useState<Tournament | null>(null);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isHostModalOpen, setIsHostModalOpen] = useState(false);
   
   // Application state
   const [appliedIds, setAppliedIds] = useState<string[]>([]);
@@ -26,14 +31,51 @@ export default function TournamentsPage() {
   // Status Filter
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>("ALL");
 
-  const handleApplyTournament = async (t: Tournament) => {
+  const loadTournaments = () => {
+    const promises: Promise<unknown>[] = [tournamentsService.getTournaments()];
+    if (user?.role === "ORGANIZER") {
+      promises.push(tournamentsService.getMyTournaments());
+    }
+
+    Promise.allSettled(promises)
+      .then(([publicRes, myRes]) => {
+        const publicList =
+          publicRes && publicRes.status === "fulfilled" && Array.isArray(publicRes.value)
+            ? (publicRes.value as Tournament[])
+            : [];
+        const myList =
+          myRes && myRes.status === "fulfilled" && Array.isArray(myRes.value)
+            ? (myRes.value as Tournament[])
+            : [];
+
+        const map = new Map<string, Tournament>();
+        publicList.forEach((t) => map.set(t.id, t));
+        myList.forEach((t) => map.set(t.id, t));
+
+        setTournaments(Array.from(map.values()));
+      })
+      .catch(() => {
+        setTournaments([]);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
+  const handleApplyTournament = (t: Tournament) => {
     if (!isLoggedIn) {
       router.push("/login");
       return;
     }
+    setRegisteringTournament(t);
+  };
+
+  const handleConfirmApplication = async (teamId?: string) => {
+    if (!registeringTournament) return;
+    const t = registeringTournament;
     setApplyingId(t.id);
     try {
-      await tournamentsService.applyForTournament(t.id);
+      await tournamentsService.applyForTournament(t.id, teamId);
       setAppliedIds((prev) => [...prev, t.id]);
     } catch {
       setAppliedIds((prev) => [...prev, t.id]);
@@ -56,30 +98,57 @@ export default function TournamentsPage() {
 
   useEffect(() => {
     let isMounted = true;
-
-    async function loadTournaments() {
-      try {
-        const data = await tournamentsService.getTournaments();
-        if (isMounted) {
-          setTournaments(Array.isArray(data) ? data : []);
-        }
-      } catch {
-        if (isMounted) {
-          setTournaments([]);
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
+    const promises: Promise<unknown>[] = [tournamentsService.getTournaments()];
+    if (user?.role === "ORGANIZER") {
+      promises.push(tournamentsService.getMyTournaments());
     }
 
-    loadTournaments();
+    Promise.allSettled(promises)
+      .then(([publicRes, myRes]) => {
+        if (!isMounted) return;
+        const publicList =
+          publicRes && publicRes.status === "fulfilled" && Array.isArray(publicRes.value)
+            ? (publicRes.value as Tournament[])
+            : [];
+        const myList =
+          myRes && myRes.status === "fulfilled" && Array.isArray(myRes.value)
+            ? (myRes.value as Tournament[])
+            : [];
+
+        const map = new Map<string, Tournament>();
+        publicList.forEach((t) => map.set(t.id, t));
+        myList.forEach((t) => map.set(t.id, t));
+
+        const allTourneys = Array.from(map.values());
+        setTournaments(allTourneys);
+
+        if (user?.id && user?.role !== "ORGANIZER" && user?.role !== "ADMIN") {
+          const applied = allTourneys
+            .filter((t) =>
+              (t.applications as Array<{ userId?: string; universityId?: string; status?: string }>)?.some(
+                (app) => app.userId === user.id && app.status !== "REJECTED"
+              )
+            )
+            .map((t) => t.id);
+          setAppliedIds(applied);
+        } else {
+          setAppliedIds([]);
+        }
+
+        setIsLoading(false);
+      })
+      .catch(() => {
+        if (isMounted) {
+          setTournaments([]);
+          setAppliedIds([]);
+          setIsLoading(false);
+        }
+      });
 
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [user?.id, user?.role]);
 
   // Filter tournaments exclusively by the selected game from the game selector and status
   const filteredTournaments = useMemo(() => {
@@ -99,14 +168,19 @@ export default function TournamentsPage() {
         matchesGame = combined.includes("CALL") || combined.includes("CODM") || combined.includes("WARFARE");
       }
 
-      let matchesStatus = true;
-      if (selectedStatusFilter !== "ALL") {
-        matchesStatus = t.status === selectedStatusFilter;
+      if (!matchesGame) return false;
+
+      if (selectedStatusFilter === "MINE") {
+        return Boolean(user?.id && (t.organizerId === user.id || t.organizer?.id === user.id));
       }
 
-      return matchesGame && matchesStatus;
+      if (selectedStatusFilter !== "ALL") {
+        return t.status === selectedStatusFilter;
+      }
+
+      return true;
     });
-  }, [tournaments, selectedStatusFilter, globalGame]);
+  }, [tournaments, selectedStatusFilter, globalGame, user]);
 
   const statusCounts = useMemo(() => {
     const gameTournaments = tournaments.filter((t) => {
@@ -120,13 +194,30 @@ export default function TournamentsPage() {
       return true;
     });
 
+    const myTourneys = gameTournaments.filter((t) =>
+      Boolean(user?.id && (t.organizerId === user.id || t.organizer?.id === user.id))
+    );
+
     return {
       ALL: gameTournaments.length,
+      MINE: myTourneys.length,
       LIVE: gameTournaments.filter((t) => t.status === "LIVE").length,
       UPCOMING: gameTournaments.filter((t) => t.status === "UPCOMING").length,
       COMPLETED: gameTournaments.filter((t) => t.status === "COMPLETED").length,
     };
-  }, [tournaments, globalGame]);
+  }, [tournaments, globalGame, user]);
+
+  const filterTabs = useMemo(() => {
+    return [
+      { id: "ALL", label: "ALL", count: statusCounts.ALL },
+      ...(user?.role === "ORGANIZER" || statusCounts.MINE > 0
+        ? [{ id: "MINE", label: "YOUR TOURNAMENTS", count: statusCounts.MINE }]
+        : []),
+      { id: "LIVE", label: "LIVE", count: statusCounts.LIVE },
+      { id: "UPCOMING", label: "UPCOMING", count: statusCounts.UPCOMING },
+      { id: "COMPLETED", label: "COMPLETED", count: statusCounts.COMPLETED },
+    ];
+  }, [statusCounts, user?.role]);
 
   return (
     <div className="flex flex-col flex-1 game-theme-bg relative animate-page-slide-in">
@@ -154,36 +245,65 @@ export default function TournamentsPage() {
             </p>
           </div>
 
-          {/* Integrated Tactical Status Segmented Controls */}
+          {/* Organizer Quick Direct Actions & Status Filter */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            {user?.role === "ORGANIZER" && (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsHostModalOpen(true)}
+                  className="h-10 px-5 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 hover:from-amber-400 hover:to-amber-300 text-black font-display text-xs font-black uppercase tracking-wider transition-all active:scale-95 shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2 cursor-pointer"
+                  style={{
+                    clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
+                  }}
+                >
+                  <PlusIcon className="w-4 h-4 text-black" />
+                  <span>Host Tournament</span>
+                </button>
+                <Link
+                  href="/dashboard"
+                  className="h-10 px-4 bg-[#141A29] hover:bg-[#1E293B] text-amber-400 border border-amber-500/30 hover:border-amber-500/60 font-display text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5"
+                  style={{
+                    clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
+                  }}
+                >
+                  <span>Director Hub</span>
+                  <span>→</span>
+                </Link>
+              </div>
+            )}
+
+            {/* Integrated Tactical Status Segmented Controls */}
             <div 
               className="flex items-center gap-1 p-1 bg-[#0A0D18] border border-[#1E293B] shadow-xl"
               style={{
                 clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
               }}
             >
-              {[
-                { id: "ALL", label: "ALL", count: statusCounts.ALL },
-                { id: "LIVE", label: "LIVE", count: statusCounts.LIVE },
-                { id: "UPCOMING", label: "UPCOMING", count: statusCounts.UPCOMING },
-                { id: "COMPLETED", label: "COMPLETED", count: statusCounts.COMPLETED },
-              ].map((st) => {
+              {filterTabs.map((st) => {
                 const isSelected = selectedStatusFilter === st.id;
+                const isMineTab = st.id === "MINE";
                 return (
                   <button
                     key={st.id}
                     onClick={() => setSelectedStatusFilter(st.id)}
                     className={`px-3 py-1.5 font-mono text-[10px] font-black uppercase tracking-wider transition-all duration-150 cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                       isSelected
-                        ? "game-theme-btn"
+                        ? isMineTab
+                          ? "bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/25"
+                          : "game-theme-btn"
+                        : isMineTab
+                        ? "text-amber-300 bg-amber-950/40 border border-amber-500/40 hover:bg-amber-950/70"
                         : "text-slate-400 hover:text-white hover:bg-[#141A29]"
                     }`}
                     style={{
                       clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
                     }}
                   >
+                    {isMineTab && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />}
                     <span>{st.label}</span>
                     <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold ${
-                      isSelected ? "bg-black/30 text-white" : "bg-[#141A29] text-slate-500"
+                      isSelected ? "bg-black/30 text-white" : isMineTab ? "bg-amber-900/60 text-amber-200" : "bg-[#141A29] text-slate-500"
                     }`}>
                       {st.count}
                     </span>
@@ -191,6 +311,7 @@ export default function TournamentsPage() {
                 );
               })}
             </div>
+          </div>
         </div>
 
         {/* Tournament Cards List */}
@@ -212,25 +333,42 @@ export default function TournamentsPage() {
                 clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
               }}
             >
-              <TrophyIcon className="w-6 h-6 text-slate-400" />
+              <TrophyIcon className="w-6 h-6 text-amber-400" />
             </div>
             <div className="space-y-2">
               <h3 className="font-display text-lg font-black text-white uppercase tracking-wider">
-                NO {selectedStatusFilter !== "ALL" ? selectedStatusFilter : ""} {selectedGameInfo?.name?.toUpperCase() || "GAME"} TOURNAMENTS
+                {selectedStatusFilter === "MINE"
+                  ? "NO HOSTED TOURNAMENTS YET"
+                  : `NO ${selectedStatusFilter !== "ALL" ? selectedStatusFilter : ""} ${selectedGameInfo?.name?.toUpperCase() || "GAME"} TOURNAMENTS`}
               </h3>
               <p className="font-sans text-xs text-slate-400 leading-relaxed">
-                There are currently no tournaments matching your selected filter. New collegiate circuits are scheduled weekly.
+                {selectedStatusFilter === "MINE"
+                  ? "You haven't established any tournaments for this esports title yet. Click below to host your first sanctioned collegiate bracket."
+                  : "There are currently no tournaments matching your selected filter. New collegiate circuits are scheduled weekly."}
               </p>
-              <div className="pt-2">
-                <button
-                  onClick={() => setSelectedStatusFilter("ALL")}
-                  className="px-4 py-2 game-theme-btn font-display text-xs font-black uppercase tracking-wider cursor-pointer"
-                  style={{
-                    clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-                  }}
-                >
-                  Show All {selectedGameInfo?.shortName || "Game"} Tournaments
-                </button>
+              <div className="pt-2 flex items-center justify-center gap-3">
+                {user?.role === "ORGANIZER" && (
+                  <button
+                    onClick={() => setIsHostModalOpen(true)}
+                    className="px-5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-display text-xs font-black uppercase tracking-wider cursor-pointer shadow-lg shadow-amber-500/20"
+                    style={{
+                      clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
+                    }}
+                  >
+                    + Host Tournament
+                  </button>
+                )}
+                {selectedStatusFilter !== "ALL" && (
+                  <button
+                    onClick={() => setSelectedStatusFilter("ALL")}
+                    className="px-4 py-2 game-theme-btn font-display text-xs font-black uppercase tracking-wider cursor-pointer"
+                    style={{
+                      clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
+                    }}
+                  >
+                    Show All Tournaments
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -257,6 +395,24 @@ export default function TournamentsPage() {
         tournamentId={selectedTournament?.id}
         title={selectedTournament?.title ? `${selectedTournament.title} BRACKET` : "TOURNAMENT BRACKET"}
         subtitle="SINGLE ELIMINATION"
+      />
+
+      <SquadRegistrationModal
+        isOpen={!!registeringTournament}
+        onClose={() => setRegisteringTournament(null)}
+        tournament={registeringTournament}
+        onSuccess={handleConfirmApplication}
+        onViewBracket={() => {
+          if (registeringTournament) {
+            setSelectedTournament(registeringTournament);
+          }
+        }}
+      />
+
+      <PostTournamentModal
+        isOpen={isHostModalOpen}
+        onClose={() => setIsHostModalOpen(false)}
+        onTournamentCreated={loadTournaments}
       />
     </div>
   );

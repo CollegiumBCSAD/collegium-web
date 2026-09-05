@@ -1,5 +1,13 @@
 import { apiClient } from "./apiClient";
-import { Tournament, TournamentApprovalStatus, BracketRound, MatchBoxScore, PendingSquadApplication } from "@/types";
+import { 
+  Tournament, 
+  TournamentDetail, 
+  ParticipatingTeamDetail, 
+  TournamentApprovalStatus, 
+  BracketRound, 
+  MatchBoxScore, 
+  PendingSquadApplication 
+} from "@/types";
 import { 
   mockTournaments, 
   mockBoxScore 
@@ -43,9 +51,13 @@ interface RawTournament {
   bracketFormat?: string;
   teamQuota?: number;
   rules?: string;
+  startDate?: string;
   rejectionReason?: string;
+  organizerId?: string;
+  organizer?: { id?: string; displayName?: string };
   matches?: Array<{ title?: string; gameTitle?: string }>;
   universities?: Array<{ id?: string; name?: string }>;
+  applications?: PendingSquadApplication[];
 }
 
 function mapTournaments(data: RawTournament[]): Tournament[] {
@@ -96,10 +108,217 @@ function mapTournaments(data: RawTournament[]): Tournament[] {
       bracketFormat: t.bracketFormat,
       teamQuota: t.teamQuota,
       rules: t.rules,
+      startDate: t.startDate,
+      applications: t.applications,
       rejectionReason: t.rejectionReason,
+      organizerId: t.organizerId,
+      organizer: t.organizer,
       bgGradient: gameDisplay.gradient,
     };
   });
+}
+
+interface RawUniversityData {
+  id?: string;
+  name?: string;
+  domain?: string;
+  teams?: Array<{
+    id?: string;
+    name?: string;
+    gameTitle?: string;
+    captainId?: string;
+    captain?: { id?: string; displayName?: string };
+    members?: Array<{
+      id?: string;
+      userId?: string;
+      gameHandle?: string;
+      preferredRole?: string;
+      user?: { id?: string; displayName?: string; role?: string };
+    }>;
+  }>;
+}
+
+export type RawTournamentDetail = Omit<RawTournament, "universities"> & {
+  universities?: RawUniversityData[];
+  createdAt?: string;
+};
+
+function mapTournamentDetail(raw: RawTournamentDetail): TournamentDetail {
+  const base = mapTournaments([raw as RawTournament])[0];
+  const rawUnis: RawUniversityData[] = raw.universities || [];
+  const rawApps = ((raw as unknown as { applications?: Array<{
+    id: string;
+    universityId: string;
+    userId: string;
+    applicantName: string;
+    status: string;
+    teamId?: string;
+    teamName?: string;
+    universityName?: string;
+  }> }).applications) || [];
+  const approvedApps = rawApps.filter((a) => a.status === "APPROVED");
+  const participatingTeams: ParticipatingTeamDetail[] = [];
+  const handledAppIds = new Set<string>();
+
+  const isOrganizerTourney = Boolean(raw.organizerId || raw.organizer?.id);
+
+  if (isOrganizerTourney || rawApps.length > 0) {
+    // 1. First match against university teams where possible
+    rawUnis.forEach((uni, uIdx) => {
+      const uniName = uni.name || "University Squad";
+      const uniId = uni.id || `uni-${uIdx}`;
+      const matchingApps = approvedApps.filter(
+        (app) => app.universityId === uniId || app.universityId === uni.id
+      );
+
+      if (matchingApps.length > 0) {
+        (uni.teams || []).forEach((tm, tIdx) => {
+          const matchedApp = matchingApps.find(
+            (app) =>
+              (app.teamId && tm.id === app.teamId) ||
+              (app.userId && tm.captainId === app.userId) ||
+              (app.userId && tm.members?.some((m) => m.userId === app.userId)) ||
+              (app.teamName && tm.name && app.teamName.toLowerCase() === tm.name.toLowerCase())
+          );
+
+          if (matchedApp) {
+            handledAppIds.add(matchedApp.id);
+            participatingTeams.push({
+              id: tm.id || `team-${uniId}-${tIdx}`,
+              name: tm.name || matchedApp.teamName || `${uniName} Varsity`,
+              universityId: uniId,
+              universityName: uniName,
+              gameTitle: tm.gameTitle || raw.gameTitle || "VALORANT",
+              captainName: tm.captain?.displayName || matchedApp.applicantName || "Team Captain",
+              captainId: tm.captainId || matchedApp.userId,
+              status: "CONFIRMED",
+              seed: participatingTeams.length + 1,
+              members: (tm.members || []).map((m) => ({
+                id: m.id || `m-${m.userId}`,
+                userId: m.userId || `u-${Math.random()}`,
+                displayName: m.user?.displayName || m.gameHandle || "Varsity Athlete",
+                gameHandle: m.gameHandle || m.user?.displayName || "Player",
+                preferredRole: m.preferredRole || "Flex",
+                isCaptain: tm.captainId === m.userId,
+              })),
+            });
+          }
+        });
+      }
+    });
+
+    // 2. Add any remaining approved applications directly (e.g. custom squads or newly approved)
+    approvedApps.forEach((app) => {
+      if (!handledAppIds.has(app.id)) {
+        handledAppIds.add(app.id);
+        const uniName = app.universityName || "Collegiate Varsity";
+        participatingTeams.push({
+          id: app.teamId || `team-${app.id}`,
+          name: app.teamName || `${uniName} Squad`,
+          universityId: app.universityId,
+          universityName: uniName,
+          gameTitle: raw.gameTitle || "VALORANT",
+          captainName: app.applicantName || "Team Captain",
+          captainId: app.userId,
+          status: "CONFIRMED",
+          seed: participatingTeams.length + 1,
+          members: [
+            {
+              id: `m-${app.id}-1`,
+              userId: app.userId,
+              displayName: app.applicantName,
+              gameHandle: app.applicantName,
+              preferredRole: "Captain",
+              isCaptain: true,
+            },
+            {
+              id: `m-${app.id}-2`,
+              userId: `u-${app.id}-2`,
+              displayName: "Varsity Starter 2",
+              gameHandle: "Duelist",
+              preferredRole: "Duelist",
+            },
+            {
+              id: `m-${app.id}-3`,
+              userId: `u-${app.id}-3`,
+              displayName: "Varsity Starter 3",
+              gameHandle: "Initiator",
+              preferredRole: "Initiator",
+            },
+            {
+              id: `m-${app.id}-4`,
+              userId: `u-${app.id}-4`,
+              displayName: "Varsity Starter 4",
+              gameHandle: "Controller",
+              preferredRole: "Controller",
+            },
+            {
+              id: `m-${app.id}-5`,
+              userId: `u-${app.id}-5`,
+              displayName: "Varsity Starter 5",
+              gameHandle: "Sentinel",
+              preferredRole: "Sentinel",
+            },
+          ],
+        });
+      }
+    });
+  } else {
+    // System Tournaments (pre-seeded with participating university rosters)
+    rawUnis.forEach((uni, uIdx) => {
+      const uniName = uni.name || "University Squad";
+      const uniId = uni.id || `uni-${uIdx}`;
+      const teams = uni.teams || [];
+
+      if (teams.length > 0) {
+        teams.forEach((tm, tIdx) => {
+          participatingTeams.push({
+            id: tm.id || `team-${uniId}-${tIdx}`,
+            name: tm.name || `${uniName} Varsity`,
+            universityId: uniId,
+            universityName: uniName,
+            gameTitle: tm.gameTitle || raw.gameTitle || "VALORANT",
+            captainName: tm.captain?.displayName || "Team Captain",
+            captainId: tm.captainId,
+            status: "CONFIRMED",
+            seed: participatingTeams.length + 1,
+            members: (tm.members || []).map((m) => ({
+              id: m.id || `m-${m.userId}`,
+              userId: m.userId || `u-${Math.random()}`,
+              displayName: m.user?.displayName || m.gameHandle || "Varsity Athlete",
+              gameHandle: m.gameHandle || m.user?.displayName || "Player",
+              preferredRole: m.preferredRole || "Flex",
+              isCaptain: tm.captainId === m.userId,
+            })),
+          });
+        });
+      } else {
+        participatingTeams.push({
+          id: `team-${uniId}`,
+          name: `${uniName} Esports`,
+          universityId: uniId,
+          universityName: uniName,
+          gameTitle: raw.gameTitle || "VALORANT",
+          captainName: "Athletic Captain",
+          status: "CONFIRMED",
+          seed: participatingTeams.length + 1,
+          members: [
+            { id: `m-${uniId}-1`, userId: `u-${uniId}-1`, displayName: `${uniName} Entry`, gameHandle: "Duelist / Carry", preferredRole: "Duelist", isCaptain: true },
+            { id: `m-${uniId}-2`, userId: `u-${uniId}-2`, displayName: `${uniName} Recon`, gameHandle: "Initiator", preferredRole: "Initiator" },
+            { id: `m-${uniId}-3`, userId: `u-${uniId}-3`, displayName: `${uniName} Smokes`, gameHandle: "Controller", preferredRole: "Controller" },
+            { id: `m-${uniId}-4`, userId: `u-${uniId}-4`, displayName: `${uniName} Anchor`, gameHandle: "Sentinel", preferredRole: "Sentinel" },
+            { id: `m-${uniId}-5`, userId: `u-${uniId}-5`, displayName: `${uniName} Flex`, gameHandle: "Sixth Man / Flex", preferredRole: "Flex" },
+          ],
+        });
+      }
+    });
+  }
+
+  return {
+    ...base,
+    participatingTeams,
+    createdAt: raw.createdAt,
+  };
 }
 
 function parseServerTournamentsResponse(data: unknown): Tournament[] {
@@ -247,6 +466,16 @@ export const tournamentsService = {
     }
   },
 
+  getTournamentById: async (tournamentId: string): Promise<TournamentDetail | null> => {
+    try {
+      const response = await apiClient.get<unknown>(`/tournaments/${tournamentId}`);
+      if (!response || typeof response !== "object") return null;
+      return mapTournamentDetail(response as RawTournamentDetail);
+    } catch {
+      return null;
+    }
+  },
+
   getAllPendingApplications: async (): Promise<PendingSquadApplication[]> => {
     return apiClient
       .get<PendingSquadApplication[]>("/tournaments/applications/pending")
@@ -269,6 +498,7 @@ export const tournamentsService = {
     bracketFormat?: string;
     teamQuota?: number;
     rules?: string;
+    startDate?: string;
   }): Promise<unknown> => {
     const formData = new FormData();
     formData.append("name", params.name);
@@ -277,15 +507,52 @@ export const tournamentsService = {
     if (params.bracketFormat) formData.append("bracketFormat", params.bracketFormat);
     if (params.teamQuota) formData.append("teamQuota", String(params.teamQuota));
     if (params.rules) formData.append("rules", params.rules);
+    if (params.startDate) formData.append("startDate", params.startDate);
     return apiClient.postForm("/tournaments", formData);
+  },
+
+  updateTournament: (
+    tournamentId: string,
+    params: {
+      name?: string;
+      gameTitle?: string;
+      imageFile?: File;
+      bracketFormat?: string;
+      teamQuota?: number;
+      rules?: string;
+      startDate?: string;
+      reapply?: boolean;
+    }
+  ): Promise<unknown> => {
+    const formData = new FormData();
+    if (params.name) formData.append("name", params.name);
+    if (params.gameTitle) formData.append("gameTitle", params.gameTitle);
+    if (params.imageFile) formData.append("image", params.imageFile);
+    if (params.bracketFormat) formData.append("bracketFormat", params.bracketFormat);
+    if (params.teamQuota) formData.append("teamQuota", String(params.teamQuota));
+    if (params.rules !== undefined) formData.append("rules", params.rules);
+    if (params.startDate !== undefined) formData.append("startDate", params.startDate);
+    if (params.reapply) formData.append("reapply", "true");
+    return apiClient.patchForm(`/tournaments/${tournamentId}`, formData);
+  },
+
+  startTournament: (tournamentId: string): Promise<unknown> => {
+    return apiClient.post(`/tournaments/${tournamentId}/start`, {});
   },
 
   registerTournament: (tournamentId: string): Promise<unknown> => {
     return apiClient.post(`/tournaments/${tournamentId}/register`, {});
   },
 
-  applyForTournament: (tournamentId: string): Promise<unknown> => {
-    return apiClient.post(`/tournaments/${tournamentId}/apply`, {});
+  applyForTournament: (
+    tournamentId: string,
+    teamId?: string,
+    teamName?: string
+  ): Promise<unknown> => {
+    return apiClient.post(`/tournaments/${tournamentId}/apply`, {
+      teamId,
+      teamName,
+    });
   },
 
   withdrawApplication: (tournamentId: string): Promise<unknown> => {
