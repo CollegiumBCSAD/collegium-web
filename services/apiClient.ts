@@ -88,7 +88,12 @@ async function request<T>(
       let message = `API error ${res.status}`;
       try {
         const body = await res.json();
-        message = body.message || message;
+        // NestJS's ValidationPipe returns `message` as a string[] when a DTO
+        // fails validation (one entry per failed field) — join it instead of
+        // letting `new Error()` stringify the array with a bare comma.
+        message = Array.isArray(body.message)
+          ? body.message.join(", ")
+          : body.message || message;
       } catch {}
       throw new Error(message);
     }
