@@ -1,12 +1,14 @@
 import { apiClient } from "./apiClient";
-import { 
-  Tournament, 
-  TournamentDetail, 
-  ParticipatingTeamDetail, 
-  TournamentApprovalStatus, 
-  BracketRound, 
-  MatchBoxScore, 
-  PendingSquadApplication 
+import {
+  Tournament,
+  TournamentDetail,
+  ParticipatingTeamDetail,
+  TournamentApprovalStatus,
+  BracketRound,
+  BracketSide,
+  TournamentMatch,
+  MatchBoxScore,
+  PendingSquadApplication
 } from "@/types";
 import { 
   mockTournaments, 
@@ -328,111 +330,129 @@ function parseServerTournamentsResponse(data: unknown): Tournament[] {
   return mapTournaments(data as RawTournament[]);
 }
 
+type RawBracketMatch = {
+  id?: string;
+  winnerId?: string | null;
+  loserId?: string | null;
+  isVerified?: boolean;
+  round?: number;
+  bracketSide?: BracketSide | null;
+};
+
+function groupByRound(matches: RawBracketMatch[]): Map<number, RawBracketMatch[]> {
+  const byRound = new Map<number, RawBracketMatch[]>();
+  for (const m of matches) {
+    const round = m.round ?? 1;
+    if (!byRound.has(round)) byRound.set(round, []);
+    byRound.get(round)!.push(m);
+  }
+  return byRound;
+}
+
+function roundName(
+  roundNumber: number,
+  positionFromEnd: number,
+  matchCount: number,
+  side: "WINNERS" | "LOSERS" | undefined,
+): string {
+  const prefix = side === "LOSERS" ? "LOSERS " : "";
+  if (roundNumber === 0) return "GROUP STAGE";
+  if (positionFromEnd === 0 && matchCount === 1) {
+    // The winners bracket's own last round isn't the tournament decider in
+    // Double Elimination — the separate GRAND_FINAL group is (built and
+    // labeled by the caller). Only Single Elimination / Round Robin +
+    // Playoffs (side === undefined) end on the true grand final here.
+    if (side === "LOSERS") return "LOSERS FINAL";
+    if (side === "WINNERS") return "WINNERS FINAL";
+    return "GRAND FINALS";
+  }
+  if (positionFromEnd === 1) return `${prefix}SEMIFINALS`;
+  if (positionFromEnd === 2 && side !== "LOSERS") return `${prefix}QUARTERFINALS`;
+  return `${prefix}ROUND ${roundNumber}`;
+}
+
+// Builds one bracket's worth of rounds (winners, losers, or the single
+// implicit bracket for Single Elimination / Round Robin + Playoffs) from a
+// flat match list, using each match's real round/bracketSide instead of
+// slicing a flat list into a fixed 4/2/1 shape.
+function buildBracketRounds(
+  matches: RawBracketMatch[],
+  side: "WINNERS" | "LOSERS" | undefined,
+  teamName: (id?: string | null) => string,
+): BracketRound[] {
+  const byRound = groupByRound(matches);
+  const roundNumbers = [...byRound.keys()].sort((a, b) => a - b);
+
+  return roundNumbers.map((roundNumber, idx) => {
+    const roundMatches = byRound.get(roundNumber)!;
+    const positionFromEnd = roundNumbers.length - 1 - idx;
+
+    const bracketMatches: TournamentMatch[] = roundMatches.map((m, i) => ({
+      id: m.id || `${side || "r"}${roundNumber}-${i}`,
+      team1: {
+        name: teamName(m.winnerId),
+        code: "",
+        score: m.isVerified ? 2 : 0,
+        isWinner: m.isVerified,
+      },
+      team2: {
+        name: teamName(m.loserId),
+        code: "",
+        score: 0,
+        isWinner: false,
+      },
+      status: m.isVerified ? "COMPLETED" : "LIVE",
+    }));
+
+    return {
+      name: roundName(roundNumber, positionFromEnd, roundMatches.length, side),
+      bracketSide: side,
+      matches: bracketMatches,
+    };
+  });
+}
+
 function parseServerBracketResponse(data: unknown): BracketRound[] {
   if (Array.isArray(data) && data.length > 0) {
     return data as BracketRound[];
   }
 
-  if (data && typeof data === "object") {
-    const obj = data as Record<string, unknown>;
-    if (Array.isArray(obj.matches) && obj.matches.length > 0) {
-      const universitiesMap = new Map<string, string>();
-      if (Array.isArray(obj.universities)) {
-        obj.universities.forEach((u: unknown) => {
-          if (u && typeof u === "object") {
-            const uni = u as { id?: string; name?: string };
-            if (uni.id && uni.name) universitiesMap.set(uni.id, uni.name);
-          }
-        });
+  if (!data || typeof data !== "object") return [];
+
+  const obj = data as Record<string, unknown>;
+  if (!Array.isArray(obj.matches) || obj.matches.length === 0) return [];
+
+  const universitiesMap = new Map<string, string>();
+  if (Array.isArray(obj.universities)) {
+    obj.universities.forEach((u: unknown) => {
+      if (u && typeof u === "object") {
+        const uni = u as { id?: string; name?: string };
+        if (uni.id && uni.name) universitiesMap.set(uni.id, uni.name);
       }
-
-      type RawMatch = {
-        id?: string;
-        winnerId?: string;
-        loserId?: string;
-        isVerified?: boolean;
-      };
-
-      const rawMatches = obj.matches as RawMatch[];
-      let remaining = [...rawMatches];
-      const rounds: BracketRound[] = [];
-
-      if (remaining.length >= 4) {
-        const qf = remaining.slice(0, 4);
-        remaining = remaining.slice(4);
-        rounds.push({
-          name: "QUARTERFINALS",
-          matches: qf.map((m, idx) => ({
-            id: m.id || `qf-${idx}`,
-            team1: {
-              name: (m.winnerId && universitiesMap.get(m.winnerId)) || "University of Makati",
-              code: "UMak",
-              score: m.isVerified ? 2 : 0,
-              isWinner: m.isVerified,
-            },
-            team2: {
-              name: (m.loserId && universitiesMap.get(m.loserId)) || "Adamson University",
-              code: "AdU",
-              score: 0,
-              isWinner: false,
-            },
-            status: m.isVerified ? "COMPLETED" : "LIVE",
-          })),
-        });
-      }
-
-      if (remaining.length >= 2 || rounds.length > 0) {
-        const sf = remaining.slice(0, 2);
-        remaining = remaining.slice(2);
-        rounds.push({
-          name: "SEMIFINALS",
-          matches: sf.map((m, idx) => ({
-            id: m.id || `sf-${idx}`,
-            team1: {
-              name: (m.winnerId && universitiesMap.get(m.winnerId)) || "University of Makati",
-              code: "UMak",
-              score: m.isVerified ? 2 : 0,
-              isWinner: m.isVerified,
-            },
-            team2: {
-              name: (m.loserId && universitiesMap.get(m.loserId)) || "Ateneo de Manila University",
-              code: "ADMU",
-              score: 0,
-              isWinner: false,
-            },
-            status: m.isVerified ? "COMPLETED" : "LIVE",
-          })),
-        });
-      }
-
-      if (remaining.length >= 1 || rounds.length > 0) {
-        const gf = remaining.slice(0, 1);
-        rounds.push({
-          name: "GRAND FINALS",
-          matches: gf.map((m, idx) => ({
-            id: m.id || `gf-${idx}`,
-            team1: {
-              name: (m.winnerId && universitiesMap.get(m.winnerId)) || "University of Makati",
-              code: "UMak",
-              score: m.isVerified ? 2 : 0,
-              isWinner: m.isVerified,
-            },
-            team2: {
-              name: (m.loserId && universitiesMap.get(m.loserId)) || "De La Salle University",
-              code: "DLSU",
-              score: 0,
-              isWinner: false,
-            },
-            status: m.isVerified ? "COMPLETED" : "LIVE",
-          })),
-        });
-      }
-
-      if (rounds.length > 0) return rounds;
-    }
+    });
   }
+  const teamName = (id?: string | null) => (id && universitiesMap.get(id)) || "TBD";
 
-  return [];
+  const rawMatches = obj.matches as RawBracketMatch[];
+  const losers = rawMatches.filter((m) => m.bracketSide === "LOSERS");
+  const grandFinal = rawMatches.filter((m) => m.bracketSide === "GRAND_FINAL");
+  // Single Elimination and Round Robin + Playoffs matches carry no
+  // bracketSide at all — treat those the same as the winners bracket.
+  const winnersOrSingle = rawMatches.filter(
+    (m) => m.bracketSide !== "LOSERS" && m.bracketSide !== "GRAND_FINAL",
+  );
+
+  return [
+    ...buildBracketRounds(winnersOrSingle, losers.length > 0 ? "WINNERS" : undefined, teamName),
+    ...buildBracketRounds(losers, "LOSERS", teamName),
+    ...(grandFinal.length > 0
+      ? buildBracketRounds(grandFinal, undefined, teamName).map((r) => ({
+          ...r,
+          name: "GRAND FINALS",
+          bracketSide: "GRAND_FINAL" as const,
+        }))
+      : []),
+  ];
 }
 
 export const tournamentsService = {

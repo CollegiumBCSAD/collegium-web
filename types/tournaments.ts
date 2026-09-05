@@ -43,8 +43,14 @@ export interface TournamentMatch {
   timeLabel?: string;
 }
 
+export type BracketSide = "WINNERS" | "LOSERS" | "GRAND_FINAL";
+
 export interface BracketRound {
   name: string;
+  // Only set for Double Elimination — distinguishes the winners bracket,
+  // losers bracket, and the final decider match. Undefined for Single
+  // Elimination and Round Robin + Playoffs, which have one implicit bracket.
+  bracketSide?: BracketSide;
   matches: TournamentMatch[];
 }
 
