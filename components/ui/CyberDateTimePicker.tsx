@@ -50,8 +50,10 @@ export default function CyberDateTimePicker({
     return parsedDate.getHours() >= 12 ? "PM" : "AM";
   });
 
-  // Sync state when value changes externally
-  useEffect(() => {
+  // Sync state when value changes externally (React recommended state adjustment pattern)
+  const [prevValue, setPrevValue] = useState<string | undefined>(value);
+  if (prevValue !== value) {
+    setPrevValue(value);
     if (parsedDate) {
       setViewYear(parsedDate.getFullYear());
       setViewMonth(parsedDate.getMonth());
@@ -63,7 +65,7 @@ export default function CyberDateTimePicker({
     } else {
       setSelectedDay(null);
     }
-  }, [parsedDate]);
+  }
 
   // Click outside listener
   useEffect(() => {

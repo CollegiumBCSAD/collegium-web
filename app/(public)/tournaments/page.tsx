@@ -180,7 +180,7 @@ export default function TournamentsPage() {
 
       return true;
     });
-  }, [tournaments, selectedStatusFilter, globalGame, user?.id]);
+  }, [tournaments, selectedStatusFilter, globalGame, user]);
 
   const statusCounts = useMemo(() => {
     const gameTournaments = tournaments.filter((t) => {
@@ -205,7 +205,7 @@ export default function TournamentsPage() {
       UPCOMING: gameTournaments.filter((t) => t.status === "UPCOMING").length,
       COMPLETED: gameTournaments.filter((t) => t.status === "COMPLETED").length,
     };
-  }, [tournaments, globalGame, user?.id]);
+  }, [tournaments, globalGame, user]);
 
   const filterTabs = useMemo(() => {
     return [

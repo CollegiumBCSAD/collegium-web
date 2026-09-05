@@ -42,10 +42,13 @@ export default function PostTournamentModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  useEffect(() => {
-    if (!isOpen) return;
+  // Sync form state when modal opens or target tournament changes
+  const [prevModalKey, setPrevModalKey] = useState<string | null>(null);
+  const currentModalKey = isOpen ? `${initialTournament?.id || "new"}-${selectedGame || "none"}` : null;
 
-    if (initialTournament) {
+  if (prevModalKey !== currentModalKey) {
+    setPrevModalKey(currentModalKey);
+    if (initialTournament && isOpen) {
       setName(initialTournament.title || "");
       setSelectedGameTitle(
         initialTournament.gameTitle ||
@@ -72,7 +75,7 @@ export default function PostTournamentModal({
       }
       setImagePreview(initialTournament.image || "");
       setImageFile(null);
-    } else {
+    } else if (isOpen) {
       setName("");
       setSelectedGameTitle(
         selectedGame ? GAME_ID_TO_ENUM[selectedGame] || "VALORANT" : "VALORANT"
@@ -85,7 +88,7 @@ export default function PostTournamentModal({
       setImageFile(null);
     }
     setErrorMsg("");
-  }, [isOpen, initialTournament, selectedGame]);
+  }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

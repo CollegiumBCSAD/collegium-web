@@ -49,20 +49,20 @@ export default function SquadRegistrationModal({
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const handleClose = () => {
+    setIsSubmitted(false);
+    setError(null);
+    onClose();
+  };
+
   useEffect(() => {
-    if (!isOpen) {
-      setIsSubmitted(false);
-      setError(null);
-      return;
-    }
+    if (!isOpen) return;
 
     let isMounted = true;
-    setIsLoadingTeams(true);
 
     fetchTeamsApi()
       .then((allTeams) => {
         if (!isMounted) return;
-        const myUniId = user?.universityId;
         const myId = user?.id;
         const tourneyGame = normalizeGame(tournament?.gameTitle || tournament?.game);
 
@@ -75,7 +75,10 @@ export default function SquadRegistrationModal({
           const isMember = Boolean(
             myId &&
             t.members?.some(
-              (m) => (m.userId === myId || (m as any).user?.id === myId) && m.status !== "DECLINED"
+              (m) =>
+                (m.userId === myId ||
+                  (typeof m === "object" && m !== null && "user" in m && (m as { user?: { id?: string } }).user?.id === myId)) &&
+                m.status !== "DECLINED"
             )
           );
 
@@ -122,7 +125,7 @@ export default function SquadRegistrationModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in">
-      <div className="absolute inset-0" onClick={onClose} />
+      <div className="absolute inset-0" onClick={handleClose} />
 
       <div 
         className="relative w-full max-w-xl bg-[#0A0D18] border border-[#1E293B] shadow-2xl overflow-hidden z-10 animate-modal-enter"
@@ -155,7 +158,7 @@ export default function SquadRegistrationModal({
           </div>
 
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="p-1.5 text-slate-400 hover:text-white bg-[#141A29] border border-[#232D44] hover:border-slate-500 transition-colors cursor-pointer"
             style={{
               clipPath: "polygon(2px 0, 100% 0, calc(100% - 2px) 100%, 0 100%)",
@@ -201,7 +204,7 @@ export default function SquadRegistrationModal({
                 {onViewBracket && (
                   <button
                     onClick={() => {
-                      onClose();
+                      handleClose();
                       onViewBracket();
                     }}
                     className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-black font-display text-xs font-black uppercase tracking-wider cursor-pointer shadow-lg shadow-emerald-500/20"
@@ -209,12 +212,12 @@ export default function SquadRegistrationModal({
                       clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
                     }}
                   >
-                    View Participating Teams & Bracket →
+                    View Live Bracket
                   </button>
                 )}
                 <button
-                  onClick={onClose}
-                  className="px-4 py-2.5 bg-[#141A29] hover:bg-[#1E293B] text-slate-300 hover:text-white border border-[#232D44] font-display text-xs font-bold uppercase cursor-pointer"
+                  onClick={handleClose}
+                  className="px-5 py-2.5 bg-[#141A29] hover:bg-[#1E273D] border border-[#232D44] text-slate-300 hover:text-white font-mono text-xs font-bold uppercase tracking-wider cursor-pointer"
                   style={{
                     clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
                   }}

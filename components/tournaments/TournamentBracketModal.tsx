@@ -38,7 +38,6 @@ export default function TournamentBracketModal({
   useEffect(() => {
     if (!isOpen) return;
     let isMounted = true;
-    setIsLoading(true);
 
     async function loadData() {
       if (!tournamentId) {
@@ -138,8 +137,6 @@ export default function TournamentBracketModal({
       ? lastMatch.team1.name
       : lastMatch.team2.name
     : null;
-
-  const totalCols = normalizedRounds.length > 0 ? normalizedRounds.length + 1 : 1;
 
   // Binary tree matches
   const qfMatches = normalizedRounds[0]?.matches || [];
