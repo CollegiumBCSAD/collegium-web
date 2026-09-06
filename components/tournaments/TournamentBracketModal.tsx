@@ -1,35 +1,41 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 import MatchBoxScoreModal from "@/components/MatchBoxScoreModal";
 import MatchCard from "@/components/tournaments/MatchCard";
-import { 
-  BracketMatch, 
-  BracketRound, 
+import CloseMatchModal from "@/components/tournaments/CloseMatchModal";
+import {
+  BracketMatch,
+  BracketRound,
   TournamentBracketModalProps,
   TournamentDetail,
-  ParticipatingTeamDetail 
+  ParticipatingTeamDetail
 } from "@/types";
 import { tournamentsService } from "@/services/tournamentsService";
-import { 
-  SwordsIcon, 
-  CrownIcon, 
-  TrophyIcon, 
-  UsersIcon, 
-  ShieldIcon, 
-  ClockIcon, 
+import {
+  SwordsIcon,
+  CrownIcon,
+  TrophyIcon,
+  UsersIcon,
+  ShieldIcon,
+  ClockIcon,
   CheckCircleIcon,
-  XCircleIcon 
+  XCircleIcon
 } from "@/components/ui/Icons";
 
 function BracketColumn({
   round,
   highlight,
   onViewBoxScore,
+  canReportResults,
+  onReportResult,
 }: {
   round: { name: string; matches: BracketMatch[] };
   highlight?: boolean;
   onViewBoxScore: (m: BracketMatch) => void;
+  canReportResults?: boolean;
+  onReportResult?: (m: BracketMatch) => void;
 }) {
   return (
     <div className="w-64 shrink-0 flex flex-col justify-center z-10">
@@ -40,9 +46,23 @@ function BracketColumn({
       >
         {round.name}
       </div>
-      <div className="flex-1 flex flex-col justify-around gap-4">
+      <div className="flex-1 flex flex-col justify-around gap-2">
         {round.matches.map((m) => (
-          <MatchCard key={m.id} match={m} onViewBoxScore={() => onViewBoxScore(m)} />
+          <div key={m.id} className="space-y-1">
+            <MatchCard match={m} onViewBoxScore={() => onViewBoxScore(m)} />
+            {canReportResults && m.status !== "COMPLETED" && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onReportResult?.(m);
+                }}
+                className="w-full h-6 text-[9px] font-mono font-bold uppercase tracking-widest text-amber-400 border border-amber-500/40 hover:bg-amber-500/10 transition-colors cursor-pointer"
+              >
+                Report Result
+              </button>
+            )}
+          </div>
         ))}
       </div>
     </div>
@@ -69,11 +89,15 @@ export default function TournamentBracketModal({
   title = "PHILIPPINE COLLEGIATE TOURNAMENT BRACKET",
   subtitle = "SINGLE ELIMINATION CHAMPIONSHIP",
 }: TournamentBracketModalProps) {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<"bracket" | "teams" | "overview">("bracket");
   const [activeBoxScore, setActiveBoxScore] = useState<BracketMatch | null>(null);
+  const [reportingMatch, setReportingMatch] = useState<BracketMatch | null>(null);
   const [rounds, setRounds] = useState<BracketRound[]>([]);
   const [tournamentDetail, setTournamentDetail] = useState<TournamentDetail | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const canReportResults = user?.role === "ADMIN" || user?.role === "ORGANIZER";
 
   useEffect(() => {
     if (!isOpen) return;
@@ -120,7 +144,7 @@ export default function TournamentBracketModal({
     return () => {
       isMounted = false;
     };
-  }, [isOpen, tournamentId]);
+  }, [isOpen, tournamentId, refreshKey]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -153,11 +177,13 @@ export default function TournamentBracketModal({
         name: m.team1.name || "TBD",
         score: m.team1.score ?? 0,
         isWinner: m.team1.isWinner,
+        universityId: m.team1.universityId,
       },
       team2: {
         name: m.team2.name || "TBD",
         score: m.team2.score ?? 0,
         isWinner: m.team2.isWinner,
+        universityId: m.team2.universityId,
       },
       status: m.status,
       timeLabel: m.timeLabel,
@@ -627,6 +653,8 @@ export default function TournamentBracketModal({
                             round={round}
                             highlight={!grandFinalRound && idx === winnersRounds.length - 1}
                             onViewBoxScore={setActiveBoxScore}
+                            canReportResults={canReportResults}
+                            onReportResult={setReportingMatch}
                           />
                           <BracketConnector />
                         </div>
@@ -634,7 +662,13 @@ export default function TournamentBracketModal({
 
                       {grandFinalRound && (
                         <div className="flex items-stretch gap-6">
-                          <BracketColumn round={grandFinalRound} highlight onViewBoxScore={setActiveBoxScore} />
+                          <BracketColumn
+                            round={grandFinalRound}
+                            highlight
+                            onViewBoxScore={setActiveBoxScore}
+                            canReportResults={canReportResults}
+                            onReportResult={setReportingMatch}
+                          />
                           <BracketConnector />
                         </div>
                       )}
@@ -715,7 +749,12 @@ export default function TournamentBracketModal({
                         <div className="flex items-stretch min-w-max mx-auto gap-6 select-none">
                           {losersRounds.map((round, idx) => (
                             <div key={`l-${idx}`} className="flex items-stretch gap-6">
-                              <BracketColumn round={round} onViewBoxScore={setActiveBoxScore} />
+                              <BracketColumn
+                                round={round}
+                                onViewBoxScore={setActiveBoxScore}
+                                canReportResults={canReportResults}
+                                onReportResult={setReportingMatch}
+                              />
                               {idx < losersRounds.length - 1 && <BracketConnector />}
                             </div>
                           ))}
@@ -770,6 +809,18 @@ export default function TournamentBracketModal({
           />
         );
       })()}
+
+      {reportingMatch && (
+        <CloseMatchModal
+          isOpen={!!reportingMatch}
+          onClose={() => setReportingMatch(null)}
+          tournamentId={tournamentId || ""}
+          match={reportingMatch}
+          team1Roster={participatingTeams.find((t) => t.universityId === reportingMatch.team1.universityId)}
+          team2Roster={participatingTeams.find((t) => t.universityId === reportingMatch.team2.universityId)}
+          onReported={() => setRefreshKey((k) => k + 1)}
+        />
+      )}
     </>
   );
 }

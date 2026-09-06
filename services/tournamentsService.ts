@@ -6,6 +6,7 @@ import {
   TournamentApprovalStatus,
   BracketRound,
   BracketSide,
+  ClosePlayerStatInput,
   TournamentMatch,
   MatchBoxScore,
   PendingSquadApplication
@@ -394,12 +395,14 @@ function buildBracketRounds(
         code: "",
         score: m.isVerified ? 2 : 0,
         isWinner: m.isVerified,
+        universityId: m.winnerId ?? undefined,
       },
       team2: {
         name: teamName(m.loserId),
         code: "",
         score: 0,
         isWinner: false,
+        universityId: m.loserId ?? undefined,
       },
       status: m.isVerified ? "COMPLETED" : "LIVE",
     }));
@@ -562,6 +565,17 @@ export const tournamentsService = {
 
   registerTournament: (tournamentId: string): Promise<unknown> => {
     return apiClient.post(`/tournaments/${tournamentId}/register`, {});
+  },
+
+  closeMatch: (
+    tournamentId: string,
+    matchId: string,
+    payload: { winnerId: string; players: ClosePlayerStatInput[] }
+  ): Promise<unknown> => {
+    return apiClient.post(
+      `/tournaments/${tournamentId}/matches/${matchId}/close`,
+      payload
+    );
   },
 
   applyForTournament: (

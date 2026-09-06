@@ -12,6 +12,9 @@ export interface TeamInMatch {
   code: string;
   score?: number;
   isWinner?: boolean;
+  // The real University id backing this side of the match. Needed to submit
+  // a match result (closeMatch) — display name alone isn't enough.
+  universityId?: string;
 }
 
 export interface Tournament {
@@ -84,6 +87,17 @@ export interface MatchTeam {
   name: string;
   score: number;
   isWinner?: boolean;
+  // The real University id backing this side of the match. Needed to submit
+  // a match result (closeMatch) — display name alone isn't enough.
+  universityId?: string;
+}
+
+export interface ClosePlayerStatInput {
+  universityId: string;
+  name: string;
+  kills: number;
+  deaths: number;
+  assists: number;
 }
 
 export interface BracketMatch {
