@@ -80,8 +80,14 @@ export default function CloseMatchModal({
 
   if (!isOpen) return null;
 
+  // Backend requires each stat to be a non-negative integer (@IsInt @Min(0)).
+  // Strip anything that isn't a digit as it's typed, and cap the length so a
+  // fat-fingered value can't overflow — no minus signs, decimals, or "e".
+  const sanitizeStat = (value: string) => value.replace(/[^\d]/g, "").slice(0, 3);
+
   const updateRow = (idx: number, field: "name" | "kills" | "deaths" | "assists", value: string) => {
-    setPlayers((prev) => prev.map((p, i) => (i === idx ? { ...p, [field]: value } : p)));
+    const next = field === "name" ? value : sanitizeStat(value);
+    setPlayers((prev) => prev.map((p, i) => (i === idx ? { ...p, [field]: next } : p)));
   };
 
   const handleSubmit = async () => {
@@ -93,6 +99,10 @@ export default function CloseMatchModal({
       setErrorMsg("At least one player stat row is required.");
       return;
     }
+    if (players.some((p) => !p.name.trim())) {
+      setErrorMsg("Every player row needs a name — fill in or clear out any blank rows.");
+      return;
+    }
 
     setIsSubmitting(true);
     setErrorMsg("");
@@ -101,7 +111,9 @@ export default function CloseMatchModal({
         winnerId,
         players: players.map((p) => ({
           universityId: p.universityId,
-          name: p.name.trim() || "Player",
+          name: p.name.trim(),
+          // Sanitized to digits-only on input, so Number() is always a safe
+          // non-negative integer; empty means the player simply had 0.
           kills: Number(p.kills) || 0,
           deaths: Number(p.deaths) || 0,
           assists: Number(p.assists) || 0,
@@ -155,16 +167,21 @@ export default function CloseMatchModal({
               value={p.name}
               onChange={(e) => updateRow(p.idx, "name", e.target.value)}
               placeholder="Player name"
-              className="h-11 px-3 bg-[#060912] border border-[#1C2538] text-white text-sm font-sans rounded-lg focus:outline-none focus:border-amber-500"
+              maxLength={40}
+              aria-invalid={!p.name.trim()}
+              className={`h-11 px-3 bg-[#060912] border text-white text-sm font-sans rounded-lg focus:outline-none focus:border-amber-500 ${
+                p.name.trim() ? "border-[#1C2538]" : "border-rose-500/50"
+              }`}
             />
             {(["kills", "deaths", "assists"] as const).map((field) => (
               <input
                 key={field}
-                type="number"
-                min={0}
+                type="text"
+                inputMode="numeric"
                 value={p[field]}
                 onChange={(e) => updateRow(p.idx, field, e.target.value)}
-                className="h-11 px-1 bg-[#060912] border border-[#1C2538] text-white text-base font-mono font-bold text-center rounded-lg focus:outline-none focus:border-amber-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                placeholder="0"
+                className="h-11 px-1 bg-[#060912] border border-[#1C2538] text-white text-base font-mono font-bold text-center rounded-lg focus:outline-none focus:border-amber-500 placeholder:text-slate-600"
               />
             ))}
           </div>
