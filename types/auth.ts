@@ -4,6 +4,25 @@ export interface UniversityInfo {
   domain: string;
 }
 
+export interface UserGameHandle {
+  id?: string;
+  gameTitle: string;
+  handle: string;
+  updatedAt?: string;
+}
+
+export interface UserTeamMembership {
+  id: string;
+  gameHandle: string;
+  preferredRole?: string;
+  status: string;
+  team?: {
+    id: string;
+    name: string;
+    gameTitle: string;
+  };
+}
+
 export interface UserProfile {
   id: string;
   email: string;
@@ -12,6 +31,8 @@ export interface UserProfile {
   status: string;
   universityId: string;
   university: UniversityInfo;
+  gameHandles?: UserGameHandle[];
+  teamMemberships?: UserTeamMembership[];
   createdAt: string;
 }
 

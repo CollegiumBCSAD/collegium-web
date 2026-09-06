@@ -3,18 +3,9 @@ import {
   Tournament,
   TournamentMatch,
   BracketRound,
-  PlayerStats,
-  MatchBoxScore,
 } from "@/types";
 
-export type {
-  TeamInMatch,
-  Tournament,
-  TournamentMatch,
-  BracketRound,
-  PlayerStats,
-  MatchBoxScore,
-};
+export type { TeamInMatch, Tournament, TournamentMatch, BracketRound };
 
 export const mockTournaments: Tournament[] = [
   // VALORANT Tournaments
@@ -297,30 +288,3 @@ export const mockUpcomingBracket: BracketRound[] = [
 
 // Default backwards compatibility
 export const mockBracket: BracketRound[] = mockCompletedBracket;
-
-export const mockBoxScore: MatchBoxScore = {
-  title: "MATCH BOX SCORE",
-  subtitle: "Valorant • Grand Finals • Bo3",
-  team1: {
-    name: "University of Makati",
-    code: "UMak",
-    players: [
-      { name: "Dyeel", role: "Duelist", agent: "Reyna", kills: 28, deaths: 15, assists: 7, kda: 2.33, acs: 332 },
-      { name: "rinkinn", role: "Flex", agent: "Jett", kills: 21, deaths: 14, assists: 12, kda: 2.36, acs: 268 },
-      { name: "Ychann", role: "Initiator", agent: "Sova", kills: 18, deaths: 13, assists: 16, kda: 2.62, acs: 248 },
-      { name: "kcee", role: "Sentinel", agent: "Killjoy", kills: 14, deaths: 11, assists: 10, kda: 2.18, acs: 208 },
-      { name: "LEB", role: "Controller", agent: "Omen", kills: 20, deaths: 14, assists: 8, kda: 2.01, acs: 242 },
-    ],
-  },
-  team2: {
-    name: "De La Salle University",
-    code: "DLSU",
-    players: [
-      { name: "ArcherStriker", role: "Duelist", agent: "Jett", kills: 25, deaths: 18, assists: 5, kda: 1.67, acs: 295 },
-      { name: "TaftPhantom", role: "Controller", agent: "Omen", kills: 17, deaths: 17, assists: 9, kda: 1.53, acs: 218 },
-      { name: "GreenArrow", role: "Initiator", agent: "Sova", kills: 15, deaths: 16, assists: 13, kda: 1.75, acs: 205 },
-      { name: "AnimoViper", role: "Flex", agent: "Viper", kills: 18, deaths: 19, assists: 6, kda: 1.26, acs: 215 },
-      { name: "TaftSentinel", role: "Sentinel", agent: "Killjoy", kills: 12, deaths: 15, assists: 11, kda: 1.53, acs: 182 },
-    ],
-  },
-};

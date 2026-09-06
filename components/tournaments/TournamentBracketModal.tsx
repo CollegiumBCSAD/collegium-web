@@ -1,26 +1,86 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 import MatchBoxScoreModal from "@/components/MatchBoxScoreModal";
 import MatchCard from "@/components/tournaments/MatchCard";
-import { 
-  BracketMatch, 
-  BracketRound, 
+import CloseMatchModal from "@/components/tournaments/CloseMatchModal";
+import {
+  BracketMatch,
+  BracketRound,
   TournamentBracketModalProps,
   TournamentDetail,
-  ParticipatingTeamDetail 
+  ParticipatingTeamDetail
 } from "@/types";
 import { tournamentsService } from "@/services/tournamentsService";
-import { 
-  SwordsIcon, 
-  CrownIcon, 
-  TrophyIcon, 
-  UsersIcon, 
-  ShieldIcon, 
-  ClockIcon, 
+import {
+  SwordsIcon,
+  CrownIcon,
+  TrophyIcon,
+  UsersIcon,
+  ShieldIcon,
+  ClockIcon,
   CheckCircleIcon,
-  XCircleIcon 
+  XCircleIcon
 } from "@/components/ui/Icons";
+
+function BracketColumn({
+  round,
+  highlight,
+  onViewBoxScore,
+  canReportResults,
+  onReportResult,
+}: {
+  round: { name: string; matches: BracketMatch[] };
+  highlight?: boolean;
+  onViewBoxScore: (m: BracketMatch) => void;
+  canReportResults?: boolean;
+  onReportResult?: (m: BracketMatch) => void;
+}) {
+  return (
+    <div className="w-64 shrink-0 flex flex-col justify-center z-10">
+      <div
+        className={`text-center font-display text-xs font-black tracking-widest uppercase mb-4 pb-2 border-b ${
+          highlight ? "text-primary-brand border-primary-brand/40" : "text-slate-400 border-[#1E293B]"
+        }`}
+      >
+        {round.name}
+      </div>
+      <div className="flex-1 flex flex-col justify-around gap-2">
+        {round.matches.map((m) => (
+          <div key={m.id} className="space-y-1">
+            <MatchCard match={m} onViewBoxScore={() => onViewBoxScore(m)} />
+            {canReportResults && m.status !== "COMPLETED" && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onReportResult?.(m);
+                }}
+                className="w-full h-6 text-[9px] font-mono font-bold uppercase tracking-widest text-amber-400 border border-amber-500/40 hover:bg-amber-500/10 transition-colors cursor-pointer"
+              >
+                Report Result
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ponytail: a plain dashed connector instead of the traditional elbowed
+// bracket lines — those need per-match-count positioning math to line up
+// correctly, which stops working the moment round sizes vary (round robin
+// playoffs, double elim). Add real elbow connectors if the visual polish
+// matters more than supporting arbitrary bracket shapes.
+function BracketConnector() {
+  return (
+    <div className="w-8 shrink-0 flex items-center justify-center self-stretch pointer-events-none">
+      <div className="w-full h-0 border-t-2 border-dashed" style={{ borderColor: "#334155" }} />
+    </div>
+  );
+}
 
 export default function TournamentBracketModal({
   isOpen,
@@ -29,11 +89,15 @@ export default function TournamentBracketModal({
   title = "PHILIPPINE COLLEGIATE TOURNAMENT BRACKET",
   subtitle = "SINGLE ELIMINATION CHAMPIONSHIP",
 }: TournamentBracketModalProps) {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<"bracket" | "teams" | "overview">("bracket");
   const [activeBoxScore, setActiveBoxScore] = useState<BracketMatch | null>(null);
+  const [reportingMatch, setReportingMatch] = useState<BracketMatch | null>(null);
   const [rounds, setRounds] = useState<BracketRound[]>([]);
   const [tournamentDetail, setTournamentDetail] = useState<TournamentDetail | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const canReportResults = user?.role === "ADMIN" || user?.role === "ORGANIZER";
 
   useEffect(() => {
     if (!isOpen) return;
@@ -80,7 +144,7 @@ export default function TournamentBracketModal({
     return () => {
       isMounted = false;
     };
-  }, [isOpen, tournamentId]);
+  }, [isOpen, tournamentId, refreshKey]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -106,20 +170,24 @@ export default function TournamentBracketModal({
         : rIdx === rounds.length - 2
         ? "SEMIFINALS"
         : `ROUND ${rIdx + 1}`),
+    bracketSide: round.bracketSide,
     matches: round.matches.map((m) => ({
       id: m.id,
       team1: {
         name: m.team1.name || "TBD",
         score: m.team1.score ?? 0,
         isWinner: m.team1.isWinner,
+        universityId: m.team1.universityId,
       },
       team2: {
         name: m.team2.name || "TBD",
         score: m.team2.score ?? 0,
         isWinner: m.team2.isWinner,
+        universityId: m.team2.universityId,
       },
       status: m.status,
       timeLabel: m.timeLabel,
+      playerStats: m.playerStats,
     })),
   }));
 
@@ -138,14 +206,25 @@ export default function TournamentBracketModal({
       : lastMatch.team2.name
     : null;
 
-  // Binary tree matches
-  const qfMatches = normalizedRounds[0]?.matches || [];
-  const sfMatches = normalizedRounds[1]?.matches || [];
-  const gfMatches = normalizedRounds[2]?.matches || [];
-  const lineColor = "#334155";
+  // Double Elimination splits into two visible brackets; Single Elimination
+  // and Round Robin + Playoffs have everything in "winnersRounds" since their
+  // matches carry no bracketSide.
+  const winnersRounds = normalizedRounds.filter(
+    (r) => r.bracketSide !== "LOSERS" && r.bracketSide !== "GRAND_FINAL",
+  );
+  const losersRounds = normalizedRounds.filter((r) => r.bracketSide === "LOSERS");
+  const grandFinalRound = normalizedRounds.find((r) => r.bracketSide === "GRAND_FINAL") || null;
 
   // Participating teams list
   const participatingTeams: ParticipatingTeamDetail[] = tournamentDetail?.participatingTeams || [];
+
+  // Prefer the real bracket format/team count once loaded over the static
+  // prop default, which otherwise always claims "Single Elimination".
+  const displaySubtitle = tournamentDetail
+    ? `${(tournamentDetail.bracketFormat || "SINGLE ELIMINATION").toUpperCase()} • ${
+        tournamentDetail.teamQuota || participatingTeams.length || "?"
+      } TEAMS`
+    : subtitle;
 
   return (
     <>
@@ -175,7 +254,7 @@ export default function TournamentBracketModal({
                   {tournamentDetail?.game || "OFFICIAL COLLEGIATE CIRCUIT"}
                 </span>
                 <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">
-                  {subtitle}
+                  {displaySubtitle}
                 </span>
               </div>
               <h2 className="font-display text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-white uppercase drop-shadow-sm">
@@ -559,7 +638,7 @@ export default function TournamentBracketModal({
               </div>
             ) : (
               /* TAB: BRACKET CANVAS */
-              <div className="overflow-x-auto p-6 sm:p-10 flex flex-col justify-center min-h-[580px]">
+              <div className="overflow-x-auto p-6 sm:p-10 flex flex-col gap-10 min-h-[580px]">
                 {normalizedRounds.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-20 space-y-4">
                     <p className="font-sans text-xs font-bold text-slate-400 tracking-widest uppercase">
@@ -567,149 +646,123 @@ export default function TournamentBracketModal({
                     </p>
                   </div>
                 ) : (
-                  <div 
-                    className="flex justify-between items-stretch min-w-[1000px] max-w-6xl mx-auto relative gap-8 select-none py-6"
-                    style={{ minHeight: "540px" }}
-                  >
-                    {/* ROUND 1: QUARTERFINALS (4 Matches) */}
-                    <div className="flex-1 flex flex-col justify-between z-10">
-                      <div className="text-center font-display text-xs font-black tracking-widest text-slate-400 uppercase mb-4 pb-2 border-b border-[#1E293B]">
-                        {normalizedRounds[0]?.name || "QUARTERFINALS"}
-                      </div>
-                      <div className="flex-1 flex flex-col justify-around py-2 gap-4">
-                        {qfMatches.map((m) => (
-                          <MatchCard 
-                            key={m.id} 
-                            match={m} 
-                            onViewBoxScore={() => setActiveBoxScore(m)} 
+                  <>
+                    <div className="flex items-stretch min-w-max mx-auto gap-6 select-none py-6">
+                      {winnersRounds.map((round, idx) => (
+                        <div key={`w-${idx}`} className="flex items-stretch gap-6">
+                          <BracketColumn
+                            round={round}
+                            highlight={!grandFinalRound && idx === winnersRounds.length - 1}
+                            onViewBoxScore={setActiveBoxScore}
+                            canReportResults={canReportResults}
+                            onReportResult={setReportingMatch}
                           />
-                        ))}
-                      </div>
-                    </div>
+                          <BracketConnector />
+                        </div>
+                      ))}
 
-                    {/* CONNECTOR 1: QF -> SF */}
-                    <div className="w-12 flex flex-col justify-around relative pointer-events-none self-stretch pt-10">
-                      <div className="h-[46%] w-full relative">
-                        <div className="absolute top-[25%] left-0 right-1/2 h-[50%] border-r-2 border-t-2 border-b-2" style={{ borderColor: lineColor }} />
-                        <div className="absolute top-[50%] right-0 left-1/2 h-0 border-t-2 -translate-y-1/2" style={{ borderColor: lineColor }} />
-                      </div>
-                      <div className="h-[46%] w-full relative">
-                        <div className="absolute top-[25%] left-0 right-1/2 h-[50%] border-r-2 border-t-2 border-b-2" style={{ borderColor: lineColor }} />
-                        <div className="absolute top-[50%] right-0 left-1/2 h-0 border-t-2 -translate-y-1/2" style={{ borderColor: lineColor }} />
-                      </div>
-                    </div>
-
-                    {/* ROUND 2: SEMIFINALS (2 Matches) */}
-                    <div className="flex-1 flex flex-col justify-between z-10">
-                      <div className="text-center font-display text-xs font-black tracking-widest text-slate-400 uppercase mb-4 pb-2 border-b border-[#1E293B]">
-                        {normalizedRounds[1]?.name || "SEMIFINALS"}
-                      </div>
-                      <div className="flex-1 flex flex-col justify-around py-6 gap-8">
-                        {sfMatches.map((m) => (
-                          <MatchCard 
-                            key={m.id} 
-                            match={m} 
-                            onViewBoxScore={() => setActiveBoxScore(m)} 
+                      {grandFinalRound && (
+                        <div className="flex items-stretch gap-6">
+                          <BracketColumn
+                            round={grandFinalRound}
+                            highlight
+                            onViewBoxScore={setActiveBoxScore}
+                            canReportResults={canReportResults}
+                            onReportResult={setReportingMatch}
                           />
-                        ))}
-                      </div>
-                    </div>
+                          <BracketConnector />
+                        </div>
+                      )}
 
-                    {/* CONNECTOR 2: SF -> GF */}
-                    <div className="w-12 flex flex-col justify-around relative pointer-events-none self-stretch pt-10">
-                      <div className="h-[80%] w-full relative">
-                        <div className="absolute top-[25%] left-0 right-1/2 h-[50%] border-r-2 border-t-2 border-b-2" style={{ borderColor: lineColor }} />
-                        <div className="absolute top-[50%] right-0 left-1/2 h-0 border-t-2 -translate-y-1/2" style={{ borderColor: lineColor }} />
-                      </div>
-                    </div>
+                      {/* CHAMPIONSHIP PODIUM */}
+                      <div className="w-64 shrink-0 flex flex-col justify-between z-10">
+                        <div className="text-center font-display text-xs font-black tracking-widest text-amber-400 uppercase mb-4 pb-2 border-b border-amber-500/40">
+                          CHAMPIONSHIP PODIUM
+                        </div>
 
-                    {/* ROUND 3: GRAND FINALS (1 Match) */}
-                    <div className="flex-1 flex flex-col justify-between z-10">
-                      <div className="text-center font-display text-xs font-black tracking-widest text-primary-brand uppercase mb-4 pb-2 border-b border-primary-brand/40">
-                        {normalizedRounds[2]?.name || "GRAND FINALS"}
-                      </div>
-                      <div className="flex-1 flex flex-col justify-center py-4">
-                        {gfMatches.map((m) => (
-                          <MatchCard 
-                            key={m.id} 
-                            match={m} 
-                            onViewBoxScore={() => setActiveBoxScore(m)} 
-                          />
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* CONNECTOR 3: GF -> CHAMPION */}
-                    <div className="w-12 flex flex-col justify-center relative pointer-events-none self-stretch pt-10">
-                      <div className="w-full h-0 border-t-2" style={{ borderColor: lineColor }} />
-                    </div>
-
-                    {/* COLUMN 4: CHAMPION TROPHY PODIUM */}
-                    <div className="flex-1 flex flex-col justify-between z-10">
-                      <div className="text-center font-display text-xs font-black tracking-widest text-amber-400 uppercase mb-4 pb-2 border-b border-amber-500/40">
-                        CHAMPIONSHIP PODIUM
-                      </div>
-
-                      <div className="flex-1 flex flex-col items-center justify-center relative group py-4">
-                        <div className="relative mb-6">
-                          <div 
-                            className="w-28 h-28 bg-gradient-to-br from-amber-300 via-amber-500 to-amber-700 p-[2.5px] shadow-2xl flex items-center justify-center relative transition-transform duration-300 group-hover:scale-105"
-                            style={{
-                              clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
-                            }}
-                          >
-                            <div 
-                              className="w-full h-full bg-[#0D0F18] flex flex-col items-center justify-center p-3 text-center space-y-1"
+                        <div className="flex-1 flex flex-col items-center justify-center relative group py-4">
+                          <div className="relative mb-6">
+                            <div
+                              className="w-28 h-28 bg-gradient-to-br from-amber-300 via-amber-500 to-amber-700 p-[2.5px] shadow-2xl flex items-center justify-center relative transition-transform duration-300 group-hover:scale-105"
                               style={{
                                 clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
                               }}
                             >
-                              <TrophyIcon className="w-10 h-10 text-amber-400 drop-shadow-md animate-pulse" />
-                              <span className="font-mono text-[8px] font-bold text-amber-300 uppercase tracking-widest block">
-                                SEASON 1
+                              <div
+                                className="w-full h-full bg-[#0D0F18] flex flex-col items-center justify-center p-3 text-center space-y-1"
+                                style={{
+                                  clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
+                                }}
+                              >
+                                <TrophyIcon className="w-10 h-10 text-amber-400 drop-shadow-md animate-pulse" />
+                                <span className="font-mono text-[8px] font-bold text-amber-300 uppercase tracking-widest block">
+                                  SEASON 1
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Champion Winner Card */}
+                          <div
+                            className={`w-56 border-2 p-4 shadow-2xl text-center space-y-2 ${
+                              champion
+                                ? "bg-gradient-to-b from-[#1C1708] via-[#0E101B] to-[#070912] border-amber-500/80 shadow-[0_0_20px_rgba(245,158,11,0.2)]"
+                                : "bg-[#090C16] border-[#22304A]"
+                            }`}
+                            style={{
+                              clipPath: "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
+                            }}
+                          >
+                            <div className={`flex items-center justify-center gap-1.5 font-display text-[10px] font-black uppercase tracking-widest ${
+                              champion ? "text-amber-400" : "text-emerald-400"
+                            }`}>
+                              <CrownIcon className="w-3.5 h-3.5" />
+                              <span>{champion ? "TOURNAMENT CHAMPION" : "CHAMPIONSHIP TROPHY"}</span>
+                            </div>
+
+                            <h3 className="font-display text-base font-black uppercase text-white tracking-wide">
+                              {champion || "Awaiting Finalists"}
+                            </h3>
+
+                            <div className="pt-2 border-t border-white/10">
+                              <span
+                                className={`px-2.5 py-0.5 font-mono text-[9px] font-black uppercase tracking-wider inline-block ${
+                                  champion ? "bg-amber-500 text-black" : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
+                                }`}
+                                style={{
+                                  clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
+                                }}
+                              >
+                                {champion ? "GOLD MEDALIST" : "MATCHES IN PROGRESS"}
                               </span>
                             </div>
                           </div>
                         </div>
-
-                        {/* Champion Winner Card */}
-                        <div 
-                          className={`w-56 border-2 p-4 shadow-2xl text-center space-y-2 ${
-                            champion 
-                              ? "bg-gradient-to-b from-[#1C1708] via-[#0E101B] to-[#070912] border-amber-500/80 shadow-[0_0_20px_rgba(245,158,11,0.2)]" 
-                              : "bg-[#090C16] border-[#22304A]"
-                          }`}
-                          style={{
-                            clipPath: "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
-                          }}
-                        >
-                          <div className={`flex items-center justify-center gap-1.5 font-display text-[10px] font-black uppercase tracking-widest ${
-                            champion ? "text-amber-400" : "text-emerald-400"
-                          }`}>
-                            <CrownIcon className="w-3.5 h-3.5" />
-                            <span>{champion ? "TOURNAMENT CHAMPION" : "CHAMPIONSHIP TROPHY"}</span>
-                          </div>
-
-                          <h3 className="font-display text-base font-black uppercase text-white tracking-wide">
-                            {champion || "Awaiting Finalists"}
-                          </h3>
-
-                          <div className="pt-2 border-t border-white/10">
-                            <span 
-                              className={`px-2.5 py-0.5 font-mono text-[9px] font-black uppercase tracking-wider inline-block ${
-                                champion ? "bg-amber-500 text-black" : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
-                              }`}
-                              style={{
-                                clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-                              }}
-                            >
-                              {champion ? "GOLD MEDALIST" : "MATCHES IN PROGRESS"}
-                            </span>
-                          </div>
-                        </div>
                       </div>
                     </div>
-                  </div>
+
+                    {/* LOSERS BRACKET — Double Elimination only */}
+                    {losersRounds.length > 0 && (
+                      <div className="pt-8 border-t border-[#1E293B]">
+                        <div className="text-center font-mono text-[10px] font-black text-rose-400 uppercase tracking-widest mb-6">
+                          Losers Bracket
+                        </div>
+                        <div className="flex items-stretch min-w-max mx-auto gap-6 select-none">
+                          {losersRounds.map((round, idx) => (
+                            <div key={`l-${idx}`} className="flex items-stretch gap-6">
+                              <BracketColumn
+                                round={round}
+                                onViewBoxScore={setActiveBoxScore}
+                                canReportResults={canReportResults}
+                                onReportResult={setReportingMatch}
+                              />
+                              {idx < losersRounds.length - 1 && <BracketConnector />}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}
@@ -720,22 +773,8 @@ export default function TournamentBracketModal({
       {(() => {
         if (!activeBoxScore) return null;
 
-        const getTeamRoster = (teamName: string) => {
-          const norm = (teamName || "").toLowerCase().trim();
-          const found = participatingTeams.find((pt) => {
-            const pName = (pt.name || "").toLowerCase().trim();
-            const pUni = (pt.universityName || "").toLowerCase().trim();
-            return (
-              pName === norm ||
-              pUni === norm ||
-              norm.includes(pUni) ||
-              pUni.includes(norm) ||
-              norm.includes(pName) ||
-              pName.includes(norm)
-            );
-          });
-          return found?.members || [];
-        };
+        const getTeamRoster = (universityId?: string) =>
+          participatingTeams.find((pt) => pt.universityId === universityId)?.members || [];
 
         return (
           <MatchBoxScoreModal
@@ -746,14 +785,35 @@ export default function TournamentBracketModal({
             matchInfo={{
               team1Name: activeBoxScore.team1.name,
               team2Name: activeBoxScore.team2.name,
+              team1UniversityId: activeBoxScore.team1.universityId,
+              team2UniversityId: activeBoxScore.team2.universityId,
               team1Score: activeBoxScore.team1.score,
               team2Score: activeBoxScore.team2.score,
               status: activeBoxScore.status,
               isTeam1Winner: Boolean(activeBoxScore.team1.isWinner),
               isTeam2Winner: Boolean(activeBoxScore.team2.isWinner),
-              team1Roster: getTeamRoster(activeBoxScore.team1.name),
-              team2Roster: getTeamRoster(activeBoxScore.team2.name),
+              playerStats: activeBoxScore.playerStats,
+              team1Roster: getTeamRoster(activeBoxScore.team1.universityId),
+              team2Roster: getTeamRoster(activeBoxScore.team2.universityId),
             }}
+          />
+        );
+      })()}
+
+      {reportingMatch && (() => {
+        const team1Roster = participatingTeams.find((t) => t.universityId === reportingMatch.team1.universityId);
+        const team2Roster = participatingTeams.find((t) => t.universityId === reportingMatch.team2.universityId);
+        const key = `${reportingMatch.id}-${team1Roster?.members?.length ?? 0}-${team2Roster?.members?.length ?? 0}`;
+        return (
+          <CloseMatchModal
+            key={key}
+            isOpen={!!reportingMatch}
+            onClose={() => setReportingMatch(null)}
+            tournamentId={tournamentId || ""}
+            match={reportingMatch}
+            team1Roster={team1Roster}
+            team2Roster={team2Roster}
+            onReported={() => setRefreshKey((k) => k + 1)}
           />
         );
       })()}

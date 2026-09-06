@@ -21,7 +21,6 @@ export default function BracketPage() {
         }}
         tournamentId={tournamentId}
         title="TOURNAMENT BRACKET"
-        subtitle="SINGLE ELIMINATION • 8 TEAMS"
       />
     </div>
   );

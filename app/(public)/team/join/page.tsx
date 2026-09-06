@@ -43,7 +43,16 @@ function JoinTeamContent() {
   const [inviteTeam, setInviteTeam] = useState<Team | null>(null);
   const [userSelectedTeam, setUserSelectedTeam] = useState<Team | null>(null);
 
-  const [gameHandle, setGameHandle] = useState("");
+  const [gameHandle, setGameHandle] = useState(() => {
+    const gameTitleMap: Record<string, string> = {
+      valo: "VALORANT",
+      lol: "LOL",
+      ml: "MLBB",
+      codm: "CODM",
+    };
+    const title = gameTitleMap[activeGame] || "VALORANT";
+    return user?.gameHandles?.find((gh) => gh.gameTitle === title)?.handle || "";
+  });
   const [preferredRole, setPreferredRole] = useState("");
   const [resultMessage, setResultMessage] = useState<{ success: boolean; isInstant: boolean; message: string } | null>(null);
   const [error, setError] = useState("");

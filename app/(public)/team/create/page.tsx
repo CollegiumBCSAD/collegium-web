@@ -41,8 +41,18 @@ export default function CreateTeamPage() {
   const activeGameInfo = GAMES[activeGame as keyof typeof GAMES] || GAMES.valo;
   const placeholders = GAME_SPECIFIC_PLACEHOLDERS[activeGame] || GAME_SPECIFIC_PLACEHOLDERS.valo;
 
+  const gameTitleMap: Record<string, string> = {
+    valo: "VALORANT",
+    lol: "LOL",
+    ml: "MLBB",
+    codm: "CODM",
+  };
+
   const [teamName, setTeamName] = useState("");
-  const [gameHandle, setGameHandle] = useState("");
+  const [gameHandle, setGameHandle] = useState(() => {
+    const title = gameTitleMap[activeGame] || "VALORANT";
+    return user?.gameHandles?.find((gh) => gh.gameTitle === title)?.handle || "";
+  });
   const [preferredRole, setPreferredRole] = useState("");
   const [createdTeam, setCreatedTeam] = useState<Team | null>(null);
   const [copied, setCopied] = useState(false);

@@ -135,6 +135,21 @@ export default function TeamRosterCard({ team, onRosterUpdated }: TeamRosterCard
               </div>
             </div>
 
+            {/* Roster IGN Preview Chips */}
+            {team.members && team.members.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                {team.members.slice(0, 5).map((m) => (
+                  <span
+                    key={m.id}
+                    className="text-[9px] font-mono font-bold px-2 py-0.5 bg-[#050711] border border-[#162034] text-slate-300 rounded truncate max-w-[130px]"
+                    title={m.gameHandle || m.displayName || "Athlete"}
+                  >
+                    🎮 {m.gameHandle || m.displayName}
+                  </span>
+                ))}
+              </div>
+            )}
+
             {/* Bottom Actions Bar */}
             <div className="pt-3 border-t border-[#182338] flex items-center justify-between gap-3 text-xs">
               <button

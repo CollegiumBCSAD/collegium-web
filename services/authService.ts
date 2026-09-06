@@ -49,4 +49,11 @@ export const authService = {
   refreshToken: (): Promise<AuthTokens> => {
     return apiClient.post<AuthTokens>("/auth/refresh", {}, true);
   },
+
+  updateGameHandle: (gameTitle: string, handle: string): Promise<{ id: string; gameTitle: string; handle: string }> => {
+    return apiClient.patch<{ id: string; gameTitle: string; handle: string }>("/auth/me/game-handles", {
+      gameTitle,
+      handle,
+    });
+  },
 };

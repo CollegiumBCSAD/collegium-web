@@ -12,6 +12,9 @@ export interface TeamInMatch {
   code: string;
   score?: number;
   isWinner?: boolean;
+  // The real University id backing this side of the match. Needed to submit
+  // a match result (closeMatch) — display name alone isn't enough.
+  universityId?: string;
 }
 
 export interface Tournament {
@@ -41,43 +44,48 @@ export interface TournamentMatch {
   team2: TeamInMatch;
   status: TournamentStatus;
   timeLabel?: string;
+  playerStats?: MatchPlayerStat[];
 }
+
+export type BracketSide = "WINNERS" | "LOSERS" | "GRAND_FINAL";
 
 export interface BracketRound {
   name: string;
+  // Only set for Double Elimination — distinguishes the winners bracket,
+  // losers bracket, and the final decider match. Undefined for Single
+  // Elimination and Round Robin + Playoffs, which have one implicit bracket.
+  bracketSide?: BracketSide;
   matches: TournamentMatch[];
 }
 
-export interface PlayerStats {
+// A real, organizer-reported per-player stat row (PlayerStat.dataSource
+// PEER_VERIFIED) — no agent/ACS fields, there's no data source for those
+// on a manually-entered stat line.
+export interface MatchPlayerStat {
+  universityId: string | null;
   name: string;
-  role: string;
-  agent: string;
   kills: number;
   deaths: number;
   assists: number;
-  kda: number;
-  acs: number;
-}
-
-export interface MatchBoxScore {
-  title: string;
-  subtitle: string;
-  team1: {
-    name: string;
-    code: string;
-    players: PlayerStats[];
-  };
-  team2: {
-    name: string;
-    code: string;
-    players: PlayerStats[];
-  };
+  win: boolean;
 }
 
 export interface MatchTeam {
   name: string;
   score: number;
   isWinner?: boolean;
+  // The real University id backing this side of the match. Needed to submit
+  // a match result (closeMatch) — display name alone isn't enough.
+  universityId?: string;
+}
+
+export interface ClosePlayerStatInput {
+  universityId: string;
+  userId?: string;
+  name: string;
+  kills: number;
+  deaths: number;
+  assists: number;
 }
 
 export interface BracketMatch {
@@ -86,6 +94,7 @@ export interface BracketMatch {
   team2: MatchTeam;
   status?: "LIVE" | "COMPLETED" | "UPCOMING" | string;
   timeLabel?: string;
+  playerStats?: MatchPlayerStat[];
 }
 
 export interface TournamentBracketModalProps {
