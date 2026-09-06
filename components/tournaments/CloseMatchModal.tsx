@@ -90,17 +90,25 @@ export default function CloseMatchModal({
     setPlayers((prev) => prev.map((p, i) => (i === idx ? { ...p, [field]: next } : p)));
   };
 
+  const rowHasData = (p: PlayerRow) =>
+    Boolean(p.name.trim() || p.kills || p.deaths || p.assists);
+
   const handleSubmit = async () => {
     if (!winnerId) {
       setErrorMsg("Pick the winning team first.");
       return;
     }
-    if (players.length === 0) {
-      setErrorMsg("At least one player stat row is required.");
+
+    // A blank prefilled roster slot the organizer didn't fill is fine to
+    // drop; only rows with a name or any stat count as real entries.
+    const filled = players.filter(rowHasData);
+
+    if (filled.length === 0) {
+      setErrorMsg("Enter at least one player's stats before confirming.");
       return;
     }
-    if (players.some((p) => !p.name.trim())) {
-      setErrorMsg("Every player row needs a name — fill in or clear out any blank rows.");
+    if (filled.some((p) => !p.name.trim())) {
+      setErrorMsg("Every player with stats entered needs a name.");
       return;
     }
 
@@ -109,7 +117,7 @@ export default function CloseMatchModal({
     try {
       await tournamentsService.closeMatch(tournamentId, match.id, {
         winnerId,
-        players: players.map((p) => ({
+        players: filled.map((p) => ({
           universityId: p.universityId,
           name: p.name.trim(),
           // Sanitized to digits-only on input, so Number() is always a safe
@@ -163,16 +171,23 @@ export default function CloseMatchModal({
       <div className="space-y-2">
         {rows.map((p) => (
           <div key={p.idx} className="grid grid-cols-[1fr_3.75rem_3.75rem_3.75rem] gap-2">
-            <input
-              value={p.name}
-              onChange={(e) => updateRow(p.idx, "name", e.target.value)}
-              placeholder="Player name"
-              maxLength={40}
-              aria-invalid={!p.name.trim()}
-              className={`h-11 px-3 bg-[#060912] border text-white text-sm font-sans rounded-lg focus:outline-none focus:border-amber-500 ${
-                p.name.trim() ? "border-[#1C2538]" : "border-rose-500/50"
-              }`}
-            />
+            {(() => {
+              // Flag only a row that has stats entered but no name — a fully
+              // blank prefilled slot is legitimately optional, not an error.
+              const needsName = !p.name.trim() && Boolean(p.kills || p.deaths || p.assists);
+              return (
+                <input
+                  value={p.name}
+                  onChange={(e) => updateRow(p.idx, "name", e.target.value)}
+                  placeholder="Player name"
+                  maxLength={40}
+                  aria-invalid={needsName}
+                  className={`h-11 px-3 bg-[#060912] border text-white text-sm font-sans rounded-lg focus:outline-none focus:border-amber-500 ${
+                    needsName ? "border-rose-500/50" : "border-[#1C2538]"
+                  }`}
+                />
+              );
+            })()}
             {(["kills", "deaths", "assists"] as const).map((field) => (
               <input
                 key={field}
