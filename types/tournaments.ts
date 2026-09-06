@@ -81,6 +81,7 @@ export interface MatchTeam {
 
 export interface ClosePlayerStatInput {
   universityId: string;
+  userId?: string;
   name: string;
   kills: number;
   deaths: number;

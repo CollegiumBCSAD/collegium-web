@@ -7,6 +7,7 @@ import { TrophyIcon, AlertTriangleIcon } from "@/components/ui/Icons";
 
 interface PlayerRow {
   universityId: string;
+  userId: string;
   name: string;
   kills: string;
   deaths: string;
@@ -24,17 +25,15 @@ interface CloseMatchModalProps {
 }
 
 function buildRows(universityId: string | undefined, roster: ParticipatingTeamDetail | undefined): PlayerRow[] {
-  if (!universityId) return [];
-  if (roster && roster.members.length > 0) {
-    return roster.members.map((m) => ({
-      universityId,
-      name: m.displayName,
-      kills: "",
-      deaths: "",
-      assists: "",
-    }));
-  }
-  return Array.from({ length: 5 }, () => ({ universityId, name: "", kills: "", deaths: "", assists: "" }));
+  if (!universityId || !roster) return [];
+  return roster.members.map((m) => ({
+    universityId,
+    userId: m.userId,
+    name: m.gameHandle || m.displayName || "Athlete",
+    kills: "",
+    deaths: "",
+    assists: "",
+  }));
 }
 
 export default function CloseMatchModal({
@@ -80,28 +79,35 @@ export default function CloseMatchModal({
 
   const sanitizeStat = (value: string) => value.replace(/[^\d]/g, "").slice(0, 3);
 
-  const updateRow = (idx: number, field: "name" | "kills" | "deaths" | "assists", value: string) => {
-    const next = field === "name" ? value : sanitizeStat(value);
+  const updateRow = (idx: number, field: "kills" | "deaths" | "assists", value: string) => {
+    const next = sanitizeStat(value);
     setPlayers((prev) => prev.map((p, i) => (i === idx ? { ...p, [field]: next } : p)));
   };
 
-  const rowHasData = (p: PlayerRow) =>
-    Boolean(p.name.trim() || p.kills || p.deaths || p.assists);
+  const rowHasData = (p: PlayerRow) => Boolean(p.kills || p.deaths || p.assists);
+
+  const team1Players = players
+    .map((p, idx) => ({ ...p, idx }))
+    .filter((p) => p.universityId === match.team1.universityId);
+  const team2Players = players
+    .map((p, idx) => ({ ...p, idx }))
+    .filter((p) => p.universityId === match.team2.universityId);
+
+  const missingRoster = team1Players.length === 0 || team2Players.length === 0;
 
   const handleSubmit = async () => {
+    if (missingRoster) {
+      setErrorMsg("Both teams need a registered roster before a result can be reported.");
+      return;
+    }
     if (!winnerId) {
       setErrorMsg("Pick the winning team first.");
       return;
     }
 
     const filled = players.filter(rowHasData);
-
     if (filled.length === 0) {
       setErrorMsg("Enter at least one player's stats before confirming.");
-      return;
-    }
-    if (filled.some((p) => !p.name.trim())) {
-      setErrorMsg("Every player with stats entered needs a name.");
       return;
     }
 
@@ -112,7 +118,8 @@ export default function CloseMatchModal({
         winnerId,
         players: filled.map((p) => ({
           universityId: p.universityId,
-          name: p.name.trim(),
+          userId: p.userId,
+          name: p.name,
           kills: Number(p.kills) || 0,
           deaths: Number(p.deaths) || 0,
           assists: Number(p.assists) || 0,
@@ -127,70 +134,61 @@ export default function CloseMatchModal({
     }
   };
 
-  const team1Players = players
-    .map((p, idx) => ({ ...p, idx }))
-    .filter((p) => p.universityId === match.team1.universityId);
-  const team2Players = players
-    .map((p, idx) => ({ ...p, idx }))
-    .filter((p) => p.universityId === match.team2.universityId);
-
   const renderTeamColumn = (teamName: string, universityId: string | undefined, rows: (PlayerRow & { idx: number })[]) => (
     <div className="flex-1 min-w-0 space-y-3">
       <button
         type="button"
-        onClick={() => universityId && setWinnerId(universityId)}
-        disabled={!universityId}
-        className={`w-full flex items-center justify-between px-4 py-3 border text-left transition-colors cursor-pointer ${
-          winnerId === universityId
-            ? "bg-emerald-950/50 border-emerald-500/70 text-emerald-300"
-            : "bg-[#0A0D18] border-[#1E293B] text-slate-300 hover:border-primary-brand/50"
+        onClick={() => universityId && rows.length > 0 && setWinnerId(universityId)}
+        disabled={!universityId || rows.length === 0}
+        className={`w-full flex items-center justify-between px-4 py-3 border text-left transition-colors ${
+          rows.length === 0
+            ? "bg-[#0A0D18] border-[#1E293B] text-slate-500 cursor-not-allowed"
+            : winnerId === universityId
+            ? "bg-emerald-950/50 border-emerald-500/70 text-emerald-300 cursor-pointer"
+            : "bg-[#0A0D18] border-[#1E293B] text-slate-300 hover:border-primary-brand/50 cursor-pointer"
         }`}
       >
         <span className="font-display text-sm font-black uppercase tracking-wide truncate">{teamName}</span>
         {winnerId === universityId && <TrophyIcon className="w-4 h-4 text-emerald-400 shrink-0" />}
       </button>
 
-      <div className="grid grid-cols-[1fr_3.75rem_3.75rem_3.75rem] gap-2 px-1">
-        <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">Athlete</span>
-        {["K", "D", "A"].map((label) => (
-          <span key={label} className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest text-center">
-            {label}
-          </span>
-        ))}
-      </div>
-
-      <div className="space-y-2">
-        {rows.map((p) => (
-          <div key={p.idx} className="grid grid-cols-[1fr_3.75rem_3.75rem_3.75rem] gap-2">
-            {(() => {
-              const needsName = !p.name.trim() && Boolean(p.kills || p.deaths || p.assists);
-              return (
-                <input
-                  value={p.name}
-                  onChange={(e) => updateRow(p.idx, "name", e.target.value)}
-                  placeholder="Player name"
-                  maxLength={40}
-                  aria-invalid={needsName}
-                  className={`h-11 px-3 bg-[#060912] border text-white text-sm font-sans rounded-lg focus:outline-none focus:border-amber-500 ${
-                    needsName ? "border-rose-500/50" : "border-[#1C2538]"
-                  }`}
-                />
-              );
-            })()}
-            {(["kills", "deaths", "assists"] as const).map((field) => (
-              <input
-                key={field}
-                type="text"
-                inputMode="numeric"
-                value={p[field]}
-                onChange={(e) => updateRow(p.idx, field, e.target.value)}
-                placeholder="0"
-                className="h-11 px-1 bg-[#060912] border border-[#1C2538] text-white text-base font-mono font-bold text-center rounded-lg focus:outline-none focus:border-amber-500 placeholder:text-slate-600"
-              />
+      {rows.length === 0 ? (
+        <div className="p-4 bg-[#060912] border border-dashed border-[#2A3550] text-slate-500 text-xs font-mono text-center rounded-lg">
+          No registered athletes for this team.
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-[1fr_3.75rem_3.75rem_3.75rem] gap-2 px-1">
+            <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">Athlete</span>
+            {["K", "D", "A"].map((label) => (
+              <span key={label} className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest text-center">
+                {label}
+              </span>
             ))}
           </div>
-        ))}
-      </div>
+
+          <div className="space-y-2">
+            {rows.map((p) => (
+              <div key={p.idx} className="grid grid-cols-[1fr_3.75rem_3.75rem_3.75rem] gap-2">
+                <div className="h-11 px-3 flex items-center bg-[#060912] border border-[#1C2538] rounded-lg text-white text-sm font-sans truncate">
+                  {p.name}
+                </div>
+                {(["kills", "deaths", "assists"] as const).map((field) => (
+                  <input
+                    key={field}
+                    type="text"
+                    inputMode="numeric"
+                    value={p[field]}
+                    onChange={(e) => updateRow(p.idx, field, e.target.value)}
+                    placeholder="0"
+                    className="h-11 px-1 bg-[#060912] border border-[#1C2538] text-white text-base font-mono font-bold text-center rounded-lg focus:outline-none focus:border-amber-500 placeholder:text-slate-600"
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 
