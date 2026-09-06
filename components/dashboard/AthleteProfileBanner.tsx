@@ -271,6 +271,7 @@ export default function AthleteProfileBanner({ user, squadsCount = 0 }: AthleteP
       </div>
 
       <EditGameHandlesModal
+        key={`${user?.id}-${user?.gameHandles?.length ?? 0}`}
         isOpen={isEditIgnOpen}
         onClose={() => setIsEditIgnOpen(false)}
         user={user}

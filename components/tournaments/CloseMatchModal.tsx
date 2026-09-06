@@ -46,20 +46,12 @@ export default function CloseMatchModal({
   onReported,
 }: CloseMatchModalProps) {
   const [winnerId, setWinnerId] = useState<string | null>(null);
-  const [players, setPlayers] = useState<PlayerRow[]>([]);
+  const [players, setPlayers] = useState<PlayerRow[]>(() => [
+    ...buildRows(match.team1.universityId, team1Roster),
+    ...buildRows(match.team2.universityId, team2Roster),
+  ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-
-  const [initializedForMatchId, setInitializedForMatchId] = useState<string | null>(null);
-  if (isOpen && initializedForMatchId !== match.id) {
-    setInitializedForMatchId(match.id);
-    setPlayers([
-      ...buildRows(match.team1.universityId, team1Roster),
-      ...buildRows(match.team2.universityId, team2Roster),
-    ]);
-    setWinnerId(null);
-    setErrorMsg("");
-  }
 
   useEffect(() => {
     if (!isOpen) return;
@@ -118,7 +110,7 @@ export default function CloseMatchModal({
         winnerId,
         players: filled.map((p) => ({
           universityId: p.universityId,
-          userId: p.userId,
+          userId: p.userId ? p.userId : undefined,
           name: p.name,
           kills: Number(p.kills) || 0,
           deaths: Number(p.deaths) || 0,

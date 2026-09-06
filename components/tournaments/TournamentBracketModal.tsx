@@ -800,17 +800,23 @@ export default function TournamentBracketModal({
         );
       })()}
 
-      {reportingMatch && (
-        <CloseMatchModal
-          isOpen={!!reportingMatch}
-          onClose={() => setReportingMatch(null)}
-          tournamentId={tournamentId || ""}
-          match={reportingMatch}
-          team1Roster={participatingTeams.find((t) => t.universityId === reportingMatch.team1.universityId)}
-          team2Roster={participatingTeams.find((t) => t.universityId === reportingMatch.team2.universityId)}
-          onReported={() => setRefreshKey((k) => k + 1)}
-        />
-      )}
+      {reportingMatch && (() => {
+        const team1Roster = participatingTeams.find((t) => t.universityId === reportingMatch.team1.universityId);
+        const team2Roster = participatingTeams.find((t) => t.universityId === reportingMatch.team2.universityId);
+        const key = `${reportingMatch.id}-${team1Roster?.members?.length ?? 0}-${team2Roster?.members?.length ?? 0}`;
+        return (
+          <CloseMatchModal
+            key={key}
+            isOpen={!!reportingMatch}
+            onClose={() => setReportingMatch(null)}
+            tournamentId={tournamentId || ""}
+            match={reportingMatch}
+            team1Roster={team1Roster}
+            team2Roster={team2Roster}
+            onReported={() => setRefreshKey((k) => k + 1)}
+          />
+        );
+      })()}
     </>
   );
 }
