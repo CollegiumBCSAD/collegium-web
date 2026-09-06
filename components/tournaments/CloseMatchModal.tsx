@@ -124,29 +124,38 @@ export default function CloseMatchModal({
     .filter((p) => p.universityId === match.team2.universityId);
 
   const renderTeamColumn = (teamName: string, universityId: string | undefined, rows: (PlayerRow & { idx: number })[]) => (
-    <div className="flex-1 min-w-0 space-y-2">
+    <div className="flex-1 min-w-0 space-y-3">
       <button
         type="button"
         onClick={() => universityId && setWinnerId(universityId)}
         disabled={!universityId}
-        className={`w-full flex items-center justify-between px-3 py-2 border text-left transition-colors cursor-pointer ${
+        className={`w-full flex items-center justify-between px-4 py-3 border text-left transition-colors cursor-pointer ${
           winnerId === universityId
             ? "bg-emerald-950/50 border-emerald-500/70 text-emerald-300"
             : "bg-[#0A0D18] border-[#1E293B] text-slate-300 hover:border-primary-brand/50"
         }`}
       >
-        <span className="font-display text-xs font-black uppercase tracking-wide truncate">{teamName}</span>
-        {winnerId === universityId && <TrophyIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
+        <span className="font-display text-sm font-black uppercase tracking-wide truncate">{teamName}</span>
+        {winnerId === universityId && <TrophyIcon className="w-4 h-4 text-emerald-400 shrink-0" />}
       </button>
 
-      <div className="space-y-1.5">
+      <div className="grid grid-cols-[1fr_3.75rem_3.75rem_3.75rem] gap-2 px-1">
+        <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">Athlete</span>
+        {["K", "D", "A"].map((label) => (
+          <span key={label} className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest text-center">
+            {label}
+          </span>
+        ))}
+      </div>
+
+      <div className="space-y-2">
         {rows.map((p) => (
-          <div key={p.idx} className="grid grid-cols-[1fr_2.5rem_2.5rem_2.5rem] gap-1.5">
+          <div key={p.idx} className="grid grid-cols-[1fr_3.75rem_3.75rem_3.75rem] gap-2">
             <input
               value={p.name}
               onChange={(e) => updateRow(p.idx, "name", e.target.value)}
               placeholder="Player name"
-              className="h-8 px-2 bg-[#060912] border border-[#1C2538] text-white text-[11px] font-sans rounded focus:outline-none focus:border-amber-500"
+              className="h-11 px-3 bg-[#060912] border border-[#1C2538] text-white text-sm font-sans rounded-lg focus:outline-none focus:border-amber-500"
             />
             {(["kills", "deaths", "assists"] as const).map((field) => (
               <input
@@ -155,8 +164,7 @@ export default function CloseMatchModal({
                 min={0}
                 value={p[field]}
                 onChange={(e) => updateRow(p.idx, field, e.target.value)}
-                placeholder={field[0].toUpperCase()}
-                className="h-8 px-1 bg-[#060912] border border-[#1C2538] text-white text-[11px] font-mono text-center rounded focus:outline-none focus:border-amber-500"
+                className="h-11 px-1 bg-[#060912] border border-[#1C2538] text-white text-base font-mono font-bold text-center rounded-lg focus:outline-none focus:border-amber-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             ))}
           </div>
@@ -170,14 +178,14 @@ export default function CloseMatchModal({
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto"
+      className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-y-auto"
     >
-      <div className="w-full max-w-2xl bg-[#0A0D18] border border-amber-500/40 shadow-2xl p-6 space-y-5 relative rounded-2xl my-auto text-white">
+      <div className="w-full max-w-4xl max-h-[92vh] overflow-y-auto bg-[#0A0D18] border border-amber-500/40 shadow-2xl p-6 sm:p-8 space-y-6 relative rounded-2xl my-auto text-white">
         <div>
           <span className="text-[10px] font-mono font-black uppercase tracking-widest text-amber-400 block">
             {"// REPORT MATCH RESULT"}
           </span>
-          <h3 className="font-display text-lg font-black uppercase text-white tracking-tight">
+          <h3 className="font-display text-xl sm:text-2xl font-black uppercase text-white tracking-tight">
             {match.team1.name} vs {match.team2.name}
           </h3>
         </div>
@@ -198,7 +206,7 @@ export default function CloseMatchModal({
           <span>Scan Screenshot (OCR) — Coming Soon</span>
         </button>
 
-        <div className="flex gap-3">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {renderTeamColumn(match.team1.name, match.team1.universityId, team1Players)}
           {renderTeamColumn(match.team2.name, match.team2.universityId, team2Players)}
         </div>
