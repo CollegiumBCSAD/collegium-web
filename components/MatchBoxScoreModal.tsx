@@ -26,8 +26,6 @@ interface MatchBoxScoreModalProps {
     isTeam2Winner?: boolean;
     status?: string;
     playerStats?: MatchPlayerStat[];
-    // Names-only preview for a match with no reported stats yet — never
-    // crossed with fabricated numbers.
     team1Roster?: RosterPreviewMember[];
     team2Roster?: RosterPreviewMember[];
   };
@@ -183,7 +181,6 @@ export default function MatchBoxScoreModal({
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-8 bg-gradient-to-b from-[#080B14] via-[#0A0D18] to-[#05070E]">
-          {/* Head-to-Head Duel Podium */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-10">
             {[
               { name: team1Name, score: matchInfo?.team1Score ?? 0, isWinner: isTeam1Winner },
@@ -240,13 +237,11 @@ export default function MatchBoxScoreModal({
             ))}
           </div>
 
-          {/* Player Performance Tables Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {renderTeamPanel(team1Name, isTeam1Winner, team1Players, matchInfo?.team1Roster)}
             {renderTeamPanel(team2Name, isTeam2Winner, team2Players, matchInfo?.team2Roster)}
           </div>
 
-          {/* Footer Match Telemetry Bar */}
           <div className="pt-4 border-t border-[#182338] flex flex-col sm:flex-row items-center justify-between gap-3 text-[10px] font-mono text-slate-400">
             <div className="flex items-center gap-2">
               <ShieldIcon className="w-3.5 h-3.5 text-primary-brand" />

@@ -51,8 +51,6 @@ export default function CloseMatchModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  // Reset the form during render whenever a different match opens, instead
-  // of in an effect — avoids a spurious extra render on every open.
   const [initializedForMatchId, setInitializedForMatchId] = useState<string | null>(null);
   if (isOpen && initializedForMatchId !== match.id) {
     setInitializedForMatchId(match.id);
@@ -80,9 +78,6 @@ export default function CloseMatchModal({
 
   if (!isOpen) return null;
 
-  // Backend requires each stat to be a non-negative integer (@IsInt @Min(0)).
-  // Strip anything that isn't a digit as it's typed, and cap the length so a
-  // fat-fingered value can't overflow — no minus signs, decimals, or "e".
   const sanitizeStat = (value: string) => value.replace(/[^\d]/g, "").slice(0, 3);
 
   const updateRow = (idx: number, field: "name" | "kills" | "deaths" | "assists", value: string) => {
@@ -99,8 +94,6 @@ export default function CloseMatchModal({
       return;
     }
 
-    // A blank prefilled roster slot the organizer didn't fill is fine to
-    // drop; only rows with a name or any stat count as real entries.
     const filled = players.filter(rowHasData);
 
     if (filled.length === 0) {
@@ -120,8 +113,6 @@ export default function CloseMatchModal({
         players: filled.map((p) => ({
           universityId: p.universityId,
           name: p.name.trim(),
-          // Sanitized to digits-only on input, so Number() is always a safe
-          // non-negative integer; empty means the player simply had 0.
           kills: Number(p.kills) || 0,
           deaths: Number(p.deaths) || 0,
           assists: Number(p.assists) || 0,
@@ -172,8 +163,6 @@ export default function CloseMatchModal({
         {rows.map((p) => (
           <div key={p.idx} className="grid grid-cols-[1fr_3.75rem_3.75rem_3.75rem] gap-2">
             {(() => {
-              // Flag only a row that has stats entered but no name — a fully
-              // blank prefilled slot is legitimately optional, not an error.
               const needsName = !p.name.trim() && Boolean(p.kills || p.deaths || p.assists);
               return (
                 <input
