@@ -1,9 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { UserProfile } from "@/types";
 import { CheckCircleIcon, ShieldIcon, PlusIcon, UsersIcon, TrophyIcon } from "@/components/ui/Icons";
+import EditGameHandlesModal from "./EditGameHandlesModal";
 
 interface AthleteProfileBannerProps {
   user: UserProfile;
@@ -11,6 +12,7 @@ interface AthleteProfileBannerProps {
 }
 
 export default function AthleteProfileBanner({ user, squadsCount = 0 }: AthleteProfileBannerProps) {
+  const [isEditIgnOpen, setIsEditIgnOpen] = useState(false);
   const initial = (user.displayName || "A").charAt(0).toUpperCase();
 
   return (
@@ -114,6 +116,32 @@ export default function AthleteProfileBanner({ user, squadsCount = 0 }: AthleteP
                 </span>
                 <span className="text-slate-600">•</span>
                 <span className="font-mono text-slate-400 text-[11px]">{user.email}</span>
+              </div>
+
+              {/* Game Handles (IGN) Badges Row */}
+              <div className="pt-1.5 flex flex-wrap items-center gap-2">
+                {user.gameHandles && user.gameHandles.length > 0 ? (
+                  user.gameHandles.map((gh) => (
+                    <span
+                      key={gh.gameTitle}
+                      className="text-[10px] font-mono font-bold px-2 py-0.5 bg-[#070A14] border border-[#1E2942] text-slate-200 rounded flex items-center gap-1.5"
+                    >
+                      <span className="text-primary-brand font-extrabold">{gh.gameTitle}:</span>
+                      <span className="text-white">{gh.handle}</span>
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-[10px] font-mono text-slate-300 italic">
+                    No IGN set yet
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsEditIgnOpen(true)}
+                  className="text-[10px] font-mono font-bold text-slate-300 hover:text-white bg-[#0E1322] hover:bg-[#182138] px-2.5 py-0.5 border border-[#1E2942] transition-colors cursor-pointer flex items-center gap-1"
+                >
+                  <span>✏️ {user.gameHandles && user.gameHandles.length > 0 ? "Edit IGNs" : "Set IGNs"}</span>
+                </button>
               </div>
             </div>
           </div>
@@ -239,6 +267,12 @@ export default function AthleteProfileBanner({ user, squadsCount = 0 }: AthleteP
 
         </div>
       </div>
+
+      <EditGameHandlesModal
+        isOpen={isEditIgnOpen}
+        onClose={() => setIsEditIgnOpen(false)}
+        user={user}
+      />
     </div>
   );
 }
