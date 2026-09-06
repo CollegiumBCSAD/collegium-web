@@ -58,7 +58,7 @@ export default function EditGameHandlesModal({
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || user?.role === "ORGANIZER" || user?.role === "ADMIN") return null;
 
   const handleSave = async (gameTitle: string) => {
     const handle = handles[gameTitle]?.trim();
