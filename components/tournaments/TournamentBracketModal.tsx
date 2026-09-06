@@ -187,6 +187,7 @@ export default function TournamentBracketModal({
       },
       status: m.status,
       timeLabel: m.timeLabel,
+      playerStats: m.playerStats,
     })),
   }));
 
@@ -772,22 +773,8 @@ export default function TournamentBracketModal({
       {(() => {
         if (!activeBoxScore) return null;
 
-        const getTeamRoster = (teamName: string) => {
-          const norm = (teamName || "").toLowerCase().trim();
-          const found = participatingTeams.find((pt) => {
-            const pName = (pt.name || "").toLowerCase().trim();
-            const pUni = (pt.universityName || "").toLowerCase().trim();
-            return (
-              pName === norm ||
-              pUni === norm ||
-              norm.includes(pUni) ||
-              pUni.includes(norm) ||
-              norm.includes(pName) ||
-              pName.includes(norm)
-            );
-          });
-          return found?.members || [];
-        };
+        const getTeamRoster = (universityId?: string) =>
+          participatingTeams.find((pt) => pt.universityId === universityId)?.members || [];
 
         return (
           <MatchBoxScoreModal
@@ -798,13 +785,16 @@ export default function TournamentBracketModal({
             matchInfo={{
               team1Name: activeBoxScore.team1.name,
               team2Name: activeBoxScore.team2.name,
+              team1UniversityId: activeBoxScore.team1.universityId,
+              team2UniversityId: activeBoxScore.team2.universityId,
               team1Score: activeBoxScore.team1.score,
               team2Score: activeBoxScore.team2.score,
               status: activeBoxScore.status,
               isTeam1Winner: Boolean(activeBoxScore.team1.isWinner),
               isTeam2Winner: Boolean(activeBoxScore.team2.isWinner),
-              team1Roster: getTeamRoster(activeBoxScore.team1.name),
-              team2Roster: getTeamRoster(activeBoxScore.team2.name),
+              playerStats: activeBoxScore.playerStats,
+              team1Roster: getTeamRoster(activeBoxScore.team1.universityId),
+              team2Roster: getTeamRoster(activeBoxScore.team2.universityId),
             }}
           />
         );

@@ -7,14 +7,11 @@ import {
   BracketRound,
   BracketSide,
   ClosePlayerStatInput,
+  MatchPlayerStat,
   TournamentMatch,
-  MatchBoxScore,
   PendingSquadApplication
 } from "@/types";
-import { 
-  mockTournaments, 
-  mockBoxScore 
-} from "@/lib/mock/tournaments";
+import { mockTournaments } from "@/lib/mock/tournaments";
 
 const GAME_DISPLAY: Record<string, { label: string; gradient: string }> = {
   VALORANT: { label: "VALORANT", gradient: "from-[#8E2632] via-[#48161D] to-[#11141C]" },
@@ -331,6 +328,15 @@ function parseServerTournamentsResponse(data: unknown): Tournament[] {
   return mapTournaments(data as RawTournament[]);
 }
 
+type RawPlayerStat = {
+  universityId?: string | null;
+  summonerName: string;
+  kills: number;
+  deaths: number;
+  assists: number;
+  win: boolean;
+};
+
 type RawBracketMatch = {
   id?: string;
   winnerId?: string | null;
@@ -338,6 +344,7 @@ type RawBracketMatch = {
   isVerified?: boolean;
   round?: number;
   bracketSide?: BracketSide | null;
+  playerStats?: RawPlayerStat[];
 };
 
 function groupByRound(matches: RawBracketMatch[]): Map<number, RawBracketMatch[]> {
@@ -405,6 +412,16 @@ function buildBracketRounds(
         universityId: m.loserId ?? undefined,
       },
       status: m.isVerified ? "COMPLETED" : "LIVE",
+      playerStats: (m.playerStats || []).map(
+        (p): MatchPlayerStat => ({
+          universityId: p.universityId ?? null,
+          name: p.summonerName,
+          kills: p.kills,
+          deaths: p.deaths,
+          assists: p.assists,
+          win: p.win,
+        }),
+      ),
     }));
 
     return {
@@ -607,9 +624,5 @@ export const tournamentsService = {
 
   deleteTournament: (tournamentId: string): Promise<void> => {
     return apiClient.delete<void>(`/tournaments/${tournamentId}`);
-  },
-
-  getBoxScore: (matchId: string): Promise<MatchBoxScore> => {
-    return apiClient.get<MatchBoxScore>(`/matches/${matchId}/box-score`).catch(() => mockBoxScore);
   },
 };

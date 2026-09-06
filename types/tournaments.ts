@@ -44,6 +44,7 @@ export interface TournamentMatch {
   team2: TeamInMatch;
   status: TournamentStatus;
   timeLabel?: string;
+  playerStats?: MatchPlayerStat[];
 }
 
 export type BracketSide = "WINNERS" | "LOSERS" | "GRAND_FINAL";
@@ -57,30 +58,16 @@ export interface BracketRound {
   matches: TournamentMatch[];
 }
 
-export interface PlayerStats {
+// A real, organizer-reported per-player stat row (PlayerStat.dataSource
+// PEER_VERIFIED) — no agent/ACS fields, there's no data source for those
+// on a manually-entered stat line.
+export interface MatchPlayerStat {
+  universityId: string | null;
   name: string;
-  role: string;
-  agent: string;
   kills: number;
   deaths: number;
   assists: number;
-  kda: number;
-  acs: number;
-}
-
-export interface MatchBoxScore {
-  title: string;
-  subtitle: string;
-  team1: {
-    name: string;
-    code: string;
-    players: PlayerStats[];
-  };
-  team2: {
-    name: string;
-    code: string;
-    players: PlayerStats[];
-  };
+  win: boolean;
 }
 
 export interface MatchTeam {
@@ -106,6 +93,7 @@ export interface BracketMatch {
   team2: MatchTeam;
   status?: "LIVE" | "COMPLETED" | "UPCOMING" | string;
   timeLabel?: string;
+  playerStats?: MatchPlayerStat[];
 }
 
 export interface TournamentBracketModalProps {

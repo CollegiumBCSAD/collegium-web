@@ -8,7 +8,6 @@ import { tournamentsService } from "@/services/tournamentsService";
 import { TrophyIcon, ShieldIcon, CheckCircleIcon, PlusIcon, AlertTriangleIcon, CalendarIcon, ClockIcon, TrashIcon, ZapIcon, UsersIcon } from "@/components/ui/Icons";
 import PostTournamentModal from "./PostTournamentModal";
 import TournamentBracketModal from "@/components/tournaments/TournamentBracketModal";
-import MatchBoxScoreModal from "@/components/MatchBoxScoreModal";
 import TournamentApplicationsModal from "./TournamentApplicationsModal";
 
 interface OrganizerDashboardViewProps {
@@ -57,7 +56,6 @@ export default function OrganizerDashboardView({ user }: OrganizerDashboardViewP
 
   // In-page modal states so user stays on dashboard
   const [activeBracketTourney, setActiveBracketTourney] = useState<Tournament | null>(null);
-  const [activeBoxScoreTourney, setActiveBoxScoreTourney] = useState<Tournament | null>(null);
   const [activeApplicationsTourney, setActiveApplicationsTourney] = useState<Tournament | null>(null);
 
   const fetchTourneys = async () => {
@@ -777,16 +775,6 @@ export default function OrganizerDashboardView({ user }: OrganizerDashboardViewP
                           <TrophyIcon className="w-3.5 h-3.5 text-amber-400" />
                           <span>Bracket</span>
                         </button>
-                        {(isLive || isCompleted) && (
-                          <button
-                            type="button"
-                            onClick={() => setActiveBoxScoreTourney(t)}
-                            className="flex-1 h-9 bg-[#0E1424] hover:bg-[#162038] text-slate-300 hover:text-white border border-[#1E2C48] hover:border-cyan-500/50 rounded-lg text-xs font-mono font-bold uppercase flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-98"
-                          >
-                            <ShieldIcon className="w-3.5 h-3.5 text-cyan-400" />
-                            <span>Box Scores</span>
-                          </button>
-                        )}
                       </div>
                     )}
                   </div>
@@ -830,15 +818,6 @@ export default function OrganizerDashboardView({ user }: OrganizerDashboardViewP
         />
       )}
 
-      {/* In-Page Box Score Modal */}
-      {activeBoxScoreTourney && (
-        <MatchBoxScoreModal
-          isOpen={true}
-          onClose={() => setActiveBoxScoreTourney(null)}
-          title={`BOX SCORE • ${activeBoxScoreTourney.title}`}
-          subtitle={`${activeBoxScoreTourney.game} • VERIFIED MATCH SUMMARY`}
-        />
-      )}
     </div>
   );
 }
