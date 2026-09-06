@@ -189,6 +189,15 @@ export default function CloseMatchModal({
           </div>
         )}
 
+        <button
+          type="button"
+          disabled
+          className="w-full h-9 flex items-center justify-center gap-2 border border-dashed border-[#2A3550] text-slate-500 text-[11px] font-mono font-bold uppercase tracking-wide cursor-not-allowed opacity-60"
+        >
+          <span>📷</span>
+          <span>Scan Screenshot (OCR) — Coming Soon</span>
+        </button>
+
         <div className="flex gap-3">
           {renderTeamColumn(match.team1.name, match.team1.universityId, team1Players)}
           {renderTeamColumn(match.team2.name, match.team2.universityId, team2Players)}
