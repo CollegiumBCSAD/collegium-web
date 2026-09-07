@@ -595,6 +595,10 @@ export const tournamentsService = {
     );
   },
 
+  closeTournament: (tournamentId: string): Promise<unknown> => {
+    return apiClient.post(`/tournaments/${tournamentId}/close`, {});
+  },
+
   applyForTournament: (
     tournamentId: string,
     teamId?: string,

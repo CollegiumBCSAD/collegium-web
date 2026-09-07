@@ -25,15 +25,20 @@ const GAME_ID_TO_ENUM: Record<string, string> = {
 };
 
 function mapUniversitiesToLeaderboard(universities: University[], game: string): LeaderboardEntry[] {
-  return universities.map((u, i) => ({
-    id: u.id,
-    rank: i + 1,
-    university: u.name.toUpperCase(),
-    rating: u.glicko2_rating,
-    winRate: u.wins + u.losses > 0 ? Math.round((u.wins / (u.wins + u.losses)) * 100) : 0,
-    streak: u.wins > 0 ? `${Math.min(u.wins, 9)}W` : `${Math.min(u.losses, 9)}L`,
-    game,
-  }));
+  return universities.map((u, i) => {
+    const wins = u.wins ?? 0;
+    const losses = u.losses ?? 0;
+    const total = wins + losses;
+    return {
+      id: u.id,
+      rank: i + 1,
+      university: (u as any).teamName ? `${u.name} - ${(u as any).teamName}` : u.name.toUpperCase(),
+      rating: u.glicko2_rating ?? 1500,
+      winRate: total > 0 ? Math.round((wins / total) * 100) : 0,
+      streak: wins > 0 ? `${Math.min(wins, 9)}W` : `${Math.min(losses, 9)}L`,
+      game,
+    };
+  });
 }
 
 /**

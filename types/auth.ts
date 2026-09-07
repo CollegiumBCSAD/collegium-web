@@ -59,13 +59,14 @@ export interface University {
   id: string;
   name: string;
   domain: string;
-  glicko2_rating: number;
-  glicko2_rd: number;
-  glicko2_sigma: number;
-  wins: number;
-  losses: number;
+  glicko2_rating?: number;
+  glicko2_rd?: number;
+  glicko2_sigma?: number;
+  wins?: number;
+  losses?: number;
   createdAt: string;
   gameRatings?: UniversityGameRating[];
+  teams?: any[];
 }
 
 export interface LeaderboardEntry {
