@@ -42,7 +42,7 @@ export default function UniversityGameCards({ university }: UniversityGameCardsP
 
   // Match the specific team for the selected game if available
   const specificTeam = university.teams?.find(
-    (t: any) =>
+    (t) =>
       t.gameTitle?.toLowerCase() === activeGameKey.toLowerCase() ||
       t.gameTitle?.toLowerCase().includes(activeGameKey) ||
       (activeGameKey === "valo" && t.gameTitle?.toLowerCase().includes("valorant")) ||

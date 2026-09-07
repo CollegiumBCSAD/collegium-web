@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Tournament } from "@/types";
 import { tournamentsService } from "@/services/tournamentsService";
 import { ShieldIcon, AlertTriangleIcon, SwordsIcon } from "@/components/ui/Icons";
@@ -18,32 +18,26 @@ interface LockBracketModalProps {
   onSuccess?: () => void;
 }
 
-export default function LockBracketModal({
-  isOpen,
+export default function LockBracketModal(props: LockBracketModalProps) {
+  if (!props.isOpen) return null;
+  return <LockBracketModalContent key={props.tournament.id} {...props} />;
+}
+
+function LockBracketModalContent({
   onClose,
   tournament,
   onSuccess,
 }: LockBracketModalProps) {
-  const [teams, setTeams] = useState<TeamEntry[]>([]);
-  const [eventWeightOverride, setEventWeightOverride] = useState<string>("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    // Load participating universities/teams for this tournament
-    const initialTeams: TeamEntry[] = (tournament.universities || []).map((u, idx) => ({
+  const [teams, setTeams] = useState<TeamEntry[]>(() =>
+    (tournament.universities || []).map((u) => ({
       id: u.id,
       name: `${u.name} Valorant`,
       universityName: u.name,
-    }));
-
-    setTeams(initialTeams);
-    setErrorMessage(null);
-  }, [isOpen, tournament]);
-
-  if (!isOpen) return null;
+    }))
+  );
+  const [eventWeightOverride, setEventWeightOverride] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const teamCount = teams.length;
 
@@ -101,10 +95,11 @@ export default function LockBracketModal({
 
       if (onSuccess) onSuccess();
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorObj = err as { response?: { data?: { message?: string | string[] } }; message?: string };
       const msg =
-        err?.response?.data?.message ||
-        err?.message ||
+        errorObj?.response?.data?.message ||
+        errorObj?.message ||
         "Failed to lock rosters and generate bracket. Ensure minimum 5 verified athletes per squad and War Room initialization.";
       setErrorMessage(Array.isArray(msg) ? msg.join("; ") : msg);
     } finally {

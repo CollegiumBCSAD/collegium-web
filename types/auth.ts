@@ -55,10 +55,22 @@ export interface UniversityGameRating {
   losses: number;
 }
 
+export interface TeamRatingSummary {
+  id: string;
+  name: string;
+  gameTitle: string;
+  glicko2_rating: number;
+  glicko2_rd: number;
+  glicko2_sigma: number;
+  wins?: number;
+  losses?: number;
+}
+
 export interface University {
   id: string;
   name: string;
   domain: string;
+  teamName?: string;
   glicko2_rating?: number;
   glicko2_rd?: number;
   glicko2_sigma?: number;
@@ -66,7 +78,7 @@ export interface University {
   losses?: number;
   createdAt: string;
   gameRatings?: UniversityGameRating[];
-  teams?: any[];
+  teams?: TeamRatingSummary[];
 }
 
 export interface LeaderboardEntry {

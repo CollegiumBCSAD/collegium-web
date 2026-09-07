@@ -32,7 +32,7 @@ function mapUniversitiesToLeaderboard(universities: University[], game: string):
     return {
       id: u.id,
       rank: i + 1,
-      university: (u as any).teamName ? `${u.name} - ${(u as any).teamName}` : u.name.toUpperCase(),
+      university: u.teamName ? `${u.name} - ${u.teamName}` : u.name.toUpperCase(),
       rating: u.glicko2_rating ?? 1500,
       winRate: total > 0 ? Math.round((wins / total) * 100) : 0,
       streak: wins > 0 ? `${Math.min(wins, 9)}W` : `${Math.min(losses, 9)}L`,

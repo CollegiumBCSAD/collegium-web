@@ -599,6 +599,21 @@ export const tournamentsService = {
     return apiClient.post(`/tournaments/${tournamentId}/close`, {});
   },
 
+  ensureWarRoom: (tournamentId: string): Promise<unknown> => {
+    return apiClient.post(`/tournaments/${tournamentId}/war-room`, {});
+  },
+
+  generateBracket: (
+    tournamentId: string,
+    payload: {
+      seeds?: string[];
+      seedingMode?: string;
+      eventWeightOverride?: number;
+    }
+  ): Promise<unknown> => {
+    return apiClient.post(`/tournaments/${tournamentId}/generate-bracket`, payload);
+  },
+
   applyForTournament: (
     tournamentId: string,
     teamId?: string,

@@ -25,6 +25,20 @@ export default function UniversityHeaderBanner({ university }: UniversityHeaderB
     .substring(0, 3)
     .toUpperCase();
 
+  const activeKey = (selectedGame || "valo").toLowerCase();
+  const teamForGame = university.teams?.find(
+    (t) =>
+      t.gameTitle?.toLowerCase() === game.id?.toLowerCase() ||
+      t.gameTitle?.toLowerCase().includes(activeKey) ||
+      (activeKey === "valo" && t.gameTitle?.toLowerCase().includes("valorant")) ||
+      (activeKey === "lol" && (t.gameTitle?.toLowerCase().includes("league") || t.gameTitle?.toLowerCase() === "lol")) ||
+      (activeKey === "ml" && (t.gameTitle?.toLowerCase().includes("mobile") || t.gameTitle?.toLowerCase() === "mlbb")) ||
+      (activeKey === "codm" && (t.gameTitle?.toLowerCase().includes("duty") || t.gameTitle?.toLowerCase() === "codm"))
+  );
+
+  const displayRating = teamForGame?.glicko2_rating ?? university.glicko2_rating;
+  const displayRd = teamForGame?.glicko2_rd ?? university.glicko2_rd;
+
   return (
     <div className="relative">
       {/* 6-Sided Faceted Tactical Chassis */}
@@ -118,10 +132,14 @@ export default function UniversityHeaderBanner({ university }: UniversityHeaderB
                 GLICKO-2
               </span>
               <span className="font-display text-xl sm:text-2xl font-black text-white block mt-0.5">
-                {university.glicko2_rating.toFixed(1)}
+                {displayRating !== undefined && displayRating !== null
+                  ? displayRating.toFixed(1)
+                  : "—"}
               </span>
               <span className="text-[9px] font-mono text-slate-400 block mt-0.5">
-                ±{university.glicko2_rd?.toFixed(0) || "42"} RD
+                {displayRd !== undefined && displayRd !== null
+                  ? `±${displayRd.toFixed(0)} RD`
+                  : "UNRATED"}
               </span>
             </div>
 
