@@ -405,7 +405,7 @@ function buildBracketRounds(
         universityId: m.winnerId ?? undefined,
       },
       team2: {
-        name: teamName(m.loserId),
+        name: !m.loserId && m.isVerified ? "BYE" : teamName(m.loserId),
         code: "",
         score: 0,
         isWinner: false,
