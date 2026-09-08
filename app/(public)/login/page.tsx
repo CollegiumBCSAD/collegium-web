@@ -5,12 +5,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useGame } from "@/context/GameContext";
+import { getGameInfo } from "@/lib/games";
 import { api } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
   const { user, isLoggedIn, isLoaded, loginWithToken } = useAuth();
-  const { openGameSelector } = useGame();
+  const { selectGame } = useGame();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -76,7 +77,10 @@ export default function LoginPage() {
       if (profile?.role === "ADMIN") {
         router.push("/admin");
       } else {
-        openGameSelector();
+        const athleteGame = profile?.teamMemberships?.[0]?.team?.gameTitle || profile?.gameHandles?.[0]?.gameTitle;
+        if (athleteGame) {
+          selectGame(getGameInfo(athleteGame).id);
+        }
         router.push("/dashboard");
       }
     } catch (err: unknown) {

@@ -100,7 +100,7 @@ export default function LandingPage() {
     return map;
   }, [teams, tournaments]);
 
-  if (isLoaded && !selectedGame) {
+  if (isLoaded && !selectedGame && !user) {
     return <GameSelectorLanding />;
   }
 
