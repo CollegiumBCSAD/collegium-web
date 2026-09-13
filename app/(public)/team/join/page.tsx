@@ -127,6 +127,26 @@ function JoinTeamContent() {
 
   const selectedTeam = userSelectedTeam || inviteTeam;
 
+  const existingSquad = useMemo(() => {
+    if (!user || teams.length === 0) return null;
+    const myId = user.id;
+    const myEmail = user.email ? user.email.toLowerCase().trim() : "";
+    const myName = user.displayName ? user.displayName.toLowerCase().trim() : "";
+
+    return teams.find(
+      (t) =>
+        (myId && t.captainId === myId) ||
+        (myName && t.captainName && t.captainName.toLowerCase().trim() === myName) ||
+        t.members?.some(
+          (m) =>
+            m.status === "ACCEPTED" &&
+            ((myId && m.userId === myId) ||
+              (myEmail && m.email && m.email.toLowerCase().trim() === myEmail) ||
+              (myName && m.displayName && m.displayName.toLowerCase().trim() === myName))
+        )
+    ) || null;
+  }, [user, teams]);
+
   const alreadyMemberInfo = useMemo(() => {
     if (!selectedTeam || !user) return null;
     const currentEmail = user.email ? user.email.toLowerCase() : "";
@@ -191,7 +211,11 @@ function JoinTeamContent() {
   };
 
   const handleClose = () => {
-    router.push("/dashboard");
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push("/dashboard");
+    }
   };
 
   return (
@@ -206,32 +230,34 @@ function JoinTeamContent() {
           }}
         />
 
-        <button
-          type="button"
-          onClick={handleClose}
-          className="absolute top-5 right-5 w-8 h-8 rounded-full border border-[#232D44] bg-[#141A29] hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 flex items-center justify-center text-sm font-bold transition-all z-10 cursor-pointer"
-          title="Close window"
-          aria-label="Close window"
-        >
-          ✕
-        </button>
+        {/* Top Control Bar: Full-Width Tab Segmented Switcher + Aligned Close Button */}
+        <div className="flex items-center gap-3 w-full">
+          <div className="flex-1 grid grid-cols-2 p-1.5 rounded-2xl bg-[#080C14] border border-[#1C2538] gap-1.5 items-center">
+            <Link
+              href="/team/create"
+              className="h-11 rounded-xl bg-transparent hover:bg-[#141A29] text-slate-400 hover:text-white text-xs font-display font-bold uppercase tracking-wider flex items-center justify-center gap-2 text-center transition-all cursor-pointer"
+            >
+              <PlusIcon className="w-4 h-4" />
+              <span>Create Squad</span>
+            </Link>
+            <Link
+              href="/team/join"
+              className="h-11 game-theme-btn text-xs font-display font-black uppercase tracking-wider flex items-center justify-center gap-2 text-center w-full"
+            >
+              <UsersIcon className="w-4 h-4" />
+              <span>Join Squad</span>
+            </Link>
+          </div>
 
-        {/* Tab Selector Switcher */}
-        <div className="flex border border-[#1C2538] rounded-2xl bg-[#080C14] p-1 gap-2 pr-10">
-          <Link
-            href="/team/create"
-            className="flex-1 h-10 rounded-xl bg-transparent hover:bg-[#141A29] text-slate-400 hover:text-white text-xs font-mono font-bold uppercase tracking-wider flex items-center justify-center gap-2 text-center transition-colors"
+          <button
+            type="button"
+            onClick={handleClose}
+            className="w-12 h-12 rounded-2xl border border-[#232D44] bg-[#0E1424] hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 flex items-center justify-center text-base font-bold transition-all shrink-0 cursor-pointer shadow-md hover:border-rose-500/40 active:scale-95"
+            title="Close window"
+            aria-label="Close window"
           >
-            <PlusIcon className="w-4 h-4" />
-            <span>Create Squad</span>
-          </Link>
-          <Link
-            href="/team/join"
-            className="flex-1 h-10 rounded-xl game-theme-btn text-xs font-mono font-black uppercase tracking-wider flex items-center justify-center gap-2 text-center shadow-md"
-          >
-            <UsersIcon className="w-4 h-4" />
-            <span>Join Squad</span>
-          </Link>
+            ✕
+          </button>
         </div>
 
         {/* Header Title */}
@@ -250,7 +276,37 @@ function JoinTeamContent() {
           </p>
         </div>
 
-        {alreadyMemberInfo ? (
+        {existingSquad ? (
+          <div className="p-6 sm:p-8 rounded-2xl bg-[#080C14] border border-amber-500/40 text-center space-y-4 shadow-xl">
+            <div className="w-14 h-14 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 inline-flex items-center justify-center shadow-lg mx-auto">
+              <ShieldIcon className="w-7 h-7 text-amber-400" />
+            </div>
+            <div>
+              <span className="text-[10px] font-mono font-bold tracking-widest text-amber-400 uppercase block">
+                ROSTER LIMIT ENFORCED
+              </span>
+              <h2 className="font-display text-xl font-black uppercase text-white mt-1">
+                You Already Belong to a Squad
+              </h2>
+              <p className="text-xs font-sans text-slate-300 max-w-md mx-auto mt-2 leading-relaxed">
+                You are currently registered on <strong className="text-white">{existingSquad.name}</strong> ({GAMES[existingSquad.gameTitle]?.name || existingSquad.gameTitle}). Each collegiate player is strictly limited to <strong>1 varsity squad</strong>.
+              </p>
+              <p className="text-[11px] font-sans text-slate-400 max-w-md mx-auto mt-1">
+                To join a different squad, you must first exit your current squad roster from your dashboard.
+              </p>
+            </div>
+
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link
+                href="/dashboard"
+                className="w-full sm:w-auto h-11 px-6 game-theme-btn text-xs font-display font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+              >
+                <span>Manage Squad on Dashboard</span>
+                <span>→</span>
+              </Link>
+            </div>
+          </div>
+        ) : alreadyMemberInfo ? (
           <div className="space-y-6 text-center">
             <div className="p-6 rounded-2xl bg-[#080C14] border border-[#1C2538]">
               <span className="w-12 h-12 rounded-full bg-primary-brand/20 text-primary-brand inline-flex items-center justify-center text-xl font-bold mb-3 border border-primary-brand/30">
