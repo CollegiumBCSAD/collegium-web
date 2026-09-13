@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+<<<<<<< HEAD
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { MatchPlayerStat } from "@/types";
 import { CrownIcon, SwordsIcon, ShieldIcon } from "@/components/ui/Icons";
 
@@ -42,6 +44,13 @@ export default function MatchBoxScoreModal({
   subtitle = "TOURNAMENT MATCH",
   matchInfo,
 }: MatchBoxScoreModalProps) {
+  const [selectedMapTab, setSelectedMapTab] = useState<string>("ALL");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -56,7 +65,14 @@ export default function MatchBoxScoreModal({
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  // Reset tab to ALL when matchInfo changes or modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedMapTab("ALL");
+    }
+  }, [isOpen, matchInfo]);
+
+  if (!isOpen || !mounted) return null;
 
   const isLive = matchInfo?.status === "LIVE";
   const playerStats = matchInfo?.playerStats || [];
@@ -142,8 +158,8 @@ export default function MatchBoxScoreModal({
     </div>
   );
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 md:p-10 bg-black/85 backdrop-blur-lg">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 md:p-10 bg-black/85 backdrop-blur-lg overflow-hidden">
       <div className="absolute inset-0" onClick={onClose} />
 
       <div
@@ -255,6 +271,7 @@ export default function MatchBoxScoreModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

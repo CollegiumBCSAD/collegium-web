@@ -12,6 +12,7 @@ import NotificationBell from "@/components/NotificationBell";
 import FloatingNotificationToast from "@/components/FloatingNotificationToast";
 import ChatQuickAccess from "@/components/ChatQuickAccess";
 import ScrimWarRoomModal from "@/components/scrims/ScrimWarRoomModal";
+import TournamentBracketModal from "@/components/tournaments/TournamentBracketModal";
 import GameSelectorModal from "@/components/GameSelectorModal";
 import HeaderGameSwitcher from "@/components/HeaderGameSwitcher";
 import { HomeIcon, PlusIcon, UsersIcon, SwordsIcon, ShieldIcon } from "@/components/ui/Icons";
@@ -262,6 +263,20 @@ function GlobalWarRoomModal() {
   );
 }
 
+function GlobalTournamentModal() {
+  const { activeTournamentBracketId, closeTournamentBracket } = useWarRoom();
+
+  return (
+    <TournamentBracketModal
+      isOpen={!!activeTournamentBracketId}
+      onClose={closeTournamentBracket}
+      tournamentId={activeTournamentBracketId ?? undefined}
+      title="TOURNAMENT WAR ROOM & BRACKET"
+      subtitle="SANCTIONED COLLEGIATE CIRCUIT"
+    />
+  );
+}
+
 function PublicLayoutContent({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
@@ -287,7 +302,6 @@ function PublicLayoutContent({ children }: { children: React.ReactNode }) {
 
             <div className="flex items-center gap-2.5 sm:gap-3.5">
               <HeaderGameSwitcher />
-              <ChatQuickAccess />
               <NotificationBell />
               <HeaderAuthControls />
 
@@ -320,7 +334,9 @@ function PublicLayoutContent({ children }: { children: React.ReactNode }) {
 
       <main className="flex flex-1 flex-col">{children}</main>
 
+      <ChatQuickAccess />
       <GlobalWarRoomModal />
+      <GlobalTournamentModal />
       <FloatingNotificationToast />
     </div>
   );

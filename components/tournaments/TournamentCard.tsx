@@ -231,9 +231,16 @@ export default function TournamentCard({
 
         {/* Footer Actions */}
         <div className="mt-6 pt-4 border-t border-[#182338] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
-            <ShieldIcon className="w-3.5 h-3.5 text-slate-400" />
-            <span>Verified Tournament Payload</span>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => onSelect(tournament, "overview")}
+              className="h-10 px-4 rounded-xl bg-[#141A29] hover:bg-[#1E273D] border border-[#232D44] hover:border-amber-500/50 text-slate-200 hover:text-amber-300 text-xs font-display font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0 shadow-md group/rules"
+              title="View tournament rules, schedule and overview"
+            >
+              <ShieldIcon className="w-3.5 h-3.5 text-amber-400 group-hover/rules:scale-110 transition-transform" />
+              <span>Rules & Protocols</span>
+            </button>
           </div>
 
           <div className="flex items-center gap-2.5 flex-wrap w-full sm:w-auto justify-end">
@@ -352,12 +359,20 @@ export default function TournamentCard({
               </button>
             )}
 
+<<<<<<< HEAD
             <button
               onClick={() => onSelect(tournament)}
               className="h-10 px-6 game-theme-btn text-xs font-display font-black uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 cursor-pointer shrink-0 active:scale-95 transition-transform group/btn"
               style={{
                 clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
               }}
+=======
+            {/* View Bracket & Details Button */}
+            <button
+              type="button"
+              onClick={() => onSelect(tournament, "bracket")}
+              className="h-10 px-5 rounded-xl game-theme-btn text-xs font-display font-black uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 cursor-pointer shrink-0 active:scale-95 transition-all group/btn"
+>>>>>>> d06543d (feat(ui): reposition war room quick access to floating chat bubble, stabilize modal viewports with portals, and update tournament card actions)
             >
               <span>View Bracket & Details</span>
               <span className="group-hover/btn:translate-x-0.5 transition-transform">→</span>
