@@ -244,14 +244,15 @@ export default function TournamentCard({
 
         {/* Footer Actions */}
         <div className="mt-6 pt-4 border-t border-[#182338] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3 text-xs font-mono">
+          <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => onSelect(tournament, "overview")}
-              className="flex items-center gap-1.5 text-slate-400 hover:text-amber-300 transition-colors cursor-pointer group/rules"
+              className="h-10 px-4 rounded-xl bg-[#141A29] hover:bg-[#1E273D] border border-[#232D44] hover:border-amber-500/50 text-slate-200 hover:text-amber-300 text-xs font-display font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0 shadow-md group/rules"
+              title="View tournament rules, schedule and overview"
             >
-              <ShieldIcon className="w-3.5 h-3.5 text-amber-400/80 group-hover/rules:text-amber-400 transition-colors" />
-              <span className="underline underline-offset-4 decoration-slate-700 group-hover/rules:decoration-amber-400">View Rules & Protocols</span>
+              <ShieldIcon className="w-3.5 h-3.5 text-amber-400 group-hover/rules:scale-110 transition-transform" />
+              <span>Rules & Protocols</span>
             </button>
           </div>
 
@@ -337,17 +338,6 @@ export default function TournamentCard({
                 )}
               </button>
             )}
-
-            {/* View Rules Button */}
-            <button
-              type="button"
-              onClick={() => onSelect(tournament, "overview")}
-              className="h-10 px-4 rounded-xl bg-[#141A29] hover:bg-[#1E273D] border border-[#232D44] hover:border-amber-500/50 text-slate-200 hover:text-amber-300 text-xs font-display font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
-              title="View tournament rules, schedule and overview"
-            >
-              <ShieldIcon className="w-3.5 h-3.5 text-amber-400" />
-              <span>Rules</span>
-            </button>
 
             {/* View Bracket & Details Button */}
             <button

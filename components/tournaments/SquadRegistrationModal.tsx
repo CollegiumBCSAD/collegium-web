@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Tournament } from "@/types";
 import { useAuth } from "@/context/AuthContext";
 import { fetchTeamsApi, Team } from "@/lib/teams";
@@ -103,7 +104,13 @@ export default function SquadRegistrationModal({
     };
   }, [isOpen, user, tournament]);
 
-  if (!isOpen || !tournament) return null;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !tournament || !mounted) return null;
 
   const activeTeam = teams.find((t) => t.id === selectedTeamId) || teams[0];
 
@@ -123,8 +130,8 @@ export default function SquadRegistrationModal({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in overflow-hidden">
       <div className="absolute inset-0" onClick={handleClose} />
 
       <div 
@@ -413,6 +420,7 @@ export default function SquadRegistrationModal({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
