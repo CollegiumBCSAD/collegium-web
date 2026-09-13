@@ -28,6 +28,7 @@ export interface Tournament {
   image?: string;
   bgGradient: string;
   universities?: { id: string; name: string }[];
+  matches?: unknown[];
   applications?: unknown[];
   bracketFormat?: string;
   teamQuota?: number;

@@ -33,7 +33,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isLoaded && isLoggedIn) {
-      router.replace(user?.role === "ADMIN" ? "/admin" : "/dashboard");
+      router.replace(user?.role === "ADMIN" ? "/admin" : "/");
     }
   }, [isLoaded, isLoggedIn, user, router]);
 
@@ -76,8 +76,7 @@ export default function LoginPage() {
       if (profile?.role === "ADMIN") {
         router.push("/admin");
       } else {
-        openGameSelector();
-        router.push("/dashboard");
+        router.push("/");
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Login failed. Please try again.");

@@ -5,7 +5,6 @@ import { getGameInfo } from "@/lib/games";
 import { ScrimOffer } from "@/types";
 import {
   SwordsIcon,
-  FlameIcon,
   ClockIcon,
   LockIcon,
   TrashIcon,

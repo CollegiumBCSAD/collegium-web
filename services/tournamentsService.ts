@@ -114,6 +114,8 @@ function mapTournaments(data: RawTournament[]): Tournament[] {
       organizerId: t.organizerId,
       organizer: t.organizer,
       bgGradient: gameDisplay.gradient,
+      universities: t.universities as { id: string; name: string }[],
+      matches: t.matches as unknown[],
     };
   });
 }
@@ -322,8 +324,8 @@ function mapTournamentDetail(raw: RawTournamentDetail): TournamentDetail {
 }
 
 function parseServerTournamentsResponse(data: unknown): Tournament[] {
-  if (!Array.isArray(data) || data.length === 0) {
-    return mockTournaments;
+  if (!Array.isArray(data)) {
+    return [];
   }
   return mapTournaments(data as RawTournament[]);
 }
