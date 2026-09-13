@@ -16,10 +16,12 @@ import TournamentBracketModal from "@/components/tournaments/TournamentBracketMo
 import GameSelectorModal from "@/components/GameSelectorModal";
 import HeaderGameSwitcher from "@/components/HeaderGameSwitcher";
 import { HomeIcon, PlusIcon, UsersIcon, SwordsIcon, ShieldIcon } from "@/components/ui/Icons";
+import { fetchTeamsApi } from "@/lib/teams";
 
 function HeaderAuthControls() {
   const { user, isLoggedIn, logoutUser, isLoaded } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [hasSquad, setHasSquad] = useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -33,6 +35,32 @@ function HeaderAuthControls() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  React.useEffect(() => {
+    if (!user) {
+      setHasSquad(false);
+      return;
+    }
+    fetchTeamsApi().then((teams) => {
+      const myId = user.id;
+      const myEmail = user.email ? user.email.toLowerCase().trim() : "";
+      const myName = user.displayName ? user.displayName.toLowerCase().trim() : "";
+
+      const found = teams.some(
+        (t) =>
+          (myId && t.captainId === myId) ||
+          (myName && t.captainName && t.captainName.toLowerCase().trim() === myName) ||
+          t.members?.some(
+            (m) =>
+              m.status === "ACCEPTED" &&
+              ((myId && m.userId === myId) ||
+                (myEmail && m.email && m.email.toLowerCase().trim() === myEmail) ||
+                (myName && m.displayName && m.displayName.toLowerCase().trim() === myName))
+          )
+      );
+      setHasSquad(found);
+    }).catch(() => setHasSquad(false));
+  }, [user]);
 
   if (!isLoaded) {
     return <div className="h-9 w-28 rounded-xl bg-[#141A29] border border-[#232D44] animate-pulse" />;
@@ -94,7 +122,7 @@ function HeaderAuthControls() {
                 <HomeIcon className="w-3.5 h-3.5 text-primary-brand" />
                 <span>My Dashboard</span>
               </Link>
-              {user.role !== "ADMIN" && user.role !== "ORGANIZER" && (
+              {user.role !== "ADMIN" && user.role !== "ORGANIZER" && !hasSquad && (
                 <>
                   <Link
                     href="/team/create"

@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Team } from "@/types";
 import { GAMES } from "@/lib/games";
 import { useAuth } from "@/context/AuthContext";
@@ -19,6 +20,11 @@ export default function RosterDetailsModal({ team, isOpen, onClose, onRosterUpda
   const [isLeaving, setIsLeaving] = useState(false);
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [leaveError, setLeaveError] = useState("");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   if (!isOpen || !team) return null;
 
@@ -63,8 +69,8 @@ export default function RosterDetailsModal({ team, isOpen, onClose, onRosterUpda
       (user.id && team.captainId === user.id)
   );
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+  const modalContent = (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
       <div className="w-full max-w-xl bg-[#121520] border border-[#272D40] rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6 relative overflow-hidden">
         {/* Header Bar */}
         <div className="flex items-center justify-between border-b border-raised-panel pb-4">
@@ -233,4 +239,7 @@ export default function RosterDetailsModal({ team, isOpen, onClose, onRosterUpda
       </div>
     </div>
   );
+
+  if (!mounted || typeof document === "undefined") return null;
+  return createPortal(modalContent, document.body);
 }

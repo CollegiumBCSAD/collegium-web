@@ -3,8 +3,9 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { UserProfile, GameInfo, GameId, University, Tournament, ScrimOffer, NewsArticle } from "@/types";
-import { Team } from "@/lib/teams";
+import { Team, fetchTeamsApi } from "@/lib/teams";
 import { mockNewsArticles } from "@/lib/mock/news";
 import {
   TrophyIcon,
@@ -15,6 +16,7 @@ import {
 } from "@/components/ui/Icons";
 
 import { universitiesService, scrimsService } from "@/services";
+import RosterDetailsModal from "@/components/dashboard/RosterDetailsModal";
 
 interface AthleteHomePageProps {
   user: UserProfile | null;
@@ -23,7 +25,7 @@ interface AthleteHomePageProps {
   openGameSelector: () => void;
   selectGame: (gameId: GameId) => void;
   stats: { value: string; label: string }[];
-  teams: Team[];
+  teams?: Team[];
   tournaments: Tournament[];
   scrims?: ScrimOffer[];
   universities?: University[];
@@ -35,14 +37,82 @@ export default function AthleteHomePage({
   activeGame,
   selectedGameInfo,
   stats,
+  teams = [],
   tournaments,
   scrims = [],
   universities = [],
   articles = mockNewsArticles,
 }: AthleteHomePageProps) {
+  const router = useRouter();
   const [scrimFilter, setScrimFilter] = useState<"ALL" | "BO3" | "TIER1">("ALL");
   const [liveScrims, setLiveScrims] = useState<ScrimOffer[]>(scrims);
   const [liveUniversities, setLiveUniversities] = useState<University[]>(universities);
+  const [liveTeams, setLiveTeams] = useState<Team[]>(teams);
+  const [isRosterModalOpen, setIsRosterModalOpen] = useState(false);
+  const [selectedSquad, setSelectedSquad] = useState<Team | null>(null);
+
+  const refreshTeams = useCallback(() => {
+    fetchTeamsApi().then((data) => {
+      if (Array.isArray(data)) setLiveTeams(data);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (teams && teams.length > 0) {
+      setLiveTeams(teams);
+    }
+  }, [teams]);
+
+  useEffect(() => {
+    refreshTeams();
+  }, [refreshTeams]);
+
+  // Find athlete's squad (matching activeGame first, then fallback to any squad)
+  const userSquad = useMemo(() => {
+    if (!user || liveTeams.length === 0) return null;
+    const myId = user.id;
+    const myEmail = user.email ? user.email.toLowerCase().trim() : "";
+    const myName = user.displayName ? user.displayName.toLowerCase().trim() : "";
+
+    // 1. First priority: Squad for active game
+    const activeGameSquad = liveTeams.find(
+      (t) =>
+        t.gameTitle === activeGame &&
+        ((myId && t.captainId === myId) ||
+          (myName && t.captainName && t.captainName.toLowerCase().trim() === myName) ||
+          t.members?.some(
+            (m) =>
+              m.status === "ACCEPTED" &&
+              ((myId && m.userId === myId) ||
+                (myEmail && m.email && m.email.toLowerCase().trim() === myEmail) ||
+                (myName && m.displayName && m.displayName.toLowerCase().trim() === myName))
+          ))
+    );
+    if (activeGameSquad) return activeGameSquad;
+
+    // 2. Second priority: Any accepted squad the user belongs to
+    return liveTeams.find(
+      (t) =>
+        (myId && t.captainId === myId) ||
+        (myName && t.captainName && t.captainName.toLowerCase().trim() === myName) ||
+        t.members?.some(
+          (m) =>
+            m.status === "ACCEPTED" &&
+            ((myId && m.userId === myId) ||
+              (myEmail && m.email && m.email.toLowerCase().trim() === myEmail) ||
+              (myName && m.displayName && m.displayName.toLowerCase().trim() === myName))
+        )
+    ) || null;
+  }, [user, liveTeams, activeGame]);
+
+  const handleManageSquadClick = () => {
+    if (userSquad) {
+      setSelectedSquad(userSquad);
+      setIsRosterModalOpen(true);
+    } else {
+      router.push("/team/create");
+    }
+  };
 
   // Synchronize live data from server for the active game
   useEffect(() => {
@@ -244,16 +314,18 @@ export default function AthleteHomePage({
                   <span>Open Scrim Board</span>
                 </Link>
 
-                <Link
-                  href="/team/create"
-                  className="inline-flex h-11 items-center justify-center gap-2 bg-[#121828] hover:bg-[#1A253D] text-slate-200 hover:text-white border border-[#232F4A] px-5 text-xs font-bold uppercase tracking-wider transition-all shadow-md active:scale-95"
+                <button
+                  type="button"
+                  onClick={handleManageSquadClick}
+                  className="inline-flex h-11 items-center justify-center gap-2 bg-[#121828] hover:bg-[#1A253D] text-slate-200 hover:text-white border border-[#232F4A] px-5 text-xs font-bold uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer"
                   style={{
                     clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
                   }}
+                  title={userSquad ? `Manage ${userSquad.name} roster` : "Create or join a varsity squad"}
                 >
                   <UsersIcon className="w-3.5 h-3.5 text-sky-400" />
                   <span>Manage Squad</span>
-                </Link>
+                </button>
               </div>
 
               {/* Live Circuit Telemetry Counters */}
@@ -700,6 +772,16 @@ export default function AthleteHomePage({
           </div>
         </div>
       </section>
+
+      {/* Squad Roster Management Modal */}
+      {selectedSquad && (
+        <RosterDetailsModal
+          team={selectedSquad}
+          isOpen={isRosterModalOpen}
+          onClose={() => setIsRosterModalOpen(false)}
+          onRosterUpdated={refreshTeams}
+        />
+      )}
     </div>
   );
 }
