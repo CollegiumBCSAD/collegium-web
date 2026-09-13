@@ -88,9 +88,10 @@ export default function TournamentBracketModal({
   tournamentId,
   title = "PHILIPPINE COLLEGIATE TOURNAMENT BRACKET",
   subtitle = "SINGLE ELIMINATION CHAMPIONSHIP",
+  initialTab = "bracket",
 }: TournamentBracketModalProps) {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<"bracket" | "teams" | "overview">("bracket");
+  const [activeTab, setActiveTab] = useState<"bracket" | "teams" | "overview">(initialTab);
   const [activeBoxScore, setActiveBoxScore] = useState<BracketMatch | null>(null);
   const [reportingMatch, setReportingMatch] = useState<BracketMatch | null>(null);
   const [rounds, setRounds] = useState<BracketRound[]>([]);
@@ -98,6 +99,12 @@ export default function TournamentBracketModal({
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const canReportResults = user?.role === "ADMIN" || user?.role === "ORGANIZER";
+
+  useEffect(() => {
+    if (isOpen && initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [isOpen, initialTab]);
 
   useEffect(() => {
     if (!isOpen) return;

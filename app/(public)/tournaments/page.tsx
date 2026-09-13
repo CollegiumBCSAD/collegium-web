@@ -19,6 +19,7 @@ export default function TournamentsPage() {
   const { user, isLoggedIn } = useAuth();
   const { selectedGame: globalGame, selectedGameInfo } = useGame();
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
+  const [selectedTournamentTab, setSelectedTournamentTab] = useState<"bracket" | "teams" | "overview">("bracket");
   const [registeringTournament, setRegisteringTournament] = useState<Tournament | null>(null);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -52,10 +53,28 @@ export default function TournamentsPage() {
         publicList.forEach((t) => map.set(t.id, t));
         myList.forEach((t) => map.set(t.id, t));
 
-        setTournaments(Array.from(map.values()));
+        const allTourneys = Array.from(map.values());
+        setTournaments(allTourneys);
+
+        if (user?.id && user?.role !== "ORGANIZER" && user?.role !== "ADMIN") {
+          const applied = allTourneys
+            .filter((t) =>
+              (t.applications as Array<{ userId?: string; universityId?: string; status?: string }>)?.some(
+                (app) =>
+                  (app.userId === user.id || (user.universityId && app.universityId === user.universityId)) &&
+                  app.status !== "REJECTED"
+              ) ||
+              (t.universities as Array<{ id?: string }>)?.some((u) => u.id === user.universityId)
+            )
+            .map((t) => t.id);
+          setAppliedIds(applied);
+        } else {
+          setAppliedIds([]);
+        }
       })
       .catch(() => {
         setTournaments([]);
+        setAppliedIds([]);
       })
       .finally(() => {
         setIsLoading(false);
@@ -76,9 +95,11 @@ export default function TournamentsPage() {
     setApplyingId(t.id);
     try {
       await tournamentsService.applyForTournament(t.id, teamId);
-      setAppliedIds((prev) => [...prev, t.id]);
+      setAppliedIds((prev) => Array.from(new Set([...prev, t.id])));
+      loadTournaments();
     } catch {
-      setAppliedIds((prev) => [...prev, t.id]);
+      setAppliedIds((prev) => Array.from(new Set([...prev, t.id])));
+      loadTournaments();
     } finally {
       setApplyingId(null);
     }
@@ -89,66 +110,18 @@ export default function TournamentsPage() {
     try {
       await tournamentsService.withdrawApplication(t.id);
       setAppliedIds((prev) => prev.filter((id) => id !== t.id));
+      loadTournaments();
     } catch {
       setAppliedIds((prev) => prev.filter((id) => id !== t.id));
+      loadTournaments();
     } finally {
       setApplyingId(null);
     }
   };
 
   useEffect(() => {
-    let isMounted = true;
-    const promises: Promise<unknown>[] = [tournamentsService.getTournaments()];
-    if (user?.role === "ORGANIZER") {
-      promises.push(tournamentsService.getMyTournaments());
-    }
-
-    Promise.allSettled(promises)
-      .then(([publicRes, myRes]) => {
-        if (!isMounted) return;
-        const publicList =
-          publicRes && publicRes.status === "fulfilled" && Array.isArray(publicRes.value)
-            ? (publicRes.value as Tournament[])
-            : [];
-        const myList =
-          myRes && myRes.status === "fulfilled" && Array.isArray(myRes.value)
-            ? (myRes.value as Tournament[])
-            : [];
-
-        const map = new Map<string, Tournament>();
-        publicList.forEach((t) => map.set(t.id, t));
-        myList.forEach((t) => map.set(t.id, t));
-
-        const allTourneys = Array.from(map.values());
-        setTournaments(allTourneys);
-
-        if (user?.id && user?.role !== "ORGANIZER" && user?.role !== "ADMIN") {
-          const applied = allTourneys
-            .filter((t) =>
-              (t.applications as Array<{ userId?: string; universityId?: string; status?: string }>)?.some(
-                (app) => app.userId === user.id && app.status !== "REJECTED"
-              )
-            )
-            .map((t) => t.id);
-          setAppliedIds(applied);
-        } else {
-          setAppliedIds([]);
-        }
-
-        setIsLoading(false);
-      })
-      .catch(() => {
-        if (isMounted) {
-          setTournaments([]);
-          setAppliedIds([]);
-          setIsLoading(false);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [user?.id, user?.role]);
+    loadTournaments();
+  }, [user]);
 
   // Filter tournaments exclusively by the selected game from the game selector and status
   const filteredTournaments = useMemo(() => {
@@ -378,7 +351,10 @@ export default function TournamentsPage() {
               <TournamentCard
                 key={tournament.id}
                 tournament={tournament}
-                onSelect={setSelectedTournament}
+                onSelect={(t, tab = "bracket") => {
+                  setSelectedTournamentTab(tab);
+                  setSelectedTournament(t);
+                }}
                 onApply={user?.role === "ORGANIZER" ? undefined : handleApplyTournament}
                 onWithdraw={user?.role === "ORGANIZER" ? undefined : handleWithdrawTournament}
                 isApplied={appliedIds.includes(tournament.id)}
@@ -395,6 +371,7 @@ export default function TournamentsPage() {
         tournamentId={selectedTournament?.id}
         title={selectedTournament?.title ? `${selectedTournament.title} BRACKET` : "TOURNAMENT BRACKET"}
         subtitle="SINGLE ELIMINATION"
+        initialTab={selectedTournamentTab}
       />
 
       <SquadRegistrationModal

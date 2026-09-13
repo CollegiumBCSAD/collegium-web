@@ -104,6 +104,7 @@ export interface TournamentBracketModalProps {
   tournamentId?: string;
   title?: string;
   subtitle?: string;
+  initialTab?: "bracket" | "teams" | "overview";
 }
 
 export interface MatchCardProps {
