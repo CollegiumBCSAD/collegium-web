@@ -9,7 +9,8 @@ import {
   ClosePlayerStatInput,
   MatchPlayerStat,
   TournamentMatch,
-  PendingSquadApplication
+  PendingSquadApplication,
+  ScanResult
 } from "@/types";
 import { mockTournaments } from "@/lib/mock/tournaments";
 
@@ -592,6 +593,19 @@ export const tournamentsService = {
     return apiClient.post(
       `/tournaments/${tournamentId}/matches/${matchId}/close`,
       payload
+    );
+  },
+
+  scanScreenshot: async (
+    tournamentId: string,
+    matchId: string,
+    file: File
+  ): Promise<ScanResult> => {
+    const formData = new FormData();
+    formData.append("image", file);
+    return apiClient.postForm<ScanResult>(
+      `/tournaments/${tournamentId}/matches/${matchId}/scan`,
+      formData
     );
   },
 
