@@ -1,6 +1,5 @@
 "use client";
 
-<<<<<<< HEAD
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { MatchPlayerStat } from "@/types";

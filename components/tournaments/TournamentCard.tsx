@@ -359,20 +359,11 @@ export default function TournamentCard({
               </button>
             )}
 
-<<<<<<< HEAD
-            <button
-              onClick={() => onSelect(tournament)}
-              className="h-10 px-6 game-theme-btn text-xs font-display font-black uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 cursor-pointer shrink-0 active:scale-95 transition-transform group/btn"
-              style={{
-                clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-              }}
-=======
             {/* View Bracket & Details Button */}
             <button
               type="button"
               onClick={() => onSelect(tournament, "bracket")}
               className="h-10 px-5 rounded-xl game-theme-btn text-xs font-display font-black uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 cursor-pointer shrink-0 active:scale-95 transition-all group/btn"
->>>>>>> d06543d (feat(ui): reposition war room quick access to floating chat bubble, stabilize modal viewports with portals, and update tournament card actions)
             >
               <span>View Bracket & Details</span>
               <span className="group-hover/btn:translate-x-0.5 transition-transform">→</span>
