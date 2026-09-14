@@ -114,6 +114,8 @@ function mapTournaments(data: RawTournament[]): Tournament[] {
       organizerId: t.organizerId,
       organizer: t.organizer,
       bgGradient: gameDisplay.gradient,
+      universities: t.universities as { id: string; name: string }[],
+      matches: t.matches as unknown[],
     };
   });
 }
@@ -143,6 +145,50 @@ export type RawTournamentDetail = Omit<RawTournament, "universities"> & {
   createdAt?: string;
 };
 
+function isTeamForTournamentGame(
+  teamGame?: string,
+  teamName?: string,
+  tourneyGame?: string,
+  tourneyTitle?: string
+): boolean {
+  const tGame = (tourneyGame || tourneyTitle || "").toUpperCase();
+  const isTourneyValo = tGame.includes("VAL");
+  const isTourneyLol = tGame.includes("LOL") || tGame.includes("LEAGUE") || tGame.includes("RIFT");
+  const isTourneyMl = tGame.includes("ML") || tGame.includes("MOBILE");
+  const isTourneyCod = tGame.includes("COD") || tGame.includes("CALL") || tGame.includes("DUTY");
+
+  const tmGame = (teamGame || "").toUpperCase();
+  const tmName = (teamName || "").toUpperCase();
+
+  if (isTourneyValo) {
+    if (tmGame) return tmGame.includes("VAL");
+    return (
+      tmName.includes("VAL") ||
+      (!tmName.includes("LEAGUE") &&
+        !tmName.includes("MOBILE") &&
+        !tmName.includes("CALL") &&
+        !tmName.includes("DUTY") &&
+        !tmName.includes("ML") &&
+        !tmName.includes("LOL") &&
+        !tmName.includes("COD"))
+    );
+  }
+  if (isTourneyLol) {
+    if (tmGame) return tmGame.includes("LOL") || tmGame.includes("LEAGUE");
+    return tmName.includes("LEAGUE") || tmName.includes("LOL");
+  }
+  if (isTourneyMl) {
+    if (tmGame) return tmGame.includes("ML") || tmGame.includes("MOBILE");
+    return tmName.includes("MOBILE") || tmName.includes("ML");
+  }
+  if (isTourneyCod) {
+    if (tmGame) return tmGame.includes("COD") || tmGame.includes("CALL");
+    return tmName.includes("CALL") || tmName.includes("COD") || tmName.includes("DUTY");
+  }
+
+  return true;
+}
+
 function mapTournamentDetail(raw: RawTournamentDetail): TournamentDetail {
   const base = mapTournaments([raw as RawTournament])[0];
   const rawUnis: RawUniversityData[] = raw.universities || [];
@@ -159,10 +205,14 @@ function mapTournamentDetail(raw: RawTournamentDetail): TournamentDetail {
   const approvedApps = rawApps.filter((a) => a.status === "APPROVED");
   const participatingTeams: ParticipatingTeamDetail[] = [];
   const handledAppIds = new Set<string>();
+  const handledTeamIds = new Set<string>();
+
+  const tourneyGameTitle = raw.gameTitle || base.gameTitle || base.game || "VALORANT";
+  const tourneyName = raw.name || base.title || "";
 
   const isOrganizerTourney = Boolean(raw.organizerId || raw.organizer?.id);
 
-  if (isOrganizerTourney || rawApps.length > 0) {
+  if (isOrganizerTourney || approvedApps.length > 0) {
     // 1. First match against university teams where possible
     rawUnis.forEach((uni, uIdx) => {
       const uniName = uni.name || "University Squad";
@@ -172,7 +222,12 @@ function mapTournamentDetail(raw: RawTournamentDetail): TournamentDetail {
       );
 
       if (matchingApps.length > 0) {
-        (uni.teams || []).forEach((tm, tIdx) => {
+        // Filter university teams strictly for the tournament's game title
+        const gameTeams = (uni.teams || []).filter((tm) =>
+          isTeamForTournamentGame(tm.gameTitle, tm.name, tourneyGameTitle, tourneyName)
+        );
+
+        gameTeams.forEach((tm, tIdx) => {
           const matchedApp = matchingApps.find(
             (app) =>
               (app.teamId && tm.id === app.teamId) ||
@@ -181,14 +236,15 @@ function mapTournamentDetail(raw: RawTournamentDetail): TournamentDetail {
               (app.teamName && tm.name && app.teamName.toLowerCase() === tm.name.toLowerCase())
           );
 
-          if (matchedApp) {
+          if (matchedApp && (!tm.id || !handledTeamIds.has(tm.id))) {
             handledAppIds.add(matchedApp.id);
+            if (tm.id) handledTeamIds.add(tm.id);
             participatingTeams.push({
               id: tm.id || `team-${uniId}-${tIdx}`,
               name: tm.name || matchedApp.teamName || `${uniName} Varsity`,
               universityId: uniId,
               universityName: uniName,
-              gameTitle: tm.gameTitle || raw.gameTitle || "VALORANT",
+              gameTitle: tm.gameTitle || tourneyGameTitle,
               captainName: tm.captain?.displayName || matchedApp.applicantName || "Team Captain",
               captainId: tm.captainId || matchedApp.userId,
               status: "CONFIRMED",
@@ -217,7 +273,7 @@ function mapTournamentDetail(raw: RawTournamentDetail): TournamentDetail {
           name: app.teamName || `${uniName} Squad`,
           universityId: app.universityId,
           universityName: uniName,
-          gameTitle: raw.gameTitle || "VALORANT",
+          gameTitle: tourneyGameTitle,
           captainName: app.applicantName || "Team Captain",
           captainId: app.userId,
           status: "CONFIRMED",
@@ -264,20 +320,23 @@ function mapTournamentDetail(raw: RawTournamentDetail): TournamentDetail {
       }
     });
   } else {
-    // System Tournaments (pre-seeded with participating university rosters)
+    // System Tournaments (pre-seeded with participating university rosters for this game)
     rawUnis.forEach((uni, uIdx) => {
       const uniName = uni.name || "University Squad";
       const uniId = uni.id || `uni-${uIdx}`;
-      const teams = uni.teams || [];
+      // Filter university teams strictly for the tournament's game title!
+      const gameTeams = (uni.teams || []).filter((tm) =>
+        isTeamForTournamentGame(tm.gameTitle, tm.name, tourneyGameTitle, tourneyName)
+      );
 
-      if (teams.length > 0) {
-        teams.forEach((tm, tIdx) => {
+      if (gameTeams.length > 0) {
+        gameTeams.forEach((tm, tIdx) => {
           participatingTeams.push({
             id: tm.id || `team-${uniId}-${tIdx}`,
             name: tm.name || `${uniName} Varsity`,
             universityId: uniId,
             universityName: uniName,
-            gameTitle: tm.gameTitle || raw.gameTitle || "VALORANT",
+            gameTitle: tm.gameTitle || tourneyGameTitle,
             captainName: tm.captain?.displayName || "Team Captain",
             captainId: tm.captainId,
             status: "CONFIRMED",
@@ -295,10 +354,10 @@ function mapTournamentDetail(raw: RawTournamentDetail): TournamentDetail {
       } else {
         participatingTeams.push({
           id: `team-${uniId}`,
-          name: `${uniName} Esports`,
+          name: `${uniName} ${tourneyGameTitle}`,
           universityId: uniId,
           universityName: uniName,
-          gameTitle: raw.gameTitle || "VALORANT",
+          gameTitle: tourneyGameTitle,
           captainName: "Athletic Captain",
           status: "CONFIRMED",
           seed: participatingTeams.length + 1,
@@ -322,8 +381,8 @@ function mapTournamentDetail(raw: RawTournamentDetail): TournamentDetail {
 }
 
 function parseServerTournamentsResponse(data: unknown): Tournament[] {
-  if (!Array.isArray(data) || data.length === 0) {
-    return mockTournaments;
+  if (!Array.isArray(data)) {
+    return [];
   }
   return mapTournaments(data as RawTournament[]);
 }
@@ -405,7 +464,7 @@ function buildBracketRounds(
         universityId: m.winnerId ?? undefined,
       },
       team2: {
-        name: !m.loserId && m.isVerified ? "BYE" : teamName(m.loserId),
+        name: teamName(m.loserId),
         code: "",
         score: 0,
         isWinner: false,

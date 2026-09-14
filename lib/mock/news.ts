@@ -1,15 +1,4 @@
-export interface NewsArticle {
-  id: string;
-  gameId: "valo" | "lol" | "ml" | "codm" | "general";
-  title: string;
-  excerpt: string;
-  date: string;
-  category: string;
-  readTime?: string;
-  author?: string;
-  image: string;
-  isFeatured?: boolean;
-}
+import { NewsArticle } from "@/types";
 
 export const mockNewsArticles: NewsArticle[] = [
   // VALORANT News
