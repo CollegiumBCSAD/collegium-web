@@ -17,7 +17,7 @@ import { GAMES } from "@/lib/games";
 
 interface TournamentCardProps {
   tournament: Tournament;
-  onSelect: (tournament: Tournament) => void;
+  onSelect: (tournament: Tournament, defaultTab?: "bracket" | "overview") => void;
   onApply?: (tournament: Tournament) => void;
   onWithdraw?: (tournament: Tournament) => void;
   isApplied?: boolean;
