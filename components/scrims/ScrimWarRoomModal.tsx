@@ -221,10 +221,11 @@ export default function ScrimWarRoomModal({
 
         <div className="p-4 sm:p-5 bg-gradient-to-r from-[#0F1628]/98 via-[#0B101E]/95 to-[#0F1628]/98 border-b border-[#1F2C46] flex items-center justify-between gap-4 backdrop-blur-xl relative z-20 shadow-md">
           <div className="flex items-center gap-3.5">
-            <div className="flex items-center -space-x-2.5">
+            <div className="flex items-center -space-x-2.5 pointer-events-none select-none">
               <div 
-                className="w-10 h-10 game-theme-btn text-white flex items-center justify-center font-display text-sm font-black shadow-lg ring-2 ring-[#0D121F] border border-white/20"
+                className="w-10 h-10 text-white flex items-center justify-center font-display text-sm font-black shadow-lg ring-2 ring-[#0D121F] border border-white/20"
                 style={{
+                  background: `linear-gradient(135deg, ${game.accentColor}, #B91C1C)`,
                   clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
                 }}
               >
