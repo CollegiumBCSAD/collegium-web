@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { UserProfile } from "@/types";
 import { useAuth } from "@/context/AuthContext";
 import { authService } from "@/services/authService";
@@ -19,21 +19,25 @@ interface ProfilePictureModalProps {
   user: UserProfile;
 }
 
-export default function ProfilePictureModal({
-  isOpen,
+function ProfilePictureModalContent({
   onClose,
   user,
-}: ProfilePictureModalProps) {
+}: {
+  onClose: () => void;
+  user: UserProfile;
+}) {
   const { setUserAvatar, refreshProfile } = useAuth();
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(
+    user.avatarOriginal || user.avatar || null
+  );
 
   // Crop & Transform controls
-  const [zoom, setZoom] = useState<number>(1);
-  const [offsetX, setOffsetX] = useState<number>(0);
-  const [offsetY, setOffsetY] = useState<number>(0);
-  const [rotation, setRotation] = useState<number>(0);
+  const [zoom, setZoom] = useState<number>(user.avatarZoom ?? 1);
+  const [offsetX, setOffsetX] = useState<number>(user.avatarOffsetX ?? 0);
+  const [offsetY, setOffsetY] = useState<number>(user.avatarOffsetY ?? 0);
+  const [rotation, setRotation] = useState<number>(user.avatarRotation ?? 0);
   const [isDragging, setIsDragging] = useState(false);
   const dragStartRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
@@ -42,28 +46,6 @@ export default function ProfilePictureModal({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Reset state on open/close
-  useEffect(() => {
-    if (isOpen) {
-      setSelectedFile(null);
-      setImagePreviewUrl(user.avatarOriginal || user.avatar || null);
-      setZoom(user.avatarZoom ?? 1);
-      setOffsetX(user.avatarOffsetX ?? 0);
-      setOffsetY(user.avatarOffsetY ?? 0);
-      setRotation(user.avatarRotation ?? 0);
-      setError(null);
-      setSuccessMessage(null);
-    }
-  }, [
-    isOpen,
-    user.avatar,
-    user.avatarOriginal,
-    user.avatarZoom,
-    user.avatarOffsetX,
-    user.avatarOffsetY,
-    user.avatarRotation,
-  ]);
 
   // Handle File Selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -293,8 +275,6 @@ export default function ProfilePictureModal({
       setIsLoading(false);
     }
   };
-
-  if (!isOpen) return null;
 
   const initial = (user.displayName || "A").charAt(0).toUpperCase();
 
@@ -582,5 +562,21 @@ export default function ProfilePictureModal({
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ProfilePictureModal({
+  isOpen,
+  onClose,
+  user,
+}: ProfilePictureModalProps) {
+  if (!isOpen) return null;
+
+  return (
+    <ProfilePictureModalContent
+      key={`${user.id}-${user.avatar}-${user.avatarOriginal}-${user.avatarZoom}-${user.avatarOffsetX}-${user.avatarOffsetY}-${user.avatarRotation}`}
+      onClose={onClose}
+      user={user}
+    />
   );
 }
