@@ -81,9 +81,13 @@ export default function TournamentsPage() {
       });
   }, [user]);
 
+  const isAthlete = Boolean(isLoggedIn && user && user.role === "ATHLETE");
+
   const handleApplyTournament = (t: Tournament) => {
-    if (!isLoggedIn) {
-      router.push("/login");
+    if (!isAthlete) {
+      if (!isLoggedIn) {
+        router.push("/login");
+      }
       return;
     }
     setRegisteringTournament(t);
@@ -355,9 +359,9 @@ export default function TournamentsPage() {
                   setSelectedTournamentTab(tab);
                   setSelectedTournament(t);
                 }}
-                onApply={user?.role === "ORGANIZER" ? undefined : handleApplyTournament}
-                onWithdraw={user?.role === "ORGANIZER" ? undefined : handleWithdrawTournament}
-                isApplied={appliedIds.includes(tournament.id)}
+                onApply={isAthlete ? handleApplyTournament : undefined}
+                onWithdraw={isAthlete ? handleWithdrawTournament : undefined}
+                isApplied={isAthlete && appliedIds.includes(tournament.id)}
                 isApplying={applyingId === tournament.id}
               />
             ))}

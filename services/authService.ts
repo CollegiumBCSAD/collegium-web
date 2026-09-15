@@ -56,4 +56,52 @@ export const authService = {
       handle,
     });
   },
+
+  uploadAvatar: (
+    file: File | Blob,
+    originalFile?: File,
+    transforms?: {
+      zoom?: number;
+      offsetX?: number;
+      offsetY?: number;
+      rotation?: number;
+    }
+  ): Promise<{
+    id: string;
+    avatar: string;
+    avatarOriginal?: string;
+    avatarZoom?: number;
+    avatarOffsetX?: number;
+    avatarOffsetY?: number;
+    avatarRotation?: number;
+  }> => {
+    const formData = new FormData();
+    formData.append("avatar", file, "avatar.png");
+    if (originalFile) {
+      formData.append("original", originalFile, originalFile.name);
+    }
+    if (transforms) {
+      if (transforms.zoom !== undefined) formData.append("zoom", String(transforms.zoom));
+      if (transforms.offsetX !== undefined) formData.append("offsetX", String(transforms.offsetX));
+      if (transforms.offsetY !== undefined) formData.append("offsetY", String(transforms.offsetY));
+      if (transforms.rotation !== undefined) formData.append("rotation", String(transforms.rotation));
+    }
+    return apiClient.postForm<{
+      id: string;
+      avatar: string;
+      avatarOriginal?: string;
+      avatarZoom?: number;
+      avatarOffsetX?: number;
+      avatarOffsetY?: number;
+      avatarRotation?: number;
+    }>("/auth/me/avatar", formData);
+  },
+
+  removeAvatar: (): Promise<{ message: string }> => {
+    return apiClient.delete<{ message: string }>("/auth/me/avatar");
+  },
+
+  setPresetAvatar: (avatarUrl: string): Promise<{ id: string; avatar: string }> => {
+    return apiClient.patch<{ id: string; avatar: string }>("/auth/me/avatar-preset", { avatarUrl });
+  },
 };
