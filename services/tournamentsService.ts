@@ -454,34 +454,43 @@ function buildBracketRounds(
     const roundMatches = byRound.get(roundNumber)!;
     const positionFromEnd = roundNumbers.length - 1 - idx;
 
-    const bracketMatches: TournamentMatch[] = roundMatches.map((m, i) => ({
-      id: m.id || `${side || "r"}${roundNumber}-${i}`,
-      team1: {
-        name: teamName(m.winnerId),
-        code: "",
-        score: m.isVerified ? 2 : 0,
-        isWinner: m.isVerified,
-        universityId: m.winnerId ?? undefined,
-      },
-      team2: {
-        name: teamName(m.loserId),
-        code: "",
-        score: 0,
-        isWinner: false,
-        universityId: m.loserId ?? undefined,
-      },
-      status: m.isVerified ? "COMPLETED" : "LIVE",
-      playerStats: (m.playerStats || []).map(
-        (p): MatchPlayerStat => ({
-          universityId: p.universityId ?? null,
-          name: p.summonerName,
-          kills: p.kills,
-          deaths: p.deaths,
-          assists: p.assists,
-          win: p.win,
-        }),
-      ),
-    }));
+    const bracketMatches: TournamentMatch[] = roundMatches.map((m, i) => {
+      // Later rounds are created up front with neither side filled in. Those
+      // are future matches, not live ones - showing them as LIVE would put a
+      // pulsing "in progress" badge on a slot nobody has reached yet.
+      const isPlaceholder = !m.winnerId && !m.loserId;
+      // A bye is verified at generation time and has no opponent at all.
+      const isBye = Boolean(m.isVerified && m.winnerId && !m.loserId);
+
+      return {
+        id: m.id || `${side || "r"}${roundNumber}-${i}`,
+        team1: {
+          name: teamName(m.winnerId),
+          code: "",
+          score: m.isVerified ? 2 : 0,
+          isWinner: m.isVerified,
+          universityId: m.winnerId ?? undefined,
+        },
+        team2: {
+          name: isBye ? "BYE" : teamName(m.loserId),
+          code: "",
+          score: 0,
+          isWinner: false,
+          universityId: m.loserId ?? undefined,
+        },
+        status: isPlaceholder ? "UPCOMING" : m.isVerified ? "COMPLETED" : "LIVE",
+        playerStats: (m.playerStats || []).map(
+          (p): MatchPlayerStat => ({
+            universityId: p.universityId ?? null,
+            name: p.summonerName,
+            kills: p.kills,
+            deaths: p.deaths,
+            assists: p.assists,
+            win: p.win,
+          }),
+        ),
+      };
+    });
 
     return {
       name: roundName(roundNumber, positionFromEnd, roundMatches.length, side),
@@ -652,6 +661,14 @@ export const tournamentsService = {
       `/tournaments/${tournamentId}/matches/${matchId}/close`,
       payload
     );
+  },
+
+  // Redraws round 1 at random. The server rejects this once a round 1 result
+  // has been reported, so the caller should surface the error message.
+  randomizeBracket: (tournamentId: string): Promise<BracketRound[]> => {
+    return apiClient
+      .post<unknown>(`/tournaments/${tournamentId}/bracket/randomize`, {})
+      .then(parseServerBracketResponse);
   },
 
   closeTournament: (tournamentId: string): Promise<unknown> => {

@@ -798,8 +798,6 @@ export default function TournamentBracketModal({
               team2Name: activeBoxScore.team2.name,
               team1UniversityId: activeBoxScore.team1.universityId,
               team2UniversityId: activeBoxScore.team2.universityId,
-              team1Score: activeBoxScore.team1.score,
-              team2Score: activeBoxScore.team2.score,
               status: activeBoxScore.status,
               isTeam1Winner: Boolean(activeBoxScore.team1.isWinner),
               isTeam2Winner: Boolean(activeBoxScore.team2.isWinner),

@@ -55,6 +55,15 @@ export interface UniversityGameRating {
   losses: number;
 }
 
+export interface UniversityRosterMember {
+  id: string;
+  userId: string;
+  displayName: string;
+  gameHandle: string;
+  preferredRole?: string | null;
+  isCaptain?: boolean;
+}
+
 export interface TeamRatingSummary {
   id: string;
   name: string;
@@ -64,6 +73,9 @@ export interface TeamRatingSummary {
   glicko2_sigma: number;
   wins?: number;
   losses?: number;
+  captainId?: string;
+  captainName?: string;
+  members?: UniversityRosterMember[];
 }
 
 export interface University {
@@ -84,6 +96,11 @@ export interface University {
   createdAt: string;
   gameRatings?: UniversityGameRating[];
   teams?: TeamRatingSummary[];
+}
+
+export interface UniversityDirectoryCardProps {
+  university: University;
+  rank?: number;
 }
 
 export interface LeaderboardEntry {

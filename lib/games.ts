@@ -71,6 +71,15 @@ export function getGameInfo(gameTitle?: string): GameInfo {
   return GAMES[gameTitle as GameId] || GAMES.valo;
 }
 
+// The server's GameTitle enum values, keyed by the client-side GameId used by
+// GameContext and the game switcher.
+export const GAME_ID_TO_ENUM: Record<GameId, string> = {
+  valo: "VALORANT",
+  lol: "LOL",
+  ml: "MLBB",
+  codm: "CODM",
+};
+
 export const GAME_LIST: GameInfo[] = [
   GAMES.valo,
   GAMES.lol,

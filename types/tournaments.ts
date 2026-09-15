@@ -1,3 +1,5 @@
+import { University } from "./auth";
+
 export type TournamentStatus = "COMPLETED" | "UPCOMING" | "LIVE";
 
 // A tournament's own approval lifecycle is broader than a match's status —
@@ -69,6 +71,60 @@ export interface MatchPlayerStat {
   deaths: number;
   assists: number;
   win: boolean;
+  // Set when the reported stat line was matched to a registered athlete rather
+  // than typed in as a bare in-game name.
+  userId?: string | null;
+  displayName?: string | null;
+}
+
+// One verified tournament match as it appears on a university's profile. The
+// roundLabel is resolved server-side so a history row reads the same as the
+// bracket it came from.
+export interface UniversityMatchHistoryEntry {
+  id: string;
+  playedAt: string;
+  tournamentId: string | null;
+  tournamentName: string | null;
+  gameTitle: string | null;
+  round: number;
+  bracketSide: BracketSide | null;
+  roundLabel: string;
+  result: "WIN" | "LOSS";
+  opponent: { id: string; name: string } | null;
+  playerStats: MatchPlayerStat[];
+}
+
+export interface MatchRosterPreviewMember {
+  displayName?: string;
+  gameHandle?: string;
+  preferredRole?: string;
+}
+
+export interface MatchBoxScore {
+  team1Name: string;
+  team2Name: string;
+  team1UniversityId?: string;
+  team2UniversityId?: string;
+  isTeam1Winner?: boolean;
+  isTeam2Winner?: boolean;
+  status?: string;
+  playerStats?: MatchPlayerStat[];
+  team1Roster?: MatchRosterPreviewMember[];
+  team2Roster?: MatchRosterPreviewMember[];
+}
+
+export interface MatchBoxScoreModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title?: string;
+  subtitle?: string;
+  matchInfo?: MatchBoxScore;
+}
+
+export interface UniversityRosterSectionProps {
+  university: University;
+  matches: UniversityMatchHistoryEntry[];
+  isLoadingMatches?: boolean;
 }
 
 export interface MatchTeam {

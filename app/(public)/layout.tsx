@@ -219,6 +219,7 @@ function NavigationLinks({ mobile = false, onClose }: { mobile?: boolean; onClos
     { name: "Home", href: "/" },
     { name: "Tournaments", href: "/tournaments" },
     { name: "Rankings", href: "/leaderboard" },
+    { name: "Universities", href: "/universities" },
     ...(isLoggedIn && isOrganizer ? [{ name: "Organize", href: "/dashboard" }] : []),
     ...(isLoggedIn && !isOrganizer ? [{ name: "Scrims", href: "/scrims" }] : []),
     { name: "News", href: "/community" },

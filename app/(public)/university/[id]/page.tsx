@@ -3,8 +3,10 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useGame } from "@/context/GameContext";
 import { universitiesService } from "@/services/universitiesService";
-import { University } from "@/types";
+import { GameId, University, UniversityMatchHistoryEntry } from "@/types";
+import { GAME_ID_TO_ENUM } from "@/lib/games";
 import { getMockUniversity } from "@/lib/mock/universities";
 import UniversityHeaderBanner from "@/components/university/UniversityHeaderBanner";
 import UniversityGameCards from "@/components/university/UniversityGameCards";
@@ -13,8 +15,16 @@ import UniversityRosterSection from "@/components/university/UniversityRosterSec
 export default function UniversityProfilePage() {
   const params = useParams();
   const universityId = params?.id as string;
+  const { selectedGame } = useGame();
+  const activeGame = (selectedGame || "valo") as GameId;
+
   const [university, setUniversity] = useState<University | null>(null);
   const [loading, setLoading] = useState(true);
+  const [matches, setMatches] = useState<UniversityMatchHistoryEntry[]>([]);
+  const [loadedMatchesKey, setLoadedMatchesKey] = useState<string | null>(null);
+
+  const matchesKey = `${universityId}:${activeGame}`;
+  const loadingMatches = loadedMatchesKey !== matchesKey;
 
   useEffect(() => {
     if (!universityId) return;
@@ -40,6 +50,28 @@ export default function UniversityProfilePage() {
       isMounted = false;
     };
   }, [universityId]);
+
+  useEffect(() => {
+    if (!universityId) return;
+    let isMounted = true;
+
+    universitiesService
+      .getUniversityMatches(universityId, GAME_ID_TO_ENUM[activeGame])
+      .then((data) => {
+        if (!isMounted) return;
+        setMatches(Array.isArray(data) ? data : []);
+        setLoadedMatchesKey(matchesKey);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setMatches([]);
+        setLoadedMatchesKey(matchesKey);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [universityId, activeGame, matchesKey]);
 
   if (loading) {
     return (
@@ -76,7 +108,11 @@ export default function UniversityProfilePage() {
         <UniversityGameCards university={university} />
 
         {/* Interactive Verified Rosters & Match Logs Component */}
-        <UniversityRosterSection />
+        <UniversityRosterSection
+          university={university}
+          matches={matches}
+          isLoadingMatches={loadingMatches}
+        />
       </div>
     </div>
   );

@@ -164,8 +164,8 @@ export default function LandingPage() {
           matchInfo={{
             team1Name: selectedMatch.team1.name,
             team2Name: selectedMatch.team2.name,
-            team1Score: selectedMatch.team1.score ?? 0,
-            team2Score: selectedMatch.team2.score ?? 0,
+            team1UniversityId: selectedMatch.team1.universityId,
+            team2UniversityId: selectedMatch.team2.universityId,
             isTeam1Winner: selectedMatch.team1.isWinner,
             isTeam2Winner: selectedMatch.team2.isWinner,
             status: selectedMatch.status,
