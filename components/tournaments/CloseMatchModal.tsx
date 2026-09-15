@@ -14,6 +14,7 @@ interface PlayerRow {
   deaths: string;
   assists: string;
   extra?: Record<string, unknown>;
+  scanIdx?: number;
 }
 
 interface CloseMatchModalProps {
@@ -58,7 +59,7 @@ export default function CloseMatchModal({
   const [errorMsg, setErrorMsg] = useState("");
   const [isScanning, setIsScanning] = useState(false);
   const [scanNotice, setScanNotice] = useState("");
-  const [unmatched, setUnmatched] = useState<ScannedPlayerRow[]>([]);
+  const [scannedRows, setScannedRows] = useState<ScannedPlayerRow[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -100,15 +101,17 @@ export default function CloseMatchModal({
   const missingRoster = team1Players.length === 0 || team2Players.length === 0;
 
   const applyScan = (scanned: ScannedPlayerRow[]) => {
+    setScannedRows(scanned);
     const roster = players.map((p, index) => ({ index, ign: p.name }));
-    const { assignments, unmatched: leftover } = matchRows(scanned, roster);
+    const { assignments } = matchRows(scanned, roster);
 
     setPlayers((prev) =>
       prev.map((p, i) => {
         const hit = assignments.find((a) => a.index === i);
-        if (!hit) return p;
+        if (!hit) return { ...p, scanIdx: undefined };
         return {
           ...p,
+          scanIdx: hit.scanIndex,
           kills: String(hit.row.kills),
           deaths: String(hit.row.deaths),
           assists: String(hit.row.assists),
@@ -117,13 +120,36 @@ export default function CloseMatchModal({
       })
     );
 
-    setUnmatched(leftover);
     const matchedCount = assignments.length;
-    const base = `Auto-filled ${matchedCount} of ${scanned.length} scanned player${scanned.length === 1 ? "" : "s"}.`;
+    const leftover = scanned.length - matchedCount;
+    const base = `Auto-matched ${matchedCount} of ${scanned.length} scanned player${scanned.length === 1 ? "" : "s"} by name.`;
     setScanNotice(
-      leftover.length > 0
-        ? `${base} Assign the remaining ${leftover.length} below.`
-        : base
+      leftover > 0
+        ? `${base} For the rest, use each athlete's "from scan" picker to attach the right line.`
+        : `${base} Review the stats and confirm.`
+    );
+  };
+
+  // Attach a scanned line to a roster slot (or detach with scanIdx = null).
+  // A one-to-one mapping: taking a line that another slot held clears that slot.
+  const assignScanToRow = (rowIdx: number, scanIdx: number | null) => {
+    setPlayers((prev) =>
+      prev.map((p, i) => {
+        if (scanIdx !== null && i !== rowIdx && p.scanIdx === scanIdx) {
+          return { ...p, scanIdx: undefined, kills: "", deaths: "", assists: "", extra: undefined };
+        }
+        if (i !== rowIdx) return p;
+        if (scanIdx === null) return { ...p, scanIdx: undefined };
+        const row = scannedRows[scanIdx];
+        return {
+          ...p,
+          scanIdx,
+          kills: String(row.kills),
+          deaths: String(row.deaths),
+          assists: String(row.assists),
+          extra: row.extra,
+        };
+      })
     );
   };
 
@@ -157,29 +183,6 @@ export default function CloseMatchModal({
     } finally {
       setIsScanning(false);
     }
-  };
-
-  const assignUnmatched = (scanIdx: number, rowIndex: number) => {
-    const row = unmatched[scanIdx];
-    if (!row) return;
-    setPlayers((prev) =>
-      prev.map((p, i) =>
-        i === rowIndex
-          ? {
-              ...p,
-              kills: String(row.kills),
-              deaths: String(row.deaths),
-              assists: String(row.assists),
-              extra: row.extra,
-            }
-          : p
-      )
-    );
-    setUnmatched((prev) => prev.filter((_, i) => i !== scanIdx));
-  };
-
-  const dismissUnmatched = (scanIdx: number) => {
-    setUnmatched((prev) => prev.filter((_, i) => i !== scanIdx));
   };
 
   const handleSubmit = async () => {
@@ -226,6 +229,11 @@ export default function CloseMatchModal({
     }
   };
 
+  const hasScan = scannedRows.length > 0;
+  const gridCols = hasScan
+    ? "grid-cols-[minmax(0,1fr)_minmax(0,1fr)_3.25rem_3.25rem_3.25rem]"
+    : "grid-cols-[1fr_3.75rem_3.75rem_3.75rem]";
+
   const renderTeamColumn = (teamName: string, universityId: string | undefined, rows: (PlayerRow & { idx: number })[]) => (
     <div className="flex-1 min-w-0 space-y-3">
       <button
@@ -250,8 +258,11 @@ export default function CloseMatchModal({
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-[1fr_3.75rem_3.75rem_3.75rem] gap-2 px-1">
+          <div className={`grid ${gridCols} gap-2 px-1`}>
             <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">Athlete</span>
+            {hasScan && (
+              <span className="text-[10px] font-mono font-bold text-amber-400 uppercase tracking-widest">From scan</span>
+            )}
             {["K", "D", "A"].map((label) => (
               <span key={label} className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest text-center">
                 {label}
@@ -262,7 +273,7 @@ export default function CloseMatchModal({
           <div className="space-y-2">
             {rows.map((p) => (
               <div key={p.idx} className="space-y-1">
-                <div className="grid grid-cols-[1fr_3.75rem_3.75rem_3.75rem] gap-2">
+                <div className={`grid ${gridCols} gap-2`}>
                   <input
                     type="text"
                     value={p.name}
@@ -271,6 +282,27 @@ export default function CloseMatchModal({
                     aria-label="Player in-game name"
                     className="h-11 px-3 bg-[#060912] border border-[#1C2538] rounded-lg text-white text-sm font-sans truncate focus:outline-none focus:border-amber-500 placeholder:text-slate-600"
                   />
+                  {hasScan && (
+                    <select
+                      value={p.scanIdx ?? ""}
+                      onChange={(e) => assignScanToRow(p.idx, e.target.value === "" ? null : Number(e.target.value))}
+                      aria-label="Attach a scanned scoreboard line to this athlete"
+                      className={`h-11 px-2 bg-[#060912] border text-xs rounded-lg focus:outline-none focus:border-amber-500 cursor-pointer truncate ${
+                        p.scanIdx !== undefined ? "border-amber-500/50 text-amber-200" : "border-[#1C2538] text-slate-400"
+                      }`}
+                    >
+                      <option value="">— from scan —</option>
+                      {scannedRows.map((s, si) => {
+                        const takenByOther = players.some((pp, pi) => pi !== p.idx && pp.scanIdx === si);
+                        if (takenByOther) return null;
+                        return (
+                          <option key={si} value={si}>
+                            {(s.ign || "(no name)") + ` · ${s.kills}/${s.deaths}/${s.assists}`}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  )}
                   {(["kills", "deaths", "assists"] as const).map((field) => (
                     <input
                       key={field}
@@ -354,51 +386,6 @@ export default function CloseMatchModal({
           {renderTeamColumn(match.team1.name, match.team1.universityId, team1Players)}
           {renderTeamColumn(match.team2.name, match.team2.universityId, team2Players)}
         </div>
-
-        {unmatched.length > 0 && (
-          <div className="space-y-2 border-t border-[#182338] pt-4">
-            <span className="text-[10px] font-mono font-bold text-amber-400 uppercase tracking-widest block">
-              Unmatched scanned players — assign each to a slot
-            </span>
-            {unmatched.map((row, i) => (
-              <div
-                key={`${row.ign}-${i}`}
-                className="flex items-center gap-2 p-2 bg-[#060912] border border-[#1C2538] rounded-lg"
-              >
-                <div className="flex-1 min-w-0 flex items-center gap-2">
-                  <span className="text-sm text-white truncate">{row.ign || "(no name)"}</span>
-                  <span className="text-xs font-mono font-bold text-slate-400 shrink-0">
-                    {row.kills}/{row.deaths}/{row.assists}
-                  </span>
-                </div>
-                <select
-                  defaultValue=""
-                  onChange={(e) => {
-                    if (e.target.value !== "") assignUnmatched(i, Number(e.target.value));
-                  }}
-                  aria-label="Assign scanned player to a roster slot"
-                  className="h-9 px-2 bg-[#0A0F1C] border border-[#1C2538] text-white text-xs rounded-lg focus:outline-none focus:border-amber-500 cursor-pointer max-w-[10rem]"
-                >
-                  <option value="" disabled>
-                    Assign to…
-                  </option>
-                  {players.map((p, idx) => (
-                    <option key={idx} value={idx}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={() => dismissUnmatched(i)}
-                  className="h-9 px-3 text-slate-400 hover:text-white border border-[#222E48] text-[10px] font-mono font-bold uppercase transition-colors cursor-pointer rounded-lg"
-                >
-                  Skip
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
 
         <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#182338]">
           <button

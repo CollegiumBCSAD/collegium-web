@@ -7,6 +7,7 @@ export interface RosterSlot {
 
 export interface MatchAssignment {
   index: number;
+  scanIndex: number;
   row: ScannedPlayerRow;
 }
 
@@ -80,6 +81,7 @@ export function matchRows(
     usedRoster.add(pair.rosterIdx);
     assignments.push({
       index: roster[pair.rosterIdx].index,
+      scanIndex: pair.scannedIdx,
       row: scanned[pair.scannedIdx],
     });
   }
