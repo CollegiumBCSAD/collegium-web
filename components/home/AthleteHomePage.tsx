@@ -244,7 +244,7 @@ export default function AthleteHomePage({
             : 0,
         streak:
           (u.wins || 0) > 0
-            ? `${Math.min(u.wins, 9)}W`
+            ? `${Math.min(u.wins || 0, 9)}W`
             : `${Math.min(u.losses || 0, 9)}L`,
       }));
   }, [liveUniversities, universities]);
