@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { GameInfo, GameId, NewsArticle } from "@/types";
-import { TrophyIcon, CalendarIcon, ClockIcon } from "@/components/ui/Icons";
+import { TrophyIcon, ClockIcon } from "@/components/ui/Icons";
 
 interface PublicHeroBroadcastProps {
   activeGame: GameId;
@@ -68,7 +68,6 @@ export default function PublicHeroBroadcast({
 
   // Ensure selectedIdx is in range when game changes
   const activeArticle = gameArticles[selectedIdx] || gameArticles[0] || articles[0];
-  const otherArticles = gameArticles.filter((_, idx) => idx !== selectedIdx).slice(0, 2);
 
   const handlePrev = (e: React.MouseEvent) => {
     e.preventDefault();

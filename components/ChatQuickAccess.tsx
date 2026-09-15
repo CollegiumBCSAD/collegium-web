@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useWarRoom } from "@/context/WarRoomContext";
 import { scrimsService, ScrimChatMessage } from "@/services";
@@ -29,107 +29,24 @@ interface WarRoomChannel {
   lastSender?: string;
   lastMessageTime?: string;
   messageCount: number;
-  scheduledAt?: string;
+  scheduledAt: string;
   isLive: boolean;
 }
 
 export default function ChatQuickAccess() {
-  const { isLoggedIn, user } = useAuth();
+  const { user, isLoggedIn } = useAuth();
   const { openWarRoom } = useWarRoom();
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [channels, setChannels] = useState<WarRoomChannel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const userId = user?.id;
 
-  const loadWarRooms = useCallback(async () => {
-    if (!userId) return;
-
-    try {
-      const [scrims, teams] = await Promise.all([
-        scrimsService.getScrims().catch(() => [] as ScrimOffer[]),
-        fetchTeamsApi().catch(() => [] as Team[]),
-      ]);
-
-      const myTeams = teams.filter(
-        (t: Team) =>
-          t.captainId === userId ||
-          t.members.some((m) => m.userId === userId && m.status !== "DECLINED")
-      );
-      const myTeamIds = new Set(myTeams.map((t) => t.id));
-
-      // Filter to all matches/scrims involving user's teams (CONFIRMED, PENDING, or OPEN)
-      const userScrims = scrims.filter(
-        (s) =>
-          (s.teamId && myTeamIds.has(s.teamId)) ||
-          (s.opponentTeamId && myTeamIds.has(s.opponentTeamId))
-      );
-
-      const channelList: WarRoomChannel[] = await Promise.all(
-        userScrims.map(async (s) => {
-          const isHost = !!(s.teamId && myTeamIds.has(s.teamId));
-          const myTeam = myTeams.find((t) => t.id === (isHost ? s.teamId : s.opponentTeamId));
-          const opponentName = isHost
-            ? s.opponentTeamName || (s.status === "CONFIRMED" ? "Challenger Squad" : "Awaiting Opponent")
-            : s.hostTeamName;
-
-          let lastMsg = "";
-          let lastSender = "";
-          let lastTime = "";
-          let count = 0;
-
-          try {
-            const chatHistory: ScrimChatMessage[] = await scrimsService.getScrimChat(s.id);
-            count = chatHistory.length;
-            if (chatHistory.length > 0) {
-              const latest = chatHistory[chatHistory.length - 1];
-              lastMsg = latest.text;
-              lastSender = latest.senderName;
-              lastTime = new Date(latest.createdAt).toLocaleTimeString([], {
-                hour: "numeric",
-                minute: "2-digit",
-              });
-            }
-          } catch {
-            // best effort
-          }
-
-          const isLive = s.status === "CONFIRMED";
-
-          return {
-            id: s.id,
-            scrim: s,
-            isHost,
-            channelName: `War Room: vs ${opponentName}`,
-            opponentTeamName: opponentName,
-            myTeamName: myTeam?.name || "Your Squad",
-            gameTitle: (s.gameTitle || "VALO").toUpperCase(),
-            format: s.format || "BO3",
-            lastMessage: lastMsg || undefined,
-            lastSender: lastSender || undefined,
-            lastMessageTime: lastTime || undefined,
-            messageCount: count,
-            scheduledAt: s.scheduledAt,
-            isLive,
-          };
-        })
-      );
-
-      // Sort: Live / recently messaged rooms at the top
-      channelList.sort((a, b) => {
-        if (a.isLive && !b.isLive) return -1;
-        if (!a.isLive && b.isLive) return 1;
-        return b.messageCount - a.messageCount;
-      });
-
-      setChannels(channelList);
-    } catch {
-      setChannels([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [userId]);
+  const triggerSync = () => {
+    setRefreshKey((prev) => prev + 1);
+  };
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -145,19 +62,110 @@ export default function ChatQuickAccess() {
 
   useEffect(() => {
     if (!isLoggedIn || !userId) return;
-    loadWarRooms();
+    let isMounted = true;
+
+    async function initWarRooms() {
+      try {
+        const [scrims, teams] = await Promise.all([
+          scrimsService.getScrims().catch(() => [] as ScrimOffer[]),
+          fetchTeamsApi().catch(() => [] as Team[]),
+        ]);
+
+        const myTeams = teams.filter(
+          (t: Team) =>
+            t.captainId === userId ||
+            t.members.some((m) => m.userId === userId && m.status !== "DECLINED")
+        );
+        const myTeamIds = new Set(myTeams.map((t) => t.id));
+
+        // Filter to all matches/scrims involving user's teams (CONFIRMED, PENDING, or OPEN)
+        const userScrims = scrims.filter(
+          (s) =>
+            (s.teamId && myTeamIds.has(s.teamId)) ||
+            (s.opponentTeamId && myTeamIds.has(s.opponentTeamId))
+        );
+
+        const channelList: WarRoomChannel[] = await Promise.all(
+          userScrims.map(async (s) => {
+            const isHost = !!(s.teamId && myTeamIds.has(s.teamId));
+            const myTeam = myTeams.find((t) => t.id === (isHost ? s.teamId : s.opponentTeamId));
+            const opponentName = isHost
+              ? s.opponentTeamName || (s.status === "CONFIRMED" ? "Challenger Squad" : "Awaiting Opponent")
+              : s.hostTeamName;
+
+            let lastMsg = "";
+            let lastSender = "";
+            let lastTime = "";
+            let count = 0;
+
+            try {
+              const chatHistory: ScrimChatMessage[] = await scrimsService.getScrimChat(s.id);
+              count = chatHistory.length;
+              if (chatHistory.length > 0) {
+                const latest = chatHistory[chatHistory.length - 1];
+                lastMsg = latest.text;
+                lastSender = latest.senderName;
+                lastTime = new Date(latest.createdAt).toLocaleTimeString([], {
+                  hour: "numeric",
+                  minute: "2-digit",
+                });
+              }
+            } catch {
+              // best effort
+            }
+
+            const isLive = s.status === "CONFIRMED";
+
+            return {
+              id: s.id,
+              scrim: s,
+              isHost,
+              channelName: `War Room: vs ${opponentName}`,
+              opponentTeamName: opponentName,
+              myTeamName: myTeam?.name || "Your Squad",
+              gameTitle: (s.gameTitle || "VALO").toUpperCase(),
+              format: s.format || "BO3",
+              lastMessage: lastMsg || undefined,
+              lastSender: lastSender || undefined,
+              lastMessageTime: lastTime || undefined,
+              messageCount: count,
+              scheduledAt: s.scheduledAt || "",
+              isLive,
+            };
+          })
+        );
+
+        if (!isMounted) return;
+
+        // Sort: Live / recently messaged rooms at the top
+        channelList.sort((a, b) => {
+          if (a.isLive && !b.isLive) return -1;
+          if (!a.isLive && b.isLive) return 1;
+          return b.messageCount - a.messageCount;
+        });
+
+        setChannels(channelList);
+      } catch {
+        if (isMounted) setChannels([]);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+
+    initWarRooms();
 
     const handleRefresh = () => {
-      loadWarRooms();
+      initWarRooms();
     };
     window.addEventListener("scrim:completed", handleRefresh);
     window.addEventListener("focus", handleRefresh);
 
     return () => {
+      isMounted = false;
       window.removeEventListener("scrim:completed", handleRefresh);
       window.removeEventListener("focus", handleRefresh);
     };
-  }, [isLoggedIn, userId, loadWarRooms]);
+  }, [isLoggedIn, userId, refreshKey]);
 
   const filteredChannels = useMemo(() => {
     if (!searchQuery.trim()) return channels;
@@ -171,47 +179,45 @@ export default function ChatQuickAccess() {
     );
   }, [channels, searchQuery]);
 
+  const unreadTotal = useMemo(() => {
+    return channels.reduce((acc, c) => acc + (c.isLive ? 1 : 0), 0);
+  }, [channels]);
+
   if (!isLoggedIn) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-50" ref={containerRef}>
-      {/* Floating War Room Messenger Popover */}
+    <div className="fixed bottom-6 right-6 z-40" ref={containerRef}>
+      {/* Floating Chat Drawer */}
       {isOpen && (
         <div
-          className="absolute bottom-16 right-0 w-[340px] sm:w-[400px] h-[520px] rounded-2xl bg-[#090D1A]/95 border border-[#1E293B] shadow-2xl backdrop-blur-xl flex flex-col overflow-hidden animate-modal-enter z-50 mb-2"
+          className="absolute bottom-16 right-0 w-[360px] sm:w-[400px] h-[520px] bg-[#0A0D18] border border-[#1E293B] shadow-2xl overflow-hidden flex flex-col z-50 animate-modal-enter"
           style={{
-            boxShadow: "0 20px 50px rgba(0, 0, 0, 0.85), 0 0 30px rgba(244, 63, 94, 0.2)",
+            clipPath:
+              "polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))",
           }}
         >
-          {/* Top Accent Gradient Bar */}
-          <div className="h-[2.5px] w-full bg-gradient-to-r from-rose-500 via-pink-400 to-rose-600" />
-
-          {/* Messenger Header */}
-          <div className="p-4 border-b border-[#182338] bg-[#070A14] flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-rose-600 to-rose-500 flex items-center justify-center text-white shadow-md shadow-rose-500/30">
-                <SpeechBubbleIcon className="w-5 h-5 text-white" />
+          {/* Header */}
+          <div className="p-4 border-b border-[#182338] bg-[#0E1322] flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400">
+                <SwordsIcon className="w-4 h-4" />
               </div>
               <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="font-display text-sm font-black uppercase text-white tracking-wide">
-                    WAR ROOMS
-                  </h3>
-                  <span className="flex items-center gap-1 font-mono text-[9px] font-black px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    LIVE
-                  </span>
-                </div>
-                <p className="font-mono text-[10px] text-slate-400 uppercase tracking-widest mt-0.5">
-                  Direct Match & Lobby Chats
-                </p>
+                <h3 className="text-sm font-display font-black text-white uppercase tracking-wider flex items-center gap-2">
+                  <span>Match War Rooms</span>
+                  {unreadTotal > 0 && (
+                    <span className="px-1.5 py-0.2 bg-rose-500 text-white font-mono text-[9px] font-bold rounded-full">
+                      {unreadTotal} LIVE
+                    </span>
+                  )}
+                </h3>
+                <p className="text-[10px] font-mono text-slate-400">Tactical Comms Channels</p>
               </div>
             </div>
-
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="w-8 h-8 rounded-lg bg-[#141A29] hover:bg-[#1E273D] border border-[#232D44] text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+              className="p-1.5 text-slate-400 hover:text-white transition-colors cursor-pointer"
             >
               ✕
             </button>
@@ -335,7 +341,7 @@ export default function ChatQuickAccess() {
             </span>
             <button
               type="button"
-              onClick={() => loadWarRooms()}
+              onClick={() => triggerSync()}
               className="hover:text-white transition-colors cursor-pointer text-slate-400 flex items-center gap-1"
             >
               <span>SYNC</span>
@@ -352,7 +358,7 @@ export default function ChatQuickAccess() {
           const next = !isOpen;
           setIsOpen(next);
           if (next) {
-            loadWarRooms();
+            triggerSync();
           }
         }}
         aria-label="Toggle War Room Chats"

@@ -101,11 +101,14 @@ export default function TournamentBracketModal({
   const [refreshKey, setRefreshKey] = useState(0);
   const canReportResults = user?.role === "ADMIN" || user?.role === "ORGANIZER";
 
-  useEffect(() => {
+  const [prevTabKey, setPrevTabKey] = useState<string | null>(null);
+  const currentTabKey = isOpen && initialTab ? `${tournamentId}-${initialTab}` : null;
+  if (prevTabKey !== currentTabKey) {
+    setPrevTabKey(currentTabKey);
     if (isOpen && initialTab) {
       setActiveTab(initialTab);
     }
-  }, [isOpen, initialTab]);
+  }
 
   useEffect(() => {
     if (!isOpen) return;
@@ -168,12 +171,7 @@ export default function TournamentBracketModal({
     };
   }, [isOpen, onClose, activeBoxScore]);
 
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!isOpen || !mounted) return null;
+  if (!isOpen) return null;
 
   const normalizedRounds = rounds.map((round, rIdx) => ({
     name:

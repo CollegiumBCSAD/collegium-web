@@ -254,7 +254,7 @@ export default function ScrimsPage() {
       if (activeGame === "ml") return title.includes("ml") || title.includes("mobile");
       return true;
     });
-  }, [scrims, activeGame, selectedFormat, isUserHost]);
+  }, [scrims, activeGame, selectedFormat, isUserHost, referenceTime]);
 
   const enrichedScrims = useMemo(() => {
     const map = getPendingScrimRequestsMap();
@@ -340,10 +340,6 @@ export default function ScrimsPage() {
       (s) => s.status === "CONFIRMED" && (isUserHost(s) || (s.opponentTeamName && myTeams.some((t: Team) => t.name === s.opponentTeamName)))
     );
   }, [scrims, isUserHost, myTeams]);
-
-  const handleOpenWarRoom = (scrim: ScrimOffer) => {
-    openWarRoom(scrim, isUserHost(scrim));
-  };
 
   const handleConfirmBooking = async (id: string, selectedOpponentId?: string) => {
     try {

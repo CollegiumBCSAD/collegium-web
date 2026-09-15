@@ -3,7 +3,6 @@
 import React from "react";
 import Link from "next/link";
 import { Tournament, GameId } from "@/types";
-import { mockTournaments } from "@/lib/mock/tournaments";
 import { TrophyIcon } from "@/components/ui/Icons";
 
 interface HomeTournamentsWidgetProps {

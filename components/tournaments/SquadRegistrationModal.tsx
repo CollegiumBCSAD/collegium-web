@@ -104,13 +104,7 @@ export default function SquadRegistrationModal({
     };
   }, [isOpen, user, tournament]);
 
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!isOpen || !tournament || !mounted) return null;
+  if (!isOpen || !tournament) return null;
 
   const activeTeam = teams.find((t) => t.id === selectedTeamId) || teams[0];
 

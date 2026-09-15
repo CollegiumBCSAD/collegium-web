@@ -57,11 +57,13 @@ export default function AthleteHomePage({
     });
   }, []);
 
-  useEffect(() => {
+  const [prevTeams, setPrevTeams] = useState(teams);
+  if (prevTeams !== teams) {
+    setPrevTeams(teams);
     if (teams && teams.length > 0) {
       setLiveTeams(teams);
     }
-  }, [teams]);
+  }
 
   useEffect(() => {
     refreshTeams();

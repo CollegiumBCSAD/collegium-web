@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { createPortal } from "react-dom";
 import { Team } from "@/types";
 import { GAMES } from "@/lib/games";
@@ -20,11 +20,6 @@ export default function RosterDetailsModal({ team, isOpen, onClose, onRosterUpda
   const [isLeaving, setIsLeaving] = useState(false);
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [leaveError, setLeaveError] = useState("");
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   if (!isOpen || !team) return null;
 
@@ -240,6 +235,6 @@ export default function RosterDetailsModal({ team, isOpen, onClose, onRosterUpda
     </div>
   );
 
-  if (!mounted || typeof document === "undefined") return null;
+  if (typeof document === "undefined") return null;
   return createPortal(modalContent, document.body);
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useGame } from "@/context/GameContext";
 import { useAuth } from "@/context/AuthContext";
@@ -32,7 +32,7 @@ export default function TournamentsPage() {
   // Status Filter
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>("ALL");
 
-  const loadTournaments = () => {
+  const loadTournaments = useCallback(() => {
     const promises: Promise<unknown>[] = [tournamentsService.getTournaments()];
     if (user?.role === "ORGANIZER") {
       promises.push(tournamentsService.getMyTournaments());
@@ -79,7 +79,7 @@ export default function TournamentsPage() {
       .finally(() => {
         setIsLoading(false);
       });
-  };
+  }, [user]);
 
   const handleApplyTournament = (t: Tournament) => {
     if (!isLoggedIn) {
@@ -121,7 +121,7 @@ export default function TournamentsPage() {
 
   useEffect(() => {
     loadTournaments();
-  }, [user]);
+  }, [loadTournaments]);
 
   // Filter tournaments exclusively by the selected game from the game selector and status
   const filteredTournaments = useMemo(() => {

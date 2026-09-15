@@ -196,13 +196,6 @@ export default function ScrimWarRoomModal({
     setTimeout(() => setIsCopied(false), 2000);
   };
 
-  const quickChats = [
-    "🎮 Lobby created! Join code above.",
-    "🎧 Join our Discord voice channel.",
-    "⏱️ Pausing 3 mins, reconnecting.",
-    "🔥 GLHF! Ready to start.",
-  ];
-
   const hostInitial = scrim.hostTeamName.charAt(0).toUpperCase();
   const oppInitial = (scrim.opponentTeamName || "C").charAt(0).toUpperCase();
 

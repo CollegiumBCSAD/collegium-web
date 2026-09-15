@@ -37,11 +37,10 @@ function HeaderAuthControls() {
   }, []);
 
   React.useEffect(() => {
-    if (!user) {
-      setHasSquad(false);
-      return;
-    }
+    if (!user) return;
+    let isMounted = true;
     fetchTeamsApi().then((teams) => {
+      if (!isMounted) return;
       const myId = user.id;
       const myEmail = user.email ? user.email.toLowerCase().trim() : "";
       const myName = user.displayName ? user.displayName.toLowerCase().trim() : "";
@@ -59,7 +58,13 @@ function HeaderAuthControls() {
           )
       );
       setHasSquad(found);
-    }).catch(() => setHasSquad(false));
+    }).catch(() => {
+      if (isMounted) setHasSquad(false);
+    });
+
+    return () => {
+      isMounted = false;
+    };
   }, [user]);
 
   if (!isLoaded) {

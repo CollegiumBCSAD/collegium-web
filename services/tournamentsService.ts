@@ -11,7 +11,6 @@ import {
   TournamentMatch,
   PendingSquadApplication
 } from "@/types";
-import { mockTournaments } from "@/lib/mock/tournaments";
 
 const GAME_DISPLAY: Record<string, { label: string; gradient: string }> = {
   VALORANT: { label: "VALORANT", gradient: "from-[#8E2632] via-[#48161D] to-[#11141C]" },

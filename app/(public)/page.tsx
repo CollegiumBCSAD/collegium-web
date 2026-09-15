@@ -50,10 +50,7 @@ export default function LandingPage() {
 
   // Fetch real matches for active tournaments
   useEffect(() => {
-    if (tournaments.length === 0) {
-      setRealMatches([]);
-      return;
-    }
+    if (tournaments.length === 0) return;
 
     let isMounted = true;
     Promise.allSettled(

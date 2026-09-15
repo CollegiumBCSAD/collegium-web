@@ -43,14 +43,6 @@ function getMapSpecificStats(
 ): MatchPlayerStat[] {
   if (mapIdx === -1 || totalGames <= 1) return allStats;
 
-  // Provide deterministic map breakdown based on map index
-  const factors = [
-    [0.55, 0.45], // Game 1
-    [0.45, 0.55], // Game 2
-    [0.5, 0.5],   // Game 3
-  ];
-  const factor = (factors[mapIdx] && factors[mapIdx][0]) || (1 / totalGames);
-
   return allStats.map((p, i) => {
     const variation = ((i % 3) - 1) * 2;
     const scaledKills = Math.max(1, Math.round((p.kills / totalGames) + variation));
@@ -73,11 +65,13 @@ export default function MatchBoxScoreModal({
   matchInfo,
 }: MatchBoxScoreModalProps) {
   const [selectedMapTab, setSelectedMapTab] = useState<string>("ALL");
-  const [mounted, setMounted] = useState(false);
+  const [prevModalKey, setPrevModalKey] = useState<string | null>(null);
+  const currentModalKey = isOpen ? `${matchInfo?.team1Name || "team1"}-${matchInfo?.team2Name || "team2"}` : null;
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  if (prevModalKey !== currentModalKey) {
+    setPrevModalKey(currentModalKey);
+    setSelectedMapTab("ALL");
+  }
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -93,14 +87,7 @@ export default function MatchBoxScoreModal({
     };
   }, [isOpen, onClose]);
 
-  // Reset tab to ALL when matchInfo changes or modal opens
-  useEffect(() => {
-    if (isOpen) {
-      setSelectedMapTab("ALL");
-    }
-  }, [isOpen, matchInfo]);
-
-  if (!isOpen || !mounted) return null;
+  if (!isOpen) return null;
 
   const isLive = matchInfo?.status === "LIVE";
   const playerStats = matchInfo?.playerStats || [];
