@@ -28,6 +28,11 @@ export interface UserProfile {
   email: string;
   displayName: string;
   avatar?: string | null;
+  avatarOriginal?: string | null;
+  avatarZoom?: number | null;
+  avatarOffsetX?: number | null;
+  avatarOffsetY?: number | null;
+  avatarRotation?: number | null;
   role: string;
   status: string;
   universityId: string;

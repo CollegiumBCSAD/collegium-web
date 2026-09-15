@@ -57,10 +57,44 @@ export const authService = {
     });
   },
 
-  uploadAvatar: (file: File | Blob): Promise<{ id: string; avatar: string }> => {
+  uploadAvatar: (
+    file: File | Blob,
+    originalFile?: File,
+    transforms?: {
+      zoom?: number;
+      offsetX?: number;
+      offsetY?: number;
+      rotation?: number;
+    }
+  ): Promise<{
+    id: string;
+    avatar: string;
+    avatarOriginal?: string;
+    avatarZoom?: number;
+    avatarOffsetX?: number;
+    avatarOffsetY?: number;
+    avatarRotation?: number;
+  }> => {
     const formData = new FormData();
     formData.append("avatar", file, "avatar.png");
-    return apiClient.postForm<{ id: string; avatar: string }>("/auth/me/avatar", formData);
+    if (originalFile) {
+      formData.append("original", originalFile, originalFile.name);
+    }
+    if (transforms) {
+      if (transforms.zoom !== undefined) formData.append("zoom", String(transforms.zoom));
+      if (transforms.offsetX !== undefined) formData.append("offsetX", String(transforms.offsetX));
+      if (transforms.offsetY !== undefined) formData.append("offsetY", String(transforms.offsetY));
+      if (transforms.rotation !== undefined) formData.append("rotation", String(transforms.rotation));
+    }
+    return apiClient.postForm<{
+      id: string;
+      avatar: string;
+      avatarOriginal?: string;
+      avatarZoom?: number;
+      avatarOffsetX?: number;
+      avatarOffsetY?: number;
+      avatarRotation?: number;
+    }>("/auth/me/avatar", formData);
   },
 
   removeAvatar: (): Promise<{ message: string }> => {

@@ -47,15 +47,23 @@ export default function ProfilePictureModal({
   useEffect(() => {
     if (isOpen) {
       setSelectedFile(null);
-      setImagePreviewUrl(user.avatar || null);
-      setZoom(1);
-      setOffsetX(0);
-      setOffsetY(0);
-      setRotation(0);
+      setImagePreviewUrl(user.avatarOriginal || user.avatar || null);
+      setZoom(user.avatarZoom ?? 1);
+      setOffsetX(user.avatarOffsetX ?? 0);
+      setOffsetY(user.avatarOffsetY ?? 0);
+      setRotation(user.avatarRotation ?? 0);
       setError(null);
       setSuccessMessage(null);
     }
-  }, [isOpen, user.avatar]);
+  }, [
+    isOpen,
+    user.avatar,
+    user.avatarOriginal,
+    user.avatarZoom,
+    user.avatarOffsetX,
+    user.avatarOffsetY,
+    user.avatarRotation,
+  ]);
 
   // Handle File Selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -137,59 +145,95 @@ export default function ProfilePictureModal({
     return new Promise((resolve) => {
       const image = new Image();
       image.crossOrigin = "anonymous";
-      image.src = imagePreviewUrl;
-      image.onload = () => {
-        const canvas = document.createElement("canvas");
-        const size = 512;
-        canvas.width = size;
-        canvas.height = size;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) {
+
+      const processImage = () => {
+        try {
+          const canvas = document.createElement("canvas");
+          const size = 512;
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            resolve(null);
+            return;
+          }
+
+          ctx.clearRect(0, 0, size, size);
+
+          // Center and apply transforms
+          ctx.save();
+          ctx.translate(size / 2, size / 2);
+          ctx.rotate((rotation * Math.PI) / 180);
+          ctx.scale(zoom, zoom);
+          ctx.translate(
+            (offsetX / 140) * (size / 2),
+            (offsetY / 140) * (size / 2)
+          );
+
+          // Draw image centered
+          const aspect = image.width / image.height;
+          let drawW = size;
+          let drawH = size;
+          if (aspect > 1) {
+            drawW = size * aspect;
+            drawH = size;
+          } else {
+            drawW = size;
+            drawH = size / aspect;
+          }
+
+          ctx.drawImage(image, -drawW / 2, -drawH / 2, drawW, drawH);
+          ctx.restore();
+
+          canvas.toBlob(
+            (blob) => {
+              resolve(blob);
+            },
+            "image/png",
+            0.95
+          );
+        } catch {
           resolve(null);
-          return;
         }
-
-        ctx.clearRect(0, 0, size, size);
-
-        // Center and apply transforms
-        ctx.save();
-        ctx.translate(size / 2, size / 2);
-        ctx.rotate((rotation * Math.PI) / 180);
-        ctx.scale(zoom, zoom);
-        ctx.translate(
-          (offsetX / 140) * (size / 2),
-          (offsetY / 140) * (size / 2)
-        );
-
-        // Draw image centered
-        const aspect = image.width / image.height;
-        let drawW = size;
-        let drawH = size;
-        if (aspect > 1) {
-          drawW = size * aspect;
-          drawH = size;
-        } else {
-          drawW = size;
-          drawH = size / aspect;
-        }
-
-        ctx.drawImage(image, -drawW / 2, -drawH / 2, drawW, drawH);
-        ctx.restore();
-
-        canvas.toBlob(
-          (blob) => {
-            resolve(blob);
-          },
-          "image/png",
-          0.95
-        );
       };
-      image.onerror = () => resolve(null);
+
+      image.onload = processImage;
+      image.onerror = () => {
+        // Fallback with fetch in case CORS was restricted on direct img tag
+        fetch(imagePreviewUrl)
+          .then((res) => res.blob())
+          .then((blob) => {
+            const objectUrl = URL.createObjectURL(blob);
+            const fallbackImg = new Image();
+            fallbackImg.onload = () => {
+              image.src = objectUrl;
+              processImage();
+            };
+            fallbackImg.onerror = () => resolve(null);
+            fallbackImg.src = objectUrl;
+          })
+          .catch(() => resolve(null));
+      };
+      image.src = imagePreviewUrl;
     });
   }, [imagePreviewUrl, zoom, offsetX, offsetY, rotation]);
 
+  const initialZoom = user.avatarZoom ?? 1;
+  const initialOffsetX = user.avatarOffsetX ?? 0;
+  const initialOffsetY = user.avatarOffsetY ?? 0;
+  const initialRotation = user.avatarRotation ?? 0;
+
+  const hasTransformChanges =
+    Math.abs(zoom - initialZoom) > 0.01 ||
+    Math.abs(offsetX - initialOffsetX) > 0.5 ||
+    Math.abs(offsetY - initialOffsetY) > 0.5 ||
+    rotation !== initialRotation;
+
+  const canSave =
+    Boolean(selectedFile) || (Boolean(imagePreviewUrl) && hasTransformChanges);
+
   const handleSave = async () => {
-    if (!selectedFile) {
+    if (!imagePreviewUrl && !selectedFile) {
       setError("Please choose or upload a photo first.");
       return;
     }
@@ -202,7 +246,16 @@ export default function ProfilePictureModal({
       // Render and crop the customized image
       const blob = await getCroppedBlob();
       const uploadFile = blob || selectedFile;
-      const res = await authService.uploadAvatar(uploadFile);
+      if (!uploadFile) {
+        throw new Error(
+          "Unable to process image. Please try selecting the file again."
+        );
+      }
+      const res = await authService.uploadAvatar(
+        uploadFile,
+        selectedFile || undefined,
+        { zoom, offsetX, offsetY, rotation }
+      );
       setUserAvatar(res.avatar);
       await refreshProfile();
       setSuccessMessage("Profile picture updated!");
@@ -415,7 +468,11 @@ export default function ProfilePictureModal({
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => setZoom((z) => Math.max(1, z - 0.1))}
+                        onClick={() =>
+                          setZoom((z) =>
+                            Math.max(1, parseFloat((z - 0.1).toFixed(2)))
+                          )
+                        }
                         className="w-6 h-6 bg-[#121929] border border-[#202C45] hover:text-white text-slate-400 rounded flex items-center justify-center text-xs font-bold cursor-pointer"
                       >
                         -
@@ -431,7 +488,11 @@ export default function ProfilePictureModal({
                       />
                       <button
                         type="button"
-                        onClick={() => setZoom((z) => Math.min(3, z + 0.1))}
+                        onClick={() =>
+                          setZoom((z) =>
+                            Math.min(3, parseFloat((z + 0.1).toFixed(2)))
+                          )
+                        }
                         className="w-6 h-6 bg-[#121929] border border-[#202C45] hover:text-white text-slate-400 rounded flex items-center justify-center text-xs font-bold cursor-pointer"
                       >
                         +
@@ -498,7 +559,7 @@ export default function ProfilePictureModal({
             <button
               type="button"
               onClick={handleSave}
-              disabled={isLoading || !selectedFile}
+              disabled={isLoading || !canSave}
               className="h-9 px-6 game-theme-btn font-display text-xs font-black uppercase tracking-wider transition-all shadow-lg active:scale-95 flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 clipPath:
