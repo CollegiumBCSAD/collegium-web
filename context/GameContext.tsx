@@ -80,7 +80,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         rgb = "0, 163, 255";
         btnText = "#FFFFFF";
       } else if (activeId === "codm") {
-        rgb = "255, 255, 255";
+        rgb = "229, 184, 0";
         btnText = "#0A0C10";
       } else if (activeId === "ml") {
         rgb = "245, 158, 11";

@@ -142,7 +142,7 @@ export default function DashboardPage() {
         )}
 
         {/* Hero Athlete Banner with Chamfered HUD Geometry */}
-        <AthleteProfileBanner user={user} squadsCount={userGameTeams.length} />
+        <AthleteProfileBanner user={user} squadsCount={userTeams.length} />
 
         {user.role === "ORGANIZER" ? (
           <OrganizerDashboardView user={user} />
@@ -182,15 +182,12 @@ export default function DashboardPage() {
                       <div 
                         key={t.id} 
                         className="p-3.5 bg-[#060812] border border-[#182338] flex items-center justify-between gap-3 shadow-inner"
-                        style={{
-                          clipPath: "polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))",
-                        }}
                       >
-                        <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="flex items-center gap-3">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={game.image} alt={game.name} className="w-8 h-8 object-cover ring-1 ring-white/10 shrink-0" />
-                          <div className="min-w-0">
-                            <h4 className="font-display text-xs font-bold uppercase text-white truncate">{t.name}</h4>
+                          <img src={game.image} alt={game.name} className="w-8 h-8 rounded object-cover border border-[#1C263B]" />
+                          <div>
+                            <span className="font-display text-xs font-bold text-white uppercase block">{t.name}</span>
                             <span className="text-[10px] font-sans text-slate-400 truncate block">Captain: {t.captainName}</span>
                           </div>
                         </div>
@@ -218,54 +215,86 @@ export default function DashboardPage() {
             />
 
             {/* Active Varsity Squads */}
-            <div className="space-y-3.5">
-              <div className="flex items-center justify-between border-b border-[#1A253C] pb-2.5">
-                <h2 className="font-display text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
-                  <SwordsIcon className="w-4 h-4 text-primary-brand" />
-                  <span>{activeGameInfo.name} Varsity Squads</span>
-                </h2>
-                <span className="text-xs font-mono text-slate-400 font-bold">
-                  {userGameTeams.length} Active {userGameTeams.length === 1 ? "Squad" : "Squads"}
-                </span>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between border-b border-[#1E293B] pb-3">
+                <div className="flex items-center gap-2">
+                  <UsersIcon className="w-4 h-4 text-primary-brand" />
+                  <h2 className="font-display text-base font-black uppercase tracking-wider text-white">
+                    {activeGameInfo.name} Squad Roster
+                  </h2>
+                </div>
               </div>
 
               {userGameTeams.length === 0 ? (
-                <div 
-                  className="p-8 bg-[#0A0D18] border border-[#1E293B] text-center space-y-4 shadow-xl"
-                  style={{
-                    clipPath: "polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))",
-                  }}
-                >
-                  <div className="w-12 h-12 bg-[#121929] text-slate-400 border border-[#202C45] flex items-center justify-center mx-auto text-xl shadow-inner">
-                    <ShieldIcon className="w-6 h-6 text-slate-400" />
+                userTeams.length > 0 ? (
+                  <div 
+                    className="p-8 bg-[#0A0D18] border border-amber-500/30 text-center space-y-4 shadow-xl"
+                    style={{
+                      clipPath: "polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))",
+                    }}
+                  >
+                    <div className="w-12 h-12 bg-amber-500/10 text-amber-400 border border-amber-500/30 flex items-center justify-center mx-auto text-xl shadow-inner rounded-full">
+                      <ShieldIcon className="w-6 h-6 text-amber-400" />
+                    </div>
+                    <div>
+                      <h3 className="font-display text-base font-bold uppercase text-white">1 Squad Limit Enforced</h3>
+                      <p className="text-xs font-sans text-slate-300 max-w-md mx-auto mt-1 leading-relaxed">
+                        You are already an active athlete on <strong className="text-white">{userTeams[0].name}</strong> ({GAMES[userTeams[0].gameTitle]?.name || userTeams[0].gameTitle}). Athletes are restricted to 1 collegiate squad across all titles.
+                      </p>
+                    </div>
+                    <div className="flex justify-center gap-3 pt-2">
+                      <div className="p-3 bg-[#060812] border border-[#182338] rounded-xl flex items-center gap-3">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img 
+                          src={GAMES[userTeams[0].gameTitle]?.image || GAMES.valo.image} 
+                          alt="" 
+                          className="w-8 h-8 rounded object-cover border border-[#1C263B]" 
+                        />
+                        <div className="text-left">
+                          <span className="font-display text-xs font-bold text-white uppercase block">{userTeams[0].name}</span>
+                          <span className="text-[10px] font-mono text-slate-400">{GAMES[userTeams[0].gameTitle]?.name || userTeams[0].gameTitle}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-display text-base font-bold uppercase text-white">No Active {activeGameInfo.name} Squad</h3>
-                    <p className="text-xs font-sans text-slate-400 max-w-sm mx-auto mt-1">
-                      You are not currently listed on a {activeGameInfo.name} roster. Switch game titles or establish a squad.
-                    </p>
+                ) : (
+                  <div 
+                    className="p-8 bg-[#0A0D18] border border-[#1E293B] text-center space-y-4 shadow-xl"
+                    style={{
+                      clipPath: "polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))",
+                    }}
+                  >
+                    <div className="w-12 h-12 bg-[#121929] text-slate-400 border border-[#202C45] flex items-center justify-center mx-auto text-xl shadow-inner">
+                      <ShieldIcon className="w-6 h-6 text-slate-400" />
+                    </div>
+                    <div>
+                      <h3 className="font-display text-base font-bold uppercase text-white">No Active {activeGameInfo.name} Squad</h3>
+                      <p className="text-xs font-sans text-slate-400 max-w-sm mx-auto mt-1">
+                        You are not currently listed on a {activeGameInfo.name} roster. Establish or join a squad.
+                      </p>
+                    </div>
+                    <div className="flex justify-center gap-3 pt-2">
+                      <Link
+                        href="/team/create"
+                        className="h-9 px-5 game-theme-btn font-display text-xs font-black uppercase tracking-wider flex items-center justify-center shadow-lg transition-all active:scale-95"
+                        style={{
+                          clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
+                        }}
+                      >
+                        Establish {activeGameInfo.shortName} Squad
+                      </Link>
+                      <Link
+                        href="/team/join"
+                        className="h-9 px-5 bg-[#141A2B] hover:bg-[#1C253B] text-slate-200 border border-[#222E48] font-display text-xs font-bold uppercase tracking-wider flex items-center justify-center transition-all active:scale-95 shadow-md"
+                        style={{
+                          clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
+                        }}
+                      >
+                        Browse Teams
+                      </Link>
+                    </div>
                   </div>
-                  <div className="flex justify-center gap-3 pt-2">
-                    <Link
-                      href="/team/create"
-                      className="h-9 px-5 game-theme-btn font-display text-xs font-black uppercase tracking-wider flex items-center justify-center shadow-lg transition-all active:scale-95"
-                      style={{
-                        clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
-                      }}
-                    >
-                      Establish {activeGameInfo.shortName} Squad
-                    </Link>
-                    <Link
-                      href="/team/join"
-                      className="h-9 px-5 bg-[#141A2B] hover:bg-[#1C253B] text-slate-200 border border-[#222E48] font-display text-xs font-bold uppercase tracking-wider flex items-center justify-center transition-all active:scale-95 shadow-md"
-                      style={{
-                        clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
-                      }}
-                    >
-                      Browse Teams
-                    </Link>
-                  </div>
-                </div>
+                )
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                   {userGameTeams.map((t) => (

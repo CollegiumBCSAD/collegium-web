@@ -28,6 +28,7 @@ export interface Tournament {
   image?: string;
   bgGradient: string;
   universities?: { id: string; name: string }[];
+  matches?: unknown[];
   applications?: unknown[];
   bracketFormat?: string;
   teamQuota?: number;
@@ -103,6 +104,7 @@ export interface TournamentBracketModalProps {
   tournamentId?: string;
   title?: string;
   subtitle?: string;
+  initialTab?: "bracket" | "teams" | "overview";
 }
 
 export interface MatchCardProps {

@@ -17,7 +17,7 @@ import { GAMES } from "@/lib/games";
 
 interface TournamentCardProps {
   tournament: Tournament;
-  onSelect: (tournament: Tournament) => void;
+  onSelect: (tournament: Tournament, tab?: "bracket" | "teams" | "overview") => void;
   onApply?: (tournament: Tournament) => void;
   onWithdraw?: (tournament: Tournament) => void;
   isApplied?: boolean;
@@ -53,13 +53,26 @@ export default function TournamentCard({
 
   const isOrganizerOrHost = user?.role === "ORGANIZER" || user?.role === "ADMIN" || isMyTournament;
 
-  const userApplication = (
-    tournament.applications as Array<{ userId?: string; status?: string }> | undefined
-  )?.find((app) => app.userId === user?.id);
+  const isUniversityRegistered = Boolean(
+    user?.universityId &&
+      (tournament.universities as Array<{ id?: string }> | undefined)?.some(
+        (u) => u.id === user.universityId
+      )
+  );
 
-  const applicationStatus = userApplication?.status || (isApplied ? "PENDING" : null);
-  const isApproved = !isOrganizerOrHost && applicationStatus === "APPROVED";
-  const isPending = !isOrganizerOrHost && (applicationStatus === "PENDING" || (isApplied && !userApplication));
+  const userApplication = (
+    tournament.applications as Array<{ userId?: string; universityId?: string; teamId?: string; status?: string }> | undefined
+  )?.find(
+    (app) =>
+      app.status !== "REJECTED" &&
+      (app.userId === user?.id || (user?.universityId && app.universityId === user.universityId))
+  );
+
+  const applicationStatus =
+    userApplication?.status ||
+    (isUniversityRegistered ? "APPROVED" : isApplied ? "PENDING" : null);
+  const isApproved = !isOrganizerOrHost && (applicationStatus === "APPROVED" || isUniversityRegistered);
+  const isPending = !isOrganizerOrHost && !isApproved && (applicationStatus === "PENDING" || isApplied || Boolean(userApplication));
   const userApplied = isApproved || isPending;
 
   const formatDateDisplay = (dateStr?: string) => {
@@ -231,39 +244,32 @@ export default function TournamentCard({
 
         {/* Footer Actions */}
         <div className="mt-6 pt-4 border-t border-[#182338] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
-            <ShieldIcon className="w-3.5 h-3.5 text-slate-400" />
-            <span>Verified Tournament Payload</span>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => onSelect(tournament, "overview")}
+              className="h-10 px-4 rounded-xl bg-[#141A29] hover:bg-[#1E273D] border border-[#232D44] hover:border-amber-500/50 text-slate-200 hover:text-amber-300 text-xs font-display font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0 shadow-md group/rules"
+              title="View tournament rules, schedule and overview"
+            >
+              <ShieldIcon className="w-3.5 h-3.5 text-amber-400 group-hover/rules:scale-110 transition-transform" />
+              <span>Rules & Protocols</span>
+            </button>
           </div>
 
-          <div className="flex items-center gap-2.5 flex-wrap w-full sm:w-auto justify-end">
+          <div className="flex items-center gap-3 flex-wrap w-full sm:w-auto justify-end">
             {!isCompleted && isApproved && (
-              <div 
-                className="h-10 px-4 bg-gradient-to-r from-emerald-500/15 via-emerald-950/30 to-[#0A0D18] text-emerald-300 border border-emerald-500/40 shadow-[0_0_12px_rgba(16,185,129,0.15)] flex items-center gap-2"
-                style={{
-                  clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-                }}
-              >
+              <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 font-mono text-[11px] font-bold tracking-wide shadow-sm shrink-0">
                 <CheckCircleIcon className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span className="text-[11px] font-mono font-black tracking-wider uppercase">
-                  Squad Confirmed & Sanctioned
-                </span>
+                <span>SQUAD SANCTIONED</span>
               </div>
             )}
 
             {!isCompleted && isPending && (
-              <div className="w-full sm:w-auto">
+              <div className="flex items-center gap-2.5 flex-wrap">
                 {showUndoConfirm ? (
-                  <div 
-                    className="flex items-center gap-2 p-1.5 bg-rose-950/80 border border-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.15)] animate-fade-in"
-                    style={{
-                      clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-                    }}
-                  >
-                    <span className="text-[11px] font-mono font-bold text-rose-200 px-2 flex items-center gap-1.5">
-                      <AlertTriangleIcon className="w-3.5 h-3.5 text-rose-400 shrink-0" />
-                      <span>Withdraw squad registration?</span>
-                    </span>
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-rose-950/50 border border-rose-500/40 text-rose-300 font-mono text-[11px] font-medium shadow-sm animate-fade-in">
+                    <AlertTriangleIcon className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                    <span>Withdraw application?</span>
                     <button
                       type="button"
                       disabled={isApplying}
@@ -271,56 +277,40 @@ export default function TournamentCard({
                         setShowUndoConfirm(false);
                         if (onWithdraw) onWithdraw(tournament);
                       }}
-                      className="h-7 px-3 bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-mono font-black uppercase transition-colors cursor-pointer shadow-sm"
-                      style={{
-                        clipPath: "polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)",
-                      }}
+                      className="px-2.5 py-0.5 bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-bold uppercase rounded transition-colors cursor-pointer"
                     >
-                      {isApplying ? "Withdrawing..." : "Confirm"}
+                      {isApplying ? "..." : "Yes"}
                     </button>
                     <button
                       type="button"
                       onClick={() => setShowUndoConfirm(false)}
-                      className="h-7 px-2.5 bg-[#141A29] hover:bg-[#1E293B] text-slate-300 hover:text-white text-[10px] font-mono font-bold uppercase transition-colors border border-[#232D44] cursor-pointer"
-                      style={{
-                        clipPath: "polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)",
-                      }}
+                      className="px-2 py-0.5 bg-[#141A29] hover:bg-[#1E293B] text-slate-300 hover:text-white text-[10px] font-bold uppercase rounded border border-[#232D44] transition-colors cursor-pointer"
                     >
-                      Cancel
+                      No
                     </button>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {/* Tactical Status HUD Badge */}
-                    <div 
-                      className="h-10 px-3.5 bg-gradient-to-r from-amber-500/15 via-amber-950/30 to-[#0A0D18] text-amber-300 border border-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.1)] flex items-center gap-2"
-                      style={{
-                        clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-                      }}
-                    >
+                  <div className="flex items-center gap-2.5">
+                    {/* Minimalist Frosted Status Pill */}
+                    <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 font-mono text-[11px] font-bold tracking-wide shadow-sm">
                       <span className="relative flex h-2 w-2">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-400" />
                       </span>
-                      <span className="text-[11px] font-mono font-black tracking-wider uppercase">
-                        Application Pending Approval
-                      </span>
+                      <span>APPLICATION PENDING</span>
                     </div>
 
-                    {/* Integrated Undo / Withdraw Action */}
+                    {/* Subtle Withdraw Link */}
                     {onWithdraw && (
                       <button
                         type="button"
                         disabled={isApplying}
                         onClick={() => setShowUndoConfirm(true)}
-                        className="h-10 px-3.5 bg-[#101524] hover:bg-rose-950/40 text-slate-400 hover:text-rose-300 border border-[#232D44] hover:border-rose-500/40 text-xs font-mono font-bold uppercase transition-all duration-200 cursor-pointer flex items-center gap-1.5 active:scale-95"
-                        style={{
-                          clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-                        }}
+                        className="px-2.5 py-2 text-[11px] font-mono font-bold text-slate-400 hover:text-rose-400 hover:bg-rose-950/20 rounded-lg transition-all cursor-pointer flex items-center gap-1.5"
                         title="Withdraw squad application"
                       >
-                        <XCircleIcon className="w-3.5 h-3.5 text-slate-400 group-hover:text-rose-400" />
-                        <span>Undo</span>
+                        <XCircleIcon className="w-3.5 h-3.5" />
+                        <span>Withdraw</span>
                       </button>
                     )}
                   </div>
@@ -333,31 +323,27 @@ export default function TournamentCard({
                 type="button"
                 disabled={isApplying}
                 onClick={() => onApply(tournament)}
-                className="h-10 px-4 text-xs font-mono font-black uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_15px_rgba(16,185,129,0.15)] bg-gradient-to-r from-emerald-950/80 via-emerald-900/40 to-[#0A0D18] hover:from-emerald-900/90 hover:via-emerald-800/50 hover:to-emerald-950/90 text-emerald-300 hover:text-emerald-100 border border-emerald-500/50 hover:border-emerald-400 active:scale-95 group/apply"
-                style={{
-                  clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-                }}
+                className="h-10 px-5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-display text-xs font-black uppercase tracking-wider transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/35 active:scale-95 group/apply shrink-0"
               >
                 {isApplying ? (
                   <>
-                    <ClockIcon className="w-3.5 h-3.5 text-emerald-400 animate-spin" />
+                    <ClockIcon className="w-3.5 h-3.5 text-black animate-spin" />
                     <span>Registering...</span>
                   </>
                 ) : (
                   <>
-                    <PlusIcon className="w-3.5 h-3.5 text-emerald-400 group-hover/apply:scale-110 transition-transform" />
+                    <PlusIcon className="w-4 h-4 text-black group-hover/apply:scale-110 transition-transform font-bold" />
                     <span>Apply / Register Squad</span>
                   </>
                 )}
               </button>
             )}
 
+            {/* View Bracket & Details Button */}
             <button
-              onClick={() => onSelect(tournament)}
-              className="h-10 px-6 game-theme-btn text-xs font-display font-black uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 cursor-pointer shrink-0 active:scale-95 transition-transform group/btn"
-              style={{
-                clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-              }}
+              type="button"
+              onClick={() => onSelect(tournament, "bracket")}
+              className="h-10 px-5 rounded-xl game-theme-btn text-xs font-display font-black uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 cursor-pointer shrink-0 active:scale-95 transition-all group/btn"
             >
               <span>View Bracket & Details</span>
               <span className="group-hover/btn:translate-x-0.5 transition-transform">→</span>

@@ -124,12 +124,23 @@ button:active, a:active {
 }
 
 .game-theme-bg {
-  background: linear-gradient(90deg, rgba(var(--game-glow-rgb), 0.24) 0%, rgba(10, 12, 16, 1) 45%);
+  background: linear-gradient(
+    90deg, 
+    rgba(var(--game-glow-rgb), 0.25) 0%, 
+    rgba(var(--game-glow-rgb), 0.14) 25%, 
+    rgba(var(--game-glow-rgb), 0.05) 50%, 
+    rgba(10, 12, 16, 1) 75%
+  );
 }
 
 @media (max-width: 768px) {
   .game-theme-bg {
-    background: linear-gradient(180deg, rgba(var(--game-glow-rgb), 0.24) 0%, rgba(10, 12, 16, 1) 45%);
+    background: linear-gradient(
+      180deg, 
+      rgba(var(--game-glow-rgb), 0.24) 0%, 
+      rgba(var(--game-glow-rgb), 0.10) 40%, 
+      rgba(10, 12, 16, 1) 75%
+    );
   }
 }
 
@@ -265,7 +276,7 @@ h1, h2, h3, h4, .font-display, .font-oswald {
   }
   100% {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: none;
   }
 }
 

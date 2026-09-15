@@ -239,7 +239,7 @@ export default function AthleteProfileBanner({ user, squadsCount = 0 }: AthleteP
                     <span>View Brackets</span>
                   </Link>
                 </>
-              ) : (
+              ) : squadsCount === 0 ? (
                 <>
                   <Link
                     href="/team/create"
@@ -262,6 +262,18 @@ export default function AthleteProfileBanner({ user, squadsCount = 0 }: AthleteP
                     <span>Join Squad</span>
                   </Link>
                 </>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span 
+                    className="h-9 px-4 bg-emerald-950/40 text-emerald-400 border border-emerald-500/30 font-display text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm"
+                    style={{
+                      clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
+                    }}
+                  >
+                    <CheckCircleIcon className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>VARSITY SQUAD ACTIVE</span>
+                  </span>
+                </div>
               )}
             </div>
 

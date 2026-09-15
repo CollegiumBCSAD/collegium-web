@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useAuth } from "@/context/AuthContext";
 import MatchBoxScoreModal from "@/components/MatchBoxScoreModal";
 import MatchCard from "@/components/tournaments/MatchCard";
@@ -88,9 +89,10 @@ export default function TournamentBracketModal({
   tournamentId,
   title = "PHILIPPINE COLLEGIATE TOURNAMENT BRACKET",
   subtitle = "SINGLE ELIMINATION CHAMPIONSHIP",
+  initialTab = "bracket",
 }: TournamentBracketModalProps) {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<"bracket" | "teams" | "overview">("bracket");
+  const [activeTab, setActiveTab] = useState<"bracket" | "teams" | "overview">(initialTab);
   const [activeBoxScore, setActiveBoxScore] = useState<BracketMatch | null>(null);
   const [reportingMatch, setReportingMatch] = useState<BracketMatch | null>(null);
   const [rounds, setRounds] = useState<BracketRound[]>([]);
@@ -98,6 +100,15 @@ export default function TournamentBracketModal({
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const canReportResults = user?.role === "ADMIN" || user?.role === "ORGANIZER";
+
+  const [prevTabKey, setPrevTabKey] = useState<string | null>(null);
+  const currentTabKey = isOpen && initialTab ? `${tournamentId}-${initialTab}` : null;
+  if (prevTabKey !== currentTabKey) {
+    setPrevTabKey(currentTabKey);
+    if (isOpen && initialTab) {
+      setActiveTab(initialTab);
+    }
+  }
 
   useEffect(() => {
     if (!isOpen) return;
@@ -226,14 +237,14 @@ export default function TournamentBracketModal({
       } TEAMS`
     : subtitle;
 
-  return (
+  return createPortal(
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 md:p-8 bg-black/85 backdrop-blur-lg animate-fade-in overflow-y-auto">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 md:p-8 bg-black/85 backdrop-blur-lg animate-fade-in overflow-hidden">
         <div className="absolute inset-0" onClick={onClose} />
 
         {/* Modal Window Container */}
         <div 
-          className="relative w-full max-w-7xl max-h-[88vh] flex flex-col bg-[#080B14] border border-[#1E293B] shadow-2xl overflow-hidden z-10 animate-modal-enter my-auto"
+          className="relative w-full max-w-7xl h-[88vh] max-h-[90vh] flex flex-col bg-[#080B14] border border-[#1E293B] shadow-2xl overflow-hidden z-10 animate-modal-enter"
           style={{
             clipPath: "polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px))",
           }}
@@ -340,7 +351,7 @@ export default function TournamentBracketModal({
           </div>
 
           {/* Modal Content Area */}
-          <div className="flex-1 overflow-y-auto min-h-[580px] max-h-[calc(94vh-120px)] bg-gradient-to-b from-[#080B14] via-[#0A0D18] to-[#05070E]">
+          <div className="flex-1 overflow-y-auto min-h-0 bg-gradient-to-b from-[#080B14] via-[#0A0D18] to-[#05070E]">
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-28 space-y-4">
                 <div className="w-10 h-10 border-3 border-primary-brand border-t-transparent rounded-full animate-spin" />
@@ -817,6 +828,7 @@ export default function TournamentBracketModal({
           />
         );
       })()}
-    </>
+    </>,
+    document.body
   );
 }

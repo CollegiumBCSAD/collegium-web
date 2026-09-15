@@ -12,13 +12,16 @@ import NotificationBell from "@/components/NotificationBell";
 import FloatingNotificationToast from "@/components/FloatingNotificationToast";
 import ChatQuickAccess from "@/components/ChatQuickAccess";
 import ScrimWarRoomModal from "@/components/scrims/ScrimWarRoomModal";
+import TournamentBracketModal from "@/components/tournaments/TournamentBracketModal";
 import GameSelectorModal from "@/components/GameSelectorModal";
 import HeaderGameSwitcher from "@/components/HeaderGameSwitcher";
 import { HomeIcon, PlusIcon, UsersIcon, SwordsIcon, ShieldIcon } from "@/components/ui/Icons";
+import { fetchTeamsApi } from "@/lib/teams";
 
 function HeaderAuthControls() {
   const { user, isLoggedIn, logoutUser, isLoaded } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [hasSquad, setHasSquad] = useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -32,6 +35,37 @@ function HeaderAuthControls() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  React.useEffect(() => {
+    if (!user) return;
+    let isMounted = true;
+    fetchTeamsApi().then((teams) => {
+      if (!isMounted) return;
+      const myId = user.id;
+      const myEmail = user.email ? user.email.toLowerCase().trim() : "";
+      const myName = user.displayName ? user.displayName.toLowerCase().trim() : "";
+
+      const found = teams.some(
+        (t) =>
+          (myId && t.captainId === myId) ||
+          (myName && t.captainName && t.captainName.toLowerCase().trim() === myName) ||
+          t.members?.some(
+            (m) =>
+              m.status === "ACCEPTED" &&
+              ((myId && m.userId === myId) ||
+                (myEmail && m.email && m.email.toLowerCase().trim() === myEmail) ||
+                (myName && m.displayName && m.displayName.toLowerCase().trim() === myName))
+          )
+      );
+      setHasSquad(found);
+    }).catch(() => {
+      if (isMounted) setHasSquad(false);
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user]);
 
   if (!isLoaded) {
     return <div className="h-9 w-28 rounded-xl bg-[#141A29] border border-[#232D44] animate-pulse" />;
@@ -93,7 +127,7 @@ function HeaderAuthControls() {
                 <HomeIcon className="w-3.5 h-3.5 text-primary-brand" />
                 <span>My Dashboard</span>
               </Link>
-              {user.role !== "ADMIN" && user.role !== "ORGANIZER" && (
+              {user.role !== "ADMIN" && user.role !== "ORGANIZER" && !hasSquad && (
                 <>
                   <Link
                     href="/team/create"
@@ -262,6 +296,20 @@ function GlobalWarRoomModal() {
   );
 }
 
+function GlobalTournamentModal() {
+  const { activeTournamentBracketId, closeTournamentBracket } = useWarRoom();
+
+  return (
+    <TournamentBracketModal
+      isOpen={!!activeTournamentBracketId}
+      onClose={closeTournamentBracket}
+      tournamentId={activeTournamentBracketId ?? undefined}
+      title="TOURNAMENT WAR ROOM & BRACKET"
+      subtitle="SANCTIONED COLLEGIATE CIRCUIT"
+    />
+  );
+}
+
 function PublicLayoutContent({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
@@ -288,7 +336,6 @@ function PublicLayoutContent({ children }: { children: React.ReactNode }) {
 
             <div className="flex items-center gap-2.5 sm:gap-3.5">
               <HeaderGameSwitcher />
-              <ChatQuickAccess />
               <NotificationBell />
               <HeaderAuthControls />
 
@@ -321,7 +368,9 @@ function PublicLayoutContent({ children }: { children: React.ReactNode }) {
 
       <main className="flex flex-1 flex-col">{children}</main>
 
+      <ChatQuickAccess />
       <GlobalWarRoomModal />
+      <GlobalTournamentModal />
       <FloatingNotificationToast />
     </div>
   );

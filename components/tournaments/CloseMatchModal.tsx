@@ -189,9 +189,9 @@ export default function CloseMatchModal({
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-y-auto"
+      className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-hidden"
     >
-      <div className="w-full max-w-4xl max-h-[92vh] overflow-y-auto bg-[#0A0D18] border border-amber-500/40 shadow-2xl p-6 sm:p-8 space-y-6 relative rounded-2xl my-auto text-white">
+      <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-[#0A0D18] border border-amber-500/40 shadow-2xl p-6 sm:p-8 space-y-6 relative rounded-2xl text-white">
         <div>
           <span className="text-[10px] font-mono font-black uppercase tracking-widest text-amber-400 block">
             {"// REPORT MATCH RESULT"}

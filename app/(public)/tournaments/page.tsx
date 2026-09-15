@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useGame } from "@/context/GameContext";
 import { useAuth } from "@/context/AuthContext";
@@ -19,6 +19,7 @@ export default function TournamentsPage() {
   const { user, isLoggedIn } = useAuth();
   const { selectedGame: globalGame, selectedGameInfo } = useGame();
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
+  const [selectedTournamentTab, setSelectedTournamentTab] = useState<"bracket" | "teams" | "overview">("bracket");
   const [registeringTournament, setRegisteringTournament] = useState<Tournament | null>(null);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -31,7 +32,7 @@ export default function TournamentsPage() {
   // Status Filter
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>("ALL");
 
-  const loadTournaments = () => {
+  const loadTournaments = useCallback(() => {
     const promises: Promise<unknown>[] = [tournamentsService.getTournaments()];
     if (user?.role === "ORGANIZER") {
       promises.push(tournamentsService.getMyTournaments());
@@ -39,73 +40,6 @@ export default function TournamentsPage() {
 
     Promise.allSettled(promises)
       .then(([publicRes, myRes]) => {
-        const publicList =
-          publicRes && publicRes.status === "fulfilled" && Array.isArray(publicRes.value)
-            ? (publicRes.value as Tournament[])
-            : [];
-        const myList =
-          myRes && myRes.status === "fulfilled" && Array.isArray(myRes.value)
-            ? (myRes.value as Tournament[])
-            : [];
-
-        const map = new Map<string, Tournament>();
-        publicList.forEach((t) => map.set(t.id, t));
-        myList.forEach((t) => map.set(t.id, t));
-
-        setTournaments(Array.from(map.values()));
-      })
-      .catch(() => {
-        setTournaments([]);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  };
-
-  const handleApplyTournament = (t: Tournament) => {
-    if (!isLoggedIn) {
-      router.push("/login");
-      return;
-    }
-    setRegisteringTournament(t);
-  };
-
-  const handleConfirmApplication = async (teamId?: string) => {
-    if (!registeringTournament) return;
-    const t = registeringTournament;
-    setApplyingId(t.id);
-    try {
-      await tournamentsService.applyForTournament(t.id, teamId);
-      setAppliedIds((prev) => [...prev, t.id]);
-    } catch {
-      setAppliedIds((prev) => [...prev, t.id]);
-    } finally {
-      setApplyingId(null);
-    }
-  };
-
-  const handleWithdrawTournament = async (t: Tournament) => {
-    setApplyingId(t.id);
-    try {
-      await tournamentsService.withdrawApplication(t.id);
-      setAppliedIds((prev) => prev.filter((id) => id !== t.id));
-    } catch {
-      setAppliedIds((prev) => prev.filter((id) => id !== t.id));
-    } finally {
-      setApplyingId(null);
-    }
-  };
-
-  useEffect(() => {
-    let isMounted = true;
-    const promises: Promise<unknown>[] = [tournamentsService.getTournaments()];
-    if (user?.role === "ORGANIZER") {
-      promises.push(tournamentsService.getMyTournaments());
-    }
-
-    Promise.allSettled(promises)
-      .then(([publicRes, myRes]) => {
-        if (!isMounted) return;
         const publicList =
           publicRes && publicRes.status === "fulfilled" && Array.isArray(publicRes.value)
             ? (publicRes.value as Tournament[])
@@ -126,29 +60,68 @@ export default function TournamentsPage() {
           const applied = allTourneys
             .filter((t) =>
               (t.applications as Array<{ userId?: string; universityId?: string; status?: string }>)?.some(
-                (app) => app.userId === user.id && app.status !== "REJECTED"
-              )
+                (app) =>
+                  (app.userId === user.id || (user.universityId && app.universityId === user.universityId)) &&
+                  app.status !== "REJECTED"
+              ) ||
+              (t.universities as Array<{ id?: string }>)?.some((u) => u.id === user.universityId)
             )
             .map((t) => t.id);
           setAppliedIds(applied);
         } else {
           setAppliedIds([]);
         }
-
-        setIsLoading(false);
       })
       .catch(() => {
-        if (isMounted) {
-          setTournaments([]);
-          setAppliedIds([]);
-          setIsLoading(false);
-        }
+        setTournaments([]);
+        setAppliedIds([]);
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
+  }, [user]);
 
-    return () => {
-      isMounted = false;
-    };
-  }, [user?.id, user?.role]);
+  const handleApplyTournament = (t: Tournament) => {
+    if (!isLoggedIn) {
+      router.push("/login");
+      return;
+    }
+    setRegisteringTournament(t);
+  };
+
+  const handleConfirmApplication = async (teamId?: string) => {
+    if (!registeringTournament) return;
+    const t = registeringTournament;
+    setApplyingId(t.id);
+    try {
+      await tournamentsService.applyForTournament(t.id, teamId);
+      setAppliedIds((prev) => Array.from(new Set([...prev, t.id])));
+      loadTournaments();
+    } catch {
+      setAppliedIds((prev) => Array.from(new Set([...prev, t.id])));
+      loadTournaments();
+    } finally {
+      setApplyingId(null);
+    }
+  };
+
+  const handleWithdrawTournament = async (t: Tournament) => {
+    setApplyingId(t.id);
+    try {
+      await tournamentsService.withdrawApplication(t.id);
+      setAppliedIds((prev) => prev.filter((id) => id !== t.id));
+      loadTournaments();
+    } catch {
+      setAppliedIds((prev) => prev.filter((id) => id !== t.id));
+      loadTournaments();
+    } finally {
+      setApplyingId(null);
+    }
+  };
+
+  useEffect(() => {
+    loadTournaments();
+  }, [loadTournaments]);
 
   // Filter tournaments exclusively by the selected game from the game selector and status
   const filteredTournaments = useMemo(() => {
@@ -378,7 +351,10 @@ export default function TournamentsPage() {
               <TournamentCard
                 key={tournament.id}
                 tournament={tournament}
-                onSelect={setSelectedTournament}
+                onSelect={(t, tab = "bracket") => {
+                  setSelectedTournamentTab(tab);
+                  setSelectedTournament(t);
+                }}
                 onApply={user?.role === "ORGANIZER" ? undefined : handleApplyTournament}
                 onWithdraw={user?.role === "ORGANIZER" ? undefined : handleWithdrawTournament}
                 isApplied={appliedIds.includes(tournament.id)}
@@ -395,6 +371,7 @@ export default function TournamentsPage() {
         tournamentId={selectedTournament?.id}
         title={selectedTournament?.title ? `${selectedTournament.title} BRACKET` : "TOURNAMENT BRACKET"}
         subtitle="SINGLE ELIMINATION"
+        initialTab={selectedTournamentTab}
       />
 
       <SquadRegistrationModal

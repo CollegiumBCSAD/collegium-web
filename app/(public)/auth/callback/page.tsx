@@ -13,7 +13,7 @@ function GoogleCallbackContent() {
   useEffect(() => {
     loginWithToken(token || undefined)
       .then((profile) => {
-        router.push(profile?.role === "ADMIN" ? "/admin" : "/dashboard");
+        router.push(profile?.role === "ADMIN" ? "/admin" : "/");
       })
       .catch(() => {
         router.push("/login?error=profile_failed");
