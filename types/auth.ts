@@ -27,6 +27,7 @@ export interface UserProfile {
   id: string;
   email: string;
   displayName: string;
+  avatar?: string | null;
   role: string;
   status: string;
   universityId: string;
@@ -43,6 +44,8 @@ export interface AuthContextType {
   isLoaded: boolean;
   loginWithToken: (token?: string) => Promise<UserProfile | null>;
   logoutUser: () => Promise<void>;
+  refreshProfile: () => Promise<UserProfile | null>;
+  setUserAvatar: (avatarUrl: string | null) => void;
 }
 
 export interface UniversityGameRating {

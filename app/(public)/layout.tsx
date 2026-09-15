@@ -80,13 +80,22 @@ function HeaderAuthControls() {
         >
           {/* Athlete Avatar Badge */}
           <div 
-            className="w-7 h-7 rounded-lg flex items-center justify-center font-display font-black text-xs shrink-0 shadow-sm group-hover:scale-105 transition-transform duration-200"
+            className="w-7 h-7 rounded-lg flex items-center justify-center font-display font-black text-xs shrink-0 shadow-sm group-hover:scale-105 transition-transform duration-200 overflow-hidden"
             style={{
               backgroundColor: "var(--primary-brand)",
               color: "var(--game-btn-text, #FFFFFF)",
             }}
           >
-            {user.displayName.charAt(0)}
+            {user.avatar ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={user.avatar}
+                alt={user.displayName}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              user.displayName.charAt(0)
+            )}
           </div>
           <div className="hidden sm:flex flex-col text-left leading-tight pr-1">
             <span className="text-xs font-display font-black tracking-wide text-white uppercase group-hover:text-primary-brand transition-colors">
