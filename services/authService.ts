@@ -56,4 +56,18 @@ export const authService = {
       handle,
     });
   },
+
+  uploadAvatar: (file: File | Blob): Promise<{ id: string; avatar: string }> => {
+    const formData = new FormData();
+    formData.append("avatar", file, "avatar.png");
+    return apiClient.postForm<{ id: string; avatar: string }>("/auth/me/avatar", formData);
+  },
+
+  removeAvatar: (): Promise<{ message: string }> => {
+    return apiClient.delete<{ message: string }>("/auth/me/avatar");
+  },
+
+  setPresetAvatar: (avatarUrl: string): Promise<{ id: string; avatar: string }> => {
+    return apiClient.patch<{ id: string; avatar: string }>("/auth/me/avatar-preset", { avatarUrl });
+  },
 };
