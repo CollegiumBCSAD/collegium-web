@@ -87,6 +87,21 @@ export interface ClosePlayerStatInput {
   kills: number;
   deaths: number;
   assists: number;
+  extra?: Record<string, unknown>;
+}
+
+export interface ScannedPlayerRow {
+  ign: string;
+  team: string | null;
+  kills: number;
+  deaths: number;
+  assists: number;
+  extra: Record<string, unknown>;
+}
+
+export interface ScanResult {
+  game: string;
+  players: ScannedPlayerRow[];
 }
 
 export interface BracketMatch {

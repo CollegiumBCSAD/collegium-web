@@ -9,7 +9,8 @@ import {
   ClosePlayerStatInput,
   MatchPlayerStat,
   TournamentMatch,
-  PendingSquadApplication
+  PendingSquadApplication,
+  ScanResult
 } from "@/types";
 
 const GAME_DISPLAY: Record<string, { label: string; gradient: string }> = {
@@ -670,6 +671,19 @@ export const tournamentsService = {
     }
   ): Promise<unknown> => {
     return apiClient.post(`/tournaments/${tournamentId}/generate-bracket`, payload);
+  },
+
+  scanScreenshot: async (
+    tournamentId: string,
+    matchId: string,
+    file: File
+  ): Promise<ScanResult> => {
+    const formData = new FormData();
+    formData.append("image", file);
+    return apiClient.postForm<ScanResult>(
+      `/tournaments/${tournamentId}/matches/${matchId}/scan`,
+      formData
+    );
   },
 
   applyForTournament: (
