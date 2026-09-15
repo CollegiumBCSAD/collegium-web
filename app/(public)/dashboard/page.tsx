@@ -13,6 +13,9 @@ import TeamRosterCard from "@/components/dashboard/TeamRosterCard";
 import OrganizerDashboardView from "@/components/dashboard/OrganizerDashboardView";
 import CaptainRequestInbox from "@/components/CaptainRequestInbox";
 import { TrophyIcon, SwordsIcon, UsersIcon, ShieldIcon, ClockIcon } from "@/components/ui/Icons";
+import DashboardTournamentsShowcase from "@/components/dashboard/DashboardTournamentsShowcase";
+import TournamentBracketModal from "@/components/tournaments/TournamentBracketModal";
+import { Tournament } from "@/types";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -21,6 +24,7 @@ export default function DashboardPage() {
   const activeGame = selectedGame || "valo";
   const activeGameInfo = GAMES[activeGame as keyof typeof GAMES] || GAMES.valo;
 
+  const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
   const [allTeams, setAllTeams] = useState<Team[]>(() => getStoredTeams());
 
   const refreshTeams = () => {
@@ -206,6 +210,12 @@ export default function DashboardPage() {
                 </div>
               </div>
             )}
+
+            {/* Sanctioned Tournaments & Brackets Circuit Showcase */}
+            <DashboardTournamentsShowcase
+              onSelectTournament={setSelectedTournament}
+              userTeams={userTeams}
+            />
 
             {/* Active Varsity Squads */}
             <div className="space-y-3.5">
@@ -395,6 +405,14 @@ export default function DashboardPage() {
         )}
 
       </div>
+
+      <TournamentBracketModal
+        isOpen={!!selectedTournament}
+        onClose={() => setSelectedTournament(null)}
+        tournamentId={selectedTournament?.id}
+        title={selectedTournament?.title ? `${selectedTournament.title} BRACKET` : "TOURNAMENT BRACKET"}
+        subtitle="SINGLE ELIMINATION"
+      />
     </div>
   );
 }

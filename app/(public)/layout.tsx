@@ -265,9 +265,10 @@ function GlobalWarRoomModal() {
 function PublicLayoutContent({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const { user } = useAuth();
   const { selectedGame, isLoaded } = useGame();
 
-  const showNavbar = !(pathname === "/" && !selectedGame && isLoaded);
+  const showNavbar = !(pathname === "/" && !selectedGame && isLoaded && !user);
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground relative">
