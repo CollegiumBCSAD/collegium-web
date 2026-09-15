@@ -55,25 +55,50 @@ export interface UniversityGameRating {
   losses: number;
 }
 
+export interface TeamRatingSummary {
+  id: string;
+  name: string;
+  gameTitle: string;
+  glicko2_rating: number;
+  glicko2_rd: number;
+  glicko2_sigma: number;
+  wins?: number;
+  losses?: number;
+}
+
 export interface University {
   id: string;
   name: string;
   domain: string;
-  glicko2_rating: number;
-  glicko2_rd: number;
-  glicko2_sigma: number;
-  wins: number;
-  losses: number;
+  teamId?: string;
+  teamName?: string;
+  gameTitle?: string;
+  glicko2_rating?: number;
+  glicko2_rd?: number;
+  glicko2_sigma?: number;
+  wins?: number;
+  losses?: number;
+  winRate?: number;
+  streak?: string;
+  isProvisional?: boolean;
   createdAt: string;
   gameRatings?: UniversityGameRating[];
+  teams?: TeamRatingSummary[];
 }
 
 export interface LeaderboardEntry {
   id: string;
   rank: number;
   university: string;
+  teamId?: string;
+  teamName?: string;
   rating: number;
+  rd?: number;
+  sigma?: number;
+  isProvisional?: boolean;
   winRate: number;
+  wins?: number;
+  losses?: number;
   streak: string;
   game: string;
   icon?: string;

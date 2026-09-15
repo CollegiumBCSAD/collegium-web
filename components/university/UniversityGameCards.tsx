@@ -40,6 +40,17 @@ export default function UniversityGameCards({ university }: UniversityGameCardsP
   const game = GAMES[activeGameKey as keyof typeof GAMES] || GAMES.valo;
   const gameDetails = GAME_DETAILS[activeGameKey] || GAME_DETAILS.valo;
 
+  // Match the specific team for the selected game if available
+  const specificTeam = university.teams?.find(
+    (t) =>
+      t.gameTitle?.toLowerCase() === activeGameKey.toLowerCase() ||
+      t.gameTitle?.toLowerCase().includes(activeGameKey) ||
+      (activeGameKey === "valo" && t.gameTitle?.toLowerCase().includes("valorant")) ||
+      (activeGameKey === "lol" && (t.gameTitle?.toLowerCase().includes("league") || t.gameTitle?.toLowerCase() === "lol")) ||
+      (activeGameKey === "ml" && (t.gameTitle?.toLowerCase().includes("mobile") || t.gameTitle?.toLowerCase() === "mlbb")) ||
+      (activeGameKey === "codm" && (t.gameTitle?.toLowerCase().includes("duty") || t.gameTitle?.toLowerCase() === "codm"))
+  );
+
   // Match the specific rating for the selected game if available
   const specificRating = university.gameRatings?.find(
     (gr) => gr.gameTitle.toLowerCase().includes(activeGameKey) ||
@@ -49,7 +60,8 @@ export default function UniversityGameCards({ university }: UniversityGameCardsP
             (activeGameKey === "codm" && gr.gameTitle.toLowerCase().includes("duty"))
   );
 
-  const rating = specificRating ? specificRating.glicko2_rating : Math.round(university.glicko2_rating);
+  const rating = specificTeam?.glicko2_rating ?? specificRating?.glicko2_rating ?? (university.glicko2_rating ? Math.round(university.glicko2_rating) : 1500);
+  const rd = specificTeam?.glicko2_rd ?? specificRating?.glicko2_rd ?? university.glicko2_rd ?? 350;
   const wins = specificRating ? specificRating.wins : university.wins || 0;
   const losses = specificRating ? specificRating.losses : university.losses || 0;
   const totalMatches = wins + losses;
@@ -189,7 +201,7 @@ export default function UniversityGameCards({ university }: UniversityGameCardsP
                 </span>
               </div>
               <p className="text-[10px] font-mono text-slate-400">
-                Confidence RD: ±{university.glicko2_rd?.toFixed(0) || "42"}
+                Confidence RD: ±{rd ? rd.toFixed(0) : "350"}
               </p>
             </div>
 

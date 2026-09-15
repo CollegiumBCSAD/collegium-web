@@ -110,7 +110,7 @@ export default function LandingPage() {
     setBoxScoreOpen(true);
   };
 
-  if (isLoaded && !selectedGame) {
+  if (isLoaded && !selectedGame && !user) {
     return <GameSelectorLanding />;
   }
 

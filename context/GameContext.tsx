@@ -1,7 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { GameId, GameInfo, GAMES, STORAGE_KEY } from "@/lib/games";
+import { GameId, GameInfo, GAMES, STORAGE_KEY, getGameInfo } from "@/lib/games";
+import { useAuth } from "@/context/AuthContext";
 
 interface GameContextType {
   selectedGame: GameId | null;
@@ -17,6 +18,7 @@ interface GameContextType {
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
+  const { user, isLoggedIn } = useAuth();
   const [selectedGame, setSelectedGame] = useState<GameId | null>(null);
   const [isSelectorOpen, setIsSelectorOpen] = useState<boolean>(false);
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
@@ -34,15 +36,32 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       if (storedGame) {
         setSelectedGame(storedGame);
       } else {
-        setSelectedGame("valo");
-        try {
-          localStorage.setItem(STORAGE_KEY, "valo");
-        } catch {}
+        setSelectedGame(null);
       }
       setIsSelectorOpen(false);
       setIsLoaded(true);
     });
   }, []);
+
+  // If user is logged in, sync their athlete game or fallback to valo to prevent null game state
+  useEffect(() => {
+    if (isLoggedIn && user) {
+      const athleteGameTitle =
+        user.teamMemberships?.[0]?.team?.gameTitle ||
+        user.gameHandles?.[0]?.gameTitle;
+      const athleteGameId = athleteGameTitle ? getGameInfo(athleteGameTitle).id : null;
+
+      if (!selectedGame) {
+        const gameToSet = athleteGameId || "valo";
+        queueMicrotask(() => {
+          setSelectedGame(gameToSet);
+        });
+        try {
+          localStorage.setItem(STORAGE_KEY, gameToSet);
+        } catch {}
+      }
+    }
+  }, [isLoggedIn, user, selectedGame]);
 
   useEffect(() => {
     const activeId = selectedGame || "valo";
