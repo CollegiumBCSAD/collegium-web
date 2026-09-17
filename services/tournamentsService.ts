@@ -730,6 +730,118 @@ export const tournamentsService = {
     return apiClient.post(`/tournaments/${tournamentId}/applications/${appId}/reject`, {});
   },
 
+  getApplicationRoster: (
+    tournamentId: string,
+    appId: string
+  ): Promise<{
+    applicationId: string;
+    tournamentId: string;
+    teamId: string;
+    teamName: string;
+    universityId: string;
+    universityName: string;
+    status: string;
+    appliedAt: string;
+    applicantName: string;
+    roster: Array<{
+      userId: string;
+      displayName: string;
+      gameHandle: string;
+      studentId?: string;
+      role: string;
+      isCaptain: boolean;
+      eligibilityStatus: string;
+    }>;
+  }> => {
+    return apiClient.get(`/tournaments/${tournamentId}/applications/${appId}/roster`);
+  },
+
+  forfeitMatch: (
+    tournamentId: string,
+    matchId: string,
+    forfeitingUniversityId: string
+  ): Promise<unknown> => {
+    return apiClient.post(
+      `/tournaments/${tournamentId}/matches/${matchId}/forfeit`,
+      { forfeitingUniversityId }
+    );
+  },
+
+  updateMatchStats: (
+    tournamentId: string,
+    matchId: string,
+    dto: {
+      winnerId?: string;
+      gameDuration?: number;
+      players: Array<{
+        userId?: string;
+        universityId: string;
+        name: string;
+        kills: number;
+        deaths: number;
+        assists: number;
+        combatScore?: number;
+        headshotPct?: number;
+        agentName?: string;
+      }>;
+    }
+  ): Promise<unknown> => {
+    return apiClient.patch(
+      `/tournaments/${tournamentId}/matches/${matchId}/stats`,
+      dto
+    );
+  },
+
+  getTournamentMessages: (tournamentId: string): Promise<Array<{
+    id: string;
+    tournamentId: string;
+    senderId: string;
+    senderName: string;
+    teamName?: string;
+    text: string;
+    isPinned: boolean;
+    isAnnouncement: boolean;
+    createdAt: string;
+  }>> => {
+    return apiClient
+      .get<
+        Array<{
+          id: string;
+          tournamentId: string;
+          senderId: string;
+          senderName: string;
+          teamName?: string;
+          text: string;
+          isPinned: boolean;
+          isAnnouncement: boolean;
+          createdAt: string;
+        }>
+      >(`/tournaments/${tournamentId}/messages`)
+      .catch(() => []);
+  },
+
+  createTournamentMessage: (
+    tournamentId: string,
+    dto: { text: string; isPinned?: boolean; isAnnouncement?: boolean }
+  ): Promise<unknown> => {
+    return apiClient.post(`/tournaments/${tournamentId}/messages`, dto);
+  },
+
+  updateTournamentMessage: (
+    tournamentId: string,
+    messageId: string,
+    dto: { text?: string; isPinned?: boolean; isAnnouncement?: boolean }
+  ): Promise<unknown> => {
+    return apiClient.patch(`/tournaments/${tournamentId}/messages/${messageId}`, dto);
+  },
+
+  deleteTournamentMessage: (
+    tournamentId: string,
+    messageId: string
+  ): Promise<void> => {
+    return apiClient.delete(`/tournaments/${tournamentId}/messages/${messageId}`);
+  },
+
   deleteTournament: (tournamentId: string): Promise<void> => {
     return apiClient.delete<void>(`/tournaments/${tournamentId}`);
   },

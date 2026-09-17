@@ -7,6 +7,8 @@ import { getStoredTeams, fetchTeamsApi, Team } from "@/lib/teams";
 import { getSocket } from "@/services/socket";
 import { getGameInfo } from "@/lib/games";
 import { CrownIcon, CheckCircleIcon, UsersIcon } from "@/components/ui/Icons";
+import ScrimOcrIngestModal from "./ScrimOcrIngestModal";
+import { useAuth } from "@/context/AuthContext";
 
 interface ChatMessage {
   id: string;
@@ -42,11 +44,13 @@ export default function ScrimWarRoomModal({
   onClose,
   isHost,
 }: ScrimWarRoomModalProps) {
+  const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isCopied, setIsCopied] = useState(false);
   const [isLineupModalOpen, setIsLineupModalOpen] = useState<boolean>(false);
   const [completeConfirmOpen, setCompleteConfirmOpen] = useState(false);
+  const [ocrIngestOpen, setOcrIngestOpen] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [activeRosterTab, setActiveRosterTab] = useState<"ALL" | "HOST" | "CHALLENGER">("ALL");
   const [teams, setTeams] = useState<Team[]>(() => getStoredTeams());
@@ -113,6 +117,21 @@ export default function ScrimWarRoomModal({
         (scrim.opponentTeamName && t.name.toLowerCase().trim() === scrim.opponentTeamName.toLowerCase().trim())
     );
   }, [scrim, teams]);
+
+  // Any accepted athlete on either participating roster can log the match,
+  // not just the captain — mirrors the guard in ScrimsService#finalizeScrim.
+  // `isHost` alone isn't enough here because it only covers the hosting
+  // team's side; an opponent-side athlete should be able to log it too, and
+  // the resulting Match ends up in both universities' ledgers either way.
+  const canFinalizeScrim = useMemo(() => {
+    if (!user) return false;
+    if (user.role === "ADMIN" || user.role === "ORGANIZER") return true;
+    const isRosteredOn = (squad: Team | null | undefined) =>
+      !!squad &&
+      (squad.captainId === user.id ||
+        !!squad.members?.some((m) => m.status === "ACCEPTED" && m.userId === user.id));
+    return isRosteredOn(hostSquad) || isRosteredOn(opponentSquad);
+  }, [user, hostSquad, opponentSquad]);
 
   const lobbyCode = scrim
     ? getDeterministicLobbyCode(scrim.id, scrim.hostTeamName, scrim.opponentTeamName)
@@ -262,15 +281,15 @@ export default function ScrimWarRoomModal({
               </button>
             </div>
 
-            {isHost && (
+            {canFinalizeScrim && (
               <button
                 type="button"
-                onClick={() => setCompleteConfirmOpen(true)}
-                className="h-9 px-3 sm:px-4 rounded-xl bg-emerald-950/70 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-500/50 font-mono text-xs font-bold uppercase transition-all cursor-pointer flex items-center gap-1.5 shadow-md active:scale-95"
-                title="Conclude scrimmage and close War Room"
+                onClick={() => setOcrIngestOpen(true)}
+                className="h-9 px-3 sm:px-4 rounded-xl bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-black font-mono text-xs font-black uppercase transition-all cursor-pointer flex items-center gap-1.5 shadow-md active:scale-95"
+                title="Log Scoreboard Screenshot (OCR) and finalize scrim match"
               >
-                <CheckCircleIcon className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Complete Match</span>
+                <CheckCircleIcon className="w-3.5 h-3.5 text-black" />
+                <span>Log Scoreboard (OCR)</span>
               </button>
             )}
 
@@ -589,6 +608,21 @@ export default function ScrimWarRoomModal({
             </div>
           </div>
         </div>
+      )}
+      {/* Mandatory Scrim OCR Ingestion Modal */}
+      {ocrIngestOpen && scrim && (
+        <ScrimOcrIngestModal
+          isOpen={ocrIngestOpen}
+          onClose={() => setOcrIngestOpen(false)}
+          scrim={scrim}
+          onFinalized={() => {
+            setOcrIngestOpen(false);
+            onClose();
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(new Event("scrim:completed"));
+            }
+          }}
+        />
       )}
     </div>
   );

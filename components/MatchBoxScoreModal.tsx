@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
+import Link from "next/link";
 import { MatchBoxScoreModalProps, MatchPlayerStat } from "@/types";
 import { CrownIcon, SwordsIcon, ShieldIcon } from "@/components/ui/Icons";
 
@@ -19,6 +20,8 @@ export default function MatchBoxScoreModal({
   title = "MATCH BOX SCORE",
   subtitle = "TOURNAMENT MATCH",
   matchInfo,
+  canEditStats,
+  onEditStats,
 }: MatchBoxScoreModalProps) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -103,7 +106,17 @@ export default function MatchBoxScoreModal({
               <tr key={`${p.name}-${idx}`} className="hover:bg-[#101626] transition-colors">
                 <td className="py-2.5 pl-1 font-sans text-xs font-bold flex items-center gap-2">
                   {isMvp && <CrownIcon className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
-                  <span className={isMvp ? "text-amber-400 font-extrabold" : "text-white"}>{p.name}</span>
+                  {p.userId ? (
+                    <Link
+                      href={`/athlete/${p.userId}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className={`hover:underline ${isMvp ? "text-amber-400 font-extrabold" : "text-white"}`}
+                    >
+                      {p.name}
+                    </Link>
+                  ) : (
+                    <span className={isMvp ? "text-amber-400 font-extrabold" : "text-white"}>{p.name}</span>
+                  )}
                   {p.displayName && p.displayName !== p.name && (
                     <span className="text-[10px] font-mono text-slate-500 truncate">{p.displayName}</span>
                   )}
@@ -263,7 +276,18 @@ export default function MatchBoxScoreModal({
                   : "MATCH TELEMETRY PENDING • STATS WILL POPULATE ONCE THE RESULT IS REPORTED"}
               </span>
             </div>
-            <span>KDA = (KILLS + ASSISTS) / DEATHS</span>
+            <div className="flex items-center gap-3">
+              {canEditStats && onEditStats && isMatchPlayed && (
+                <button
+                  type="button"
+                  onClick={onEditStats}
+                  className="px-3 py-1 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-300 rounded text-[10px] font-mono font-bold uppercase transition-colors cursor-pointer"
+                >
+                  Edit Match Stats
+                </button>
+              )}
+              <span>KDA = (KILLS + ASSISTS) / DEATHS</span>
+            </div>
           </div>
         </div>
       </div>

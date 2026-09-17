@@ -4,15 +4,19 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useGame } from "@/context/GameContext";
-import { GameId, ScrimOffer } from "@/types";
+import { GameId, ScrimOffer, UniversityMatchHistoryEntry } from "@/types";
 import { scrimsService } from "@/services";
+import { universitiesService } from "@/services/universitiesService";
 import { getStoredTeams, fetchTeamsApi, Team } from "@/lib/teams";
+import { GAME_ID_TO_ENUM } from "@/lib/games";
 import { useWarRoom } from "@/context/WarRoomContext";
 import ScrimCard from "@/components/scrims/ScrimCard";
 import { ScrimCardSkeleton } from "@/components/ui/Skeleton";
-import { SwordsIcon, AlertTriangleIcon, ZapIcon, CheckCircleIcon, FlameIcon } from "@/components/ui/Icons";
+import { SwordsIcon, AlertTriangleIcon, ZapIcon, CheckCircleIcon, FlameIcon, ShieldIcon } from "@/components/ui/Icons";
 import PostScrimModal from "@/components/scrims/PostScrimModal";
 import NoSquadModal from "@/components/scrims/NoSquadModal";
+import MatchBoxScoreModal from "@/components/MatchBoxScoreModal";
+import ScrimStatsEditModal from "@/components/scrims/ScrimStatsEditModal";
 
 const getMyRequestedScrims = (): Record<string, string[]> => {
   if (typeof window === "undefined") return {};
@@ -104,6 +108,18 @@ export default function ScrimsPage() {
   const [userTeams, setUserTeams] = useState<Team[]>(() => getStoredTeams());
   const [isLoading, setIsLoading] = useState(true);
   const [selectedFormat, setSelectedFormat] = useState<string>("ALL");
+
+  // Scrim Match History — completed scrims, logged once a scoreboard is
+  // finalized, are archived off the live board and surfaced here instead.
+  const [viewTab, setViewTab] = useState<"BOARD" | "HISTORY">("BOARD");
+  const [historyMatches, setHistoryMatches] = useState<UniversityMatchHistoryEntry[]>([]);
+  const [historyPage, setHistoryPage] = useState(1);
+  const [historyTotal, setHistoryTotal] = useState(0);
+  const [historyTotalPages, setHistoryTotalPages] = useState(1);
+  const [loadedHistoryKey, setLoadedHistoryKey] = useState<string | null>(null);
+  const [historyRefreshTick, setHistoryRefreshTick] = useState(0);
+  const [activeBoxScore, setActiveBoxScore] = useState<UniversityMatchHistoryEntry | null>(null);
+  const [editingMatch, setEditingMatch] = useState<UniversityMatchHistoryEntry | null>(null);
 
   useEffect(() => {
     if (isLoaded && !isLoggedIn) {
@@ -227,11 +243,62 @@ export default function ScrimsPage() {
 
   const [referenceTime] = useState(() => Date.now());
 
+  // Switching games invalidates the current history page - reset it during
+  // render (React re-runs the render before committing) rather than in an
+  // effect, so the fetch below never fires against a stale page number.
+  const historyResetKey = `${user?.universityId}:${activeGame}`;
+  const [lastHistoryResetKey, setLastHistoryResetKey] = useState(historyResetKey);
+  if (historyResetKey !== lastHistoryResetKey) {
+    setLastHistoryResetKey(historyResetKey);
+    setHistoryPage(1);
+  }
+
+  const historyKey = `${user?.universityId}:${activeGame}:${historyPage}:${historyRefreshTick}`;
+  const isLoadingHistory = viewTab === "HISTORY" && loadedHistoryKey !== historyKey;
+
+  useEffect(() => {
+    if (viewTab !== "HISTORY" || !user?.universityId) return;
+    let isMounted = true;
+
+    universitiesService
+      .getUniversityMatches(user.universityId, GAME_ID_TO_ENUM[activeGame], "SCRIM", historyPage, 10)
+      .then((data) => {
+        if (!isMounted) return;
+        setHistoryMatches(Array.isArray(data?.matches) ? data.matches : []);
+        setHistoryTotal(data?.total ?? 0);
+        setHistoryTotalPages(Math.max(data?.totalPages ?? 1, 1));
+        setLoadedHistoryKey(historyKey);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setHistoryMatches([]);
+        setHistoryTotal(0);
+        setHistoryTotalPages(1);
+        setLoadedHistoryKey(historyKey);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [viewTab, user?.universityId, activeGame, historyPage, historyKey]);
+
+  // Re-fetching after an edit just bumps this tick, which changes historyKey
+  // and re-runs the effect above - no separate fetch implementation to keep
+  // in sync with it.
+  const refreshHistory = useCallback(() => {
+    setHistoryRefreshTick((t) => t + 1);
+  }, []);
+
   const filteredScrims = useMemo(() => {
     const oneDayAgo = referenceTime - 24 * 60 * 60 * 1000;
     return scrims.filter((s) => {
       // Completed scrims are archived and hidden from the active matchmaking board
       if (s.status === "COMPLETED") return false;
+
+      // Once a team accepts and the host confirms an opponent, the scrim is
+      // no longer an "open offer" - it drops off this board and surfaces
+      // instead via the Booked Scrim banner and War Room access.
+      if (s.status === "CONFIRMED") return false;
 
       // Cancelled scrims are only visible to the host captain who posted them
       if (s.status === "CANCELLED" && !isUserHost(s)) return false;
@@ -495,8 +562,34 @@ export default function ScrimsPage() {
           </div>
         </div>
 
+        {/* Board / History Tab Switcher */}
+        <div className="flex items-center gap-2">
+          {([
+            { key: "BOARD" as const, label: "Scrim Board", icon: SwordsIcon },
+            { key: "HISTORY" as const, label: "Match History", icon: ShieldIcon },
+          ]).map(({ key, label, icon: Icon }) => (
+            <button
+              key={key}
+              onClick={() => setViewTab(key)}
+              className={`h-9 px-4 font-display text-xs font-black uppercase tracking-wide transition-all duration-150 cursor-pointer flex items-center gap-2 ${
+                viewTab === key
+                  ? "game-theme-btn shadow-md"
+                  : "tactical-btn-secondary text-slate-400 hover:text-white"
+              }`}
+              style={{
+                clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
+              }}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              <span>{label}</span>
+            </button>
+          ))}
+        </div>
+
+        {viewTab === "BOARD" && (
+        <>
         {/* Quick Format Filter & Status Bar */}
-        <div 
+        <div
           className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-[#0A0D18] border border-[#1E293B] shadow-2xl"
           style={{
             clipPath: "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
@@ -638,6 +731,162 @@ export default function ScrimsPage() {
               />
             ))}
           </div>
+        )}
+        </>
+        )}
+
+        {viewTab === "HISTORY" && (
+          <div
+            className="p-4 sm:p-6 bg-[#0A0D18] border border-[#1E293B] shadow-2xl space-y-4"
+            style={{
+              clipPath: "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
+            }}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="font-display text-sm font-black uppercase text-white tracking-wide">
+                Logged Scrim Matches
+              </h3>
+              {historyTotal > 0 && (
+                <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">
+                  {historyTotal} logged {historyTotal === 1 ? "match" : "matches"}
+                </span>
+              )}
+            </div>
+
+            {isLoadingHistory ? (
+              <div className="p-6 text-center text-xs font-mono text-slate-400 animate-pulse">
+                Loading scrim match history...
+              </div>
+            ) : historyMatches.length === 0 ? (
+              <div className="flex flex-col items-center justify-center text-center py-12 px-4 space-y-3">
+                <div
+                  className="w-14 h-14 bg-[#141A29] border border-[#232D44] flex items-center justify-center text-slate-400"
+                  style={{
+                    clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
+                  }}
+                >
+                  <ShieldIcon className="w-6 h-6 text-slate-400" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-display text-base font-black text-white uppercase tracking-wider">
+                    No Logged Scrims Yet
+                  </h4>
+                  <p className="font-sans text-xs text-slate-400 leading-relaxed max-w-sm">
+                    Once a scrim&apos;s scoreboard is scanned and finalized in the War Room, it lands here.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {historyMatches.map((match) => {
+                  const isVictory = match.result === "WIN" || match.result === "FORFEIT_WIN";
+                  return (
+                    <button
+                      key={match.id}
+                      type="button"
+                      onClick={() => setActiveBoxScore(match)}
+                      className="w-full text-left p-3.5 bg-[#050711] border border-[#182338] flex items-center justify-between gap-4 shadow-inner hover:border-[#2A3B58] transition-colors cursor-pointer"
+                      style={{
+                        clipPath: "polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%)",
+                      }}
+                    >
+                      <div className="min-w-0">
+                        <span className="font-display text-sm font-bold uppercase text-white block truncate">
+                          VS {match.opponent?.name || "Unknown Opponent"}
+                        </span>
+                        <span className="text-[10px] font-mono text-slate-400 block truncate">
+                          {new Date(match.playedAt).toLocaleDateString(undefined, {
+                            month: "short",
+                            day: "2-digit",
+                            year: "numeric",
+                          })}
+                        </span>
+                      </div>
+                      <span
+                        className={`text-[9px] font-mono font-bold px-2.5 py-0.5 border shrink-0 ${
+                          isVictory
+                            ? "bg-emerald-950/60 text-emerald-400 border-emerald-500/40"
+                            : "bg-rose-950/60 text-rose-400 border-rose-500/40"
+                        }`}
+                        style={{
+                          clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
+                        }}
+                      >
+                        {match.isForfeit ? (isVictory ? "FORFEIT WIN" : "FORFEIT LOSS") : isVictory ? "VICTORY" : "DEFEAT"}
+                      </span>
+                    </button>
+                  );
+                })}
+
+                {historyTotalPages > 1 && (
+                  <div className="flex items-center justify-between gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setHistoryPage((p) => Math.max(p - 1, 1))}
+                      disabled={historyPage <= 1}
+                      className="px-3 py-1.5 text-[10px] font-display font-black uppercase tracking-wider bg-[#101626] text-slate-300 border border-[#202C45] enabled:hover:border-primary-brand/50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                      style={{
+                        clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
+                      }}
+                    >
+                      ← Prev
+                    </button>
+                    <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">
+                      Page <strong className="text-white">{historyPage}</strong> of{" "}
+                      <strong className="text-white">{historyTotalPages}</strong>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setHistoryPage((p) => Math.min(p + 1, historyTotalPages))}
+                      disabled={historyPage >= historyTotalPages}
+                      className="px-3 py-1.5 text-[10px] font-display font-black uppercase tracking-wider bg-[#101626] text-slate-300 border border-[#202C45] enabled:hover:border-primary-brand/50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                      style={{
+                        clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
+                      }}
+                    >
+                      Next →
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeBoxScore && (
+          <MatchBoxScoreModal
+            isOpen
+            onClose={() => setActiveBoxScore(null)}
+            title="SCRIM MATCH BOX SCORE"
+            subtitle={`${user?.university?.name || "Your Squad"} vs ${activeBoxScore.opponent?.name || "Opponent"} • SCRIM`}
+            matchInfo={{
+              team1Name: user?.university?.name || "Your Squad",
+              team2Name: activeBoxScore.opponent?.name || "Unknown Opponent",
+              team1UniversityId: user?.universityId,
+              team2UniversityId: activeBoxScore.opponent?.id,
+              isTeam1Winner: activeBoxScore.result.endsWith("WIN"),
+              isTeam2Winner: activeBoxScore.result.endsWith("LOSS"),
+              status: "COMPLETED",
+              playerStats: activeBoxScore.playerStats,
+            }}
+            canEditStats={!!activeBoxScore.scrimId}
+            onEditStats={() => {
+              setEditingMatch(activeBoxScore);
+              setActiveBoxScore(null);
+            }}
+          />
+        )}
+
+        {editingMatch && user?.universityId && (
+          <ScrimStatsEditModal
+            key={editingMatch.id}
+            isOpen={!!editingMatch}
+            onClose={() => setEditingMatch(null)}
+            universityId={user.universityId}
+            universityName={user?.university?.name || "Your Squad"}
+            match={editingMatch}
+            onStatsUpdated={refreshHistory}
+          />
         )}
 
         <PostScrimModal

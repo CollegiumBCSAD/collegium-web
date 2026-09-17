@@ -1,8 +1,10 @@
 import { apiClient } from "./apiClient";
 import {
+  MatchLedgerMode,
   TeamRatingSummary,
   University,
-  UniversityMatchHistoryEntry,
+  UniversityMatchHistoryPage,
+  UniversityTournamentPlacement,
 } from "@/types";
 
 type RawRosterMember = {
@@ -52,11 +54,28 @@ export const universitiesService = {
 
   getUniversityMatches: (
     id: string,
+    gameTitle?: string,
+    matchMode: MatchLedgerMode = "ALL",
+    page = 1,
+    limit = 10
+  ): Promise<UniversityMatchHistoryPage> => {
+    const params = new URLSearchParams();
+    if (gameTitle) params.set("gameTitle", gameTitle);
+    params.set("matchMode", matchMode);
+    params.set("page", String(page));
+    params.set("limit", String(limit));
+    return apiClient.get<UniversityMatchHistoryPage>(
+      `/universities/${id}/matches?${params.toString()}`
+    );
+  },
+
+  getUniversityTournaments: (
+    id: string,
     gameTitle?: string
-  ): Promise<UniversityMatchHistoryEntry[]> => {
+  ): Promise<UniversityTournamentPlacement[]> => {
     const query = gameTitle ? `?gameTitle=${gameTitle}` : "";
-    return apiClient.get<UniversityMatchHistoryEntry[]>(
-      `/universities/${id}/matches${query}`
+    return apiClient.get<UniversityTournamentPlacement[]>(
+      `/universities/${id}/tournaments${query}`
     );
   },
 
