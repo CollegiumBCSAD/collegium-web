@@ -245,6 +245,21 @@ export default function TournamentBracketModal({
   const losersRounds = normalizedRounds.filter((r) => r.bracketSide === "LOSERS");
   const grandFinalRound = normalizedRounds.find((r) => r.bracketSide === "GRAND_FINAL") || null;
 
+  let featuredOnStream: {
+    roundName: string;
+    match: (typeof normalizedRounds)[0]["matches"][0];
+  } | null = null;
+  const featuredId = tournamentDetail?.featuredMatchId;
+  if (featuredId) {
+    for (const round of normalizedRounds) {
+      const match = round.matches.find((m) => m.id === featuredId);
+      if (match) {
+        featuredOnStream = { roundName: round.name, match };
+        break;
+      }
+    }
+  }
+
   // Participating teams list
   const participatingTeams: ParticipatingTeamDetail[] = tournamentDetail?.participatingTeams || [];
 
@@ -413,8 +428,43 @@ export default function TournamentBracketModal({
             </div>
           </div>
 
+          {/* NOW ON STREAM — sticky callout when organizer features a match */}
+          {featuredOnStream && tournamentDetail?.streamUrl && (
+            <div className="shrink-0 z-20 flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 sm:px-6 py-2.5 bg-rose-950/80 border-b border-rose-500/40">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="w-2 h-2 rounded-full bg-rose-400 animate-pulse shrink-0" />
+                <span className="text-[10px] font-mono font-black uppercase tracking-widest text-rose-300 shrink-0">
+                  Now on stream
+                </span>
+                <span className="text-slate-600 hidden sm:inline">·</span>
+                <span className="text-[10px] font-mono text-rose-200/80 uppercase tracking-wider shrink-0 hidden sm:inline">
+                  {featuredOnStream.roundName}
+                </span>
+                <span className="text-slate-600">·</span>
+                <span className="font-display text-sm font-black text-white uppercase truncate">
+                  {featuredOnStream.match.team1.name}
+                  <span className="text-rose-400 font-normal mx-1.5">vs</span>
+                  {featuredOnStream.match.team2.name}
+                </span>
+              </div>
+              {activeTab !== "watch" && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("watch")}
+                  className="h-8 px-3 font-mono text-[10px] font-black uppercase tracking-wider text-white bg-rose-600 hover:bg-rose-500 cursor-pointer shrink-0 self-start sm:self-auto"
+                >
+                  {showWatchLive ? "Watch desk" : "Open watch"}
+                </button>
+              )}
+            </div>
+          )}
+
           {/* Modal Content Area */}
-          <div className="flex-1 overflow-y-auto min-h-0 bg-gradient-to-b from-[#080B14] via-[#0A0D18] to-[#05070E]">
+          <div
+            className={`flex-1 min-h-0 bg-gradient-to-b from-[#080B14] via-[#0A0D18] to-[#05070E] ${
+              activeTab === "watch" ? "overflow-hidden flex flex-col" : "overflow-y-auto"
+            }`}
+          >
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-28 space-y-4">
                 <div className="w-10 h-10 border-3 border-primary-brand border-t-transparent rounded-full animate-spin" />
@@ -423,12 +473,94 @@ export default function TournamentBracketModal({
                 </p>
               </div>
             ) : activeTab === "watch" && tournamentDetail?.streamUrl ? (
-              <div className="p-3 sm:p-5 w-full h-full flex flex-col">
-                <TournamentStreamPlayer
-                  streamUrl={tournamentDetail.streamUrl}
-                  streamIsLive={Boolean(tournamentDetail.streamIsLive)}
-                  className="flex-1 min-h-0"
-                />
+              /* WATCH DESK — stream + live bracket side by side */
+              <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-0">
+                <div className="lg:w-[58%] xl:w-[62%] shrink-0 p-3 sm:p-4 flex flex-col min-h-[220px] lg:min-h-0 lg:h-full border-b lg:border-b-0 lg:border-r border-[#1E293B]">
+                  <TournamentStreamPlayer
+                    streamUrl={tournamentDetail.streamUrl}
+                    streamIsLive={Boolean(tournamentDetail.streamIsLive)}
+                    className="flex-1 min-h-[200px] lg:min-h-0"
+                  />
+                </div>
+                <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+                  <div className="shrink-0 px-4 py-2.5 border-b border-[#1E293B] bg-[#0A0D18] flex items-center justify-between gap-2">
+                    <div>
+                      <span className="text-[10px] font-mono font-black uppercase tracking-widest text-slate-300 block">
+                        Live bracket
+                      </span>
+                      <span className="text-[10px] font-sans text-slate-500">
+                        Same broadcast · follow the series here
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("bracket")}
+                      className="text-[10px] font-mono text-rose-400 hover:text-rose-300 uppercase tracking-wider cursor-pointer"
+                    >
+                      Full bracket →
+                    </button>
+                  </div>
+                  <div className="flex-1 overflow-auto p-4">
+                    {normalizedRounds.length === 0 ? (
+                      <p className="font-mono text-[10px] text-slate-500 uppercase tracking-widest text-center py-10">
+                        Bracket not generated yet
+                      </p>
+                    ) : (
+                      <div className="flex items-stretch min-w-max gap-4 select-none py-2">
+                        {winnersRounds.map((round, idx) => (
+                          <div key={`watch-w-${idx}`} className="flex items-stretch gap-4">
+                            <BracketColumn
+                              round={round}
+                              highlight={
+                                !grandFinalRound && idx === winnersRounds.length - 1
+                              }
+                              onViewBoxScore={setActiveBoxScore}
+                              canReportResults={canReportResults}
+                              onReportResult={setReportingMatch}
+                              featuredMatchId={tournamentDetail?.featuredMatchId}
+                            />
+                            {(idx < winnersRounds.length - 1 ||
+                              grandFinalRound ||
+                              losersRounds.length > 0) && <BracketConnector />}
+                          </div>
+                        ))}
+                        {grandFinalRound && (
+                          <div className="flex items-stretch gap-4">
+                            <BracketColumn
+                              round={grandFinalRound}
+                              highlight
+                              onViewBoxScore={setActiveBoxScore}
+                              canReportResults={canReportResults}
+                              onReportResult={setReportingMatch}
+                              featuredMatchId={tournamentDetail?.featuredMatchId}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {losersRounds.length > 0 && (
+                      <div className="pt-6 mt-4 border-t border-[#1E293B]">
+                        <div className="text-[9px] font-mono font-black text-rose-400 uppercase tracking-widest mb-3">
+                          Losers bracket
+                        </div>
+                        <div className="flex items-stretch min-w-max gap-4 select-none">
+                          {losersRounds.map((round, idx) => (
+                            <div key={`watch-l-${idx}`} className="flex items-stretch gap-4">
+                              <BracketColumn
+                                round={round}
+                                onViewBoxScore={setActiveBoxScore}
+                                canReportResults={canReportResults}
+                                onReportResult={setReportingMatch}
+                                featuredMatchId={tournamentDetail?.featuredMatchId}
+                              />
+                              {idx < losersRounds.length - 1 && <BracketConnector />}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             ) : activeTab === "teams" ? (
               /* TAB: PARTICIPATING TEAMS & ROSTERS */

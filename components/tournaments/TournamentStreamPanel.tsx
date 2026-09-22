@@ -68,7 +68,7 @@ export default function TournamentStreamPanel({
           Official Broadcast
         </span>
         <p className="font-sans text-xs text-slate-400">
-          One stream for this tournament. Paste a YouTube, Twitch, or public Facebook Live URL — viewers watch it embedded in the Watch tab.
+          One stream for this tournament. Paste YouTube / Twitch / public Facebook Live. Set &quot;On stream now&quot; so the Watch desk highlights that match.
         </p>
       </div>
 
