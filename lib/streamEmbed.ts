@@ -55,7 +55,7 @@ export function resolveStreamEmbed(
   if (yt) {
     return {
       platform: "youtube",
-      embedSrc: `https://www.youtube.com/embed/${yt}?autoplay=1&rel=0`,
+      embedSrc: `https://www.youtube.com/embed/${yt}?autoplay=1&rel=0&modestbranding=1`,
       originalUrl,
     };
   }

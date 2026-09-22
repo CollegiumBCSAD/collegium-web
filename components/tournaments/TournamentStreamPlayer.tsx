@@ -23,7 +23,7 @@ export default function TournamentStreamPlayer({
   if (!streamIsLive) {
     return (
       <div
-        className={`flex flex-col items-center justify-center gap-2 bg-[#05070E] border border-[#1E293B] aspect-video ${className}`}
+        className={`flex flex-col items-center justify-center gap-2 bg-[#05070E] border border-[#1E293B] aspect-video w-full ${className}`}
       >
         <p className="font-mono text-xs text-slate-400 uppercase tracking-widest">
           Stream offline
@@ -43,7 +43,7 @@ export default function TournamentStreamPlayer({
   if (!embed.embedSrc) {
     return (
       <div
-        className={`flex flex-col items-center justify-center gap-3 bg-[#05070E] border border-[#1E293B] aspect-video p-6 text-center ${className}`}
+        className={`flex flex-col items-center justify-center gap-3 bg-[#05070E] border border-[#1E293B] aspect-video w-full p-6 text-center ${className}`}
       >
         <p className="font-mono text-xs text-slate-300 uppercase tracking-widest">
           Can&apos;t embed this link
@@ -65,26 +65,29 @@ export default function TournamentStreamPlayer({
   }
 
   return (
-    <div className={`relative w-full bg-black border border-rose-500/30 ${className}`}>
+    <div
+      className={`relative w-full h-full min-h-[240px] flex flex-col bg-black border border-rose-500/30 ${className}`}
+    >
       <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5 px-2 py-0.5 bg-rose-950/90 border border-rose-500/50">
         <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
         <span className="text-[9px] font-mono font-black uppercase tracking-widest text-rose-200">
           Live · {embed.platform}
         </span>
       </div>
-      <div className="aspect-video w-full">
-        <iframe
-          title="Tournament live stream"
-          src={embed.embedSrc}
-          className="w-full h-full"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowFullScreen
-          // Facebook plugin needs this; others ignore it
-          scrolling="no"
-          frameBorder={0}
-        />
+      {/* Fixed 16:9 box at full modal width — avoids tiny iframe upscaled soft. */}
+      <div className="relative w-full flex-1 min-h-0 bg-black flex items-center justify-center">
+        <div className="w-full max-h-full aspect-video">
+          <iframe
+            title="Tournament live stream"
+            src={embed.embedSrc}
+            className="w-full h-full"
+            style={{ border: 0 }}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+          />
+        </div>
       </div>
-      <div className="flex items-center justify-between px-3 py-2 bg-[#0A0D18] border-t border-[#1E293B]">
+      <div className="flex items-center justify-between px-3 py-2 bg-[#0A0D18] border-t border-[#1E293B] shrink-0">
         <span className="text-[10px] font-mono text-slate-500 truncate max-w-[70%]">
           {streamUrl}
         </span>

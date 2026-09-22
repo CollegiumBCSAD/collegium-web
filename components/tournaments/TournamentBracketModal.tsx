@@ -258,12 +258,16 @@ export default function TournamentBracketModal({
 
   return createPortal(
     <>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 md:p-8 bg-black/85 backdrop-blur-lg animate-fade-in overflow-hidden">
-        <div className="absolute inset-0" onClick={onClose} />
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 md:p-8 overflow-hidden">
+        {/* Backdrop is a sibling — backdrop-blur on a parent of the iframe makes the embed look soft. */}
+        <div
+          className="absolute inset-0 bg-black/85 backdrop-blur-lg animate-fade-in"
+          onClick={onClose}
+        />
 
-        {/* Modal Window Container */}
+        {/* Modal Window Container — no scale transform; scale() on ancestors blurs iframes */}
         <div 
-          className="relative w-full max-w-7xl h-[88vh] max-h-[90vh] flex flex-col bg-[#080B14] border border-[#1E293B] shadow-2xl overflow-hidden z-10 animate-modal-enter"
+          className="relative w-full max-w-7xl h-[88vh] max-h-[90vh] flex flex-col bg-[#080B14] border border-[#1E293B] shadow-2xl overflow-hidden z-10 animate-fade-in"
           style={{
             clipPath: "polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px))",
           }}
@@ -419,18 +423,11 @@ export default function TournamentBracketModal({
                 </p>
               </div>
             ) : activeTab === "watch" && tournamentDetail?.streamUrl ? (
-              <div className="p-4 sm:p-6 sm:px-8 max-w-5xl mx-auto w-full space-y-4">
-                <div>
-                  <span className="text-[10px] font-mono text-rose-400 uppercase tracking-widest block mb-1">
-                    Official Tournament Broadcast
-                  </span>
-                  <p className="font-sans text-xs text-slate-400">
-                    One stream for this entire tournament — watch here without leaving Collegium.
-                  </p>
-                </div>
+              <div className="p-3 sm:p-5 w-full h-full flex flex-col">
                 <TournamentStreamPlayer
                   streamUrl={tournamentDetail.streamUrl}
                   streamIsLive={Boolean(tournamentDetail.streamIsLive)}
+                  className="flex-1 min-h-0"
                 />
               </div>
             ) : activeTab === "teams" ? (
