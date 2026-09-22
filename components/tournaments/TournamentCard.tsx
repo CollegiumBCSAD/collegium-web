@@ -130,7 +130,7 @@ export default function TournamentCard({
             {tournament.game}
           </span>
           
-          <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="flex items-center gap-1.5 flex-wrap">
             {isMyTournament && (
               <span 
                 className="font-mono text-[9px] font-black uppercase px-2 py-0.5 bg-gradient-to-r from-amber-500/25 to-amber-600/25 text-amber-300 border border-amber-500/50 shadow-[0_0_10px_rgba(245,158,11,0.2)] flex items-center gap-1"
@@ -140,6 +140,18 @@ export default function TournamentCard({
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
                 YOUR TOURNAMENT
+              </span>
+            )}
+
+            {tournament.streamIsLive && tournament.streamUrl && (
+              <span
+                className="font-mono text-[9px] font-black uppercase px-2 py-0.5 bg-rose-950/90 text-rose-300 border border-rose-500/50 flex items-center gap-1"
+                style={{
+                  clipPath: "polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)",
+                }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
+                LIVE STREAM
               </span>
             )}
 

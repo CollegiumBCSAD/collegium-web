@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import MatchBoxScoreModal from "@/components/MatchBoxScoreModal";
 import MatchCard from "@/components/tournaments/MatchCard";
 import CloseMatchModal from "@/components/tournaments/CloseMatchModal";
+import TournamentStreamPanel from "@/components/tournaments/TournamentStreamPanel";
 import {
   BracketMatch,
   BracketRound,
@@ -31,12 +32,14 @@ function BracketColumn({
   onViewBoxScore,
   canReportResults,
   onReportResult,
+  featuredMatchId,
 }: {
   round: { name: string; matches: BracketMatch[] };
   highlight?: boolean;
   onViewBoxScore: (m: BracketMatch) => void;
   canReportResults?: boolean;
   onReportResult?: (m: BracketMatch) => void;
+  featuredMatchId?: string | null;
 }) {
   return (
     <div className="w-64 shrink-0 flex flex-col justify-center z-10">
@@ -50,7 +53,11 @@ function BracketColumn({
       <div className="flex-1 flex flex-col justify-around gap-2">
         {round.matches.map((m) => (
           <div key={m.id} className="space-y-1">
-            <MatchCard match={m} onViewBoxScore={() => onViewBoxScore(m)} />
+            <MatchCard
+              match={m}
+              onViewBoxScore={() => onViewBoxScore(m)}
+              isFeatured={featuredMatchId === m.id}
+            />
             {canReportResults && m.status !== "COMPLETED" && (
               <button
                 type="button"
@@ -100,6 +107,17 @@ export default function TournamentBracketModal({
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const canReportResults = user?.role === "ADMIN" || user?.role === "ORGANIZER";
+  const canEditStream =
+    user?.role === "ADMIN" ||
+    (user?.role === "ORGANIZER" &&
+      Boolean(
+        user?.id &&
+          (tournamentDetail?.organizerId === user.id ||
+            tournamentDetail?.organizer?.id === user.id)
+      ));
+  const showWatchLive = Boolean(
+    tournamentDetail?.streamUrl && tournamentDetail?.streamIsLive
+  );
 
   const [prevTabKey, setPrevTabKey] = useState<string | null>(null);
   const currentTabKey = isOpen && initialTab ? `${tournamentId}-${initialTab}` : null;
@@ -274,6 +292,21 @@ export default function TournamentBracketModal({
             </div>
 
             <div className="flex items-center gap-3 self-end md:self-center">
+              {showWatchLive && tournamentDetail?.streamUrl && (
+                <a
+                  href={tournamentDetail.streamUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="h-10 px-4 font-mono text-xs font-black uppercase tracking-wider text-white bg-rose-600 hover:bg-rose-500 flex items-center gap-2 whitespace-nowrap"
+                  style={{
+                    clipPath: "polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)",
+                  }}
+                >
+                  <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                  Watch Live
+                </a>
+              )}
+
               {/* Tab Navigation Controls */}
               <div 
                 className="flex items-stretch gap-1 p-1 bg-[#05070E] border border-[#1E293B]"
@@ -618,6 +651,45 @@ export default function TournamentBracketModal({
                   </div>
                 </div>
 
+                {canEditStream && tournamentId && (
+                  <TournamentStreamPanel
+                    tournamentId={tournamentId}
+                    streamUrl={tournamentDetail?.streamUrl}
+                    streamIsLive={tournamentDetail?.streamIsLive}
+                    featuredMatchId={tournamentDetail?.featuredMatchId}
+                    rounds={rounds}
+                    onSaved={() => setRefreshKey((k) => k + 1)}
+                  />
+                )}
+
+                {!canEditStream && tournamentDetail?.streamUrl && (
+                  <div className="p-5 bg-[#0A0D18] border border-[#1E293B] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest block mb-1">
+                        Official Broadcast
+                      </span>
+                      <p className="font-sans text-xs text-slate-300 truncate max-w-xl">
+                        {tournamentDetail.streamUrl}
+                      </p>
+                    </div>
+                    {showWatchLive ? (
+                      <a
+                        href={tournamentDetail.streamUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="h-10 px-4 font-mono text-xs font-black uppercase tracking-wider text-white bg-rose-600 hover:bg-rose-500 inline-flex items-center justify-center gap-2"
+                      >
+                        <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                        Watch Live
+                      </a>
+                    ) : (
+                      <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">
+                        Stream offline
+                      </span>
+                    )}
+                  </div>
+                )}
+
                 {/* Tournament Regulations */}
                 <div className="p-6 bg-[#0A0D18] border border-[#1E293B] space-y-4">
                   <h4 className="font-display text-base font-black uppercase text-white tracking-wide flex items-center gap-2">
@@ -667,6 +739,7 @@ export default function TournamentBracketModal({
                             onViewBoxScore={setActiveBoxScore}
                             canReportResults={canReportResults}
                             onReportResult={setReportingMatch}
+                            featuredMatchId={tournamentDetail?.featuredMatchId}
                           />
                           <BracketConnector />
                         </div>
@@ -680,6 +753,7 @@ export default function TournamentBracketModal({
                             onViewBoxScore={setActiveBoxScore}
                             canReportResults={canReportResults}
                             onReportResult={setReportingMatch}
+                            featuredMatchId={tournamentDetail?.featuredMatchId}
                           />
                           <BracketConnector />
                         </div>
@@ -766,6 +840,7 @@ export default function TournamentBracketModal({
                                 onViewBoxScore={setActiveBoxScore}
                                 canReportResults={canReportResults}
                                 onReportResult={setReportingMatch}
+                                featuredMatchId={tournamentDetail?.featuredMatchId}
                               />
                               {idx < losersRounds.length - 1 && <BracketConnector />}
                             </div>

@@ -3,7 +3,7 @@
 import { MatchCardProps } from "@/types";
 import { CrownIcon } from "@/components/ui/Icons";
 
-export default function MatchCard({ match, onViewBoxScore }: MatchCardProps) {
+export default function MatchCard({ match, onViewBoxScore, isFeatured }: MatchCardProps) {
   const isCompleted = match.status === "COMPLETED";
   const isLive = match.status === "LIVE";
   const isTeam1Winner = match.team1.isWinner || (isCompleted && match.team1.score > match.team2.score);
@@ -24,15 +24,29 @@ export default function MatchCard({ match, onViewBoxScore }: MatchCardProps) {
     <div
       onClick={onViewBoxScore}
       className={`w-56 sm:w-64 h-[86px] bg-[#0A0D18] border shadow-xl transition-all duration-200 cursor-pointer overflow-hidden group relative flex flex-col justify-between ${
-        isLive ? "border-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.15)]" : "border-[#1E293B] hover:border-primary-brand/60"
+        isFeatured
+          ? "border-rose-500/70 shadow-[0_0_15px_rgba(244,63,94,0.2)]"
+          : isLive
+            ? "border-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
+            : "border-[#1E293B] hover:border-primary-brand/60"
       }`}
       style={{
         clipPath: "polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))",
       }}
     >
+      {isFeatured && (
+        <span className="absolute top-1 right-2 z-10 text-[8px] font-mono font-black uppercase tracking-widest text-rose-300 bg-rose-950/80 px-1.5 py-0.5 border border-rose-500/40">
+          On Stream
+        </span>
+      )}
+
       {/* Top Neutral Highlight */}
       <div className={`absolute top-0 left-0 right-0 h-[1.5px] ${
-        isLive ? "bg-gradient-to-r from-emerald-500 via-emerald-400/40 to-transparent" : "bg-gradient-to-r from-slate-500/30 via-slate-400/10 to-transparent"
+        isFeatured
+          ? "bg-gradient-to-r from-rose-500 via-rose-400/40 to-transparent"
+          : isLive
+            ? "bg-gradient-to-r from-emerald-500 via-emerald-400/40 to-transparent"
+            : "bg-gradient-to-r from-slate-500/30 via-slate-400/10 to-transparent"
       }`} />
 
       {/* Team 1 Slot */}
