@@ -7,6 +7,7 @@ import MatchBoxScoreModal from "@/components/MatchBoxScoreModal";
 import MatchCard from "@/components/tournaments/MatchCard";
 import CloseMatchModal from "@/components/tournaments/CloseMatchModal";
 import TournamentStreamPanel from "@/components/tournaments/TournamentStreamPanel";
+import TournamentStreamPlayer from "@/components/tournaments/TournamentStreamPlayer";
 import {
   BracketMatch,
   BracketRound,
@@ -99,7 +100,7 @@ export default function TournamentBracketModal({
   initialTab = "bracket",
 }: TournamentBracketModalProps) {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<"bracket" | "teams" | "overview">(initialTab);
+  const [activeTab, setActiveTab] = useState<"bracket" | "teams" | "overview" | "watch">(initialTab);
   const [activeBoxScore, setActiveBoxScore] = useState<BracketMatch | null>(null);
   const [reportingMatch, setReportingMatch] = useState<BracketMatch | null>(null);
   const [rounds, setRounds] = useState<BracketRound[]>([]);
@@ -292,19 +293,24 @@ export default function TournamentBracketModal({
             </div>
 
             <div className="flex items-center gap-3 self-end md:self-center">
-              {showWatchLive && tournamentDetail?.streamUrl && (
-                <a
-                  href={tournamentDetail.streamUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="h-10 px-4 font-mono text-xs font-black uppercase tracking-wider text-white bg-rose-600 hover:bg-rose-500 flex items-center gap-2 whitespace-nowrap"
+              {tournamentDetail?.streamUrl && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("watch")}
+                  className={`h-10 px-4 font-mono text-xs font-black uppercase tracking-wider flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                    showWatchLive
+                      ? "text-white bg-rose-600 hover:bg-rose-500"
+                      : "text-slate-300 bg-[#141A29] border border-[#232D44] hover:text-white"
+                  }`}
                   style={{
                     clipPath: "polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)",
                   }}
                 >
-                  <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                  Watch Live
-                </a>
+                  {showWatchLive && (
+                    <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                  )}
+                  {showWatchLive ? "Watch Live" : "Stream"}
+                </button>
               )}
 
               {/* Tab Navigation Controls */}
@@ -314,6 +320,26 @@ export default function TournamentBracketModal({
                   clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
                 }}
               >
+                {tournamentDetail?.streamUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("watch")}
+                    className={`h-10 px-4 sm:px-5 font-mono text-xs font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap flex items-center justify-center gap-2 ${
+                      activeTab === "watch"
+                        ? "game-theme-btn"
+                        : "text-slate-400 hover:text-white hover:bg-[#141A29]"
+                    }`}
+                    style={{
+                      clipPath: "polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)",
+                    }}
+                  >
+                    {showWatchLive && (
+                      <span className="w-2 h-2 rounded-full bg-rose-400 animate-pulse shrink-0" />
+                    )}
+                    <span>Watch</span>
+                  </button>
+                )}
+
                 <button
                   type="button"
                   onClick={() => setActiveTab("bracket")}
@@ -391,6 +417,21 @@ export default function TournamentBracketModal({
                 <p className="font-sans text-xs font-bold text-slate-400 tracking-widest uppercase">
                   Loading Tournament Payload & Rosters...
                 </p>
+              </div>
+            ) : activeTab === "watch" && tournamentDetail?.streamUrl ? (
+              <div className="p-4 sm:p-6 sm:px-8 max-w-5xl mx-auto w-full space-y-4">
+                <div>
+                  <span className="text-[10px] font-mono text-rose-400 uppercase tracking-widest block mb-1">
+                    Official Tournament Broadcast
+                  </span>
+                  <p className="font-sans text-xs text-slate-400">
+                    One stream for this entire tournament — watch here without leaving Collegium.
+                  </p>
+                </div>
+                <TournamentStreamPlayer
+                  streamUrl={tournamentDetail.streamUrl}
+                  streamIsLive={Boolean(tournamentDetail.streamIsLive)}
+                />
               </div>
             ) : activeTab === "teams" ? (
               /* TAB: PARTICIPATING TEAMS & ROSTERS */
@@ -653,6 +694,7 @@ export default function TournamentBracketModal({
 
                 {canEditStream && tournamentId && (
                   <TournamentStreamPanel
+                    key={`stream-${refreshKey}-${tournamentDetail?.streamUrl ?? ""}-${tournamentDetail?.streamIsLive}-${tournamentDetail?.featuredMatchId ?? ""}`}
                     tournamentId={tournamentId}
                     streamUrl={tournamentDetail?.streamUrl}
                     streamIsLive={tournamentDetail?.streamIsLive}
@@ -672,21 +714,16 @@ export default function TournamentBracketModal({
                         {tournamentDetail.streamUrl}
                       </p>
                     </div>
-                    {showWatchLive ? (
-                      <a
-                        href={tournamentDetail.streamUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="h-10 px-4 font-mono text-xs font-black uppercase tracking-wider text-white bg-rose-600 hover:bg-rose-500 inline-flex items-center justify-center gap-2"
-                      >
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("watch")}
+                      className="h-10 px-4 font-mono text-xs font-black uppercase tracking-wider text-white bg-rose-600 hover:bg-rose-500 inline-flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      {showWatchLive && (
                         <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                        Watch Live
-                      </a>
-                    ) : (
-                      <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">
-                        Stream offline
-                      </span>
-                    )}
+                      )}
+                      {showWatchLive ? "Watch Live" : "Open Stream Tab"}
+                    </button>
                   </div>
                 )}
 

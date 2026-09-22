@@ -68,7 +68,7 @@ export default function TournamentStreamPanel({
           Official Broadcast
         </span>
         <p className="font-sans text-xs text-slate-400">
-          One stream for this tournament (all matches share it). Paste a Twitch / YouTube / Facebook Live URL.
+          One stream for this tournament. Paste a YouTube, Twitch, or public Facebook Live URL — viewers watch it embedded in the Watch tab.
         </p>
       </div>
 
