@@ -15,7 +15,19 @@ interface TournamentApplication {
   applicantName: string;
   status: "PENDING" | "APPROVED" | "REJECTED";
   appliedAt: string | Date;
-  rosterSnapshot?: any;
+  rosterSnapshot?: RosterSnapshotEntry[];
+}
+
+interface RosterSnapshotEntry {
+  id?: string;
+  userId?: string;
+  displayName?: string;
+  gameHandle?: string;
+  ign?: string;
+  studentId?: string;
+  role?: string;
+  isCaptain?: boolean;
+  user?: { displayName?: string; studentId?: string };
 }
 
 interface ApplicationRosterDetail {
@@ -121,8 +133,8 @@ export default function TournamentApplicationsModal({
           status: app.status,
           appliedAt: String(app.appliedAt),
           applicantName: app.applicantName,
-          roster: app.rosterSnapshot.map((r: any) => ({
-            userId: r.userId || r.id,
+          roster: app.rosterSnapshot.map((r) => ({
+            userId: r.userId || r.id || "",
             displayName: r.displayName || r.user?.displayName || "Athlete",
             gameHandle: r.gameHandle || r.ign || "Player",
             studentId: r.studentId || r.user?.studentId || "VERIFIED-ID",

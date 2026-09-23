@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { BracketMatch } from "@/types";
 import { tournamentsService } from "@/services/tournamentsService";
 import { AlertTriangleIcon, CheckCircleIcon } from "@/components/ui/Icons";
@@ -25,6 +25,22 @@ interface EditableStatRow {
   teamName?: string;
 }
 
+function buildInitialRows(match: BracketMatch): EditableStatRow[] {
+  return (match.playerStats || []).map((p) => ({
+    universityId: p.universityId || match.team1.universityId || "",
+    name: p.name,
+    kills: p.kills ?? 0,
+    deaths: p.deaths ?? 0,
+    assists: p.assists ?? 0,
+    teamName:
+      p.universityId === match.team1.universityId
+        ? match.team1.name
+        : p.universityId === match.team2.universityId
+        ? match.team2.name
+        : undefined,
+  }));
+}
+
 export default function RetroactiveStatsEditModal({
   isOpen,
   onClose,
@@ -32,32 +48,13 @@ export default function RetroactiveStatsEditModal({
   match,
   onStatsUpdated,
 }: RetroactiveStatsEditModalProps) {
-  const [rows, setRows] = useState<EditableStatRow[]>([]);
+  // Seeded once per mount; the parent keys this modal by match id so a
+  // different match always gets a fresh set of rows.
+  const [rows, setRows] = useState<EditableStatRow[]>(() => buildInitialRows(match));
   const [isSaving, setIsSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
-  useEffect(() => {
-    if (!isOpen || !match) return;
-
-    const initialRows: EditableStatRow[] = (match.playerStats || []).map((p) => ({
-      universityId: p.universityId || match.team1.universityId || "",
-      name: p.name,
-      kills: p.kills ?? 0,
-      deaths: p.deaths ?? 0,
-      assists: p.assists ?? 0,
-      teamName:
-        p.universityId === match.team1.universityId
-          ? match.team1.name
-          : p.universityId === match.team2.universityId
-          ? match.team2.name
-          : undefined,
-    }));
-
-    setRows(initialRows);
-    setErrorMsg("");
-    setSuccessMsg("");
-  }, [isOpen, match]);
 
   if (!isOpen) return null;
 

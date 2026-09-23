@@ -40,14 +40,16 @@ export default function HomeMatchesHub({
   const [matches, setMatches] = useState<HomeMatchItem[]>([]);
   const [totalMatches, setTotalMatches] = useState<number>(0);
   const [totalPages, setTotalPages] = useState<number>(1);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  // Loading is derived: true until the fetch for the current query settles.
+  const queryKey = `${activeGame}|${statusTab}|${currentPage}|${pageSize}`;
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  const isLoading = loadedKey !== queryKey;
 
   // Fetch matches from dedicated server-side matches API with pagination
   useEffect(() => {
     let isMounted = true;
-    setIsLoading(true);
 
-    const apiStatus =
+    const apiStatus: "LIVE" | "UPCOMING" | "COMPLETED" | undefined =
       statusTab === "RESULTS"
         ? "COMPLETED"
         : statusTab === "LIVE"
@@ -65,7 +67,7 @@ export default function HomeMatchesHub({
         page: currentPage,
         limit: pageSize,
         gameTitle: gameEnum,
-        status: apiStatus as any,
+        status: apiStatus,
         matchMode: "TOURNAMENT",
       })
       .then((res) => {
@@ -106,13 +108,13 @@ export default function HomeMatchesHub({
         setTotalPages(Math.ceil(filtered.length / pageSize) || 1);
       })
       .finally(() => {
-        if (isMounted) setIsLoading(false);
+        if (isMounted) setLoadedKey(queryKey);
       });
 
     return () => {
       isMounted = false;
     };
-  }, [activeGame, currentPage, statusTab, pageSize, propMatches]);
+  }, [activeGame, currentPage, statusTab, pageSize, propMatches, queryKey]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {

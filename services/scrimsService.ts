@@ -112,7 +112,7 @@ export const scrimsService = {
     scrimId: string;
     gameTitle: string;
     players: Array<{
-      extracted: { ign: string; kills: number; deaths: number; assists: number; extra?: Record<string, any> };
+      extracted: { ign: string; kills: number; deaths: number; assists: number; extra?: Record<string, unknown> };
       resolution: {
         rawIgn: string;
         matchedCandidate: { userId: string; displayName: string; gameHandle: string; teamId: string; teamName: string; role?: string } | null;

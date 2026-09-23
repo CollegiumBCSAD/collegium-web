@@ -1086,6 +1086,7 @@ export default function TournamentBracketModal({
 
       {editingStatsMatch && (
         <RetroactiveStatsEditModal
+          key={editingStatsMatch.id}
           isOpen={!!editingStatsMatch}
           onClose={() => setEditingStatsMatch(null)}
           tournamentId={tournamentId || ""}
