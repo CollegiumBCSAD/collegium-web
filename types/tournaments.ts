@@ -39,6 +39,11 @@ export interface Tournament {
   rejectionReason?: string;
   organizerId?: string;
   organizer?: { id?: string; displayName?: string };
+  /** Official tournament broadcast URL (one per tournament / esport). */
+  streamUrl?: string | null;
+  streamIsLive?: boolean;
+  /** Match currently featured on the official stream. */
+  featuredMatchId?: string | null;
 }
 
 export interface TournamentMatch {
@@ -219,12 +224,13 @@ export interface TournamentBracketModalProps {
   tournamentId?: string;
   title?: string;
   subtitle?: string;
-  initialTab?: "bracket" | "teams" | "channel" | "overview";
+  initialTab?: "bracket" | "teams" | "channel" | "overview" | "watch";
 }
 
 export interface MatchCardProps {
   match: BracketMatch;
   onViewBoxScore: () => void;
+  isFeatured?: boolean;
 }
 
 export interface PendingSquadApplication {

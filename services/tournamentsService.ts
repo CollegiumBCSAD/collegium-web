@@ -55,6 +55,9 @@ interface RawTournament {
   rejectionReason?: string;
   organizerId?: string;
   organizer?: { id?: string; displayName?: string };
+  streamUrl?: string | null;
+  streamIsLive?: boolean;
+  featuredMatchId?: string | null;
   matches?: Array<{ title?: string; gameTitle?: string }>;
   universities?: Array<{ id?: string; name?: string }>;
   applications?: PendingSquadApplication[];
@@ -113,6 +116,9 @@ function mapTournaments(data: RawTournament[]): Tournament[] {
       rejectionReason: t.rejectionReason,
       organizerId: t.organizerId,
       organizer: t.organizer,
+      streamUrl: t.streamUrl ?? null,
+      streamIsLive: Boolean(t.streamIsLive),
+      featuredMatchId: t.featuredMatchId ?? null,
       bgGradient: gameDisplay.gradient,
       universities: t.universities as { id: string; name: string }[],
       matches: t.matches as unknown[],
@@ -642,6 +648,17 @@ export const tournamentsService = {
     if (params.startDate !== undefined) formData.append("startDate", params.startDate);
     if (params.reapply) formData.append("reapply", "true");
     return apiClient.patchForm(`/tournaments/${tournamentId}`, formData);
+  },
+
+  updateStream: (
+    tournamentId: string,
+    payload: {
+      streamUrl?: string | null;
+      streamIsLive?: boolean;
+      featuredMatchId?: string | null;
+    }
+  ): Promise<unknown> => {
+    return apiClient.patch(`/tournaments/${tournamentId}/stream`, payload);
   },
 
   startTournament: (tournamentId: string): Promise<unknown> => {
