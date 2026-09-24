@@ -1,18 +1,16 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useGame } from "@/context/GameContext";
-import { TrophyIcon, ShieldIcon, AlertTriangleIcon, ClockIcon, PlusIcon } from "@/components/ui/Icons";
+import { AlertTriangleIcon, TrophyIcon } from "@/components/ui/Icons";
 import { tournamentsService } from "@/services/tournamentsService";
-import { Tournament } from "@/types";
-import CyberDateTimePicker from "@/components/ui/CyberDateTimePicker";
-
-const GAME_ID_TO_ENUM: Record<string, string> = {
-  valo: "VALORANT",
-  lol: "LOL",
-  ml: "MLBB",
-  codm: "CODM",
-};
+import { GameId, HostTournamentDraft, Tournament } from "@/types";
+import { draftFrom } from "@/lib/hostTournament";
+import HostStepBasics from "@/components/organize/host/HostStepBasics";
+import HostStepFormat from "@/components/organize/host/HostStepFormat";
+import HostStepDetails from "@/components/organize/host/HostStepDetails";
+import HostPreviewCard from "@/components/organize/host/HostPreviewCard";
 
 interface PostTournamentModalProps {
   isOpen: boolean;
@@ -21,451 +19,191 @@ interface PostTournamentModalProps {
   initialTournament?: Tournament | null;
 }
 
-export default function PostTournamentModal({
-  isOpen,
-  onClose,
-  onTournamentCreated,
-  initialTournament,
-}: PostTournamentModalProps) {
+const STEPS = [
+  { title: "Name", Body: HostStepBasics },
+  { title: "Format & schedule", Body: HostStepFormat },
+  { title: "Cover & rules", Body: HostStepDetails },
+];
+
+export default function PostTournamentModal({ isOpen, onClose, onTournamentCreated, initialTournament }: PostTournamentModalProps) {
   const { selectedGame } = useGame();
   const isEditing = Boolean(initialTournament?.id);
   const isRejected = initialTournament?.status === "REJECTED";
 
-  const [selectedGameTitle, setSelectedGameTitle] = useState<string>("VALORANT");
-  const [name, setName] = useState("");
-  const [format, setFormat] = useState("Single Elimination");
-  const [teamQuota, setTeamQuota] = useState("8 Universities");
-  const [rules, setRules] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [imagePreview, setImagePreview] = useState("");
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [draft, setDraft] = useState<HostTournamentDraft>(() => draftFrom(initialTournament, selectedGame as GameId));
+  const [step, setStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  // Sync form state when modal opens or target tournament changes
-  const [prevModalKey, setPrevModalKey] = useState<string | null>(null);
-  const currentModalKey = isOpen ? `${initialTournament?.id || "new"}-${selectedGame || "none"}` : null;
-
-  if (prevModalKey !== currentModalKey) {
-    setPrevModalKey(currentModalKey);
-    if (initialTournament && isOpen) {
-      setName(initialTournament.title || "");
-      setSelectedGameTitle(
-        initialTournament.gameTitle ||
-        (initialTournament.game ? GAME_ID_TO_ENUM[initialTournament.game.toLowerCase()] : "VALORANT") ||
-        "VALORANT"
-      );
-      setFormat(initialTournament.bracketFormat || "Single Elimination");
-      setTeamQuota(
-        initialTournament.teamQuota ? `${initialTournament.teamQuota} Universities` : "8 Universities"
-      );
-      setRules(initialTournament.rules || "");
-      if (initialTournament.startDate) {
-        try {
-          const d = new Date(initialTournament.startDate);
-          const localIso = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-            .toISOString()
-            .slice(0, 16);
-          setStartDate(localIso);
-        } catch {
-          setStartDate("");
-        }
-      } else {
-        setStartDate("");
-      }
-      setImagePreview(initialTournament.image || "");
-      setImageFile(null);
-    } else if (isOpen) {
-      setName("");
-      setSelectedGameTitle(
-        selectedGame ? GAME_ID_TO_ENUM[selectedGame] || "VALORANT" : "VALORANT"
-      );
-      setFormat("Single Elimination");
-      setTeamQuota("8 Universities");
-      setRules("");
-      setStartDate("");
-      setImagePreview("");
-      setImageFile(null);
+  // Reset the wizard whenever it opens for a different tournament (or a new one).
+  const openKey = isOpen ? `${initialTournament?.id || "new"}-${selectedGame || "none"}` : null;
+  const [prevKey, setPrevKey] = useState<string | null>(null);
+  if (prevKey !== openKey) {
+    setPrevKey(openKey);
+    if (isOpen) {
+      setDraft(draftFrom(initialTournament, selectedGame as GameId));
+      setStep(0);
+      setErrorMsg("");
     }
-    setErrorMsg("");
   }
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setImagePreview(URL.createObjectURL(file));
-    setImageFile(file);
-  };
-
-  const handleRemoveImage = () => {
-    setImagePreview("");
-    setImageFile(null);
-  };
 
   useEffect(() => {
     if (!isOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    const prevBodyOverflow = document.body.style.overflow;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keydown", onKey);
     return () => {
-      document.body.style.overflow = prevBodyOverflow;
-      window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "unset";
+      window.removeEventListener("keydown", onKey);
     };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) return;
+  const update = (patch: Partial<HostTournamentDraft>) => setDraft((prev) => ({ ...prev, ...patch }));
+  const canAdvance = step !== 0 || draft.name.trim().length > 0;
+  const isLast = step === STEPS.length - 1;
+  const StepBody = STEPS[step].Body;
 
+  const submit = async () => {
     setIsSubmitting(true);
     setErrorMsg("");
-
+    const payload = {
+      name: draft.name.trim(),
+      gameTitle: draft.gameTitle,
+      imageFile: draft.imageFile || undefined,
+      bracketFormat: draft.bracketFormat,
+      teamQuota: draft.teamQuota,
+      rules: draft.rules.trim() || undefined,
+      startDate: draft.startDate ? new Date(draft.startDate).toISOString() : undefined,
+    };
     try {
-      const quotaNum = parseInt(teamQuota, 10) || undefined;
-      const startDateIso = startDate ? new Date(startDate).toISOString() : undefined;
-
       if (isEditing && initialTournament) {
-        await tournamentsService.updateTournament(initialTournament.id, {
-          name: name.trim(),
-          gameTitle: selectedGameTitle,
-          imageFile: imageFile || undefined,
-          bracketFormat: format,
-          teamQuota: quotaNum,
-          rules: rules.trim() || undefined,
-          startDate: startDateIso,
-          reapply: isRejected,
-        });
+        await tournamentsService.updateTournament(initialTournament.id, { ...payload, reapply: isRejected });
       } else {
-        await tournamentsService.createTournament({
-          name: name.trim(),
-          gameTitle: selectedGameTitle,
-          imageFile: imageFile || undefined,
-          bracketFormat: format,
-          teamQuota: quotaNum,
-          rules: rules.trim() || undefined,
-          startDate: startDateIso,
-        });
+        await tournamentsService.createTournament(payload);
       }
-
       onTournamentCreated();
       onClose();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to process tournament request. Please try again.";
-      setErrorMsg(message);
+      setErrorMsg(err instanceof Error ? err.message : "Couldn't save the tournament. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  return (
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canAdvance) return;
+    if (isLast) void submit();
+    else setStep((s) => s + 1);
+  };
+
+  // Portaled to <body>: a transformed ancestor (e.g. the page slide-in
+  // animation) would otherwise trap this fixed overlay inside the page.
+  return createPortal(
     <div
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+      className="fixed inset-0 z-[100] overflow-y-auto bg-black/80 backdrop-blur-md animate-fade-in"
     >
-      <div
-        className="w-full max-w-xl bg-[#0A0D18] border border-amber-500/40 shadow-2xl p-6 sm:p-8 space-y-6 relative rounded-3xl backdrop-blur-2xl my-auto text-white"
-        style={{
-          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.9), 0 0 30px rgba(245, 158, 11, 0.15)",
-        }}
-      >
-        {/* Top Tactical Gold Accent Bevel */}
-        <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 shadow-[0_0_15px_rgba(245,158,11,0.6)]" />
+      <div className="min-h-full flex items-center justify-center p-3 sm:p-6" onClick={(e) => e.target === e.currentTarget && onClose()}>
+        <form
+          onSubmit={handleSubmit}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="host-title"
+          className="relative w-full max-w-4xl grid lg:grid-cols-[280px_1fr] bg-gradient-to-b from-[#121827] to-[#090C15] border border-white/10 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.9),0_0_60px_-20px_rgba(var(--game-glow-rgb),0.25)] animate-modal-pop-in"
+        >
+          <span aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary-brand to-transparent" />
 
-        {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-[#182338] pb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-inner">
-              <TrophyIcon className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="text-[10px] font-mono font-black uppercase tracking-widest text-amber-400 block">
-                {"// ORGANIZER PORTAL DIRECTIVE"}
-              </span>
-              <h3 className="font-display text-xl sm:text-2xl font-black uppercase text-white tracking-tight">
-                {isEditing ? (isRejected ? "Edit & Re-Apply Tournament" : "Modify Tournament Details") : "Host Collegiate Tournament"}
-              </h3>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close Modal"
-            className="w-8 h-8 bg-[#101524] hover:bg-rose-950/80 text-slate-400 hover:text-rose-300 border border-[#222E48] hover:border-rose-500/50 flex items-center justify-center text-sm font-mono font-bold transition-all cursor-pointer shadow-md active:scale-95"
-            style={{
-              clipPath: "polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)",
-            }}
-          >
-            ✕
-          </button>
-        </div>
+          <aside className="hidden lg:block p-6 border-r border-white/[0.06] bg-black/25">
+            <HostPreviewCard draft={draft} />
+          </aside>
 
-        {/* Rejection Warning Banner for Rejected Tournaments */}
-        {isRejected && (
-          <div
-            className="p-4 bg-gradient-to-b from-rose-950/70 to-[#12080D] border border-rose-500/60 shadow-[0_0_20px_rgba(244,63,94,0.2)] space-y-2 relative overflow-hidden"
-            style={{
-              clipPath: "polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))",
-            }}
-          >
-            <div className="absolute top-0 left-0 bottom-0 w-1 bg-rose-500" />
-            <div className="flex items-start gap-2.5 pl-1.5">
-              <div className="w-7 h-7 rounded bg-rose-500/20 border border-rose-500/40 flex items-center justify-center shrink-0 text-rose-400 mt-0.5">
-                <AlertTriangleIcon className="w-4 h-4" />
-              </div>
-              <div className="space-y-1 flex-1">
-                <span className="text-[10px] font-mono font-black uppercase tracking-widest text-rose-300 block">
-                  {"// ADMIN REJECTION DIRECTIVE"}
+          <div className="flex flex-col min-w-0">
+            <header className="flex items-start justify-between gap-4 px-6 pt-6">
+              <div className="flex items-center gap-3">
+                <span className="w-10 h-10 flex items-center justify-center text-primary-brand bg-primary-brand/10 border border-primary-brand/30">
+                  <TrophyIcon className="w-5 h-5" />
                 </span>
-                <p className="text-xs font-sans text-rose-100 leading-relaxed font-medium">
-                  {initialTournament?.statusText || initialTournament?.rejectionReason || "Please review tournament guidelines and modify required details."}
-                </p>
-                <div className="flex items-center gap-1 text-[11px] text-amber-300 font-mono pt-1">
-                  <span>✓</span>
-                  <span>Saving updates will reset status to PENDING APPROVAL for official admin re-sanctioning.</span>
+                <div>
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-[0.25em] text-primary-brand">
+                    Step {step + 1} of {STEPS.length}
+                  </span>
+                  <h2 id="host-title" className="font-display text-xl font-black uppercase text-white leading-tight">
+                    {isEditing ? (isRejected ? "Revise & resubmit" : "Edit tournament") : "Host a tournament"}
+                  </h2>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Close Modal"
+                className="w-9 h-9 flex items-center justify-center text-slate-400 hover:text-white border border-white/10 hover:border-white/30 transition-colors"
+              >
+                ✕
+              </button>
+            </header>
 
-        {/* Error Alert Box */}
-        {errorMsg && (
-          <div
-            className="p-3.5 bg-rose-950/70 border border-rose-500/50 text-rose-200 text-xs font-mono flex items-center justify-between gap-2 shadow-lg"
-            style={{
-              clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-            }}
-          >
-            <div className="flex items-center gap-2">
-              <AlertTriangleIcon className="w-4 h-4 text-rose-400 shrink-0" />
-              <span>{errorMsg}</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setErrorMsg("")}
-              className="text-slate-400 hover:text-white text-xs font-mono cursor-pointer"
-            >
-              ✕
-            </button>
-          </div>
-        )}
-
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Cover Artwork Dropzone */}
-          <div>
-            <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center justify-between">
-              <span>{"// 01. COVER ARTWORK BANNER"}</span>
-              <span className="text-[10px] font-normal text-slate-500">Optional • PNG, JPG, WEBP</span>
-            </label>
-
-            {imagePreview ? (
-              <div className="relative h-28 sm:h-32 w-full rounded-xl overflow-hidden border border-amber-500/40 group/cover">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={imagePreview}
-                  alt="Tournament Cover Preview"
-                  className="w-full h-full object-cover group-hover/cover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/cover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                  <label className="h-8 px-3 bg-amber-500 hover:bg-amber-400 text-black text-xs font-mono font-bold uppercase rounded-lg flex items-center gap-1.5 cursor-pointer shadow-md transition-transform active:scale-95">
-                    <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
-                    <span>Change Image</span>
-                  </label>
+            <ol className="grid grid-cols-3 gap-2 px-6 pt-5">
+              {STEPS.map((s, i) => (
+                <li key={s.title}>
                   <button
                     type="button"
-                    onClick={handleRemoveImage}
-                    className="h-8 px-3 bg-rose-600 hover:bg-rose-500 text-white text-xs font-mono font-bold uppercase rounded-lg cursor-pointer transition-transform active:scale-95"
+                    disabled={i > step && !canAdvance}
+                    onClick={() => setStep(i)}
+                    className="w-full text-left disabled:cursor-not-allowed"
                   >
-                    Remove
+                    <span className={`block h-1 transition-colors ${i <= step ? "bg-primary-brand shadow-[0_0_8px_rgba(var(--game-glow-rgb),0.6)]" : "bg-white/10"}`} />
+                    <span className={`mt-1.5 block text-[10px] font-mono font-bold uppercase tracking-wider ${i === step ? "text-white" : "text-slate-500"}`}>
+                      {s.title}
+                    </span>
                   </button>
+                </li>
+              ))}
+            </ol>
+
+            <div className="px-6 py-6 space-y-4">
+              {isRejected && step === 0 && (
+                <div className="flex gap-3 px-4 py-3 border border-rose-500/40 bg-rose-500/10">
+                  <AlertTriangleIcon className="w-4 h-4 mt-0.5 shrink-0 text-rose-400" />
+                  <p className="text-[11px] font-sans leading-relaxed text-rose-100/90">
+                    <span className="font-bold">Admin feedback:</span> {initialTournament?.rejectionReason || "Please revise and resubmit."}
+                  </p>
                 </div>
-              </div>
-            ) : (
-              <label
-                className="w-full h-24 border-2 border-dashed border-[#1E293B] hover:border-amber-500/60 rounded-xl bg-[#060912]/80 hover:bg-[#0A0E1A] flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all duration-200 group/upload"
-                style={{
-                  clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
-                }}
-              >
-                <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
-                <div className="w-8 h-8 rounded-lg bg-[#101626] border border-[#222E48] group-hover/upload:border-amber-500/50 flex items-center justify-center text-slate-400 group-hover/upload:text-amber-400 transition-colors">
-                  <PlusIcon className="w-4 h-4" />
-                </div>
-                <div className="text-center">
-                  <span className="text-xs font-mono text-slate-300 font-bold group-hover/upload:text-amber-300 transition-colors">
-                    Click to browse or drop cover banner
-                  </span>
-                </div>
-              </label>
-            )}
-          </div>
-
-          {/* Tournament Name */}
-          <div>
-            <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-              {"// 02. TOURNAMENT NAME"}
-            </label>
-            <input
-              type="text"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Philippine Collegiate Invitational — Season 2"
-              className="w-full h-11 px-4 bg-[#060912] border border-[#1C2538] hover:border-[#2C3A56] focus:border-amber-500 focus:shadow-[0_0_15px_rgba(245,158,11,0.15)] text-white text-xs font-sans rounded-xl focus:outline-none placeholder:text-slate-600 transition-all"
-              style={{
-                clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-              }}
-            />
-          </div>
-
-          {/* Esports Title & Bracket Format */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            <div>
-              <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                {"// 03. ESPORTS TITLE"}
-              </label>
-              <select
-                value={selectedGameTitle}
-                onChange={(e) => setSelectedGameTitle(e.target.value)}
-                className="w-full h-11 px-3.5 bg-[#060912] border border-[#1C2538] hover:border-[#2C3A56] focus:border-amber-500 text-white text-xs font-mono rounded-xl focus:outline-none cursor-pointer transition-all"
-                style={{
-                  clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-                }}
-              >
-                <option value="VALORANT">VALORANT</option>
-                <option value="LOL">LEAGUE OF LEGENDS</option>
-                <option value="MLBB">MOBILE LEGENDS</option>
-                <option value="CODM">CALL OF DUTY: MOBILE</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                {"// 04. BRACKET FORMAT"}
-              </label>
-              <select
-                value={format}
-                onChange={(e) => setFormat(e.target.value)}
-                className="w-full h-11 px-3.5 bg-[#060912] border border-[#1C2538] hover:border-[#2C3A56] focus:border-amber-500 text-white text-xs font-mono rounded-xl focus:outline-none cursor-pointer transition-all"
-                style={{
-                  clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-                }}
-              >
-                <option value="Single Elimination">Single Elimination</option>
-                <option value="Double Elimination">Double Elimination</option>
-                <option value="Round Robin + Playoffs">Round Robin + Playoffs</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Quota & Custom Cyber Calendar Picker */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            <div>
-              <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                {"// 05. SQUAD QUOTA"}
-              </label>
-              <select
-                value={teamQuota}
-                onChange={(e) => setTeamQuota(e.target.value)}
-                className="w-full h-11 px-3.5 bg-[#060912] border border-[#1C2538] hover:border-[#2C3A56] focus:border-amber-500 text-white text-xs font-mono rounded-xl focus:outline-none cursor-pointer transition-all"
-                style={{
-                  clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-                }}
-              >
-                <option value="8 Universities">8 Universities</option>
-                <option value="16 Universities">16 Universities</option>
-                <option value="32 Universities">32 Universities</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center gap-1.5">
-                <ClockIcon className="w-3.5 h-3.5 text-amber-400" />
-                <span>{"// 06. SCHEDULED START"}</span>
-              </label>
-              <CyberDateTimePicker
-                value={startDate}
-                onChange={setStartDate}
-                placeholder="Set Scheduled Launch Time"
-              />
-            </div>
-          </div>
-
-          {/* Rules & Protocols */}
-          <div>
-            <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-              {"// 07. RULES & MATCH PROTOCOLS"}
-            </label>
-            <textarea
-              rows={2}
-              value={rules}
-              onChange={(e) => setRules(e.target.value)}
-              placeholder="e.g. Best of 3 Semi-Finals, BO5 Grand Finals. Official university varsity rosters only..."
-              className="w-full p-3.5 bg-[#060912] border border-[#1C2538] hover:border-[#2C3A56] focus:border-amber-500 focus:shadow-[0_0_15px_rgba(245,158,11,0.15)] text-white text-xs font-mono rounded-xl focus:outline-none placeholder:text-slate-600 transition-all resize-none"
-              style={{
-                clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-              }}
-            />
-          </div>
-
-          {/* Sanctioning Guarantee Box */}
-          <div
-            className="p-3.5 bg-gradient-to-r from-amber-950/25 via-[#0A0D18] to-[#0A0D18] border border-amber-500/30 rounded-xl flex items-start gap-2.5 text-xs font-sans text-amber-200/90"
-            style={{
-              clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-            }}
-          >
-            <ShieldIcon className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-            <span className="leading-relaxed">
-              <strong>Organizer Verification:</strong> Once submitted, your tournament is queued for official Collegium Sanctioning Review. University rosters can join upon approval.
-            </span>
-          </div>
-
-          {/* Modal Action Buttons */}
-          <div className="pt-3 border-t border-[#182338] flex items-center justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="h-11 px-6 bg-[#101524] hover:bg-[#1A233A] text-slate-300 hover:text-white border border-[#222E48] text-xs font-mono font-bold uppercase transition-colors cursor-pointer active:scale-95"
-              style={{
-                clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-              }}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="h-11 px-7 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 hover:from-amber-400 hover:to-amber-300 text-black font-display text-xs font-black uppercase tracking-wider transition-all shadow-xl shadow-amber-500/25 cursor-pointer disabled:opacity-50 flex items-center gap-2.5 active:scale-98"
-              style={{
-                clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-              }}
-            >
-              {isSubmitting ? (
-                <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-              ) : (
-                <TrophyIcon className="w-4 h-4 text-black" />
               )}
-              <span>
-                {isEditing
-                  ? isRejected
-                    ? "⚡ Re-Submit for Sanctioning"
-                    : "Save Changes"
-                  : "Submit for Approval"}
-              </span>
-            </button>
+              <div key={step} className="animate-fade-in">
+                <StepBody draft={draft} onChange={update} />
+              </div>
+              {errorMsg && (
+                <p className="flex items-center gap-2 px-3 py-2 text-xs font-mono text-rose-200 border border-rose-500/40 bg-rose-500/10">
+                  <AlertTriangleIcon className="w-4 h-4 shrink-0 text-rose-400" />
+                  {errorMsg}
+                </p>
+              )}
+            </div>
+
+            <footer className="mt-auto flex items-center justify-between gap-3 px-6 py-4 border-t border-white/[0.06] bg-black/20">
+              <button
+                type="button"
+                onClick={() => (step === 0 ? onClose() : setStep((s) => s - 1))}
+                className="h-10 px-5 text-[11px] font-mono font-bold uppercase tracking-wider text-slate-300 hover:text-white border border-white/10 hover:border-white/30 transition-colors"
+              >
+                {step === 0 ? "Cancel" : "← Back"}
+              </button>
+              <button
+                type="submit"
+                disabled={!canAdvance || isSubmitting}
+                className="h-10 px-6 flex items-center gap-2 bg-primary-brand text-[var(--game-btn-text,#fff)] font-display text-xs font-black uppercase tracking-wider shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_10px_26px_-8px_rgba(var(--game-glow-rgb),0.7)] disabled:opacity-40 disabled:shadow-none transition"
+              >
+                {isSubmitting && <span className="w-3.5 h-3.5 border-2 border-black/30 border-t-black rounded-full animate-spin" />}
+                {!isLast ? "Continue →" : isEditing ? (isRejected ? "Resubmit for review" : "Save changes") : "Submit for approval"}
+              </button>
+            </footer>
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
