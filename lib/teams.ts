@@ -43,7 +43,7 @@ interface RawServerTeam {
 export async function fetchTeamsApi(): Promise<Team[]> {
   try {
     const rawData = (await teamsService.getTeams()) as unknown as RawServerTeam[];
-    if (Array.isArray(rawData) && rawData.length > 0) {
+    if (Array.isArray(rawData)) {
       const mapped: Team[] = rawData.map((t) => {
         const captainMember = t.members?.find(
           (m) => m.user?.id === t.captainId || m.userId === t.captainId
@@ -51,10 +51,21 @@ export async function fetchTeamsApi(): Promise<Team[]> {
         const captainName =
           captainMember?.user?.displayName || captainMember?.displayName || t.captainName || "Team Captain";
 
+        const rawGame = (t.gameTitle || "").toLowerCase();
+        const gameTitle: GameId =
+          reverseGameTitleMap[t.gameTitle] ||
+          (rawGame.includes("lol") || rawGame.includes("league")
+            ? "lol"
+            : rawGame.includes("cod")
+            ? "codm"
+            : rawGame.includes("ml")
+            ? "ml"
+            : "valo");
+
         return {
           id: t.id,
           name: t.name,
-          gameTitle: reverseGameTitleMap[t.gameTitle] || (t.gameTitle as GameId) || "valo",
+          gameTitle,
           universityId: t.universityId,
           universityName: t.university?.name || "Unknown University",
           captainId: t.captainId,

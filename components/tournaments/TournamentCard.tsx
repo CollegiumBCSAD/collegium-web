@@ -53,26 +53,18 @@ export default function TournamentCard({
 
   const isOrganizerOrHost = user?.role === "ORGANIZER" || user?.role === "ADMIN" || isMyTournament;
 
-  const isUniversityRegistered = Boolean(
-    user?.universityId &&
-      (tournament.universities as Array<{ id?: string }> | undefined)?.some(
-        (u) => u.id === user.universityId
-      )
-  );
-
   const userApplication = (
-    tournament.applications as Array<{ userId?: string; universityId?: string; teamId?: string; status?: string }> | undefined
+    tournament.applications as Array<{ userId?: string; teamId?: string; status?: string }> | undefined
   )?.find(
     (app) =>
       app.status !== "REJECTED" &&
-      (app.userId === user?.id || (user?.universityId && app.universityId === user.universityId))
+      Boolean(user?.id && app.userId === user.id)
   );
 
   const applicationStatus =
-    userApplication?.status ||
-    (isUniversityRegistered ? "APPROVED" : isApplied ? "PENDING" : null);
-  const isApproved = !isOrganizerOrHost && (applicationStatus === "APPROVED" || isUniversityRegistered);
-  const isPending = !isOrganizerOrHost && !isApproved && (applicationStatus === "PENDING" || isApplied || Boolean(userApplication));
+    userApplication?.status || (isApplied ? "PENDING" : null);
+  const isApproved = !isOrganizerOrHost && applicationStatus === "APPROVED";
+  const isPending = !isOrganizerOrHost && !isApproved && (applicationStatus === "PENDING" || isApplied);
   const userApplied = isApproved || isPending;
 
   const formatDateDisplay = (dateStr?: string) => {

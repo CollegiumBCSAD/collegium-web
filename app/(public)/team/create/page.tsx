@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { GameId, GAMES } from "@/lib/games";
 import { Team } from "@/types";
+import { fetchTeamsApi } from "@/lib/teams";
 import { teamsService } from "@/services";
 import { useAuth } from "@/context/AuthContext";
 import { useGame } from "@/context/GameContext";
@@ -35,7 +36,7 @@ const GAME_SPECIFIC_PLACEHOLDERS: Record<string, { tag: string; role: string; sq
 
 export default function CreateTeamPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, refreshProfile, loginWithToken } = useAuth();
   const { selectedGame: globalGame } = useGame();
   const activeGame: GameId = globalGame || "valo";
   const activeGameInfo = GAMES[activeGame as keyof typeof GAMES] || GAMES.valo;
@@ -73,18 +74,15 @@ export default function CreateTeamPage() {
       }>;
       const myId = user.id;
       const myEmail = user.email ? user.email.toLowerCase().trim() : "";
-      const myName = user.displayName ? user.displayName.toLowerCase().trim() : "";
 
       const found = teams.find(
         (t) =>
           (myId && t.captainId === myId) ||
-          (myName && t.captainName && t.captainName.toLowerCase().trim() === myName) ||
           t.members?.some(
             (m) =>
               m.status === "ACCEPTED" &&
               ((myId && (m.userId === myId || m.user?.id === myId)) ||
-                (myEmail && (m.email?.toLowerCase().trim() === myEmail || m.user?.email?.toLowerCase().trim() === myEmail)) ||
-                (myName && (m.displayName?.toLowerCase().trim() === myName || m.user?.displayName?.toLowerCase().trim() === myName)))
+                (myEmail && (m.email?.toLowerCase().trim() === myEmail || m.user?.email?.toLowerCase().trim() === myEmail)))
           )
       );
       if (found) {
@@ -100,6 +98,8 @@ export default function CreateTeamPage() {
           createdAt: "",
           members: [],
         });
+      } else {
+        setExistingSquad(null);
       }
     }).catch(() => {});
   }, [user]);
@@ -180,6 +180,12 @@ export default function CreateTeamPage() {
       };
 
       setCreatedTeam(mappedTeam);
+      await fetchTeamsApi();
+      if (refreshProfile) {
+        await refreshProfile();
+      } else if (loginWithToken) {
+        await loginWithToken();
+      }
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
       setError(errorObj?.response?.data?.message || errorObj?.message || "Failed to create team.");

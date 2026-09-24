@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { UserProfile } from "@/types";
 import { useAuth } from "@/context/AuthContext";
 import { authService } from "@/services/authService";
@@ -46,6 +47,24 @@ function ProfilePictureModalContent({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Modal Lifecycle: Scroll Locking & Escape Key Handler
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = "unset";
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onClose]);
 
   // Handle File Selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -103,21 +122,29 @@ function ProfilePictureModalContent({
     }
   };
 
-  // Drag pan handlers for custom image
-  const handleMouseDown = (e: React.MouseEvent) => {
+  // Pointer drag handlers for responsive image positioning
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!imagePreviewUrl) return;
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {}
     setIsDragging(true);
     dragStartRef.current = { x: e.clientX - offsetX, y: e.clientY - offsetY };
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDragging) return;
     setOffsetX(e.clientX - dragStartRef.current.x);
     setOffsetY(e.clientY - dragStartRef.current.y);
   };
 
-  const handleMouseUp = () => {
-    setIsDragging(false);
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isDragging) {
+      setIsDragging(false);
+      try {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      } catch {}
+    }
   };
 
   // Generate cropped image Blob via HTML Canvas
@@ -132,6 +159,7 @@ function ProfilePictureModalContent({
         try {
           const canvas = document.createElement("canvas");
           const size = 512;
+          const previewSize = 144;
           canvas.width = size;
           canvas.height = size;
           const ctx = canvas.getContext("2d");
@@ -142,17 +170,17 @@ function ProfilePictureModalContent({
 
           ctx.clearRect(0, 0, size, size);
 
-          // Center and apply transforms
+          // Center and apply transforms matching CSS transform sequence
           ctx.save();
           ctx.translate(size / 2, size / 2);
+          ctx.translate(
+            (offsetX * size) / previewSize,
+            (offsetY * size) / previewSize
+          );
           ctx.rotate((rotation * Math.PI) / 180);
           ctx.scale(zoom, zoom);
-          ctx.translate(
-            (offsetX / 140) * (size / 2),
-            (offsetY / 140) * (size / 2)
-          );
 
-          // Draw image centered
+          // Draw image centered with object-cover calculation
           const aspect = image.width / image.height;
           let drawW = size;
           let drawH = size;
@@ -278,11 +306,15 @@ function ProfilePictureModalContent({
 
   const initial = (user.displayName || "A").charAt(0).toUpperCase();
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn"
+      onClick={onClose}
+    >
       {/* Modal Dialog Card */}
       <div
         className="relative w-full max-w-2xl bg-[#090C16] border border-[#1E293B] shadow-2xl overflow-hidden flex flex-col max-h-[92vh]"
+        onClick={(e) => e.stopPropagation()}
         style={{
           clipPath:
             "polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px))",
@@ -317,6 +349,7 @@ function ProfilePictureModalContent({
           <button
             type="button"
             onClick={onClose}
+            aria-label="Close modal"
             className="w-8 h-8 rounded-lg bg-[#101626] border border-[#202C45] hover:border-slate-400 text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer text-sm font-bold"
           >
             ✕
@@ -352,7 +385,7 @@ function ProfilePictureModalContent({
               {/* Octagonal Avatar Crest */}
               <div className="relative group/crest">
                 <div
-                  className={`w-36 h-36 bg-gradient-to-br from-[#1E293B] via-[#121929] to-[#0A0D18] p-[3px] shadow-2xl flex items-center justify-center relative overflow-hidden ${
+                  className={`w-36 h-36 bg-gradient-to-br from-[#1E293B] via-[#121929] to-[#0A0D18] p-[3px] shadow-2xl flex items-center justify-center relative overflow-hidden select-none touch-none ${
                     imagePreviewUrl ? "cursor-grab active:cursor-grabbing" : ""
                   }`}
                   style={{
@@ -360,13 +393,13 @@ function ProfilePictureModalContent({
                       "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
                     boxShadow: "0 0 25px rgba(0,0,0,0.8)",
                   }}
-                  onMouseDown={handleMouseDown}
-                  onMouseMove={handleMouseMove}
-                  onMouseUp={handleMouseUp}
-                  onMouseLeave={handleMouseUp}
+                  onPointerDown={handlePointerDown}
+                  onPointerMove={handlePointerMove}
+                  onPointerUp={handlePointerUp}
+                  onPointerCancel={handlePointerUp}
                 >
                   <div
-                    className="w-full h-full bg-[#080B14] flex items-center justify-center overflow-hidden relative"
+                    className="w-full h-full bg-[#080B14] flex items-center justify-center overflow-hidden relative pointer-events-none"
                     style={{
                       clipPath:
                         "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
@@ -378,9 +411,11 @@ function ProfilePictureModalContent({
                         src={imagePreviewUrl}
                         alt="Preview"
                         draggable={false}
-                        className="w-full h-full object-cover select-none pointer-events-none transition-transform duration-75"
+                        className={`w-full h-full object-cover select-none pointer-events-none origin-center ${
+                          isDragging ? "" : "transition-transform duration-75"
+                        }`}
                         style={{
-                          transform: `scale(${zoom}) translate(${offsetX}px, ${offsetY}px) rotate(${rotation}deg)`,
+                          transform: `translate3d(${offsetX}px, ${offsetY}px, 0px) rotate(${rotation}deg) scale(${zoom})`,
                         }}
                       />
                     ) : (
@@ -392,7 +427,7 @@ function ProfilePictureModalContent({
                 </div>
 
                 {/* Corner Verified Crest Ring */}
-                <span className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 border-2 border-[#0A0D18] flex items-center justify-center text-white shadow-md">
+                <span className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 border-2 border-[#0A0D18] flex items-center justify-center text-white shadow-md pointer-events-none">
                   <CheckCircleIcon className="w-3.5 h-3.5" />
                 </span>
               </div>
@@ -561,7 +596,8 @@ function ProfilePictureModalContent({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -570,7 +606,13 @@ export default function ProfilePictureModal({
   onClose,
   user,
 }: ProfilePictureModalProps) {
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
 
   return (
     <ProfilePictureModalContent
@@ -580,3 +622,4 @@ export default function ProfilePictureModal({
     />
   );
 }
+

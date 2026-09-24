@@ -23,45 +23,45 @@ export default function MatchCard({ match, onViewBoxScore, isFeatured }: MatchCa
   return (
     <div
       onClick={onViewBoxScore}
-      className={`w-56 sm:w-64 h-[86px] bg-[#0A0D18] border shadow-xl transition-all duration-200 cursor-pointer overflow-hidden group relative flex flex-col justify-between ${
+      className={`w-72 sm:w-80 md:w-84 min-h-[104px] bg-[#0A0D18] border shadow-2xl transition-all duration-200 cursor-pointer overflow-hidden group relative flex flex-col justify-between hover:-translate-y-0.5 ${
         isFeatured
-          ? "border-rose-500/70 shadow-[0_0_15px_rgba(244,63,94,0.2)]"
+          ? "border-rose-500/80 shadow-[0_0_20px_rgba(244,63,94,0.25)]"
           : isLive
-            ? "border-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
-            : "border-[#1E293B] hover:border-primary-brand/60"
+            ? "border-emerald-500/80 shadow-[0_0_20px_rgba(16,185,129,0.2)]"
+            : "border-[#1E293B] hover:border-primary-brand/70 hover:shadow-[0_0_20px_rgba(229,58,76,0.18)]"
       }`}
       style={{
-        clipPath: "polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))",
+        clipPath: "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
       }}
     >
       {isFeatured && (
-        <span className="absolute top-1 right-2 z-10 text-[8px] font-mono font-black uppercase tracking-widest text-rose-300 bg-rose-950/80 px-1.5 py-0.5 border border-rose-500/40">
+        <span className="absolute top-1 right-2.5 z-10 text-[9px] font-mono font-black uppercase tracking-widest text-rose-200 bg-rose-950/90 px-2 py-0.5 border border-rose-500/50 shadow-sm">
           On Stream
         </span>
       )}
 
-      {/* Top Neutral Highlight */}
-      <div className={`absolute top-0 left-0 right-0 h-[1.5px] ${
+      {/* Top Accent Highlight */}
+      <div className={`absolute top-0 left-0 right-0 h-[2px] ${
         isFeatured
-          ? "bg-gradient-to-r from-rose-500 via-rose-400/40 to-transparent"
+          ? "bg-gradient-to-r from-rose-500 via-rose-400 to-transparent"
           : isLive
-            ? "bg-gradient-to-r from-emerald-500 via-emerald-400/40 to-transparent"
-            : "bg-gradient-to-r from-slate-500/30 via-slate-400/10 to-transparent"
+            ? "bg-gradient-to-r from-emerald-500 via-teal-400 to-transparent"
+            : "bg-gradient-to-r from-primary-brand via-amber-400/60 to-transparent"
       }`} />
 
       {/* Team 1 Slot */}
       <div
-        className={`flex items-center justify-between px-3.5 py-2 border-b border-[#161E30] transition-colors ${
+        className={`flex items-center justify-between px-4 py-2.5 border-b border-[#161E30] transition-colors ${
           isTeam1Winner
-            ? "bg-[#111728] text-white"
-            : "bg-[#070912] text-slate-400"
+            ? "bg-[#12182B] text-white"
+            : "bg-[#080B14] text-slate-300 hover:bg-[#0E1322]"
         }`}
       >
-        <div className="flex items-center gap-2 min-w-0 pr-2">
+        <div className="flex items-center gap-2.5 min-w-0 pr-2">
           {/* Team Initials Badge */}
           <div 
-            className={`w-5 h-5 flex items-center justify-center font-display text-[9px] font-black shrink-0 ${
-              isTeam1Winner ? "bg-primary-brand text-white" : "bg-[#141A29] text-slate-400"
+            className={`w-6 h-6 flex items-center justify-center font-display text-[10px] font-black shrink-0 shadow-sm ${
+              isTeam1Winner ? "bg-primary-brand text-white" : "bg-[#161E32] text-slate-300 border border-[#222E4A]"
             }`}
             style={{
               clipPath: "polygon(25% 0%, 75% 0%, 100% 25%, 100% 75%, 75% 100%, 25% 100%, 0% 75%, 0% 25%)",
@@ -69,17 +69,21 @@ export default function MatchCard({ match, onViewBoxScore, isFeatured }: MatchCa
           >
             {getInitials(match.team1.name)}
           </div>
-          <span className={`font-sans text-xs truncate ${isTeam1Winner ? "font-bold text-white" : "font-medium"}`}>
+          <span className={`font-display text-sm tracking-wide uppercase truncate ${isTeam1Winner ? "font-black text-white" : "font-bold text-slate-200"}`}>
             {match.team1.name}
           </span>
         </div>
 
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           {isTeam1Winner && isCompleted && (
-            <CrownIcon className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <CrownIcon className="w-4 h-4 text-amber-400 shrink-0 drop-shadow-sm" />
           )}
-          <span className={`font-mono text-xs px-1.5 py-0.2 rounded ${
-            isTeam1Winner ? "font-bold text-white bg-primary-brand/20" : isLive ? "font-bold text-emerald-400 bg-emerald-950/40" : "font-normal text-slate-500"
+          <span className={`font-mono text-xs sm:text-sm font-black px-2 py-0.5 rounded min-w-[24px] text-center ${
+            isTeam1Winner
+              ? "text-white bg-primary-brand/30 border border-primary-brand/50 shadow-sm"
+              : isLive
+                ? "text-emerald-300 bg-emerald-950/60 border border-emerald-500/40"
+                : "text-slate-400 bg-[#121726]"
           }`}>
             {isMatchPlayed ? match.team1.score : "-"}
           </span>
@@ -88,17 +92,17 @@ export default function MatchCard({ match, onViewBoxScore, isFeatured }: MatchCa
 
       {/* Team 2 Slot */}
       <div
-        className={`flex items-center justify-between px-3.5 py-2 transition-colors ${
+        className={`flex items-center justify-between px-4 py-2.5 transition-colors ${
           isTeam2Winner
-            ? "bg-[#111728] text-white"
-            : "bg-[#070912] text-slate-400"
+            ? "bg-[#12182B] text-white"
+            : "bg-[#080B14] text-slate-300 hover:bg-[#0E1322]"
         }`}
       >
-        <div className="flex items-center gap-2 min-w-0 pr-2">
+        <div className="flex items-center gap-2.5 min-w-0 pr-2">
           {/* Team Initials Badge */}
           <div 
-            className={`w-5 h-5 flex items-center justify-center font-display text-[9px] font-black shrink-0 ${
-              isTeam2Winner ? "bg-primary-brand text-white" : "bg-[#141A29] text-slate-400"
+            className={`w-6 h-6 flex items-center justify-center font-display text-[10px] font-black shrink-0 shadow-sm ${
+              isTeam2Winner ? "bg-primary-brand text-white" : "bg-[#161E32] text-slate-300 border border-[#222E4A]"
             }`}
             style={{
               clipPath: "polygon(25% 0%, 75% 0%, 100% 25%, 100% 75%, 75% 100%, 25% 100%, 0% 75%, 0% 25%)",
@@ -106,31 +110,39 @@ export default function MatchCard({ match, onViewBoxScore, isFeatured }: MatchCa
           >
             {getInitials(match.team2.name)}
           </div>
-          <span className={`font-sans text-xs truncate ${isTeam2Winner ? "font-bold text-white" : "font-medium"}`}>
+          <span className={`font-display text-sm tracking-wide uppercase truncate ${isTeam2Winner ? "font-black text-white" : "font-bold text-slate-200"}`}>
             {match.team2.name}
           </span>
         </div>
 
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           {isTeam2Winner && isCompleted && (
-            <CrownIcon className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <CrownIcon className="w-4 h-4 text-amber-400 shrink-0 drop-shadow-sm" />
           )}
-          <span className={`font-mono text-xs px-1.5 py-0.2 rounded ${
-            isTeam2Winner ? "font-bold text-white bg-primary-brand/20" : isLive ? "font-bold text-emerald-400 bg-emerald-950/40" : "font-normal text-slate-500"
+          <span className={`font-mono text-xs sm:text-sm font-black px-2 py-0.5 rounded min-w-[24px] text-center ${
+            isTeam2Winner
+              ? "text-white bg-primary-brand/30 border border-primary-brand/50 shadow-sm"
+              : isLive
+                ? "text-emerald-300 bg-emerald-950/60 border border-emerald-500/40"
+                : "text-slate-400 bg-[#121726]"
           }`}>
             {isMatchPlayed ? match.team2.score : "-"}
           </span>
         </div>
       </div>
 
-      {/* Bottom Subtle Match Status Bar */}
-      <div className="px-3 py-0.5 bg-[#05070E] border-t border-[#141A29] flex items-center justify-between text-[8px] font-mono text-slate-500 group-hover:text-primary-brand transition-colors">
-        <span className={isLive ? "text-emerald-400 font-bold flex items-center gap-1" : ""}>
-          {isLive && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />}
-          {isLive ? "LIVE MATCH IN PROGRESS" : isCompleted ? "MATCH BOX SCORE" : "UPCOMING MATCH"}
+      {/* Match Status Footer */}
+      <div className="px-3.5 py-1.5 bg-[#05070E] border-t border-[#141A29] flex items-center justify-between text-[9px] font-mono text-slate-400 group-hover:text-primary-brand transition-colors">
+        <span className={`flex items-center gap-1.5 ${isLive ? "text-emerald-400 font-bold" : ""}`}>
+          {isLive && <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />}
+          {isLive ? "LIVE MATCH IN PROGRESS" : isCompleted ? "MATCH FINAL • BOX SCORE" : "UPCOMING MATCH"}
         </span>
-        <span>→</span>
+        <span className="font-bold flex items-center gap-1">
+          <span>VIEW SCORE</span>
+          <span>→</span>
+        </span>
       </div>
     </div>
   );
 }
+

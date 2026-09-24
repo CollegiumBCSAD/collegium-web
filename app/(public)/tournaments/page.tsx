@@ -59,12 +59,9 @@ export default function TournamentsPage() {
         if (user?.id && user?.role !== "ORGANIZER" && user?.role !== "ADMIN") {
           const applied = allTourneys
             .filter((t) =>
-              (t.applications as Array<{ userId?: string; universityId?: string; status?: string }>)?.some(
-                (app) =>
-                  (app.userId === user.id || (user.universityId && app.universityId === user.universityId)) &&
-                  app.status !== "REJECTED"
-              ) ||
-              (t.universities as Array<{ id?: string }>)?.some((u) => u.id === user.universityId)
+              (t.applications as Array<{ userId?: string; status?: string }>)?.some(
+                (app) => app.userId === user.id && app.status !== "REJECTED"
+              )
             )
             .map((t) => t.id);
           setAppliedIds(applied);
@@ -81,13 +78,11 @@ export default function TournamentsPage() {
       });
   }, [user]);
 
-  const isAthlete = Boolean(isLoggedIn && user && user.role === "ATHLETE");
+  const canApply = Boolean(user && user.role !== "ORGANIZER" && user.role !== "ADMIN");
 
   const handleApplyTournament = (t: Tournament) => {
-    if (!isAthlete) {
-      if (!isLoggedIn) {
-        router.push("/login");
-      }
+    if (!isLoggedIn) {
+      router.push("/login");
       return;
     }
     setRegisteringTournament(t);
@@ -359,9 +354,9 @@ export default function TournamentsPage() {
                   setSelectedTournamentTab(tab);
                   setSelectedTournament(t);
                 }}
-                onApply={isAthlete ? handleApplyTournament : undefined}
-                onWithdraw={isAthlete ? handleWithdrawTournament : undefined}
-                isApplied={isAthlete && appliedIds.includes(tournament.id)}
+                onApply={canApply ? handleApplyTournament : undefined}
+                onWithdraw={canApply ? handleWithdrawTournament : undefined}
+                isApplied={canApply && appliedIds.includes(tournament.id)}
                 isApplying={applyingId === tournament.id}
               />
             ))}
