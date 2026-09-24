@@ -254,7 +254,7 @@ export default function AthleteProfileBanner({ user, squadsCount = 0 }: AthleteP
               {user.role === "ORGANIZER" ? (
                 <>
                   <Link
-                    href="/tournaments"
+                    href="/organize"
                     className="h-9 px-4.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-display text-xs font-black uppercase tracking-wider transition-all shadow-lg active:scale-95 flex items-center gap-1.5 cursor-pointer shadow-amber-500/20"
                     style={{
                       clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",

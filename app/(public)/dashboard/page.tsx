@@ -10,7 +10,6 @@ import { teamsService } from "@/services/teamsService";
 import { GAMES } from "@/lib/games";
 import AthleteProfileBanner from "@/components/dashboard/AthleteProfileBanner";
 import TeamRosterCard from "@/components/dashboard/TeamRosterCard";
-import OrganizerDashboardView from "@/components/dashboard/OrganizerDashboardView";
 import CaptainRequestInbox from "@/components/CaptainRequestInbox";
 import { TrophyIcon, SwordsIcon, UsersIcon, ShieldIcon, ClockIcon } from "@/components/ui/Icons";
 import DashboardTournamentsShowcase from "@/components/dashboard/DashboardTournamentsShowcase";
@@ -145,7 +144,21 @@ export default function DashboardPage() {
         <AthleteProfileBanner user={user} squadsCount={userTeams.length} />
 
         {user.role === "ORGANIZER" ? (
-          <OrganizerDashboardView user={user} />
+          <Link
+            href="/organize"
+            className="group flex items-center justify-between gap-4 px-6 py-5 bg-[#0B0E17] border border-white/[0.06] border-l-4 border-l-amber-400 hover:border-white/20 transition-colors"
+          >
+            <div>
+              <span className="text-[10px] font-mono font-black uppercase tracking-widest text-amber-400">
+                {"// Organize"}
+              </span>
+              <h2 className="font-display text-lg font-black uppercase text-white">Tournament Operations</h2>
+              <p className="text-xs font-sans text-slate-400">
+                Host tournaments, review squad applications, and run live brackets.
+              </p>
+            </div>
+            <span className="text-slate-500 group-hover:text-white group-hover:translate-x-1 transition-all">→</span>
+          </Link>
         ) : (
           /* 2-Column Dashboard Main Layout */
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-7 items-start">

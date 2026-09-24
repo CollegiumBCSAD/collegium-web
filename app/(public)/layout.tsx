@@ -15,6 +15,7 @@ import ScrimWarRoomModal from "@/components/scrims/ScrimWarRoomModal";
 import TournamentBracketModal from "@/components/tournaments/TournamentBracketModal";
 import GameSelectorModal from "@/components/GameSelectorModal";
 import HeaderGameSwitcher from "@/components/HeaderGameSwitcher";
+import OrganizeNavButton from "@/components/OrganizeNavButton";
 import { HomeIcon, PlusIcon, UsersIcon, SwordsIcon, ShieldIcon } from "@/components/ui/Icons";
 import { fetchTeamsApi } from "@/lib/teams";
 
@@ -168,7 +169,7 @@ function HeaderAuthControls() {
               )}
               {user.role === "ORGANIZER" && (
                 <Link
-                  href="/tournaments"
+                  href="/organize"
                   onClick={() => setDropdownOpen(false)}
                   className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-mono font-bold uppercase tracking-wider text-amber-400 hover:text-white hover:bg-[#141A29] hover:translate-x-1 transition-all duration-150"
                 >
@@ -229,7 +230,6 @@ function NavigationLinks({ mobile = false, onClose }: { mobile?: boolean; onClos
     { name: "Tournaments", href: "/tournaments" },
     { name: "Rankings", href: "/leaderboard" },
     { name: "Universities", href: "/universities" },
-    ...(isLoggedIn && isOrganizer ? [{ name: "Organize", href: "/dashboard" }] : []),
     ...(isLoggedIn && !isOrganizer ? [{ name: "Scrims", href: "/scrims" }] : []),
     { name: "News", href: "/community" },
   ];
@@ -345,6 +345,7 @@ function PublicLayoutContent({ children }: { children: React.ReactNode }) {
             </div>
 
             <div className="flex items-center gap-2.5 sm:gap-3.5">
+              <OrganizeNavButton />
               <HeaderGameSwitcher />
               <NotificationBell />
               <HeaderAuthControls />
@@ -367,6 +368,9 @@ function PublicLayoutContent({ children }: { children: React.ReactNode }) {
 
           {mobileMenuOpen && (
             <div className="border-b border-[#182338] bg-[#0A0D18] p-4 md:hidden animate-page-slide-in">
+              <div className="mb-3 empty:hidden">
+                <OrganizeNavButton variant="menu" onNavigate={() => setMobileMenuOpen(false)} />
+              </div>
               <NavigationLinks mobile onClose={() => setMobileMenuOpen(false)} />
               <div className="mt-4 pt-4 border-t border-[#182338] flex flex-col gap-2">
                 <HeaderAuthControls />
