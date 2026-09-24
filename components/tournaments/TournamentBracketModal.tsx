@@ -39,7 +39,7 @@ export default function TournamentBracketModal({
   initialTab = "bracket",
 }: TournamentBracketModalProps) {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<"bracket" | "teams" | "channel" | "overview" | "watch">(initialTab);
+  const [selectedTab, setActiveTab] = useState<"bracket" | "teams" | "channel" | "overview" | "watch">(initialTab);
   const [activeBoxScore, setActiveBoxScore] = useState<BracketMatch | null>(null);
   const [editingStatsMatch, setEditingStatsMatch] = useState<BracketMatch | null>(null);
   const [reportingMatch, setReportingMatch] = useState<BracketMatch | null>(null);
@@ -60,14 +60,53 @@ export default function TournamentBracketModal({
     tournamentDetail?.streamUrl && tournamentDetail?.streamIsLive
   );
 
+  // Check if current user is the tournament organizer or an administrator
+  const isOrganizer = Boolean(
+    user?.role === "ADMIN" ||
+    (user?.role === "ORGANIZER" &&
+      (!tournamentDetail?.organizerId ||
+        tournamentDetail?.organizerId === user?.id ||
+        tournamentDetail?.organizer?.id === user?.id)) ||
+    (user?.id &&
+      (tournamentDetail?.organizerId === user.id ||
+        tournamentDetail?.organizer?.id === user.id))
+  );
+
+  // Check if current user is a roster athlete/captain on a participating team in this tournament
+  const participatingTeams: ParticipatingTeamDetail[] = tournamentDetail?.participatingTeams || [];
+  const isUserInParticipatingTeam = Boolean(
+    user?.id &&
+    participatingTeams.some((team) => {
+      const isCaptain = team.captainId === user.id;
+      const isMember = team.members?.some((m) => m.userId === user.id);
+      return isCaptain || isMember;
+    })
+  );
+  const hasApprovedApplication = Boolean(
+    user?.id &&
+    (tournamentDetail?.applications as Array<{ userId?: string; status?: string }> | undefined)?.some(
+      (app) => app.status === "APPROVED" && app.userId === user.id
+    )
+  );
+  const isParticipant = isUserInParticipatingTeam || hasApprovedApplication;
+  const canViewChannel = isOrganizer || isParticipant;
+
   const [prevTabKey, setPrevTabKey] = useState<string | null>(null);
   const currentTabKey = isOpen && initialTab ? `${tournamentId}-${initialTab}` : null;
   if (prevTabKey !== currentTabKey) {
     setPrevTabKey(currentTabKey);
     if (isOpen && initialTab) {
-      setActiveTab(initialTab);
+      if (initialTab === "channel" && !canViewChannel && !isLoading) {
+        setActiveTab("bracket");
+      } else {
+        setActiveTab(initialTab);
+      }
     }
   }
+
+  // Non-participants can't see the channel: once access is known, show the
+  // bracket instead. Derived at render time rather than corrected in an effect.
+  const activeTab = !isLoading && !canViewChannel && selectedTab === "channel" ? "bracket" : selectedTab;
 
   useEffect(() => {
     if (!isOpen) return;
@@ -184,6 +223,13 @@ export default function TournamentBracketModal({
   );
   const losersRounds = normalizedRounds.filter((r) => r.bracketSide === "LOSERS");
   const grandFinalRound = normalizedRounds.find((r) => r.bracketSide === "GRAND_FINAL") || null;
+  const mainRounds = grandFinalRound ? [...winnersRounds, grandFinalRound] : winnersRounds;
+  const treeHandlers = {
+    onViewBoxScore: setActiveBoxScore,
+    canReportResults,
+    onReportResult: setReportingMatch,
+    featuredMatchId: tournamentDetail?.featuredMatchId,
+  };
 
   let featuredOnStream: {
     roundName: string;
@@ -199,9 +245,6 @@ export default function TournamentBracketModal({
       }
     }
   }
-
-  // Participating teams list
-  const participatingTeams: ParticipatingTeamDetail[] = tournamentDetail?.participatingTeams || [];
 
   // Prefer the real bracket format/team count once loaded over the static
   // prop default, which otherwise always claims "Single Elimination".
@@ -225,13 +268,6 @@ export default function TournamentBracketModal({
           className="relative w-full max-w-[1720px] h-[92vh] max-h-[96vh] flex flex-col bg-[#080B14] border border-[#1E293B] shadow-2xl overflow-hidden z-10 animate-fade-in"
           style={{
             clipPath: "polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px))",
-  const mainRounds = grandFinalRound ? [...winnersRounds, grandFinalRound] : winnersRounds;
-  const treeHandlers = {
-    onViewBoxScore: setActiveBoxScore,
-    canReportResults,
-    onReportResult: setReportingMatch,
-    featuredMatchId: tournamentDetail?.featuredMatchId,
-  };
           }}
         >
           {/* Top Brand Ambient Line (Prominent & High Z-Index) */}
@@ -345,21 +381,23 @@ export default function TournamentBracketModal({
                   )}
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("channel")}
-                  className={`h-10 sm:h-11 px-4 sm:px-6 font-mono text-xs sm:text-[13px] font-black uppercase tracking-wider transition-all duration-150 cursor-pointer whitespace-nowrap flex items-center gap-2 ${
-                    activeTab === "channel"
-                      ? "game-theme-btn"
-                      : "text-slate-400 hover:text-white hover:bg-[#141A29]"
-                  }`}
-                  style={{
-                    clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
-                  }}
-                >
-                  <FlameIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0" />
-                  <span>Channel</span>
-                </button>
+                {canViewChannel && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("channel")}
+                    className={`h-10 sm:h-11 px-4 sm:px-6 font-mono text-xs sm:text-[13px] font-black uppercase tracking-wider transition-all duration-150 cursor-pointer whitespace-nowrap flex items-center gap-2 ${
+                      activeTab === "channel"
+                        ? "game-theme-btn"
+                        : "text-slate-400 hover:text-white hover:bg-[#141A29]"
+                    }`}
+                    style={{
+                      clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
+                    }}
+                  >
+                    <FlameIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0" />
+                    <span>Channel</span>
+                  </button>
+                )}
 
                 <button
                   type="button"
@@ -708,13 +746,13 @@ export default function TournamentBracketModal({
                   </div>
                 )}
               </div>
-            ) : activeTab === "channel" ? (
+            ) : activeTab === "channel" && canViewChannel ? (
               /* TAB: GLOBAL TOURNAMENT CHANNEL */
               <div className="p-4 sm:p-6 sm:px-8 h-[calc(88vh-140px)] min-h-[500px]">
                 <TournamentGlobalChannel
                   tournamentId={tournamentId || ""}
                   tournamentTitle={tournamentDetail?.title || title}
-                  isOrganizerOrAdmin={canReportResults}
+                  isOrganizerOrAdmin={isOrganizer}
                 />
               </div>
             ) : activeTab === "overview" ? (
