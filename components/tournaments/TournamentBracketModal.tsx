@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "@/context/AuthContext";
 import MatchBoxScoreModal from "@/components/MatchBoxScoreModal";
-import MatchCard from "@/components/tournaments/MatchCard";
+import BracketTree from "@/components/tournaments/BracketTree";
 import CloseMatchModal from "@/components/tournaments/CloseMatchModal";
 import TournamentGlobalChannel from "@/components/tournaments/TournamentGlobalChannel";
 import RetroactiveStatsEditModal from "@/components/tournaments/RetroactiveStatsEditModal";
@@ -29,74 +29,6 @@ import {
   XCircleIcon,
   FlameIcon
 } from "@/components/ui/Icons";
-
-function BracketColumn({
-  round,
-  highlight,
-  onViewBoxScore,
-  canReportResults,
-  onReportResult,
-  featuredMatchId,
-}: {
-  round: { name: string; matches: BracketMatch[] };
-  highlight?: boolean;
-  onViewBoxScore: (m: BracketMatch) => void;
-  canReportResults?: boolean;
-  onReportResult?: (m: BracketMatch) => void;
-  featuredMatchId?: string | null;
-}) {
-  return (
-    <div className="w-72 sm:w-80 md:w-84 shrink-0 flex flex-col justify-center z-10">
-      <div
-        className={`text-center font-display text-sm sm:text-base font-black tracking-widest uppercase mb-4 pb-2.5 border-b flex items-center justify-center gap-2 ${
-          highlight ? "text-primary-brand border-primary-brand/60" : "text-slate-300 border-[#1E293B]"
-        }`}
-      >
-        <span className={`w-2 h-2 rounded-full ${highlight ? "bg-primary-brand shadow-sm shadow-primary-brand" : "bg-slate-500"}`} />
-        <span>{round.name}</span>
-      </div>
-      <div className="flex-1 flex flex-col justify-around gap-4 py-2">
-        {round.matches.map((m) => (
-          <div key={m.id} className="space-y-1.5">
-            <MatchCard
-              match={m}
-              onViewBoxScore={() => onViewBoxScore(m)}
-              isFeatured={featuredMatchId === m.id}
-            />
-            {canReportResults && m.status !== "COMPLETED" && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onReportResult?.(m);
-                }}
-                className="w-full h-8 text-[11px] font-mono font-black uppercase tracking-wider text-slate-200 bg-gradient-to-r from-[#101726] via-[#162035] to-[#101726] border border-[#263554] hover:border-primary-brand/80 hover:bg-gradient-to-r hover:from-[#16223B] hover:via-[#1D2C4D] hover:to-[#16223B] hover:text-white shadow-md hover:shadow-[0_0_12px_rgba(229,58,76,0.25)] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 group relative overflow-hidden"
-                style={{
-                  clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-                }}
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-slate-400 group-hover:bg-primary-brand transition-colors" />
-                <span className="tracking-widest">REPORT RESULT</span>
-                <span className="text-slate-400 group-hover:text-primary-brand group-hover:translate-x-0.5 transition-all text-xs">→</span>
-              </button>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function BracketConnector() {
-  return (
-    <div className="w-10 sm:w-14 shrink-0 flex items-center justify-center self-stretch pointer-events-none relative">
-      <div className="w-full h-[2px] bg-gradient-to-r from-primary-brand/60 via-amber-400/50 to-primary-brand/60 shadow-[0_0_8px_rgba(229,58,76,0.35)] relative">
-        <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary-brand shadow-sm" />
-        <div className="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-amber-400 shadow-sm" />
-      </div>
-    </div>
-  );
-}
 
 export default function TournamentBracketModal({
   isOpen,
@@ -293,6 +225,13 @@ export default function TournamentBracketModal({
           className="relative w-full max-w-[1720px] h-[92vh] max-h-[96vh] flex flex-col bg-[#080B14] border border-[#1E293B] shadow-2xl overflow-hidden z-10 animate-fade-in"
           style={{
             clipPath: "polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px))",
+  const mainRounds = grandFinalRound ? [...winnersRounds, grandFinalRound] : winnersRounds;
+  const treeHandlers = {
+    onViewBoxScore: setActiveBoxScore,
+    canReportResults,
+    onReportResult: setReportingMatch,
+    featuredMatchId: tournamentDetail?.featuredMatchId,
+  };
           }}
         >
           {/* Top Brand Ambient Line (Prominent & High Z-Index) */}
@@ -530,57 +469,19 @@ export default function TournamentBracketModal({
                         Bracket not generated yet
                       </p>
                     ) : (
-                      <div className="flex items-stretch min-w-max gap-4 select-none py-2">
-                        {winnersRounds.map((round, idx) => (
-                          <div key={`watch-w-${idx}`} className="flex items-stretch gap-4">
-                            <BracketColumn
-                              round={round}
-                              highlight={
-                                !grandFinalRound && idx === winnersRounds.length - 1
-                              }
-                              onViewBoxScore={setActiveBoxScore}
-                              canReportResults={canReportResults}
-                              onReportResult={setReportingMatch}
-                              featuredMatchId={tournamentDetail?.featuredMatchId}
-                            />
-                            {(idx < winnersRounds.length - 1 ||
-                              grandFinalRound ||
-                              losersRounds.length > 0) && <BracketConnector />}
-                          </div>
-                        ))}
-                        {grandFinalRound && (
-                          <div className="flex items-stretch gap-4">
-                            <BracketColumn
-                              round={grandFinalRound}
-                              highlight
-                              onViewBoxScore={setActiveBoxScore}
-                              canReportResults={canReportResults}
-                              onReportResult={setReportingMatch}
-                              featuredMatchId={tournamentDetail?.featuredMatchId}
-                            />
-                          </div>
-                        )}
-                      </div>
+                      <BracketTree
+                        rounds={mainRounds}
+                        projectToFinal={losersRounds.length === 0}
+                        compact
+                        {...treeHandlers}
+                      />
                     )}
                     {losersRounds.length > 0 && (
                       <div className="pt-6 mt-4 border-t border-[#1E293B]">
-                        <div className="text-[9px] font-mono font-black text-rose-400 uppercase tracking-widest mb-3">
+                        <div className="text-[9px] font-mono font-black text-slate-400 uppercase tracking-widest mb-3">
                           Losers bracket
                         </div>
-                        <div className="flex items-stretch min-w-max gap-4 select-none">
-                          {losersRounds.map((round, idx) => (
-                            <div key={`watch-l-${idx}`} className="flex items-stretch gap-4">
-                              <BracketColumn
-                                round={round}
-                                onViewBoxScore={setActiveBoxScore}
-                                canReportResults={canReportResults}
-                                onReportResult={setReportingMatch}
-                                featuredMatchId={tournamentDetail?.featuredMatchId}
-                              />
-                              {idx < losersRounds.length - 1 && <BracketConnector />}
-                            </div>
-                          ))}
-                        </div>
+                        <BracketTree rounds={losersRounds} compact {...treeHandlers} />
                       </div>
                     )}
                   </div>
@@ -958,7 +859,7 @@ export default function TournamentBracketModal({
               </div>
             ) : (
               /* TAB: BRACKET CANVAS */
-              <div className="overflow-x-auto p-6 sm:p-10 flex flex-col gap-10 min-h-[580px]">
+              <div className="overflow-auto p-6 sm:p-10 flex flex-col gap-10 min-h-[580px] bg-[radial-gradient(rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:24px_24px]">
                 {normalizedRounds.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-20 space-y-4">
                     <p className="font-sans text-xs font-bold text-slate-400 tracking-widest uppercase">
@@ -967,123 +868,22 @@ export default function TournamentBracketModal({
                   </div>
                 ) : (
                   <>
-                    <div className="flex items-stretch min-w-max mx-auto gap-6 select-none py-6">
-                      {winnersRounds.map((round, idx) => (
-                        <div key={`w-${idx}`} className="flex items-stretch gap-6">
-                          <BracketColumn
-                            round={round}
-                            highlight={!grandFinalRound && idx === winnersRounds.length - 1}
-                            onViewBoxScore={setActiveBoxScore}
-                            canReportResults={canReportResults}
-                            onReportResult={setReportingMatch}
-                            featuredMatchId={tournamentDetail?.featuredMatchId}
-                          />
-                          <BracketConnector />
-                        </div>
-                      ))}
-
-                      {grandFinalRound && (
-                        <div className="flex items-stretch gap-6">
-                          <BracketColumn
-                            round={grandFinalRound}
-                            highlight
-                            onViewBoxScore={setActiveBoxScore}
-                            canReportResults={canReportResults}
-                            onReportResult={setReportingMatch}
-                            featuredMatchId={tournamentDetail?.featuredMatchId}
-                          />
-                          <BracketConnector />
-                        </div>
-                      )}
-
-                      {/* CHAMPIONSHIP PODIUM */}
-                      <div className="w-72 sm:w-80 md:w-88 shrink-0 flex flex-col justify-between z-10">
-                        <div className="text-center font-display text-sm sm:text-base font-black tracking-widest text-amber-400 uppercase mb-4 pb-2.5 border-b border-amber-500/60 flex items-center justify-center gap-2">
-                          <TrophyIcon className="w-4 h-4 text-amber-400" />
-                          <span>CHAMPIONSHIP PODIUM</span>
-                        </div>
-
-                        <div className="flex-1 flex flex-col items-center justify-center relative group py-4">
-                          <div className="relative mb-6">
-                            <div
-                              className="w-36 h-36 bg-gradient-to-br from-amber-300 via-amber-500 to-amber-700 p-[3px] shadow-[0_0_40px_rgba(245,158,11,0.35)] flex items-center justify-center relative transition-transform duration-300 group-hover:scale-105"
-                              style={{
-                                clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
-                              }}
-                            >
-                              <div
-                                className="w-full h-full bg-[#0D101C] flex flex-col items-center justify-center p-4 text-center space-y-1.5"
-                                style={{
-                                  clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
-                                }}
-                              >
-                                <TrophyIcon className="w-14 h-14 text-amber-400 drop-shadow-[0_0_12px_rgba(245,158,11,0.6)] animate-pulse" />
-                                <span className="font-display font-black text-xs text-amber-300 uppercase tracking-widest block">
-                                  GRAND FINALS
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Champion Winner Card */}
-                          <div
-                            className={`w-64 sm:w-72 border-2 p-5 shadow-2xl text-center space-y-3 ${
-                              champion
-                                ? "bg-gradient-to-b from-[#1E180A] via-[#101322] to-[#070912] border-amber-400/90 shadow-[0_0_30px_rgba(245,158,11,0.3)]"
-                                : "bg-[#090C16] border-[#22304A] shadow-[0_0_20px_rgba(0,0,0,0.5)]"
-                            }`}
-                            style={{
-                              clipPath: "polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px))",
-                            }}
-                          >
-                            <div className={`flex items-center justify-center gap-1.5 font-display text-xs font-black uppercase tracking-widest ${
-                              champion ? "text-amber-400" : "text-emerald-400"
-                            }`}>
-                              <CrownIcon className="w-4 h-4" />
-                              <span>{champion ? "TOURNAMENT CHAMPION" : "CHAMPIONSHIP TROPHY"}</span>
-                            </div>
-
-                            <h3 className="font-display text-lg sm:text-xl font-black uppercase text-white tracking-wide">
-                              {champion || "Awaiting Finalists"}
-                            </h3>
-
-                            <div className="pt-2.5 border-t border-white/10">
-                              <span
-                                className={`px-3 py-1 font-mono text-[10px] font-black uppercase tracking-wider inline-block ${
-                                  champion ? "bg-amber-500 text-black font-extrabold shadow-md" : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/50"
-                                }`}
-                                style={{
-                                  clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-                                }}
-                              >
-                                {champion ? "GOLD MEDALIST" : "MATCHES IN PROGRESS"}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                    <div className="mx-auto">
+                      <BracketTree
+                        rounds={mainRounds}
+                        projectToFinal={losersRounds.length === 0}
+                        champion={champion ?? null}
+                        {...treeHandlers}
+                      />
                     </div>
 
                     {/* LOSERS BRACKET — Double Elimination only */}
                     {losersRounds.length > 0 && (
                       <div className="pt-8 border-t border-[#1E293B]">
-                        <div className="text-center font-mono text-[10px] font-black text-rose-400 uppercase tracking-widest mb-6">
+                        <div className="mb-4 font-display text-sm font-black uppercase tracking-[0.2em] text-slate-300">
                           Losers Bracket
                         </div>
-                        <div className="flex items-stretch min-w-max mx-auto gap-6 select-none">
-                          {losersRounds.map((round, idx) => (
-                            <div key={`l-${idx}`} className="flex items-stretch gap-6">
-                              <BracketColumn
-                                round={round}
-                                onViewBoxScore={setActiveBoxScore}
-                                canReportResults={canReportResults}
-                                onReportResult={setReportingMatch}
-                                featuredMatchId={tournamentDetail?.featuredMatchId}
-                              />
-                              {idx < losersRounds.length - 1 && <BracketConnector />}
-                            </div>
-                          ))}
-                        </div>
+                        <BracketTree rounds={losersRounds} {...treeHandlers} />
                       </div>
                     )}
                   </>
