@@ -120,7 +120,7 @@ export default function TournamentApplicationsModal({
     try {
       const detail = await tournamentsService.getApplicationRoster(tournamentId, app.id);
       setRosterDetail(detail);
-    } catch (err) {
+    } catch {
       // Fallback to snapshot if available on application
       if (app.rosterSnapshot && Array.isArray(app.rosterSnapshot)) {
         setRosterDetail({

@@ -245,6 +245,7 @@ export default function TournamentModerationPanel({
                 <div className="flex flex-col md:flex-row">
                   {/* Left Artwork */}
                   <div className="relative md:w-72 h-44 md:h-auto bg-[#050505] shrink-0 overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={coverImage}
                       alt={t.title}

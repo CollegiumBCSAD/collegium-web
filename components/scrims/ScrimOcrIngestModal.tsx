@@ -8,7 +8,6 @@ import {
   CheckCircleIcon,
   AlertTriangleIcon,
   TrophyIcon,
-  CrownIcon,
 } from "@/components/ui/Icons";
 
 interface CandidateAthlete {
@@ -47,7 +46,6 @@ export default function ScrimOcrIngestModal({
   scrim,
   onFinalized,
 }: ScrimOcrIngestModalProps) {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [isFinalizing, setIsFinalizing] = useState(false);
@@ -73,7 +71,6 @@ export default function ScrimOcrIngestModal({
       return;
     }
 
-    setSelectedFile(file);
     const objectUrl = URL.createObjectURL(file);
     setPreviewUrl(objectUrl);
     setErrorMsg(null);
@@ -271,6 +268,7 @@ export default function ScrimOcrIngestModal({
             ) : (
               <div className="flex flex-col space-y-3 flex-1">
                 <div className="relative flex-1 min-h-[280px] bg-[#04060C] border border-[#182338] rounded-xl overflow-hidden flex items-center justify-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={previewUrl}
                     alt="Scoreboard Preview"

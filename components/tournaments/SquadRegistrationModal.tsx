@@ -14,11 +14,9 @@ import {
   CheckCircleIcon, 
   CrownIcon, 
   AlertTriangleIcon,
-  XCircleIcon,
   ClockIcon,
   UsersIcon,
   PlusIcon,
-  ZapIcon
 } from "@/components/ui/Icons";
 
 const normalizeGame = (g?: string | null): GameId => {

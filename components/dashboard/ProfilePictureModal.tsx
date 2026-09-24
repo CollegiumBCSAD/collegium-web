@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import React, { useState, useRef, useCallback, useEffect, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { UserProfile } from "@/types";
 import { useAuth } from "@/context/AuthContext";
@@ -606,11 +606,12 @@ export default function ProfilePictureModal({
   onClose,
   user,
 }: ProfilePictureModalProps) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // false during SSR, true on the client — the portal needs document.body.
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   if (!isOpen || !mounted) return null;
 

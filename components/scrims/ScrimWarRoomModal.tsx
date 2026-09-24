@@ -353,6 +353,7 @@ export default function ScrimWarRoomModal({
               background: `radial-gradient(circle at center, ${game.accentColor}35 0%, transparent 65%)`,
             }}
           />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={game.image}
             alt=""
