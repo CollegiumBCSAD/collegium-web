@@ -1,3 +1,5 @@
+import type { GameId } from "./games";
+
 export interface UniversityInfo {
   id: string;
   name: string;
@@ -108,7 +110,34 @@ export interface University {
 
 export interface UniversityDirectoryCardProps {
   university: University;
+  gameShortName: string;
+  // Only passed when the directory is ordered by rating.
   rank?: number;
+}
+
+export interface UniversityBranding {
+  abbr: string;
+  primary: string;
+  secondary: string;
+}
+
+export type UniversitySortKey = "name" | "rating";
+
+export interface UniversityDirectoryToolbarProps {
+  sortKey: UniversitySortKey;
+  onSortChange: (key: UniversitySortKey) => void;
+  resultCount: number;
+  // Starting letters that have at least one school, for the A–Z index.
+  availableLetters: string[];
+  activeLetter: string | null;
+  onLetterChange: (letter: string | null) => void;
+}
+
+export interface UniversityDirectoryHeroProps {
+  gameId: GameId;
+  universities: University[];
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
 }
 
 export interface LeaderboardEntry {

@@ -64,6 +64,23 @@ export function LeaderboardSkeletonRow() {
   );
 }
 
+export function UniversityCardSkeleton() {
+  return (
+    <div className="bg-[#0B0E17] border border-white/[0.06] shadow-2xl">
+      <div className="h-28 bg-[#141A28] animate-pulse" />
+      <div className="px-5 -mt-10">
+        <Skeleton className="w-[72px] h-[72px] rounded-none bg-[#1B2233]" />
+      </div>
+      <div className="px-5 pt-3 pb-5 space-y-2">
+        <Skeleton className="h-5 w-3/4 rounded-none" />
+        <Skeleton className="h-3 w-1/3 rounded-none" />
+        <Skeleton className="h-12 w-full rounded-none mt-5" />
+        <Skeleton className="h-3 w-1/2 rounded-none mt-4" />
+      </div>
+    </div>
+  );
+}
+
 export function ScrimCardSkeleton() {
   return (
     <div className="p-5 rounded-2xl bg-[#0E121C]/90 border border-[#1E2538] shadow-xl space-y-4">
