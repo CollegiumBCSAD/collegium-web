@@ -460,34 +460,43 @@ function buildBracketRounds(
     const roundMatches = byRound.get(roundNumber)!;
     const positionFromEnd = roundNumbers.length - 1 - idx;
 
-    const bracketMatches: TournamentMatch[] = roundMatches.map((m, i) => ({
-      id: m.id || `${side || "r"}${roundNumber}-${i}`,
-      team1: {
-        name: teamName(m.winnerId),
-        code: "",
-        score: m.isVerified ? 2 : 0,
-        isWinner: m.isVerified,
-        universityId: m.winnerId ?? undefined,
-      },
-      team2: {
-        name: teamName(m.loserId),
-        code: "",
-        score: 0,
-        isWinner: false,
-        universityId: m.loserId ?? undefined,
-      },
-      status: m.isVerified ? "COMPLETED" : "LIVE",
-      playerStats: (m.playerStats || []).map(
-        (p): MatchPlayerStat => ({
-          universityId: p.universityId ?? null,
-          name: p.summonerName,
-          kills: p.kills,
-          deaths: p.deaths,
-          assists: p.assists,
-          win: p.win,
-        }),
-      ),
-    }));
+    const bracketMatches: TournamentMatch[] = roundMatches.map((m, i) => {
+      // Later rounds are created up front with neither side filled in. Those
+      // are future matches, not live ones - showing them as LIVE would put a
+      // pulsing "in progress" badge on a slot nobody has reached yet.
+      const isPlaceholder = !m.winnerId && !m.loserId;
+      // A bye is verified at generation time and has no opponent at all.
+      const isBye = Boolean(m.isVerified && m.winnerId && !m.loserId);
+
+      return {
+        id: m.id || `${side || "r"}${roundNumber}-${i}`,
+        team1: {
+          name: teamName(m.winnerId),
+          code: "",
+          score: m.isVerified ? 2 : 0,
+          isWinner: m.isVerified,
+          universityId: m.winnerId ?? undefined,
+        },
+        team2: {
+          name: isBye ? "BYE" : teamName(m.loserId),
+          code: "",
+          score: 0,
+          isWinner: false,
+          universityId: m.loserId ?? undefined,
+        },
+        status: isPlaceholder ? "UPCOMING" : m.isVerified ? "COMPLETED" : "LIVE",
+        playerStats: (m.playerStats || []).map(
+          (p): MatchPlayerStat => ({
+            universityId: p.universityId ?? null,
+            name: p.summonerName,
+            kills: p.kills,
+            deaths: p.deaths,
+            assists: p.assists,
+            win: p.win,
+          }),
+        ),
+      };
+    });
 
     return {
       name: roundName(roundNumber, positionFromEnd, roundMatches.length, side),
@@ -671,6 +680,14 @@ export const tournamentsService = {
     );
   },
 
+  // Redraws round 1 at random. The server rejects this once a round 1 result
+  // has been reported, so the caller should surface the error message.
+  randomizeBracket: (tournamentId: string): Promise<BracketRound[]> => {
+    return apiClient
+      .post<unknown>(`/tournaments/${tournamentId}/bracket/randomize`, {})
+      .then(parseServerBracketResponse);
+  },
+
   closeTournament: (tournamentId: string): Promise<unknown> => {
     return apiClient.post(`/tournaments/${tournamentId}/close`, {});
   },
@@ -728,6 +745,118 @@ export const tournamentsService = {
 
   rejectApplication: (tournamentId: string, appId: string): Promise<unknown> => {
     return apiClient.post(`/tournaments/${tournamentId}/applications/${appId}/reject`, {});
+  },
+
+  getApplicationRoster: (
+    tournamentId: string,
+    appId: string
+  ): Promise<{
+    applicationId: string;
+    tournamentId: string;
+    teamId: string;
+    teamName: string;
+    universityId: string;
+    universityName: string;
+    status: string;
+    appliedAt: string;
+    applicantName: string;
+    roster: Array<{
+      userId: string;
+      displayName: string;
+      gameHandle: string;
+      studentId?: string;
+      role: string;
+      isCaptain: boolean;
+      eligibilityStatus: string;
+    }>;
+  }> => {
+    return apiClient.get(`/tournaments/${tournamentId}/applications/${appId}/roster`);
+  },
+
+  forfeitMatch: (
+    tournamentId: string,
+    matchId: string,
+    forfeitingUniversityId: string
+  ): Promise<unknown> => {
+    return apiClient.post(
+      `/tournaments/${tournamentId}/matches/${matchId}/forfeit`,
+      { forfeitingUniversityId }
+    );
+  },
+
+  updateMatchStats: (
+    tournamentId: string,
+    matchId: string,
+    dto: {
+      winnerId?: string;
+      gameDuration?: number;
+      players: Array<{
+        userId?: string;
+        universityId: string;
+        name: string;
+        kills: number;
+        deaths: number;
+        assists: number;
+        combatScore?: number;
+        headshotPct?: number;
+        agentName?: string;
+      }>;
+    }
+  ): Promise<unknown> => {
+    return apiClient.patch(
+      `/tournaments/${tournamentId}/matches/${matchId}/stats`,
+      dto
+    );
+  },
+
+  getTournamentMessages: (tournamentId: string): Promise<Array<{
+    id: string;
+    tournamentId: string;
+    senderId: string;
+    senderName: string;
+    teamName?: string;
+    text: string;
+    isPinned: boolean;
+    isAnnouncement: boolean;
+    createdAt: string;
+  }>> => {
+    return apiClient
+      .get<
+        Array<{
+          id: string;
+          tournamentId: string;
+          senderId: string;
+          senderName: string;
+          teamName?: string;
+          text: string;
+          isPinned: boolean;
+          isAnnouncement: boolean;
+          createdAt: string;
+        }>
+      >(`/tournaments/${tournamentId}/messages`)
+      .catch(() => []);
+  },
+
+  createTournamentMessage: (
+    tournamentId: string,
+    dto: { text: string; isPinned?: boolean; isAnnouncement?: boolean }
+  ): Promise<unknown> => {
+    return apiClient.post(`/tournaments/${tournamentId}/messages`, dto);
+  },
+
+  updateTournamentMessage: (
+    tournamentId: string,
+    messageId: string,
+    dto: { text?: string; isPinned?: boolean; isAnnouncement?: boolean }
+  ): Promise<unknown> => {
+    return apiClient.patch(`/tournaments/${tournamentId}/messages/${messageId}`, dto);
+  },
+
+  deleteTournamentMessage: (
+    tournamentId: string,
+    messageId: string
+  ): Promise<void> => {
+    return apiClient.delete(`/tournaments/${tournamentId}/messages/${messageId}`);
   },
 
   deleteTournament: (tournamentId: string): Promise<void> => {

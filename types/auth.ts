@@ -55,6 +55,15 @@ export interface UniversityGameRating {
   losses: number;
 }
 
+export interface UniversityRosterMember {
+  id: string;
+  userId: string;
+  displayName: string;
+  gameHandle: string;
+  preferredRole?: string | null;
+  isCaptain?: boolean;
+}
+
 export interface TeamRatingSummary {
   id: string;
   name: string;
@@ -64,6 +73,9 @@ export interface TeamRatingSummary {
   glicko2_sigma: number;
   wins?: number;
   losses?: number;
+  captainId?: string;
+  captainName?: string;
+  members?: UniversityRosterMember[];
 }
 
 export interface University {
@@ -86,6 +98,11 @@ export interface University {
   teams?: TeamRatingSummary[];
 }
 
+export interface UniversityDirectoryCardProps {
+  university: University;
+  rank?: number;
+}
+
 export interface LeaderboardEntry {
   id: string;
   rank: number;
@@ -102,4 +119,42 @@ export interface LeaderboardEntry {
   streak: string;
   game: string;
   icon?: string;
+}
+
+export interface AthleteTeamMembership {
+  id: string;
+  name: string;
+  gameTitle: string;
+  preferredRole?: string | null;
+  gameHandle: string;
+  isCaptain: boolean;
+  glicko2_rating: number;
+  glicko2_rd: number;
+  joinedAt: string;
+}
+
+export interface AthleteRecentMatch {
+  matchId: string;
+  playedAt: string;
+  matchMode: "TOURNAMENT" | "SCRIM";
+  tournamentName: string | null;
+  opponentName?: string | null;
+  result: "WIN" | "LOSS";
+  kills: number;
+  deaths: number;
+  assists: number;
+}
+
+// Public-facing profile card for an athlete's account — the read-only
+// counterpart to their own /dashboard, viewable by anyone (including
+// non-athletes) from a match box score or a university roster.
+export interface AthleteProfile {
+  id: string;
+  displayName: string;
+  role: string;
+  memberSince: string;
+  university: UniversityInfo;
+  gameHandles: UserGameHandle[];
+  teams: AthleteTeamMembership[];
+  recentMatches: AthleteRecentMatch[];
 }

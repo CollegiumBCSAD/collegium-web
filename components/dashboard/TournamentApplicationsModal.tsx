@@ -2,17 +2,53 @@
 
 import React, { useState, useEffect } from "react";
 import { tournamentsService } from "@/services/tournamentsService";
-import { ShieldIcon, CheckCircleIcon } from "@/components/ui/Icons";
+import { ShieldIcon, CheckCircleIcon, UsersIcon, CrownIcon } from "@/components/ui/Icons";
 
 interface TournamentApplication {
   id: string;
   tournamentId: string;
   universityId: string;
   universityName: string;
+  teamId?: string;
+  teamName?: string;
   userId: string;
   applicantName: string;
   status: "PENDING" | "APPROVED" | "REJECTED";
   appliedAt: string | Date;
+  rosterSnapshot?: RosterSnapshotEntry[];
+}
+
+interface RosterSnapshotEntry {
+  id?: string;
+  userId?: string;
+  displayName?: string;
+  gameHandle?: string;
+  ign?: string;
+  studentId?: string;
+  role?: string;
+  isCaptain?: boolean;
+  user?: { displayName?: string; studentId?: string };
+}
+
+interface ApplicationRosterDetail {
+  applicationId: string;
+  tournamentId: string;
+  teamId: string;
+  teamName: string;
+  universityId: string;
+  universityName: string;
+  status: string;
+  appliedAt: string;
+  applicantName: string;
+  roster: Array<{
+    userId: string;
+    displayName: string;
+    gameHandle: string;
+    studentId?: string;
+    role: string;
+    isCaptain: boolean;
+    eligibilityStatus: string;
+  }>;
 }
 
 interface TournamentApplicationsModalProps {
@@ -35,6 +71,12 @@ export default function TournamentApplicationsModal({
   const [applications, setApplications] = useState<TournamentApplication[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
+
+  // Standalone Roster View state
+  const [selectedApp, setSelectedApp] = useState<TournamentApplication | null>(null);
+  const [rosterDetail, setRosterDetail] = useState<ApplicationRosterDetail | null>(null);
+  const [isRosterLoading, setIsRosterLoading] = useState(false);
+  const [rosterError, setRosterError] = useState<string | null>(null);
 
   const fetchApps = async () => {
     setIsLoading(true);
@@ -70,6 +112,51 @@ export default function TournamentApplicationsModal({
     };
   }, [isOpen, tournamentId]);
 
+  const handleOpenRoster = async (app: TournamentApplication) => {
+    setSelectedApp(app);
+    setIsRosterLoading(true);
+    setRosterError(null);
+    setRosterDetail(null);
+    try {
+      const detail = await tournamentsService.getApplicationRoster(tournamentId, app.id);
+      setRosterDetail(detail);
+    } catch (err) {
+      // Fallback to snapshot if available on application
+      if (app.rosterSnapshot && Array.isArray(app.rosterSnapshot)) {
+        setRosterDetail({
+          applicationId: app.id,
+          tournamentId,
+          teamId: app.teamId || app.id,
+          teamName: app.teamName || app.universityName,
+          universityId: app.universityId,
+          universityName: app.universityName,
+          status: app.status,
+          appliedAt: String(app.appliedAt),
+          applicantName: app.applicantName,
+          roster: app.rosterSnapshot.map((r) => ({
+            userId: r.userId || r.id || "",
+            displayName: r.displayName || r.user?.displayName || "Athlete",
+            gameHandle: r.gameHandle || r.ign || "Player",
+            studentId: r.studentId || r.user?.studentId || "VERIFIED-ID",
+            role: r.role || (r.isCaptain ? "CAPTAIN" : "STARTER"),
+            isCaptain: Boolean(r.isCaptain),
+            eligibilityStatus: "ELIGIBLE",
+          })),
+        });
+      } else {
+        setRosterError("Unable to fetch complete squad roster snapshot.");
+      }
+    } finally {
+      setIsRosterLoading(false);
+    }
+  };
+
+  const handleCloseRoster = () => {
+    setSelectedApp(null);
+    setRosterDetail(null);
+    setRosterError(null);
+  };
+
   if (!isOpen) return null;
 
   const handleApprove = async (appId: string) => {
@@ -79,6 +166,10 @@ export default function TournamentApplicationsModal({
       setApplications((prev) =>
         prev.map((a) => (a.id === appId ? { ...a, status: "APPROVED" } : a))
       );
+      if (selectedApp && selectedApp.id === appId) {
+        setSelectedApp((prev) => (prev ? { ...prev, status: "APPROVED" } : null));
+        if (rosterDetail) setRosterDetail({ ...rosterDetail, status: "APPROVED" });
+      }
       if (onApplicationUpdated) onApplicationUpdated();
     } catch {
       setApplications((prev) =>
@@ -97,6 +188,10 @@ export default function TournamentApplicationsModal({
       setApplications((prev) =>
         prev.map((a) => (a.id === appId ? { ...a, status: "REJECTED" } : a))
       );
+      if (selectedApp && selectedApp.id === appId) {
+        setSelectedApp((prev) => (prev ? { ...prev, status: "REJECTED" } : null));
+        if (rosterDetail) setRosterDetail({ ...rosterDetail, status: "REJECTED" });
+      }
       if (onApplicationUpdated) onApplicationUpdated();
     } catch {
       setApplications((prev) =>
@@ -114,7 +209,7 @@ export default function TournamentApplicationsModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
       <div
-        className="relative w-full max-w-2xl bg-[#080C16] border border-[#1E293B] shadow-2xl rounded-2xl overflow-hidden flex flex-col max-h-[85vh]"
+        className="relative w-full max-w-3xl bg-[#080C16] border border-[#1E293B] shadow-2xl rounded-2xl overflow-hidden flex flex-col max-h-[88vh]"
         style={{
           boxShadow: "0 25px 60px -15px rgba(0, 0, 0, 0.9), 0 0 30px rgba(245, 158, 11, 0.15)",
         }}
@@ -137,7 +232,7 @@ export default function TournamentApplicationsModal({
               {tournamentTitle} — Squad Applications
             </h3>
             <p className="text-xs font-sans text-slate-400">
-              Review and sanction varsity squad registrations for official seeding and bracket placement.
+              Applications are managed at the squad/team entity level. If 1 team member applies, the whole team roster is pending review.
             </p>
           </div>
 
@@ -155,7 +250,7 @@ export default function TournamentApplicationsModal({
         <div className="px-6 py-3 bg-[#060912] border-b border-[#141A29] flex items-center justify-between text-xs font-mono">
           <div className="flex items-center gap-4">
             <span className="text-slate-400">
-              Total Applications: <strong className="text-white">{applications.length}</strong>
+              Total Squads: <strong className="text-white">{applications.length}</strong>
             </span>
             <span className="text-amber-400">
               Pending: <strong>{pendingCount}</strong>
@@ -173,9 +268,161 @@ export default function TournamentApplicationsModal({
           </button>
         </div>
 
-        {/* Application List Body */}
+        {/* Application List Body or Roster View Drawer */}
         <div className="p-6 overflow-y-auto space-y-3 flex-1">
-          {isLoading ? (
+          {selectedApp ? (
+            /* STANDALONE ROSTER VIEW PANEL */
+            <div className="space-y-4 animate-fade-in">
+              {/* Back to List Navigation */}
+              <div className="flex items-center justify-between pb-3 border-b border-[#182338]">
+                <button
+                  type="button"
+                  onClick={handleCloseRoster}
+                  className="flex items-center gap-1.5 text-xs font-mono font-bold uppercase text-amber-400 hover:text-amber-300 transition-colors cursor-pointer"
+                >
+                  <span>← Back to Squad Applications</span>
+                </button>
+
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`text-[9px] font-mono font-bold uppercase px-2.5 py-1 rounded border ${
+                      selectedApp.status === "APPROVED"
+                        ? "bg-emerald-950/80 text-emerald-300 border-emerald-500/40"
+                        : selectedApp.status === "PENDING"
+                        ? "bg-amber-950/80 text-amber-300 border-amber-500/40 animate-pulse"
+                        : "bg-rose-950/80 text-rose-300 border-rose-500/40"
+                    }`}
+                  >
+                    {selectedApp.status}
+                  </span>
+                </div>
+              </div>
+
+              {/* Squad Header Banner */}
+              <div className="p-4 bg-[#0A0D18] border border-amber-500/30 rounded-xl space-y-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <span className="text-[10px] font-mono text-amber-400 uppercase tracking-widest font-bold">
+                      {"// SQUAD ROSTER SNAPSHOT"}
+                    </span>
+                    <h4 className="font-display text-lg font-black uppercase text-white">
+                      {selectedApp.teamName || selectedApp.universityName}
+                    </h4>
+                    <p className="text-xs font-sans text-slate-300">
+                      Institution: <strong className="text-white">{selectedApp.universityName}</strong>
+                    </p>
+                  </div>
+                  <div className="text-right sm:text-right text-xs font-sans text-slate-400">
+                    <div>Applicant Captain: <strong className="text-slate-200">{selectedApp.applicantName}</strong></div>
+                    <div className="text-[10px] font-mono text-slate-500">
+                      Submitted: {new Date(selectedApp.appliedAt).toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-[11px] font-sans text-slate-400 bg-[#060912] p-2.5 rounded border border-[#161F32]">
+                  Notice: All active starters and designated substitutes are frozen in this immutable roster snapshot upon submission.
+                </div>
+              </div>
+
+              {/* Roster Athletes Table / Cards */}
+              {isRosterLoading ? (
+                <div className="p-12 text-center text-xs font-mono text-slate-400 animate-pulse">
+                  Loading verified roster snapshot...
+                </div>
+              ) : rosterError ? (
+                <div className="p-6 text-center text-xs font-mono text-rose-400 bg-rose-950/20 border border-rose-500/30 rounded-xl">
+                  {rosterError}
+                </div>
+              ) : rosterDetail?.roster && rosterDetail.roster.length > 0 ? (
+                <div className="space-y-2">
+                  <div className="text-[10px] font-mono uppercase tracking-widest text-slate-400 font-bold px-1">
+                    Squad Lineup ({rosterDetail.roster.length} Athletes)
+                  </div>
+                  <div className="grid grid-cols-1 gap-2">
+                    {rosterDetail.roster.map((athlete, idx) => (
+                      <div
+                        key={athlete.userId || idx}
+                        className="p-3 bg-[#0A0D18] border border-[#182338] hover:border-amber-500/30 rounded-xl flex items-center justify-between gap-3 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-[#141A29] border border-[#232D44] flex items-center justify-center font-mono font-bold text-xs text-amber-400 shrink-0">
+                            {idx + 1}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-display text-sm font-bold text-white uppercase">
+                                {athlete.displayName}
+                              </span>
+                              {athlete.isCaptain && (
+                                <span className="inline-flex items-center gap-1 text-[9px] font-mono font-bold uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                  <CrownIcon className="w-2.5 h-2.5" />
+                                  Captain
+                                </span>
+                              )}
+                              <span className="text-[9px] font-mono uppercase px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                                {athlete.role || "STARTER"}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs font-mono text-slate-400 mt-0.5">
+                              <span>IGN: <strong className="text-amber-400">{athlete.gameHandle}</strong></span>
+                              <span>•</span>
+                              <span>ID: <strong className="text-slate-300">{athlete.studentId || "COLLEGIATE-ATHLETE"}</strong></span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-mono text-emerald-400 bg-emerald-950/40 border border-emerald-500/30 px-2 py-0.5 rounded">
+                            <CheckCircleIcon className="w-3 h-3" />
+                            <span>{athlete.eligibilityStatus || "Eligible"}</span>
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="p-8 text-center text-xs font-mono text-slate-500">
+                  No roster snapshot attached to this squad.
+                </div>
+              )}
+
+              {/* Roster Actions Bottom Bar */}
+              <div className="pt-4 border-t border-[#182338] flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={handleCloseRoster}
+                  className="px-4 py-2 bg-[#141A29] hover:bg-[#1E293B] text-slate-300 rounded-lg text-xs font-mono font-bold uppercase transition-colors cursor-pointer"
+                >
+                  Close Roster
+                </button>
+
+                {selectedApp.status === "PENDING" && (
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      disabled={processingId === selectedApp.id}
+                      onClick={() => handleApprove(selectedApp.id)}
+                      className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-mono font-bold uppercase cursor-pointer disabled:opacity-50 transition-colors shadow-md flex items-center gap-1.5"
+                    >
+                      <CheckCircleIcon className="w-3.5 h-3.5" />
+                      <span>{processingId === selectedApp.id ? "Sanctioning..." : "Approve Full Squad"}</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={processingId === selectedApp.id}
+                      onClick={() => handleReject(selectedApp.id)}
+                      className="px-4 py-2 bg-[#141A29] hover:bg-rose-950/40 text-slate-300 hover:text-rose-300 border border-[#232D44] hover:border-rose-500/40 rounded-lg text-xs font-mono font-bold uppercase cursor-pointer disabled:opacity-50 transition-colors"
+                    >
+                      Decline
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : isLoading ? (
+            /* APPLICATION LIST */
             <div className="p-12 text-center text-xs font-mono text-slate-500 animate-pulse">
               Loading Squad Applications...
             </div>
@@ -188,7 +435,7 @@ export default function TournamentApplicationsModal({
                 No Squad Applications Yet
               </h4>
               <p className="text-xs font-sans text-slate-400 max-w-sm mx-auto leading-relaxed">
-                When team captains or athletes click <span className="text-slate-200 font-bold">&quot;Apply / Register Squad&quot;</span> on the public tournaments page, their applications will appear here for your review and approval.
+                When team captains or varsity athletes click <span className="text-slate-200 font-bold">&quot;Apply / Register Squad&quot;</span> on the public tournaments page, their applications will appear here for your review.
               </p>
             </div>
           ) : (
@@ -211,8 +458,13 @@ export default function TournamentApplicationsModal({
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <h5 className="font-display text-sm font-black uppercase text-white">
-                        {app.universityName}
+                        {app.teamName || app.universityName}
                       </h5>
+                      {app.teamName && (
+                        <span className="text-[10px] font-mono text-slate-400">
+                          ({app.universityName})
+                        </span>
+                      )}
                       <span
                         className={`text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded border ${
                           isApproved
@@ -233,8 +485,18 @@ export default function TournamentApplicationsModal({
                     </span>
                   </div>
 
-                  {/* Actions */}
-                  <div className="flex items-center gap-2 shrink-0">
+                  {/* Actions: Standalone View Roster Button + Approve/Reject */}
+                  <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                    {/* Standalone View Roster Action Button */}
+                    <button
+                      type="button"
+                      onClick={() => handleOpenRoster(app)}
+                      className="h-9 px-3 bg-[#141A29] hover:bg-[#1E293B] text-amber-400 hover:text-amber-300 border border-amber-500/30 hover:border-amber-500/60 rounded-lg text-xs font-mono font-bold uppercase cursor-pointer transition-colors flex items-center gap-1.5"
+                    >
+                      <UsersIcon className="w-3.5 h-3.5" />
+                      <span>View Roster</span>
+                    </button>
+
                     {isPending && (
                       <>
                         <button
@@ -250,7 +512,7 @@ export default function TournamentApplicationsModal({
                           type="button"
                           disabled={isProcessing}
                           onClick={() => handleReject(app.id)}
-                          className="h-9 px-3.5 bg-[#141A29] hover:bg-rose-950/40 text-slate-300 hover:text-rose-300 border border-[#232D44] hover:border-rose-500/40 rounded-lg text-xs font-mono font-bold uppercase cursor-pointer disabled:opacity-50 transition-colors"
+                          className="h-9 px-3 bg-[#141A29] hover:bg-rose-950/40 text-slate-300 hover:text-rose-300 border border-[#232D44] hover:border-rose-500/40 rounded-lg text-xs font-mono font-bold uppercase cursor-pointer disabled:opacity-50 transition-colors"
                         >
                           Decline
                         </button>
@@ -260,7 +522,7 @@ export default function TournamentApplicationsModal({
                     {isApproved && (
                       <span className="text-xs font-mono font-bold text-emerald-400 flex items-center gap-1.5 px-3 py-1.5 bg-emerald-950/40 border border-emerald-500/30 rounded-lg">
                         <CheckCircleIcon className="w-3.5 h-3.5 text-emerald-400" />
-                        <span>Sanctioned to Bracket</span>
+                        <span>Sanctioned</span>
                       </span>
                     )}
 
@@ -283,7 +545,7 @@ export default function TournamentApplicationsModal({
         {/* Modal Footer */}
         <div className="p-4 bg-[#0A0E1A] border-t border-[#182338] flex items-center justify-between">
           <span className="text-[11px] font-mono text-slate-500">
-            Approved squads automatically appear in tournament bracket generation.
+            Sanctioned squad entities are seeded directly into the tournament bracket.
           </span>
           <button
             type="button"

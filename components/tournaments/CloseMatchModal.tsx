@@ -62,10 +62,18 @@ export default function CloseMatchModal({
   const [scannedRows, setScannedRows] = useState<ScannedPlayerRow[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Dedicated 2-step forfeit dialog states
+  const [forfeitStep, setForfeitStep] = useState<0 | 1 | 2>(0);
+  const [forfeitingUniId, setForfeitingUniId] = useState<string | null>(null);
+  const [isForfeiting, setIsForfeiting] = useState(false);
+
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        if (forfeitStep > 0) setForfeitStep(0);
+        else onClose();
+      }
     };
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -74,7 +82,7 @@ export default function CloseMatchModal({
       document.body.style.overflow = prevOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, forfeitStep]);
 
   if (!isOpen) return null;
 
@@ -130,8 +138,6 @@ export default function CloseMatchModal({
     );
   };
 
-  // Attach a scanned line to a roster slot (or detach with scanIdx = null).
-  // A one-to-one mapping: taking a line that another slot held clears that slot.
   const assignScanToRow = (rowIdx: number, scanIdx: number | null) => {
     setPlayers((prev) =>
       prev.map((p, i) => {
@@ -228,6 +234,31 @@ export default function CloseMatchModal({
       setIsSubmitting(false);
     }
   };
+
+  const handleExecuteForfeit = async () => {
+    if (!forfeitingUniId) return;
+    setIsForfeiting(true);
+    setErrorMsg("");
+    try {
+      await tournamentsService.forfeitMatch(tournamentId, match.id, forfeitingUniId);
+      onReported();
+      onClose();
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "Failed to declare forfeit.");
+      setIsForfeiting(false);
+    }
+  };
+
+  const forfeitingTeamName =
+    forfeitingUniId === match.team1.universityId
+      ? match.team1.name
+      : forfeitingUniId === match.team2.universityId
+      ? match.team2.name
+      : "";
+  const advancingTeamName =
+    forfeitingUniId === match.team1.universityId
+      ? match.team2.name
+      : match.team1.name;
 
   const hasScan = scannedRows.length > 0;
   const gridCols = hasScan
@@ -343,13 +374,27 @@ export default function CloseMatchModal({
       className="fixed inset-0 z-[110] flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-hidden"
     >
       <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-[#0A0D18] border border-amber-500/40 shadow-2xl p-6 sm:p-8 space-y-6 relative rounded-2xl text-white">
-        <div>
-          <span className="text-[10px] font-mono font-black uppercase tracking-widest text-amber-400 block">
-            {"// REPORT MATCH RESULT"}
-          </span>
-          <h3 className="font-display text-xl sm:text-2xl font-black uppercase text-white tracking-tight">
-            {match.team1.name} vs {match.team2.name}
-          </h3>
+        {/* TOP BAR */}
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="text-[10px] font-mono font-black uppercase tracking-widest text-amber-400 block">
+              {"// REPORT MATCH RESULT"}
+            </span>
+            <h3 className="font-display text-xl sm:text-2xl font-black uppercase text-white tracking-tight">
+              {match.team1.name} vs {match.team2.name}
+            </h3>
+          </div>
+
+          {forfeitStep === 0 && (
+            <button
+              type="button"
+              onClick={() => setForfeitStep(1)}
+              className="px-3.5 py-1.5 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 border border-rose-500/40 hover:border-rose-400 text-rose-300 text-xs font-mono font-bold uppercase transition-colors flex items-center gap-1.5 cursor-pointer"
+            >
+              <AlertTriangleIcon className="w-3.5 h-3.5 text-rose-400" />
+              <span>Forfeit Match</span>
+            </button>
+          )}
         </div>
 
         {errorMsg && (
@@ -359,52 +404,166 @@ export default function CloseMatchModal({
           </div>
         )}
 
-        {scanNotice && !errorMsg && (
-          <div className="p-3 bg-emerald-950/50 border border-emerald-500/40 text-emerald-200 text-xs font-mono">
-            {scanNotice}
+        {/* 2-STEP FORFEIT DIALOG OVERLAY */}
+        {forfeitStep > 0 ? (
+          <div className="p-6 bg-[#060912] border-2 border-rose-500/50 rounded-xl space-y-5 animate-fade-in">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded bg-rose-500 text-black font-mono text-[9px] font-black uppercase">
+                  FORFEIT PROTOCOL · STEP {forfeitStep} OF 2
+                </span>
+                <span className="text-xs font-mono text-rose-400">Zero Stat Attribution</span>
+              </div>
+              <h4 className="font-display text-lg font-black uppercase text-white">
+                {forfeitStep === 1 ? "Select Forfeiting Squad" : "Confirm Official Match Forfeiture"}
+              </h4>
+              <p className="text-xs font-sans text-slate-300">
+                In collegiate tournament play, forfeits award an automatic 2-0 victory to the opposing team.
+                Zero kills, deaths, assists, or rating impact are attributed to any individual athlete.
+              </p>
+            </div>
+
+            {forfeitStep === 1 ? (
+              <div className="space-y-3">
+                <span className="text-[11px] font-mono uppercase text-slate-400 font-bold block">
+                  Which squad is declaring a forfeit?
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setForfeitingUniId(match.team1.universityId || "team1")}
+                    className={`p-4 border rounded-xl text-left transition-colors cursor-pointer ${
+                      forfeitingUniId === (match.team1.universityId || "team1")
+                        ? "bg-rose-950/60 border-rose-500 text-white"
+                        : "bg-[#0A0D18] border-[#1E293B] text-slate-300 hover:border-rose-500/40"
+                    }`}
+                  >
+                    <span className="text-[10px] font-mono text-rose-400 uppercase font-bold block">Team 1</span>
+                    <h5 className="font-display text-base font-black uppercase">{match.team1.name}</h5>
+                    <span className="text-xs font-sans text-slate-400 mt-1 block">Declares Forfeit Loss</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setForfeitingUniId(match.team2.universityId || "team2")}
+                    className={`p-4 border rounded-xl text-left transition-colors cursor-pointer ${
+                      forfeitingUniId === (match.team2.universityId || "team2")
+                        ? "bg-rose-950/60 border-rose-500 text-white"
+                        : "bg-[#0A0D18] border-[#1E293B] text-slate-300 hover:border-rose-500/40"
+                    }`}
+                  >
+                    <span className="text-[10px] font-mono text-rose-400 uppercase font-bold block">Team 2</span>
+                    <h5 className="font-display text-base font-black uppercase">{match.team2.name}</h5>
+                    <span className="text-xs font-sans text-slate-400 mt-1 block">Declares Forfeit Loss</span>
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between pt-4 border-t border-[#182338]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForfeitStep(0);
+                      setForfeitingUniId(null);
+                    }}
+                    className="px-4 py-2 bg-[#141A29] text-slate-300 rounded text-xs font-mono uppercase cursor-pointer"
+                  >
+                    Back to Normal Reporting
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!forfeitingUniId}
+                    onClick={() => setForfeitStep(2)}
+                    className="px-5 py-2 bg-rose-600 hover:bg-rose-500 disabled:opacity-40 text-white rounded text-xs font-mono font-bold uppercase transition-colors cursor-pointer"
+                  >
+                    Proceed to Confirmation →
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="p-4 bg-rose-950/30 border border-rose-500/40 rounded-xl space-y-2">
+                  <div className="text-sm font-sans text-white">
+                    <strong>Forfeiting Squad:</strong> <span className="text-rose-400">{forfeitingTeamName}</span>
+                  </div>
+                  <div className="text-sm font-sans text-white">
+                    <strong>Advancing Squad:</strong> <span className="text-emerald-400">{advancingTeamName} (Default 2-0 Win)</span>
+                  </div>
+                  <div className="text-xs font-mono text-amber-300 pt-1">
+                    Warning: Bracket advancement will strictly advance the winner by 1 round. Zero combat stats will be recorded.
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-4 border-t border-[#182338]">
+                  <button
+                    type="button"
+                    onClick={() => setForfeitStep(1)}
+                    className="px-4 py-2 bg-[#141A29] text-slate-300 rounded text-xs font-mono uppercase cursor-pointer"
+                  >
+                    ← Back
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isForfeiting}
+                    onClick={handleExecuteForfeit}
+                    className="px-6 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-mono font-black uppercase transition-all shadow-lg shadow-rose-950/50 cursor-pointer"
+                  >
+                    {isForfeiting ? "Executing Forfeit..." : "Confirm Forfeit & Advance Winner"}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
+        ) : (
+          /* NORMAL REPORTING FLOW */
+          <>
+            {scanNotice && !errorMsg && (
+              <div className="p-3 bg-emerald-950/50 border border-emerald-500/40 text-emerald-200 text-xs font-mono">
+                {scanNotice}
+              </div>
+            )}
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleScanChange}
+              className="hidden"
+              aria-hidden="true"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isScanning || missingRoster}
+              className="w-full h-9 flex items-center justify-center gap-2 border border-amber-500/40 bg-amber-500/5 text-amber-300 hover:bg-amber-500/10 text-[11px] font-mono font-bold uppercase tracking-wide transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer rounded-lg"
+            >
+              <span>{isScanning ? "Scanning screenshot..." : "Scan Screenshot (OCR)"}</span>
+            </button>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {renderTeamColumn(match.team1.name, match.team1.universityId, team1Players)}
+              {renderTeamColumn(match.team2.name, match.team2.universityId, team2Players)}
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#182338]">
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Close Modal"
+                className="h-10 px-5 bg-[#101524] hover:bg-[#1A233A] text-slate-300 hover:text-white border border-[#222E48] text-xs font-mono font-bold uppercase transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className="h-10 px-6 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50 cursor-pointer"
+              >
+                {isSubmitting ? "Submitting..." : "Confirm Result"}
+              </button>
+            </div>
+          </>
         )}
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handleScanChange}
-          className="hidden"
-          aria-hidden="true"
-        />
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isScanning || missingRoster}
-          className="w-full h-9 flex items-center justify-center gap-2 border border-amber-500/40 bg-amber-500/5 text-amber-300 hover:bg-amber-500/10 text-[11px] font-mono font-bold uppercase tracking-wide transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer rounded-lg"
-        >
-          <span>{isScanning ? "Scanning screenshot..." : "Scan Screenshot (OCR)"}</span>
-        </button>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {renderTeamColumn(match.team1.name, match.team1.universityId, team1Players)}
-          {renderTeamColumn(match.team2.name, match.team2.universityId, team2Players)}
-        </div>
-
-        <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#182338]">
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close Modal"
-            className="h-10 px-5 bg-[#101524] hover:bg-[#1A233A] text-slate-300 hover:text-white border border-[#222E48] text-xs font-mono font-bold uppercase transition-colors cursor-pointer"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-            className="h-10 px-6 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50 cursor-pointer"
-          >
-            {isSubmitting ? "Submitting..." : "Confirm Result"}
-          </button>
-        </div>
       </div>
     </div>
   );

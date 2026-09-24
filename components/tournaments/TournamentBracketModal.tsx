@@ -6,6 +6,8 @@ import { useAuth } from "@/context/AuthContext";
 import MatchBoxScoreModal from "@/components/MatchBoxScoreModal";
 import MatchCard from "@/components/tournaments/MatchCard";
 import CloseMatchModal from "@/components/tournaments/CloseMatchModal";
+import TournamentGlobalChannel from "@/components/tournaments/TournamentGlobalChannel";
+import RetroactiveStatsEditModal from "@/components/tournaments/RetroactiveStatsEditModal";
 import TournamentStreamPanel from "@/components/tournaments/TournamentStreamPanel";
 import TournamentStreamPlayer from "@/components/tournaments/TournamentStreamPlayer";
 import {
@@ -24,7 +26,8 @@ import {
   ShieldIcon,
   ClockIcon,
   CheckCircleIcon,
-  XCircleIcon
+  XCircleIcon,
+  FlameIcon
 } from "@/components/ui/Icons";
 
 function BracketColumn({
@@ -100,8 +103,9 @@ export default function TournamentBracketModal({
   initialTab = "bracket",
 }: TournamentBracketModalProps) {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<"bracket" | "teams" | "overview" | "watch">(initialTab);
+  const [activeTab, setActiveTab] = useState<"bracket" | "teams" | "channel" | "overview" | "watch">(initialTab);
   const [activeBoxScore, setActiveBoxScore] = useState<BracketMatch | null>(null);
+  const [editingStatsMatch, setEditingStatsMatch] = useState<BracketMatch | null>(null);
   const [reportingMatch, setReportingMatch] = useState<BracketMatch | null>(null);
   const [rounds, setRounds] = useState<BracketRound[]>([]);
   const [tournamentDetail, setTournamentDetail] = useState<TournamentDetail | null>(null);
@@ -396,6 +400,22 @@ export default function TournamentBracketModal({
                       {participatingTeams.length}
                     </span>
                   )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("channel")}
+                  className={`h-10 px-4 sm:px-5 font-mono text-xs font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap flex items-center justify-center gap-2 ${
+                    activeTab === "channel"
+                      ? "game-theme-btn"
+                      : "text-slate-400 hover:text-white hover:bg-[#141A29]"
+                  }`}
+                  style={{
+                    clipPath: "polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)",
+                  }}
+                >
+                  <FlameIcon className="w-4 h-4 shrink-0" />
+                  <span>Channel</span>
                 </button>
 
                 <button
@@ -745,6 +765,15 @@ export default function TournamentBracketModal({
                   </div>
                 )}
               </div>
+            ) : activeTab === "channel" ? (
+              /* TAB: GLOBAL TOURNAMENT CHANNEL */
+              <div className="p-4 sm:p-6 sm:px-8 h-[calc(88vh-140px)] min-h-[500px]">
+                <TournamentGlobalChannel
+                  tournamentId={tournamentId || ""}
+                  tournamentTitle={tournamentDetail?.title || title}
+                  isOrganizerOrAdmin={canReportResults}
+                />
+              </div>
             ) : activeTab === "overview" ? (
               /* TAB: OVERVIEW & RULES */
               <div className="p-6 sm:p-10 space-y-8 max-w-5xl mx-auto">
@@ -1039,8 +1068,6 @@ export default function TournamentBracketModal({
               team2Name: activeBoxScore.team2.name,
               team1UniversityId: activeBoxScore.team1.universityId,
               team2UniversityId: activeBoxScore.team2.universityId,
-              team1Score: activeBoxScore.team1.score,
-              team2Score: activeBoxScore.team2.score,
               status: activeBoxScore.status,
               isTeam1Winner: Boolean(activeBoxScore.team1.isWinner),
               isTeam2Winner: Boolean(activeBoxScore.team2.isWinner),
@@ -1048,9 +1075,25 @@ export default function TournamentBracketModal({
               team1Roster: getTeamRoster(activeBoxScore.team1.universityId),
               team2Roster: getTeamRoster(activeBoxScore.team2.universityId),
             }}
+            canEditStats={canReportResults}
+            onEditStats={() => {
+              setEditingStatsMatch(activeBoxScore);
+              setActiveBoxScore(null);
+            }}
           />
         );
       })()}
+
+      {editingStatsMatch && (
+        <RetroactiveStatsEditModal
+          key={editingStatsMatch.id}
+          isOpen={!!editingStatsMatch}
+          onClose={() => setEditingStatsMatch(null)}
+          tournamentId={tournamentId || ""}
+          match={editingStatsMatch}
+          onStatsUpdated={() => setRefreshKey((k) => k + 1)}
+        />
+      )}
 
       {reportingMatch && (() => {
         const team1Roster = participatingTeams.find((t) => t.universityId === reportingMatch.team1.universityId);

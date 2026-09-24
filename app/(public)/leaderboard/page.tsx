@@ -239,11 +239,10 @@ export default function LeaderboardPage() {
                   key={g.id}
                   onClick={() => selectGame(g.id)}
                   type="button"
-                  className={`group relative p-3 sm:p-4 text-left transition-all duration-200 border cursor-pointer overflow-hidden ${
-                    isActive
-                      ? "bg-gradient-to-r from-[#141B2D] via-[#0E1424] to-[#0A0D18] border-primary-brand shadow-lg shadow-primary-brand/10 ring-1 ring-primary-brand/40"
-                      : "bg-[#0A0D18] border-[#1E293B] hover:border-[#334155] hover:bg-[#0E1322]"
-                  }`}
+                  className={`group relative p-3 sm:p-4 text-left transition-all duration-200 border cursor-pointer overflow-hidden ${isActive
+                    ? "bg-gradient-to-r from-[#141B2D] via-[#0E1424] to-[#0A0D18] border-primary-brand shadow-lg shadow-primary-brand/10 ring-1 ring-primary-brand/40"
+                    : "bg-[#0A0D18] border-[#1E293B] hover:border-[#334155] hover:bg-[#0E1322]"
+                    }`}
                   style={{
                     clipPath: "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
                   }}
@@ -261,9 +260,8 @@ export default function LeaderboardPage() {
                     <img
                       src={g.image}
                       alt={g.name}
-                      className={`w-8 h-8 object-cover rounded border transition-transform duration-200 ${
-                        isActive ? "border-white/40 scale-105" : "border-white/10 opacity-70 group-hover:opacity-100"
-                      }`}
+                      className={`w-8 h-8 object-cover rounded border transition-transform duration-200 ${isActive ? "border-white/40 scale-105" : "border-white/10 opacity-70 group-hover:opacity-100"
+                        }`}
                       style={{
                         clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
                       }}
@@ -273,9 +271,8 @@ export default function LeaderboardPage() {
                         {g.genre}
                       </span>
                       <span
-                        className={`font-display text-xs sm:text-sm font-black uppercase tracking-wide truncate block transition-colors ${
-                          isActive ? "text-white" : "text-slate-300 group-hover:text-white"
-                        }`}
+                        className={`font-display text-xs sm:text-sm font-black uppercase tracking-wide truncate block transition-colors ${isActive ? "text-white" : "text-slate-300 group-hover:text-white"
+                          }`}
                       >
                         {g.shortName}
                       </span>
@@ -602,27 +599,24 @@ export default function LeaderboardPage() {
                 <button
                   type="button"
                   onClick={() => setSortBy("rating")}
-                  className={`px-2 py-1 rounded transition-colors ${
-                    sortBy === "rating" ? "bg-primary-brand text-white font-bold" : "text-slate-300 hover:text-white"
-                  }`}
+                  className={`px-2 py-1 rounded transition-colors ${sortBy === "rating" ? "bg-primary-brand text-white font-bold" : "text-slate-300 hover:text-white"
+                    }`}
                 >
                   Rating
                 </button>
                 <button
                   type="button"
                   onClick={() => setSortBy("winRate")}
-                  className={`px-2 py-1 rounded transition-colors ${
-                    sortBy === "winRate" ? "bg-primary-brand text-white font-bold" : "text-slate-300 hover:text-white"
-                  }`}
+                  className={`px-2 py-1 rounded transition-colors ${sortBy === "winRate" ? "bg-primary-brand text-white font-bold" : "text-slate-300 hover:text-white"
+                    }`}
                 >
                   Win %
                 </button>
                 <button
                   type="button"
                   onClick={() => setSortBy("wins")}
-                  className={`px-2 py-1 rounded transition-colors ${
-                    sortBy === "wins" ? "bg-primary-brand text-white font-bold" : "text-slate-300 hover:text-white"
-                  }`}
+                  className={`px-2 py-1 rounded transition-colors ${sortBy === "wins" ? "bg-primary-brand text-white font-bold" : "text-slate-300 hover:text-white"
+                    }`}
                 >
                   Wins
                 </button>
@@ -633,11 +627,10 @@ export default function LeaderboardPage() {
                 <button
                   type="button"
                   onClick={() => setShowAllInTable(!showAllInTable)}
-                  className={`px-3 py-2 text-xs font-mono border rounded-lg transition-all ${
-                    showAllInTable
-                      ? "bg-[#141A29] text-primary-brand border-primary-brand/40"
-                      : "bg-[#05070E] text-slate-400 border-[#1E2538] hover:text-slate-200"
-                  }`}
+                  className={`px-3 py-2 text-xs font-mono border rounded-lg transition-all ${showAllInTable
+                    ? "bg-[#141A29] text-primary-brand border-primary-brand/40"
+                    : "bg-[#05070E] text-slate-400 border-[#1E2538] hover:text-slate-200"
+                    }`}
                 >
                   {showAllInTable ? "Show 4+ in Table" : "Show All in Table"}
                 </button>
@@ -661,8 +654,8 @@ export default function LeaderboardPage() {
                 {isSearchingOrSorting
                   ? "SEARCH & SORTED STANDINGS TABLE"
                   : showAllInTable
-                  ? "COMPLETE DIVISION STANDINGS TABLE (ALL RANKS)"
-                  : "CONTENDER RANKINGS TABLE (RANK 4+)"}
+                    ? "COMPLETE DIVISION STANDINGS TABLE (ALL RANKS)"
+                    : "CONTENDER RANKINGS TABLE (RANK 4+)"}
               </span>
             </h3>
             <span className="text-xs font-mono font-bold text-slate-400">
@@ -709,10 +702,10 @@ export default function LeaderboardPage() {
                   entry.rank === 1
                     ? "border-amber-500/60"
                     : entry.rank === 2
-                    ? "border-slate-400/60"
-                    : entry.rank === 3
-                    ? "border-amber-700/60"
-                    : "border-[#1E293B]";
+                      ? "border-slate-400/60"
+                      : entry.rank === 3
+                        ? "border-amber-700/60"
+                        : "border-[#1E293B]";
 
                 return (
                   <Link
@@ -727,15 +720,14 @@ export default function LeaderboardPage() {
                     <div className="flex items-center gap-4 sm:gap-6 flex-1 min-w-0 pr-2">
                       {/* Octagonal Rank Badge */}
                       <div
-                        className={`h-12 w-12 sm:h-13 sm:w-13 text-white border flex items-center justify-center font-display text-xl sm:text-2xl font-black shrink-0 shadow-md transition-colors ${
-                          entry.rank === 1
-                            ? "bg-gradient-to-br from-amber-400 to-amber-700 text-black border-amber-300"
-                            : entry.rank === 2
+                        className={`h-12 w-12 sm:h-13 sm:w-13 text-white border flex items-center justify-center font-display text-xl sm:text-2xl font-black shrink-0 shadow-md transition-colors ${entry.rank === 1
+                          ? "bg-gradient-to-br from-amber-400 to-amber-700 text-black border-amber-300"
+                          : entry.rank === 2
                             ? "bg-gradient-to-br from-slate-200 to-slate-500 text-black border-slate-300"
                             : entry.rank === 3
-                            ? "bg-gradient-to-br from-amber-600 to-amber-900 text-white border-amber-500"
-                            : "bg-gradient-to-br from-[#1A2236] to-[#0E1424] text-white border-[#2B3B5C] group-hover:border-primary-brand group-hover:text-primary-brand"
-                        }`}
+                              ? "bg-gradient-to-br from-amber-600 to-amber-900 text-white border-amber-500"
+                              : "bg-gradient-to-br from-[#1A2236] to-[#0E1424] text-white border-[#2B3B5C] group-hover:border-primary-brand group-hover:text-primary-brand"
+                          }`}
                         style={{
                           clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
                         }}
@@ -810,13 +802,12 @@ export default function LeaderboardPage() {
                         STREAK
                       </span>
                       <span
-                        className={`font-mono text-sm sm:text-base font-bold mt-0.5 ${
-                          entry.streak.includes("W")
-                            ? "text-emerald-400"
-                            : entry.streak.includes("L")
+                        className={`font-mono text-sm sm:text-base font-bold mt-0.5 ${entry.streak.includes("W")
+                          ? "text-emerald-400"
+                          : entry.streak.includes("L")
                             ? "text-rose-400"
                             : "text-slate-400"
-                        }`}
+                          }`}
                       >
                         {entry.streak}
                       </span>

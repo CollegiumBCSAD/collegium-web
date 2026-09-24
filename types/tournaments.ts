@@ -1,3 +1,5 @@
+import { University } from "./auth";
+
 export type TournamentStatus = "COMPLETED" | "UPCOMING" | "LIVE";
 
 // A tournament's own approval lifecycle is broader than a match's status —
@@ -74,6 +76,104 @@ export interface MatchPlayerStat {
   deaths: number;
   assists: number;
   win: boolean;
+  // Set when the reported stat line was matched to a registered athlete rather
+  // than typed in as a bare in-game name.
+  userId?: string | null;
+  displayName?: string | null;
+}
+
+export type MatchLedgerMode = "ALL" | "TOURNAMENT" | "SCRIM";
+
+// One verified match as it appears on a university's profile ledger, covering
+// both tournament matches and scrims. The roundLabel is resolved server-side
+// so a history row reads the same as the bracket it came from.
+export interface UniversityMatchHistoryEntry {
+  id: string;
+  // Only present on a scrim-mode entry - lets the scrim page route an "edit
+  // this log" action back to the Scrim that produced it.
+  scrimId: string | null;
+  playedAt: string;
+  tournamentId: string | null;
+  tournamentName: string | null;
+  gameTitle: string | null;
+  round: number;
+  bracketSide: BracketSide | null;
+  roundLabel: string;
+  matchMode: "TOURNAMENT" | "SCRIM";
+  isForfeit: boolean;
+  // A forfeited match still counts in the ledger, but carries no combat stats.
+  result: "WIN" | "LOSS" | "FORFEIT_WIN" | "FORFEIT_LOSS";
+  opponent: { id: string; name: string } | null;
+  playerStats: MatchPlayerStat[];
+}
+
+// The match ledger is paged server-side so a long history is never fetched at
+// once.
+export interface UniversityMatchHistoryPage {
+  matches: UniversityMatchHistoryEntry[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+// One tournament finish on a university's Tournament Tracker. The placement is
+// derived from the bracket server-side, never stored.
+export interface UniversityTournamentPlacement {
+  tournamentId: string;
+  tournamentName: string;
+  gameTitle: string | null;
+  image: string | null;
+  status: string;
+  startDate: string;
+  placement: number | null;
+  placementLabel: string;
+  wins: number;
+  losses: number;
+  matchesPlayed: number;
+}
+
+export interface MatchRosterPreviewMember {
+  displayName?: string;
+  gameHandle?: string;
+  preferredRole?: string;
+}
+
+export interface MatchBoxScore {
+  team1Name: string;
+  team2Name: string;
+  team1UniversityId?: string;
+  team2UniversityId?: string;
+  isTeam1Winner?: boolean;
+  isTeam2Winner?: boolean;
+  status?: string;
+  playerStats?: MatchPlayerStat[];
+  team1Roster?: MatchRosterPreviewMember[];
+  team2Roster?: MatchRosterPreviewMember[];
+}
+
+export interface MatchBoxScoreModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title?: string;
+  subtitle?: string;
+  matchInfo?: MatchBoxScore;
+  canEditStats?: boolean;
+  onEditStats?: () => void;
+}
+
+export interface UniversityRosterSectionProps {
+  university: University;
+  matches: UniversityMatchHistoryEntry[];
+  isLoadingMatches?: boolean;
+  matchMode: MatchLedgerMode;
+  onMatchModeChange: (mode: MatchLedgerMode) => void;
+  matchPage: number;
+  matchTotalPages: number;
+  matchTotal: number;
+  onMatchPageChange: (page: number) => void;
+  placements: UniversityTournamentPlacement[];
+  isLoadingPlacements?: boolean;
 }
 
 export interface MatchTeam {
@@ -124,7 +224,7 @@ export interface TournamentBracketModalProps {
   tournamentId?: string;
   title?: string;
   subtitle?: string;
-  initialTab?: "bracket" | "teams" | "overview" | "watch";
+  initialTab?: "bracket" | "teams" | "channel" | "overview" | "watch";
 }
 
 export interface MatchCardProps {

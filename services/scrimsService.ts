@@ -108,6 +108,49 @@ export const scrimsService = {
   completeScrim: (scrimId: string): Promise<ScrimOffer> =>
     apiClient.patch<ScrimOffer>(`/scrims/${scrimId}/complete`),
 
+  scanScrim: async (scrimId: string, file: File): Promise<{
+    scrimId: string;
+    gameTitle: string;
+    players: Array<{
+      extracted: { ign: string; kills: number; deaths: number; assists: number; extra?: Record<string, unknown> };
+      resolution: {
+        rawIgn: string;
+        matchedCandidate: { userId: string; displayName: string; gameHandle: string; teamId: string; teamName: string; role?: string } | null;
+        confidence: number;
+        isHighConfidence: boolean;
+        suggestedCandidates: Array<{ candidate: { userId: string; displayName: string; gameHandle: string; teamId: string; teamName: string }; confidence: number }>;
+      };
+    }>;
+    hostTeam: { id: string; name: string; universityId: string; universityName?: string };
+    opponentTeam: { id: string; name: string; universityId: string; universityName?: string } | null;
+  }> => {
+    const formData = new FormData();
+    formData.append("image", file);
+    return apiClient.postForm(`/scrims/${scrimId}/scan`, formData);
+  },
+
+  finalizeScrim: async (
+    scrimId: string,
+    dto: {
+      winnerId: string;
+      loserId?: string;
+      gameDuration?: number;
+      players: Array<{
+        userId?: string;
+        universityId?: string;
+        name: string;
+        kills: number;
+        deaths: number;
+        assists: number;
+        combatScore?: number;
+        headshotPct?: number;
+        agentName?: string;
+      }>;
+    }
+  ): Promise<ScrimOffer> => {
+    return apiClient.post<ScrimOffer>(`/scrims/${scrimId}/finalize`, dto);
+  },
+
   deleteScrim: (scrimId: string): Promise<void> =>
     apiClient.delete<void>(`/scrims/${scrimId}`),
 
