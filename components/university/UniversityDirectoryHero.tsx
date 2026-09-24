@@ -1,15 +1,8 @@
 "use client";
 
-import Image from "next/image";
-import { GameId, UniversityDirectoryHeroProps } from "@/types";
+import { UniversityDirectoryHeroProps } from "@/types";
 import { GAMES } from "@/lib/games";
-
-const GAME_ART: Record<GameId, string> = {
-  valo: "/valorant-art-1.png",
-  lol: "/lol-art-1.png",
-  codm: "/codm-art-1.png",
-  ml: "/ml-art-1.jpg",
-};
+import UniversityCrestWall from "./UniversityCrestWall";
 
 export default function UniversityDirectoryHero({
   gameId,
@@ -32,16 +25,7 @@ export default function UniversityDirectoryHero({
 
   return (
     <section className="relative overflow-hidden border border-white/[0.06] bg-[#0B0E17]">
-      <div className="absolute inset-y-0 right-0 w-full md:w-3/5 [mask-image:linear-gradient(to_left,black_35%,transparent)]">
-        <Image
-          src={GAME_ART[gameId] || GAME_ART.valo}
-          alt=""
-          fill
-          priority
-          sizes="(min-width: 768px) 60vw, 100vw"
-          className="object-cover object-center opacity-45"
-        />
-      </div>
+      <UniversityCrestWall universities={universities} />
       <div
         aria-hidden
         className="absolute inset-0 opacity-40"

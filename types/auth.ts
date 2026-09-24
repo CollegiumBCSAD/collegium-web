@@ -195,3 +195,7 @@ export interface AthleteProfile {
   teams: AthleteTeamMembership[];
   recentMatches: AthleteRecentMatch[];
 }
+
+export interface UniversityCrestWallProps {
+  universities: University[];
+}
