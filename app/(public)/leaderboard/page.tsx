@@ -177,7 +177,7 @@ export default function LeaderboardPage() {
                 }}
               >
                 <ZapIcon className="w-3.5 h-3.5 text-primary-brand" />
-                GLICKO-2 DYNAMIC RANKING ENGINE
+                RATING
               </span>
               <span className="text-xs font-mono font-bold text-slate-400 uppercase">
                 • {gameDisplayName} DIVISION
@@ -187,7 +187,7 @@ export default function LeaderboardPage() {
               VARSITY ESPORTS LEADERBOARDS
             </h1>
             <p className="font-sans text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl leading-relaxed">
-              Real-time aggregated Glicko-2 ratings, rating deviations (<span className="text-slate-300 font-mono">RD</span>), and verified tournament match records for verified collegiate varsity teams in <strong className="text-white font-bold">{gameDisplayName}</strong>.
+              Ratings and verified tournament records for collegiate varsity teams in <strong className="text-white font-bold">{gameDisplayName}</strong>. The ± next to a rating shows how sure that number is.
             </p>
           </div>
 
@@ -336,7 +336,7 @@ export default function LeaderboardPage() {
                           {top2.isProvisional && (
                             <span
                               className="text-[8px] font-mono font-bold text-amber-300 uppercase px-1.5 py-0.5 bg-amber-500/10 border border-amber-500/30"
-                              title="Rating Deviation > 100. Calibrates with verified tournament matches."
+                              title="This rating is still settling. It firms up after verified tournament matches."
                             >
                               PROVISIONAL
                             </span>
@@ -354,7 +354,7 @@ export default function LeaderboardPage() {
                     {/* Telemetry Box */}
                     <div className="w-full mt-4 p-3 bg-[#05070E] border border-[#182236] flex items-center justify-between font-mono text-xs shadow-inner">
                       <div>
-                        <span className="text-[8px] text-slate-400 block uppercase font-bold">GLICKO-2</span>
+                        <span className="text-[8px] text-slate-400 block uppercase font-bold">RATING</span>
                         <div className="flex items-baseline gap-1">
                           <span className="font-bold text-white text-base">{top2.rating.toFixed(1)}</span>
                           <span className="text-[9px] text-slate-400">±{Math.round(top2.rd ?? 350)}</span>
@@ -426,7 +426,7 @@ export default function LeaderboardPage() {
                           {top1.isProvisional && (
                             <span
                               className="text-[8px] font-mono font-bold text-amber-300 uppercase px-1.5 py-0.5 bg-amber-500/10 border border-amber-500/30"
-                              title="Rating Deviation > 100. Calibrates with verified tournament matches."
+                              title="This rating is still settling. It firms up after verified tournament matches."
                             >
                               PROVISIONAL
                             </span>
@@ -444,10 +444,10 @@ export default function LeaderboardPage() {
                     {/* Recessed Gold Telemetry Box */}
                     <div className="w-full mt-4 p-3.5 bg-[#080703] border border-amber-500/30 flex items-center justify-between font-mono shadow-inner">
                       <div>
-                        <span className="text-[8px] text-amber-400/80 block uppercase font-bold">GLICKO-2 SCORE</span>
+                        <span className="text-[8px] text-amber-400/80 block uppercase font-bold">RATING</span>
                         <div className="flex items-baseline gap-1.5">
                           <span className="font-black text-amber-400 text-xl">{top1.rating.toFixed(1)}</span>
-                          <span className="text-[10px] text-amber-400/70">±{Math.round(top1.rd ?? 350)} RD</span>
+                          <span className="text-[10px] text-amber-400/70">±{Math.round(top1.rd ?? 350)}</span>
                         </div>
                       </div>
                       <div className="text-right">
@@ -510,7 +510,7 @@ export default function LeaderboardPage() {
                           {top3.isProvisional && (
                             <span
                               className="text-[8px] font-mono font-bold text-amber-300 uppercase px-1.5 py-0.5 bg-amber-500/10 border border-amber-500/30"
-                              title="Rating Deviation > 100. Calibrates with verified tournament matches."
+                              title="This rating is still settling. It firms up after verified tournament matches."
                             >
                               PROVISIONAL
                             </span>
@@ -528,7 +528,7 @@ export default function LeaderboardPage() {
                     {/* Telemetry Box */}
                     <div className="w-full mt-4 p-3 bg-[#05070E] border border-[#182236] flex items-center justify-between font-mono text-xs shadow-inner">
                       <div>
-                        <span className="text-[8px] text-slate-400 block uppercase font-bold">GLICKO-2</span>
+                        <span className="text-[8px] text-slate-400 block uppercase font-bold">RATING</span>
                         <div className="flex items-baseline gap-1">
                           <span className="font-bold text-white text-base">{top3.rating.toFixed(1)}</span>
                           <span className="text-[9px] text-slate-400">±{Math.round(top3.rd ?? 350)}</span>
@@ -743,7 +743,7 @@ export default function LeaderboardPage() {
                           {entry.isProvisional && (
                             <span
                               className="text-[9px] font-mono font-bold text-amber-300 uppercase px-2 py-0.5 bg-amber-500/10 border border-amber-500/30 rounded"
-                              title="Rating Deviation > 100. Calibrates with verified tournament matches."
+                              title="This rating is still settling. It firms up after verified tournament matches."
                             >
                               PROVISIONAL
                             </span>
@@ -760,13 +760,13 @@ export default function LeaderboardPage() {
                             {entry.university}
                           </span>
                           <span className="font-mono text-xs font-bold text-white">
-                            {entry.rating.toFixed(1)} <span className="text-[10px] text-slate-400 font-normal">Glicko-2</span>
+                            {entry.rating.toFixed(1)} <span className="text-[10px] text-slate-400 font-normal">Rating</span>
                           </span>
                           <span
                             className="text-[9px] font-mono font-bold px-2 py-0.5 bg-[#141A29] text-slate-300 border border-[#232D44] rounded"
-                            title="Rating Deviation: Represents the statistical uncertainty of the rating."
+                            title="How sure this rating is. A wider ± means fewer verified matches."
                           >
-                            ±{Math.round(entry.rd ?? 350)} RD
+                            ±{Math.round(entry.rd ?? 350)}
                           </span>
                         </div>
                       </div>
@@ -831,20 +831,20 @@ export default function LeaderboardPage() {
           <div className="space-y-1 text-center md:text-left">
             <span className="text-xs font-mono font-bold text-primary-brand uppercase tracking-widest flex items-center justify-center md:justify-start gap-1.5">
               <ShieldIcon className="w-3.5 h-3.5 text-primary-brand" />
-              PEER-VERIFIED GLICKO-2 RATING ENGINE SPECIFICATION
+              HOW TEAM RATINGS WORK
             </span>
             <h4 className="font-display text-base sm:text-lg font-black text-white uppercase">
               How Ratings & Calibration Work
             </h4>
             <p className="font-sans text-xs text-slate-400 max-w-3xl leading-relaxed mt-1">
-              Collegium rates registered varsity teams directly under a persistent Glicko-2 dynamic rating system. Ratings evaluate opponent strength, Rating Deviation (<span className="text-slate-300 font-mono">RD</span>), and volatility (<span className="text-slate-300 font-mono">σ</span>) computed at tournament rating period closures.
+              Collegium rates registered varsity teams from verified tournament results. A win against a stronger team moves the rating more. The ± figure is how sure that rating is, and it tightens as more official matches are played.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 border-t border-[#161D2E]">
             <div className="p-3 bg-[#05070E] border border-[#182236] rounded-lg">
               <span className="text-[10px] font-mono font-bold text-slate-300 uppercase block mb-1">
-                Rating (r)
+                Rating
               </span>
               <p className="text-[11px] font-sans text-slate-400 leading-normal">
                 Starts at cold-start <strong className="text-white font-mono">1500</strong>. Updates based on win/loss outcome scaled by tournament Event Weight.
@@ -853,7 +853,7 @@ export default function LeaderboardPage() {
 
             <div className="p-3 bg-[#05070E] border border-[#182236] rounded-lg">
               <span className="text-[10px] font-mono font-bold text-slate-300 uppercase block mb-1">
-                Rating Deviation (RD)
+                How sure the rating is
               </span>
               <p className="text-[11px] font-sans text-slate-400 leading-normal">
                 Starts at <strong className="text-white font-mono">350</strong> (provisional). Shrinks as more official tournament matches are verified, increasing confidence.
@@ -865,7 +865,7 @@ export default function LeaderboardPage() {
                 Tournament Outcome Exclusivity
               </span>
               <p className="text-[11px] font-sans text-slate-400 leading-normal">
-                Only verified competitive tournament matches affect Glicko-2 ratings. Scrims and casual matches are non-rated practice.
+                Only verified tournament matches move a rating. Scrims stay practice and do not change it.
               </p>
             </div>
           </div>

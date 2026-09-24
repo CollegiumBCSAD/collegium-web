@@ -181,7 +181,7 @@ export default function UniversityGameCards({ university }: UniversityGameCardsP
           {/* Right Column: Telemetry Gauge & Win Rate Bar */}
           <div className="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
             
-            {/* Glicko-2 Score Pod */}
+            {/* Rating */}
             <div 
               className="p-4 bg-[#050711] border border-[#192438] space-y-2 shadow-inner"
               style={{
@@ -190,7 +190,7 @@ export default function UniversityGameCards({ university }: UniversityGameCardsP
             >
               <span className="text-[9px] font-mono text-slate-400 uppercase font-bold flex items-center gap-1.5">
                 <ZapIcon className="w-3 h-3 text-primary-brand" />
-                GLICKO-2 POWER RATING
+                RATING
               </span>
               <div className="flex items-baseline gap-2">
                 <span className="font-display text-2xl sm:text-3xl font-black text-white">
@@ -201,7 +201,7 @@ export default function UniversityGameCards({ university }: UniversityGameCardsP
                 </span>
               </div>
               <p className="text-[10px] font-mono text-slate-400">
-                Confidence RD: ±{rd ? rd.toFixed(0) : "350"}
+                ±{rd ? rd.toFixed(0) : "350"}
               </p>
             </div>
 
