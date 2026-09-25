@@ -9,7 +9,8 @@ import { fetchTeamsApi } from "@/lib/teams";
 import { teamsService } from "@/services";
 import { useAuth } from "@/context/AuthContext";
 import { useGame } from "@/context/GameContext";
-import { PlusIcon, UsersIcon, ShieldIcon, AlertTriangleIcon, CheckCircleIcon, TrophyIcon } from "@/components/ui/Icons";
+import { ShieldIcon, AlertTriangleIcon, CheckCircleIcon, TrophyIcon } from "@/components/ui/Icons";
+import SquadModeTabs from "@/components/SquadModeTabs";
 
 const GAME_SPECIFIC_PLACEHOLDERS: Record<string, { tag: string; role: string; squadName: string }> = {
   valo: {
@@ -227,34 +228,7 @@ export default function CreateTeamPage() {
         />
 
         {/* Top Control Bar: Full-Width Tab Segmented Switcher + Aligned Close Button */}
-        <div className="flex items-center gap-3 w-full">
-          <div className="flex-1 grid grid-cols-2 p-1.5 rounded-2xl bg-[#080C14] border border-[#1C2538] gap-1.5 items-center">
-            <Link
-              href="/team/create"
-              className="h-11 game-theme-btn text-xs font-display font-black uppercase tracking-wider flex items-center justify-center gap-2 text-center w-full"
-            >
-              <PlusIcon className="w-4 h-4" />
-              <span>Create Squad</span>
-            </Link>
-            <Link
-              href="/team/join"
-              className="h-11 rounded-xl bg-transparent hover:bg-[#141A29] text-slate-400 hover:text-white text-xs font-display font-bold uppercase tracking-wider flex items-center justify-center gap-2 text-center transition-all cursor-pointer"
-            >
-              <UsersIcon className="w-4 h-4" />
-              <span>Join Squad</span>
-            </Link>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleClose}
-            className="w-12 h-12 rounded-2xl border border-[#232D44] bg-[#0E1424] hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 flex items-center justify-center text-base font-bold transition-all shrink-0 cursor-pointer shadow-md hover:border-rose-500/40 active:scale-95"
-            title="Close window"
-            aria-label="Close window"
-          >
-            ✕
-          </button>
-        </div>
+        <SquadModeTabs active="create" onClose={handleClose} />
 
         {/* Header Title */}
         <div className="border-b border-[#1C2538] pb-4">
