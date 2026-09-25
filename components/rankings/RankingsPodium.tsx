@@ -29,7 +29,7 @@ export default function RankingsPodium({ top, gameDisplayName }: RankingsPodiumP
         <span className="text-[10px] font-mono font-bold uppercase tracking-[0.25em] text-slate-500">Top 3 · {gameDisplayName}</span>
       </div>
 
-      <div className="relative mt-8 grid grid-cols-1 md:grid-cols-[1fr_1.25fr_1fr] gap-6 md:gap-8 items-end">
+      <div className="relative mt-8 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)_minmax(0,1fr)] gap-6 md:gap-8 items-end">
         {order.map((entry) => {
           const place = entry.rank;
           const medal = MEDALS[place] ?? MEDALS[3];
@@ -40,7 +40,7 @@ export default function RankingsPodium({ top, gameDisplayName }: RankingsPodiumP
           const streakTone = entry.streak.includes("W") ? "text-success" : entry.streak.includes("L") ? "text-rose-400" : "text-slate-400";
 
           return (
-            <div key={entry.id} className={`flex flex-col ${champ ? "order-first md:order-none" : ""}`}>
+            <div key={entry.id} className={`flex min-w-0 flex-col ${champ ? "order-first md:order-none" : ""}`}>
               <Link
                 href={`/university/${entry.id}`}
                 className={`group relative overflow-hidden rounded-2xl border bg-[#0A0D15]/95 backdrop-blur-md transition-all duration-500 hover:-translate-y-1.5 ${champ ? "p-7" : "p-6"}`}
@@ -63,8 +63,8 @@ export default function RankingsPodium({ top, gameDisplayName }: RankingsPodiumP
                     secondary={muted.secondary}
                     className={`${champ ? "w-16 h-[4.7rem]" : "w-12 h-14"} shrink-0 transition-transform duration-500 group-hover:-rotate-3 group-hover:scale-105`}
                   />
-                  <div className="min-w-0">
-                    <span className="flex items-center gap-2 text-[10px] font-mono font-bold uppercase tracking-[0.25em]" style={{ color: medal.color }}>
+                  <div className="min-w-0 flex-1">
+                    <span className="flex flex-wrap items-center gap-x-2 text-[10px] font-mono font-bold uppercase tracking-[0.25em]" style={{ color: medal.color }}>
                       {medal.label} · #{place}
                       {entry.isProvisional && (
                         <span className="text-slate-500 tracking-widest" title={PROVISIONAL_HINT}>
@@ -72,7 +72,7 @@ export default function RankingsPodium({ top, gameDisplayName }: RankingsPodiumP
                         </span>
                       )}
                     </span>
-                    <h3 className={`mt-1 font-display font-black uppercase leading-tight text-white truncate ${champ ? "text-3xl" : "text-xl"}`}>
+                    <h3 className={`mt-1 font-display font-black uppercase leading-tight text-white line-clamp-2 break-words ${champ ? "text-2xl xl:text-3xl" : "text-lg xl:text-xl"}`}>
                       {entry.teamName || entry.university}
                     </h3>
                     <p className="text-xs font-sans text-slate-400 truncate">{entry.university}</p>
@@ -83,7 +83,7 @@ export default function RankingsPodium({ top, gameDisplayName }: RankingsPodiumP
                   <span className="text-[9px] font-mono uppercase tracking-[0.25em] text-slate-500">Glicko-2 rating</span>
                   <div className="flex items-baseline gap-2">
                     <span
-                      className={`font-display font-black tabular-nums leading-none ${champ ? "text-6xl text-transparent bg-clip-text" : "text-5xl text-white"}`}
+                      className={`font-display font-black tabular-nums leading-none ${champ ? "text-5xl xl:text-6xl text-transparent bg-clip-text" : "text-4xl xl:text-5xl text-white"}`}
                       style={champ ? { backgroundImage: `linear-gradient(180deg, #fff 30%, ${medal.color})` } : undefined}
                     >
                       {entry.rating.toFixed(1)}
