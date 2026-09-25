@@ -54,6 +54,7 @@ export interface TournamentMatch {
   team2: TeamInMatch;
   status: TournamentStatus;
   timeLabel?: string;
+  playedAt?: string;
   playerStats?: MatchPlayerStat[];
 }
 
@@ -66,6 +67,10 @@ export interface BracketRound {
   // Elimination and Round Robin + Playoffs, which have one implicit bracket.
   bracketSide?: BracketSide;
   matches: TournamentMatch[];
+}
+
+export interface TournamentMatchHistoryProps {
+  rounds: BracketRound[];
 }
 
 // A real, organizer-reported per-player stat row (PlayerStat.dataSource

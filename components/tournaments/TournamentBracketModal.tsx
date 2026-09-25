@@ -10,6 +10,7 @@ import TournamentGlobalChannel from "@/components/tournaments/TournamentGlobalCh
 import RetroactiveStatsEditModal from "@/components/tournaments/RetroactiveStatsEditModal";
 import TournamentStreamPanel from "@/components/tournaments/TournamentStreamPanel";
 import TournamentStreamPlayer from "@/components/tournaments/TournamentStreamPlayer";
+import TournamentMatchHistory from "@/components/tournaments/TournamentMatchHistory";
 import {
   BracketMatch,
   BracketRound,
@@ -897,6 +898,7 @@ export default function TournamentBracketModal({
               </div>
             ) : (
               /* TAB: BRACKET CANVAS */
+              <>
               <div className="overflow-auto p-6 sm:p-10 flex flex-col gap-10 min-h-[580px] bg-[radial-gradient(rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:24px_24px]">
                 {normalizedRounds.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-20 space-y-4">
@@ -927,6 +929,8 @@ export default function TournamentBracketModal({
                   </>
                 )}
               </div>
+              <TournamentMatchHistory rounds={rounds} />
+              </>
             )}
           </div>
         </div>

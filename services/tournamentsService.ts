@@ -408,6 +408,7 @@ type RawBracketMatch = {
   loserId?: string | null;
   isVerified?: boolean;
   round?: number;
+  playedAt?: string;
   bracketSide?: BracketSide | null;
   playerStats?: RawPlayerStat[];
 };
@@ -485,6 +486,7 @@ function buildBracketRounds(
           universityId: m.loserId ?? undefined,
         },
         status: isPlaceholder ? "UPCOMING" : m.isVerified ? "COMPLETED" : "LIVE",
+        playedAt: m.playedAt,
         playerStats: (m.playerStats || []).map(
           (p): MatchPlayerStat => ({
             universityId: p.universityId ?? null,
