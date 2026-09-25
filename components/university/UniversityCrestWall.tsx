@@ -30,9 +30,9 @@ export default function UniversityCrestWall({ universities }: UniversityCrestWal
           const style: CSSProperties = {
             clipPath: OCTAGON,
             transform: row % 2 ? "translateX(2.9rem)" : undefined,
-            opacity: 0.35 + ((i * 37) % 50) / 100,
+            opacity: 0.25 + ((i * 37) % 40) / 100,
             background: crest
-              ? `linear-gradient(145deg, ${crest.primary}, color-mix(in srgb, ${crest.primary} 35%, #0B0E17))`
+              ? `linear-gradient(145deg, color-mix(in srgb, ${crest.primary} 45%, #475569), color-mix(in srgb, ${crest.primary} 15%, #0B0E17))`
               : "#141A2A",
           };
           return (
@@ -43,7 +43,7 @@ export default function UniversityCrestWall({ universities }: UniversityCrestWal
               >
                 <span className="font-display text-sm font-black tracking-tight text-white/85">{crest?.abbr ?? ""}</span>
               </span>
-              {crest && <span className="absolute bottom-2 w-5 h-0.5" style={{ background: crest.secondary }} />}
+              {crest && <span className="absolute bottom-2 w-5 h-0.5" style={{ background: `color-mix(in srgb, ${crest.secondary} 50%, #64748B)` }} />}
             </div>
           );
         })}
