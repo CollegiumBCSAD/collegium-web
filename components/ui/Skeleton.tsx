@@ -13,8 +13,8 @@ export function Skeleton({ className = "", ...props }: React.HTMLAttributes<HTML
 
 export function TournamentCardSkeleton() {
   return (
-    <div className="flex flex-col md:flex-row overflow-hidden rounded-2xl border border-[#1E2538] bg-[#0E121C]/80 p-0 shadow-2xl backdrop-blur-md">
-      <div className="w-full md:w-64 h-48 md:h-auto shrink-0 bg-[#161C2C] animate-pulse relative">
+    <div className="flex flex-col md:flex-row overflow-hidden rounded-2xl border border-white/[0.07] bg-[#090C14] p-0 shadow-2xl">
+      <div className="w-full md:w-80 h-44 md:h-auto shrink-0 bg-[#141A28] animate-pulse relative">
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" />
       </div>
       <div className="flex-1 p-6 sm:p-8 flex flex-col justify-between space-y-6">
@@ -66,16 +66,19 @@ export function LeaderboardSkeletonRow() {
 
 export function UniversityCardSkeleton() {
   return (
-    <div className="bg-[#0B0E17] border border-white/[0.06] shadow-2xl">
-      <div className="h-28 bg-[#141A28] animate-pulse" />
-      <div className="px-5 -mt-10">
-        <Skeleton className="w-[72px] h-[72px] rounded-none bg-[#1B2233]" />
+    <div className="rounded-2xl bg-[#0E121C] border border-white/[0.06] px-6 pt-7 pb-5 space-y-5">
+      <div className="flex gap-4">
+        <Skeleton className="w-12 h-12 rounded-full shrink-0" />
+        <div className="flex-1 space-y-2">
+          <Skeleton className="h-5 w-3/4" />
+          <Skeleton className="h-3 w-1/3" />
+        </div>
       </div>
-      <div className="px-5 pt-3 pb-5 space-y-2">
-        <Skeleton className="h-5 w-3/4 rounded-none" />
-        <Skeleton className="h-3 w-1/3 rounded-none" />
-        <Skeleton className="h-12 w-full rounded-none mt-5" />
-        <Skeleton className="h-3 w-1/2 rounded-none mt-4" />
+      <Skeleton className="h-10 w-full" />
+      <div className="grid grid-cols-3 gap-4">
+        <Skeleton className="h-9" />
+        <Skeleton className="h-9" />
+        <Skeleton className="h-9" />
       </div>
     </div>
   );

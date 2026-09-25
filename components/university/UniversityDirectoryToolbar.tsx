@@ -1,14 +1,17 @@
 "use client";
 
 import { UniversityDirectoryToolbarProps, UniversitySortKey } from "@/types";
+import SegmentedControl from "@/components/ui/SegmentedControl";
 
 const SORT_OPTIONS: { key: UniversitySortKey; label: string }[] = [
   { key: "name", label: "A–Z" },
-  { key: "rating", label: "By Rating" },
+  { key: "rating", label: "By rating" },
 ];
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
+// Typographic controls: plain letters and labels, with an accent underline
+// marking the active choice instead of filled buttons.
 export default function UniversityDirectoryToolbar({
   sortKey,
   onSortChange,
@@ -18,25 +21,22 @@ export default function UniversityDirectoryToolbar({
   onLetterChange,
 }: UniversityDirectoryToolbarProps) {
   const available = new Set(availableLetters);
+  const tab = (active: boolean) =>
+    `relative pb-2 transition-colors after:absolute after:inset-x-0 after:bottom-0 after:h-[2px] after:rounded-full after:transition-colors ${
+      active ? "text-white after:bg-primary-brand" : "after:bg-transparent"
+    }`;
 
   return (
-    <div className="space-y-3">
-      {/* Yearbook-style index: jump straight to schools by starting letter */}
-      <nav
-        aria-label="Filter universities by letter"
-        className="flex items-center gap-0.5 overflow-x-auto border border-white/[0.06] bg-black/30 backdrop-blur-md p-1 [scrollbar-width:none]"
-      >
+    <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between border-b border-white/[0.06]">
+      <nav aria-label="Filter universities by letter" className="flex items-end gap-3 overflow-x-auto [scrollbar-width:none]">
         <button
           type="button"
           onClick={() => onLetterChange(null)}
           aria-pressed={activeLetter === null}
-          className={`shrink-0 px-3 h-8 text-[10px] font-mono font-bold uppercase tracking-widest transition-colors ${
-            activeLetter === null ? "bg-primary-brand text-white" : "text-slate-400 hover:text-white hover:bg-white/5"
-          }`}
+          className={`shrink-0 text-[11px] font-mono font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-white ${tab(activeLetter === null)}`}
         >
           All
         </button>
-        <span aria-hidden className="shrink-0 w-px h-5 mx-1 bg-white/10" />
         {ALPHABET.map((letter) => {
           const enabled = available.has(letter);
           const active = activeLetter === letter;
@@ -48,13 +48,9 @@ export default function UniversityDirectoryToolbar({
               onClick={() => onLetterChange(active ? null : letter)}
               aria-pressed={active}
               aria-label={`Schools starting with ${letter}`}
-              className={`shrink-0 flex-1 min-w-7 h-8 font-display text-sm font-black transition-colors ${
-                active
-                  ? "bg-primary-brand text-white"
-                  : enabled
-                    ? "text-slate-200 hover:bg-white/10 hover:text-white"
-                    : "text-slate-700 cursor-default"
-              }`}
+              className={`shrink-0 font-display text-base font-black ${
+                enabled ? "text-slate-300 hover:text-white" : "text-slate-700 cursor-default"
+              } ${tab(active)}`}
             >
               {letter}
             </button>
@@ -62,36 +58,17 @@ export default function UniversityDirectoryToolbar({
         })}
       </nav>
 
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-[10px] font-mono uppercase tracking-widest text-slate-500">
-          <span className="text-white font-bold">{resultCount}</span>{" "}
-          {resultCount === 1 ? "institution" : "institutions"}
-          {activeLetter && (
-            <>
-              {" "}
-              under <span className="text-primary-brand font-bold">{activeLetter}</span>
-            </>
-          )}
-        </p>
-
-        <div role="group" aria-label="Order universities" className="flex border border-white/10 bg-black/30">
-          {SORT_OPTIONS.map((option) => {
-            const active = option.key === sortKey;
-            return (
-              <button
-                key={option.key}
-                type="button"
-                onClick={() => onSortChange(option.key)}
-                aria-pressed={active}
-                className={`px-3.5 py-1.5 text-[10px] font-mono font-bold uppercase tracking-wider transition-colors ${
-                  active ? "bg-white text-black" : "text-slate-400 hover:text-white"
-                }`}
-              >
-                {option.label}
-              </button>
-            );
-          })}
-        </div>
+      <div className="flex items-center gap-4 shrink-0 mb-2.5">
+        <span className="text-[11px] font-mono uppercase tracking-[0.2em] text-slate-500">
+          <span className="text-white font-bold">{resultCount}</span> {resultCount === 1 ? "school" : "schools"}
+          {activeLetter && <span className="text-primary-brand"> · {activeLetter}</span>}
+        </span>
+        <SegmentedControl
+          ariaLabel="Order universities"
+          value={sortKey}
+          onChange={onSortChange}
+          options={SORT_OPTIONS.map((o) => ({ id: o.key, label: o.label }))}
+        />
       </div>
     </div>
   );
