@@ -60,6 +60,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     clearAuth();
   }, [clearAuth]);
 
+  const refreshProfile = useCallback(async (): Promise<UserProfile | null> => {
+    const profile = await fetchProfile();
+    if (profile) {
+      setUser(profile);
+    }
+    return profile;
+  }, [fetchProfile]);
+
+  const setUserAvatar = useCallback((avatarUrl: string | null) => {
+    setUser((prev) => (prev ? { ...prev, avatar: avatarUrl } : null));
+  }, []);
+
   useEffect(() => {
     configureApiClient(() => accessToken, clearAuth, handleTokenRefreshed);
     fetchProfile().then((profile) => {
@@ -81,6 +93,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoaded,
         loginWithToken,
         logoutUser,
+        refreshProfile,
+        setUserAvatar,
       }}
     >
       {children}

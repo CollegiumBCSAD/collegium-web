@@ -157,11 +157,11 @@ export default function TournamentGlobalChannel({
     const text = editText.trim();
     if (!text) return;
     try {
-      const updated = (await tournamentsService.updateTournamentMessage(tournamentId, msgId, {
+      await tournamentsService.updateTournamentMessage(tournamentId, msgId, {
         text,
         isPinned: editIsPinned,
         isAnnouncement: editIsAnnouncement,
-      })) as TournamentChatMessage;
+      });
 
       setMessages((prev) =>
         prev.map((m) =>

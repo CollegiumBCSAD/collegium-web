@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "@/context/AuthContext";
 import MatchBoxScoreModal from "@/components/MatchBoxScoreModal";
-import MatchCard from "@/components/tournaments/MatchCard";
+import BracketTree from "@/components/tournaments/BracketTree";
 import CloseMatchModal from "@/components/tournaments/CloseMatchModal";
 import TournamentGlobalChannel from "@/components/tournaments/TournamentGlobalChannel";
 import RetroactiveStatsEditModal from "@/components/tournaments/RetroactiveStatsEditModal";
@@ -31,70 +31,6 @@ import {
   FlameIcon
 } from "@/components/ui/Icons";
 
-function BracketColumn({
-  round,
-  highlight,
-  onViewBoxScore,
-  canReportResults,
-  onReportResult,
-  featuredMatchId,
-}: {
-  round: { name: string; matches: BracketMatch[] };
-  highlight?: boolean;
-  onViewBoxScore: (m: BracketMatch) => void;
-  canReportResults?: boolean;
-  onReportResult?: (m: BracketMatch) => void;
-  featuredMatchId?: string | null;
-}) {
-  return (
-    <div className="w-64 shrink-0 flex flex-col justify-center z-10">
-      <div
-        className={`text-center font-display text-xs font-black tracking-widest uppercase mb-4 pb-2 border-b ${
-          highlight ? "text-primary-brand border-primary-brand/40" : "text-slate-400 border-[#1E293B]"
-        }`}
-      >
-        {round.name}
-      </div>
-      <div className="flex-1 flex flex-col justify-around gap-2">
-        {round.matches.map((m) => (
-          <div key={m.id} className="space-y-1">
-            <MatchCard
-              match={m}
-              onViewBoxScore={() => onViewBoxScore(m)}
-              isFeatured={featuredMatchId === m.id}
-            />
-            {canReportResults && m.status !== "COMPLETED" && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onReportResult?.(m);
-                }}
-                className="w-full h-6 text-[9px] font-mono font-bold uppercase tracking-widest text-amber-400 border border-amber-500/40 hover:bg-amber-500/10 transition-colors cursor-pointer"
-              >
-                Report Result
-              </button>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ponytail: a plain dashed connector instead of the traditional elbowed
-// bracket lines — those need per-match-count positioning math to line up
-// correctly, which stops working the moment round sizes vary (round robin
-// playoffs, double elim). Add real elbow connectors if the visual polish
-// matters more than supporting arbitrary bracket shapes.
-function BracketConnector() {
-  return (
-    <div className="w-8 shrink-0 flex items-center justify-center self-stretch pointer-events-none">
-      <div className="w-full h-0 border-t-2 border-dashed" style={{ borderColor: "#334155" }} />
-    </div>
-  );
-}
-
 export default function TournamentBracketModal({
   isOpen,
   onClose,
@@ -104,7 +40,7 @@ export default function TournamentBracketModal({
   initialTab = "bracket",
 }: TournamentBracketModalProps) {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<"bracket" | "teams" | "channel" | "overview" | "watch">(initialTab);
+  const [selectedTab, setActiveTab] = useState<"bracket" | "teams" | "channel" | "overview" | "watch">(initialTab);
   const [activeBoxScore, setActiveBoxScore] = useState<BracketMatch | null>(null);
   const [editingStatsMatch, setEditingStatsMatch] = useState<BracketMatch | null>(null);
   const [reportingMatch, setReportingMatch] = useState<BracketMatch | null>(null);
@@ -125,14 +61,53 @@ export default function TournamentBracketModal({
     tournamentDetail?.streamUrl && tournamentDetail?.streamIsLive
   );
 
+  // Check if current user is the tournament organizer or an administrator
+  const isOrganizer = Boolean(
+    user?.role === "ADMIN" ||
+    (user?.role === "ORGANIZER" &&
+      (!tournamentDetail?.organizerId ||
+        tournamentDetail?.organizerId === user?.id ||
+        tournamentDetail?.organizer?.id === user?.id)) ||
+    (user?.id &&
+      (tournamentDetail?.organizerId === user.id ||
+        tournamentDetail?.organizer?.id === user.id))
+  );
+
+  // Check if current user is a roster athlete/captain on a participating team in this tournament
+  const participatingTeams: ParticipatingTeamDetail[] = tournamentDetail?.participatingTeams || [];
+  const isUserInParticipatingTeam = Boolean(
+    user?.id &&
+    participatingTeams.some((team) => {
+      const isCaptain = team.captainId === user.id;
+      const isMember = team.members?.some((m) => m.userId === user.id);
+      return isCaptain || isMember;
+    })
+  );
+  const hasApprovedApplication = Boolean(
+    user?.id &&
+    (tournamentDetail?.applications as Array<{ userId?: string; status?: string }> | undefined)?.some(
+      (app) => app.status === "APPROVED" && app.userId === user.id
+    )
+  );
+  const isParticipant = isUserInParticipatingTeam || hasApprovedApplication;
+  const canViewChannel = isOrganizer || isParticipant;
+
   const [prevTabKey, setPrevTabKey] = useState<string | null>(null);
   const currentTabKey = isOpen && initialTab ? `${tournamentId}-${initialTab}` : null;
   if (prevTabKey !== currentTabKey) {
     setPrevTabKey(currentTabKey);
     if (isOpen && initialTab) {
-      setActiveTab(initialTab);
+      if (initialTab === "channel" && !canViewChannel && !isLoading) {
+        setActiveTab("bracket");
+      } else {
+        setActiveTab(initialTab);
+      }
     }
   }
+
+  // Non-participants can't see the channel: once access is known, show the
+  // bracket instead. Derived at render time rather than corrected in an effect.
+  const activeTab = !isLoading && !canViewChannel && selectedTab === "channel" ? "bracket" : selectedTab;
 
   useEffect(() => {
     if (!isOpen) return;
@@ -249,6 +224,13 @@ export default function TournamentBracketModal({
   );
   const losersRounds = normalizedRounds.filter((r) => r.bracketSide === "LOSERS");
   const grandFinalRound = normalizedRounds.find((r) => r.bracketSide === "GRAND_FINAL") || null;
+  const mainRounds = grandFinalRound ? [...winnersRounds, grandFinalRound] : winnersRounds;
+  const treeHandlers = {
+    onViewBoxScore: setActiveBoxScore,
+    canReportResults,
+    onReportResult: setReportingMatch,
+    featuredMatchId: tournamentDetail?.featuredMatchId,
+  };
 
   let featuredOnStream: {
     roundName: string;
@@ -265,9 +247,6 @@ export default function TournamentBracketModal({
     }
   }
 
-  // Participating teams list
-  const participatingTeams: ParticipatingTeamDetail[] = tournamentDetail?.participatingTeams || [];
-
   // Prefer the real bracket format/team count once loaded over the static
   // prop default, which otherwise always claims "Single Elimination".
   const displaySubtitle = tournamentDetail
@@ -278,16 +257,16 @@ export default function TournamentBracketModal({
 
   return createPortal(
     <>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 md:p-8 overflow-hidden">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-hidden">
         {/* Backdrop is a sibling — backdrop-blur on a parent of the iframe makes the embed look soft. */}
         <div
           className="absolute inset-0 bg-black/85 backdrop-blur-lg animate-fade-in"
           onClick={onClose}
         />
 
-        {/* Modal Window Container — no scale transform; scale() on ancestors blurs iframes */}
+        {/* Modal Window Container — spacious esports command center */}
         <div 
-          className="relative w-full max-w-7xl h-[88vh] max-h-[90vh] flex flex-col bg-[#080B14] border border-[#1E293B] shadow-2xl overflow-hidden z-10 animate-fade-in"
+          className="relative w-full max-w-[1720px] h-[92vh] max-h-[96vh] flex flex-col bg-[#080B14] border border-[#1E293B] shadow-2xl overflow-hidden z-10 animate-fade-in"
           style={{
             clipPath: "polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px))",
           }}
@@ -321,13 +300,13 @@ export default function TournamentBracketModal({
                 <button
                   type="button"
                   onClick={() => setActiveTab("watch")}
-                  className={`h-10 px-4 font-mono text-xs font-black uppercase tracking-wider flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                  className={`h-10 sm:h-11 px-4 sm:px-5 font-mono text-xs sm:text-[13px] font-black uppercase tracking-wider flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
                     showWatchLive
-                      ? "text-white bg-rose-600 hover:bg-rose-500"
-                      : "text-slate-300 bg-[#141A29] border border-[#232D44] hover:text-white"
+                      ? "text-white bg-rose-600 hover:bg-rose-500 shadow-lg shadow-rose-600/30"
+                      : "text-slate-300 bg-[#141A29] border border-[#232D44] hover:text-white hover:bg-[#1E293B]"
                   }`}
                   style={{
-                    clipPath: "polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)",
+                    clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
                   }}
                 >
                   {showWatchLive && (
@@ -337,24 +316,24 @@ export default function TournamentBracketModal({
                 </button>
               )}
 
-              {/* Tab Navigation Controls */}
+              {/* Tab Navigation Controls — Matching Tactical Segmented Shape */}
               <div 
-                className="flex items-stretch gap-1 p-1 bg-[#05070E] border border-[#1E293B]"
+                className="flex items-center gap-1.5 p-1.5 bg-[#0A0D18] border border-[#1E293B] shadow-xl"
                 style={{
-                  clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
+                  clipPath: "polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%)",
                 }}
               >
                 {tournamentDetail?.streamUrl && (
                   <button
                     type="button"
                     onClick={() => setActiveTab("watch")}
-                    className={`h-10 px-4 sm:px-5 font-mono text-xs font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap flex items-center justify-center gap-2 ${
+                    className={`h-10 sm:h-11 px-4 sm:px-5 font-mono text-xs sm:text-[13px] font-black uppercase tracking-wider transition-all duration-150 cursor-pointer whitespace-nowrap flex items-center gap-2 ${
                       activeTab === "watch"
                         ? "game-theme-btn"
                         : "text-slate-400 hover:text-white hover:bg-[#141A29]"
                     }`}
                     style={{
-                      clipPath: "polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)",
+                      clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
                     }}
                   >
                     {showWatchLive && (
@@ -367,71 +346,73 @@ export default function TournamentBracketModal({
                 <button
                   type="button"
                   onClick={() => setActiveTab("bracket")}
-                  className={`h-10 px-4 sm:px-5 font-mono text-xs font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap flex items-center justify-center gap-2 ${
+                  className={`h-10 sm:h-11 px-4 sm:px-6 font-mono text-xs sm:text-[13px] font-black uppercase tracking-wider transition-all duration-150 cursor-pointer whitespace-nowrap flex items-center gap-2 ${
                     activeTab === "bracket"
                       ? "game-theme-btn"
                       : "text-slate-400 hover:text-white hover:bg-[#141A29]"
                   }`}
                   style={{
-                    clipPath: "polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)",
+                    clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
                   }}
                 >
-                  <SwordsIcon className="w-4 h-4 shrink-0" />
+                  <SwordsIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0" />
                   <span>Bracket</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setActiveTab("teams")}
-                  className={`h-10 px-4 sm:px-5 font-mono text-xs font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap flex items-center justify-center gap-2 ${
+                  className={`h-10 sm:h-11 px-4 sm:px-6 font-mono text-xs sm:text-[13px] font-black uppercase tracking-wider transition-all duration-150 cursor-pointer whitespace-nowrap flex items-center gap-2 ${
                     activeTab === "teams"
                       ? "game-theme-btn"
                       : "text-slate-400 hover:text-white hover:bg-[#141A29]"
                   }`}
                   style={{
-                    clipPath: "polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)",
+                    clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
                   }}
                 >
-                  <UsersIcon className="w-4 h-4 shrink-0" />
+                  <UsersIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0" />
                   <span>Participating Teams</span>
                   {participatingTeams.length > 0 && (
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
-                      activeTab === "teams" ? "bg-black/30 text-white" : "bg-amber-950/60 text-amber-300 border border-amber-500/30"
+                    <span className={`text-[10px] sm:text-[11px] px-2 py-0.5 rounded font-black ${
+                      activeTab === "teams" ? "bg-black/30 text-white" : "bg-[#141A29] text-slate-400"
                     }`}>
                       {participatingTeams.length}
                     </span>
                   )}
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("channel")}
-                  className={`h-10 px-4 sm:px-5 font-mono text-xs font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap flex items-center justify-center gap-2 ${
-                    activeTab === "channel"
-                      ? "game-theme-btn"
-                      : "text-slate-400 hover:text-white hover:bg-[#141A29]"
-                  }`}
-                  style={{
-                    clipPath: "polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)",
-                  }}
-                >
-                  <FlameIcon className="w-4 h-4 shrink-0" />
-                  <span>Channel</span>
-                </button>
+                {canViewChannel && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("channel")}
+                    className={`h-10 sm:h-11 px-4 sm:px-6 font-mono text-xs sm:text-[13px] font-black uppercase tracking-wider transition-all duration-150 cursor-pointer whitespace-nowrap flex items-center gap-2 ${
+                      activeTab === "channel"
+                        ? "game-theme-btn"
+                        : "text-slate-400 hover:text-white hover:bg-[#141A29]"
+                    }`}
+                    style={{
+                      clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
+                    }}
+                  >
+                    <FlameIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0" />
+                    <span>Channel</span>
+                  </button>
+                )}
 
                 <button
                   type="button"
                   onClick={() => setActiveTab("overview")}
-                  className={`h-10 px-4 sm:px-5 font-mono text-xs font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap flex items-center justify-center gap-2 ${
+                  className={`h-10 sm:h-11 px-4 sm:px-6 font-mono text-xs sm:text-[13px] font-black uppercase tracking-wider transition-all duration-150 cursor-pointer whitespace-nowrap flex items-center gap-2 ${
                     activeTab === "overview"
                       ? "game-theme-btn"
                       : "text-slate-400 hover:text-white hover:bg-[#141A29]"
                   }`}
                   style={{
-                    clipPath: "polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)",
+                    clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
                   }}
                 >
-                  <ShieldIcon className="w-4 h-4 shrink-0" />
+                  <ShieldIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0" />
                   <span>Overview & Rules</span>
                 </button>
               </div>
@@ -439,7 +420,7 @@ export default function TournamentBracketModal({
               <button
                 onClick={onClose}
                 aria-label="Close Modal"
-                className="flex h-10 w-10 items-center justify-center bg-[#141A29] border border-[#232D44] text-slate-300 hover:text-white hover:bg-[#1E273D] transition-colors cursor-pointer shrink-0"
+                className="flex h-10 sm:h-11 w-10 sm:w-11 items-center justify-center bg-[#141A29] hover:bg-[#1E273D] border border-[#232D44] hover:border-slate-500 text-slate-300 hover:text-white transition-colors cursor-pointer shrink-0"
                 style={{
                   clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
                 }}
@@ -527,57 +508,19 @@ export default function TournamentBracketModal({
                         Bracket not generated yet
                       </p>
                     ) : (
-                      <div className="flex items-stretch min-w-max gap-4 select-none py-2">
-                        {winnersRounds.map((round, idx) => (
-                          <div key={`watch-w-${idx}`} className="flex items-stretch gap-4">
-                            <BracketColumn
-                              round={round}
-                              highlight={
-                                !grandFinalRound && idx === winnersRounds.length - 1
-                              }
-                              onViewBoxScore={setActiveBoxScore}
-                              canReportResults={canReportResults}
-                              onReportResult={setReportingMatch}
-                              featuredMatchId={tournamentDetail?.featuredMatchId}
-                            />
-                            {(idx < winnersRounds.length - 1 ||
-                              grandFinalRound ||
-                              losersRounds.length > 0) && <BracketConnector />}
-                          </div>
-                        ))}
-                        {grandFinalRound && (
-                          <div className="flex items-stretch gap-4">
-                            <BracketColumn
-                              round={grandFinalRound}
-                              highlight
-                              onViewBoxScore={setActiveBoxScore}
-                              canReportResults={canReportResults}
-                              onReportResult={setReportingMatch}
-                              featuredMatchId={tournamentDetail?.featuredMatchId}
-                            />
-                          </div>
-                        )}
-                      </div>
+                      <BracketTree
+                        rounds={mainRounds}
+                        projectToFinal={losersRounds.length === 0}
+                        compact
+                        {...treeHandlers}
+                      />
                     )}
                     {losersRounds.length > 0 && (
                       <div className="pt-6 mt-4 border-t border-[#1E293B]">
-                        <div className="text-[9px] font-mono font-black text-rose-400 uppercase tracking-widest mb-3">
+                        <div className="text-[9px] font-mono font-black text-slate-400 uppercase tracking-widest mb-3">
                           Losers bracket
                         </div>
-                        <div className="flex items-stretch min-w-max gap-4 select-none">
-                          {losersRounds.map((round, idx) => (
-                            <div key={`watch-l-${idx}`} className="flex items-stretch gap-4">
-                              <BracketColumn
-                                round={round}
-                                onViewBoxScore={setActiveBoxScore}
-                                canReportResults={canReportResults}
-                                onReportResult={setReportingMatch}
-                                featuredMatchId={tournamentDetail?.featuredMatchId}
-                              />
-                              {idx < losersRounds.length - 1 && <BracketConnector />}
-                            </div>
-                          ))}
-                        </div>
+                        <BracketTree rounds={losersRounds} compact {...treeHandlers} />
                       </div>
                     )}
                   </div>
@@ -585,66 +528,66 @@ export default function TournamentBracketModal({
               </div>
             ) : activeTab === "teams" ? (
               /* TAB: PARTICIPATING TEAMS & ROSTERS */
-              <div className="p-4 sm:p-6 sm:px-8 space-y-5">
+              <div className="p-5 sm:p-8 sm:px-10 space-y-8">
                 {/* Top Highlight Metric Strip (Matching Bracket & Overview) */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6">
                   <div 
-                    className="p-3.5 bg-[#0A0D18] border border-[#1E293B] flex items-center justify-between relative overflow-hidden"
+                    className="p-5 sm:p-6 bg-[#0A0D18] border border-[#1E293B] flex items-center justify-between relative overflow-hidden shadow-xl"
                     style={{
-                      clipPath: "polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))",
+                      clipPath: "polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px))",
                     }}
                   >
-                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary-brand via-amber-400 to-transparent" />
+                    <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-primary-brand via-amber-400 to-transparent shadow-[0_0_10px_rgba(244,63,94,0.6)]" />
                     <div>
-                      <span className="text-[9px] font-mono text-slate-400 uppercase tracking-widest block">
+                      <span className="text-[11px] sm:text-xs font-mono font-bold text-slate-400 uppercase tracking-widest block">
                         Registered Competitors
                       </span>
-                      <span className="font-display text-base font-black text-white uppercase mt-0.5 block">
+                      <span className="font-display text-xl sm:text-2xl lg:text-3xl font-black text-white uppercase mt-1 block">
                         {participatingTeams.length} Varsity Squads
                       </span>
                     </div>
-                    <div className="w-8 h-8 bg-primary-brand/10 border border-primary-brand/30 flex items-center justify-center text-primary-brand">
-                      <UsersIcon className="w-4 h-4" />
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 bg-primary-brand/10 border border-primary-brand/30 flex items-center justify-center text-primary-brand shrink-0 shadow-sm">
+                      <UsersIcon className="w-6 h-6 sm:w-7 sm:h-7" />
                     </div>
                   </div>
 
                   <div 
-                    className="p-3.5 bg-[#0A0D18] border border-[#1E293B] flex items-center justify-between relative overflow-hidden"
+                    className="p-5 sm:p-6 bg-[#0A0D18] border border-[#1E293B] flex items-center justify-between relative overflow-hidden shadow-xl"
                     style={{
-                      clipPath: "polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))",
+                      clipPath: "polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px))",
                     }}
                   >
-                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-amber-500 via-amber-400 to-transparent" />
+                    <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-amber-500 via-amber-400 to-transparent shadow-[0_0_10px_rgba(245,158,11,0.6)]" />
                     <div>
-                      <span className="text-[9px] font-mono text-slate-400 uppercase tracking-widest block">
+                      <span className="text-[11px] sm:text-xs font-mono font-bold text-slate-400 uppercase tracking-widest block">
                         Esports Circuit
                       </span>
-                      <span className="font-display text-base font-black text-amber-400 uppercase mt-0.5 block truncate max-w-[160px]">
+                      <span className="font-display text-xl sm:text-2xl lg:text-3xl font-black text-amber-400 uppercase mt-1 block truncate max-w-[200px] sm:max-w-none">
                         {tournamentDetail?.game || "Collegiate Arena"}
                       </span>
                     </div>
-                    <div className="w-8 h-8 bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
-                      <TrophyIcon className="w-4 h-4" />
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0 shadow-sm">
+                      <TrophyIcon className="w-6 h-6 sm:w-7 sm:h-7" />
                     </div>
                   </div>
 
                   <div 
-                    className="p-3.5 bg-[#0A0D18] border border-[#1E293B] flex items-center justify-between relative overflow-hidden"
+                    className="p-5 sm:p-6 bg-[#0A0D18] border border-[#1E293B] flex items-center justify-between relative overflow-hidden shadow-xl"
                     style={{
-                      clipPath: "polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))",
+                      clipPath: "polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px))",
                     }}
                   >
-                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500 via-teal-400 to-transparent" />
+                    <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-emerald-500 via-teal-400 to-transparent shadow-[0_0_10px_rgba(16,185,129,0.6)]" />
                     <div>
-                      <span className="text-[9px] font-mono text-slate-400 uppercase tracking-widest block">
+                      <span className="text-[11px] sm:text-xs font-mono font-bold text-slate-400 uppercase tracking-widest block">
                         Roster Verification
                       </span>
-                      <span className="font-display text-base font-black text-emerald-400 uppercase mt-0.5 block">
+                      <span className="font-display text-xl sm:text-2xl lg:text-3xl font-black text-emerald-400 uppercase mt-1 block">
                         Active & Sanctioned
                       </span>
                     </div>
-                    <div className="w-8 h-8 bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-                      <ShieldIcon className="w-4 h-4" />
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0 shadow-sm">
+                      <ShieldIcon className="w-6 h-6 sm:w-7 sm:h-7" />
                     </div>
                   </div>
                 </div>
@@ -652,127 +595,165 @@ export default function TournamentBracketModal({
                 {/* Section Title Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#182338]">
                   <div>
-                    <h3 className="font-display text-base sm:text-lg font-black uppercase text-white tracking-wider flex items-center gap-2">
-                      <UsersIcon className="w-4 h-4 text-primary-brand" />
+                    <h3 className="font-display text-lg sm:text-xl font-black uppercase text-white tracking-wider flex items-center gap-2.5">
+                      <UsersIcon className="w-5 h-5 text-primary-brand" />
                       <span>CONFIRMED COLLEGIATE SQUADS</span>
                     </h3>
-                    <p className="font-sans text-[11px] text-slate-400 mt-0.5">
+                    <p className="font-sans text-xs sm:text-sm text-slate-400 mt-1">
                       Official verified varsity rosters and active starting lineups for this tournament circuit.
                     </p>
                   </div>
-                  <div className="flex items-center gap-1.5 text-[11px] font-mono text-emerald-400 bg-emerald-950/40 border border-emerald-500/30 px-2.5 py-1 self-start">
-                    <CheckCircleIcon className="w-3.5 h-3.5" />
+                  <div className="flex items-center gap-2 text-xs font-display font-bold text-emerald-300 bg-emerald-950/60 border border-emerald-500/40 px-3.5 py-1.5 self-start shadow-sm">
+                    <CheckCircleIcon className="w-4 h-4 text-emerald-400" />
                     <span>{participatingTeams.length} Active Competitors</span>
                   </div>
                 </div>
 
                 {participatingTeams.length === 0 ? (
-                  <div className="text-center py-12 px-4 bg-[#0A0D18] border border-[#1E293B] p-6">
-                    <UsersIcon className="w-8 h-8 text-slate-500 mx-auto mb-2" />
-                    <h4 className="font-display text-sm font-black text-white uppercase">
+                  <div className="text-center py-20 px-4 bg-[#0A0D18] border border-[#1E293B] p-8">
+                    <UsersIcon className="w-12 h-12 text-slate-500 mx-auto mb-3" />
+                    <h4 className="font-display text-base sm:text-lg font-black text-white uppercase">
                       No Registered Squads Yet
                     </h4>
-                    <p className="font-sans text-xs text-slate-400 mt-1 max-w-md mx-auto">
+                    <p className="font-sans text-xs sm:text-sm text-slate-400 mt-1.5 max-w-md mx-auto">
                       Registration is currently open for university varsity teams. Squads will appear here upon submission and confirmation.
                     </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5">
-                    {participatingTeams.map((team, idx) => (
-                      <div
-                        key={team.id || idx}
-                        className="bg-[#0A0D18] border border-[#1E293B] hover:border-primary-brand/50 transition-all p-3.5 shadow-lg flex flex-col justify-between group relative overflow-hidden"
-                        style={{
-                          clipPath: "polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))",
-                        }}
-                      >
-                        {/* Top Accent line */}
-                        <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-primary-brand/60 via-amber-500/40 to-transparent" />
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6">
+                    {participatingTeams.map((team, idx) => {
+                      const seedNum = Number(team.seed) || idx + 1;
 
-                        {/* Team Header */}
-                        <div>
-                          <div className="flex items-start justify-between gap-2 mb-2">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <div 
-                                className="w-8 h-8 bg-[#121726] border border-[#232D44] flex items-center justify-center font-display font-black text-white text-xs shrink-0 group-hover:border-primary-brand transition-colors"
+                      return (
+                        <div
+                          key={team.id || idx}
+                          className="bg-[#090C16] border border-[#1E293B] hover:border-primary-brand/70 transition-all duration-200 p-5 sm:p-6 shadow-xl flex flex-col justify-between group relative overflow-hidden"
+                          style={{
+                            clipPath: "polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px))",
+                          }}
+                        >
+                          {/* Top Brand Accent Line */}
+                          <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-primary-brand via-amber-400 to-transparent group-hover:h-[3px] transition-all" />
+
+                          <div>
+                            {/* Team Identity Header */}
+                            <div className="flex items-start justify-between gap-3 mb-4">
+                              <div className="flex items-center gap-3.5 min-w-0">
+                                {/* University Acronym Badge */}
+                                <div
+                                  className="w-12 h-12 flex items-center justify-center font-display font-black text-white text-base shrink-0 bg-[#121828] border-2 border-[#243350] group-hover:border-primary-brand shadow-sm transition-colors"
+                                  style={{
+                                    clipPath: "polygon(25% 0%, 75% 0%, 100% 25%, 100% 75%, 75% 100%, 25% 100%, 0% 75%, 0% 25%)",
+                                  }}
+                                >
+                                  {team.universityName.slice(0, 3).toUpperCase()}
+                                </div>
+
+                                <div className="min-w-0">
+                                  <h4 className="font-display text-lg sm:text-xl font-black text-white uppercase tracking-wide group-hover:text-primary-brand transition-colors truncate">
+                                    {team.name}
+                                  </h4>
+                                  <span className="font-sans text-xs sm:text-sm text-slate-400 block truncate font-medium mt-0.5">
+                                    {team.universityName}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Seed Badge */}
+                              <span
+                                className="font-display text-xs font-black uppercase px-3 py-1 bg-[#121828] text-slate-200 border border-[#26354E] shrink-0 flex items-center gap-1 shadow-sm"
                                 style={{
                                   clipPath: "polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)",
                                 }}
                               >
-                                {team.universityName.slice(0, 3).toUpperCase()}
-                              </div>
-                              <div className="min-w-0">
-                                <h4 className="font-display text-xs font-black text-white uppercase tracking-tight group-hover:text-primary-brand transition-colors truncate">
-                                  {team.name}
-                                </h4>
-                                <span className="font-mono text-[10px] text-slate-400 block truncate">
-                                  {team.universityName}
+                                SEED #{seedNum}
+                              </span>
+                            </div>
+
+                            {/* Captain & Status Bar */}
+                            <div className="flex items-center justify-between py-2.5 px-3.5 bg-[#0C111F] border border-[#182338] mb-4">
+                              <div className="flex items-center gap-2 min-w-0 pr-2">
+                                <CrownIcon className="w-4 h-4 text-amber-400 shrink-0" />
+                                <span className="font-display text-xs font-black uppercase tracking-wider text-amber-400 shrink-0">
+                                  CAP:
+                                </span>
+                                <span className="font-sans text-sm font-bold text-white truncate">
+                                  {team.captainName || "Team Captain"}
                                 </span>
                               </div>
+                              <div className="flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-950/60 border border-emerald-500/40 text-xs font-display font-bold text-emerald-400 uppercase tracking-wider shrink-0">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                                <span>{team.status}</span>
+                              </div>
                             </div>
 
-                            <span 
-                              className="font-mono text-[8px] font-black uppercase px-1.5 py-0.5 bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 shrink-0"
-                              style={{
-                                clipPath: "polygon(2px 0, 100% 0, calc(100% - 2px) 100%, 0 100%)",
-                              }}
-                            >
-                              SEED #{team.seed || idx + 1}
-                            </span>
-                          </div>
-
-                          {/* Captain & Status Bar */}
-                          <div className="flex items-center justify-between text-[10px] font-mono py-1 px-2 bg-[#060812] border border-[#141A29] mb-2.5">
-                            <span className="flex items-center gap-1 text-amber-300 truncate max-w-[150px]">
-                              <CrownIcon className="w-3 h-3 text-amber-400 shrink-0" />
-                              <span className="font-bold">Cap:</span>
-                              <span className="text-white truncate">{team.captainName || "Team Captain"}</span>
-                            </span>
-                            <span className="text-slate-400 font-bold uppercase text-[9px] shrink-0">
-                              ● {team.status}
-                            </span>
-                          </div>
-
-                          {/* Roster Athletes */}
-                          <div className="space-y-1">
-                            <span className="text-[9px] font-mono font-bold text-slate-400 uppercase tracking-widest block">
-                              Active Roster ({team.members.length})
-                            </span>
-                            <div className="space-y-0.5">
-                              {team.members.map((member, mIdx) => (
-                                <div
-                                  key={member.id || mIdx}
-                                  className="flex items-center justify-between py-0.5 px-1.5 bg-[#0E1322] border border-[#182338]/60 text-[10px] font-mono"
-                                >
-                                  <div className="flex items-center gap-1.5 truncate">
-                                    <span className="text-slate-500 text-[9px]">{mIdx + 1}</span>
-                                    <span className="text-slate-200 truncate font-medium">
-                                      {member.displayName}
-                                    </span>
-                                    {member.isCaptain && (
-                                      <CrownIcon className="w-2.5 h-2.5 text-amber-400 shrink-0" />
-                                    )}
-                                  </div>
-                                  <span className="text-[8px] px-1 py-0.2 bg-[#161D30] text-primary-brand font-bold uppercase shrink-0">
-                                    {member.preferredRole || (mIdx === 0 ? "Duelist" : mIdx === 1 ? "Initiator" : mIdx === 2 ? "Controller" : mIdx === 3 ? "Sentinel" : "Flex")}
+                            {/* Active Roster List */}
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between pb-2 border-b border-[#182338]">
+                                <span className="text-xs font-display font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                                  <span>Active Roster</span>
+                                  <span className="px-2 py-0.5 bg-[#141C2E] text-slate-300 text-xs font-display font-bold">
+                                    {team.members.length}
                                   </span>
-                                </div>
-                              ))}
+                                </span>
+                                <span className="text-xs font-display font-bold uppercase tracking-wider text-slate-500">
+                                  Starting Lineup
+                                </span>
+                              </div>
+
+                              <div className="space-y-1.5">
+                                {team.members.map((member, mIdx) => {
+                                  const roleName = member.preferredRole || (mIdx === 0 ? "Duelist" : mIdx === 1 ? "Initiator" : mIdx === 2 ? "Controller" : mIdx === 3 ? "Sentinel" : "Flex");
+
+                                  return (
+                                    <div
+                                      key={member.id || mIdx}
+                                      className="group/row flex items-center justify-between py-2.5 px-3.5 bg-[#0C111F] hover:bg-[#131A2D] border border-[#162035] hover:border-[#2A3B5A] transition-all"
+                                    >
+                                      <div className="flex items-center gap-3 min-w-0 pr-2">
+                                        <span className="text-slate-500 font-display font-bold text-sm w-4 text-center shrink-0">
+                                          {mIdx + 1}
+                                        </span>
+                                        <span className="text-white group-hover/row:text-primary-brand truncate font-sans font-bold text-sm">
+                                          {member.displayName}
+                                        </span>
+                                        {member.isCaptain && (
+                                          <CrownIcon className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                                        )}
+                                      </div>
+                                      <span
+                                        className="text-xs font-display font-bold uppercase tracking-wider px-3 py-1 bg-[#141C2E] text-slate-300 border border-[#23314A] shrink-0"
+                                        style={{
+                                          clipPath: "polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)",
+                                        }}
+                                      >
+                                        {roleName}
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
                             </div>
+                          </div>
+
+                          {/* Card Footer */}
+                          <div className="mt-4 pt-3 border-t border-[#141C2E] flex items-center justify-between text-xs font-sans text-slate-500">
+                            <span>VARSITY SQUAD</span>
+                            <span className="text-primary-brand font-display font-bold tracking-wider uppercase">COLLEGIUM VERIFIED</span>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
-            ) : activeTab === "channel" ? (
+            ) : activeTab === "channel" && canViewChannel ? (
               /* TAB: GLOBAL TOURNAMENT CHANNEL */
               <div className="p-4 sm:p-6 sm:px-8 h-[calc(88vh-140px)] min-h-[500px]">
                 <TournamentGlobalChannel
                   tournamentId={tournamentId || ""}
                   tournamentTitle={tournamentDetail?.title || title}
-                  isOrganizerOrAdmin={canReportResults}
+                  isOrganizerOrAdmin={isOrganizer}
                 />
               </div>
             ) : activeTab === "overview" ? (
@@ -918,7 +899,7 @@ export default function TournamentBracketModal({
             ) : (
               /* TAB: BRACKET CANVAS */
               <>
-              <div className="overflow-x-auto p-6 sm:p-10 flex flex-col gap-10 min-h-[580px]">
+              <div className="overflow-auto p-6 sm:p-10 flex flex-col gap-10 min-h-[580px] bg-[radial-gradient(rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:24px_24px]">
                 {normalizedRounds.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-20 space-y-4">
                     <p className="font-sans text-xs font-bold text-slate-400 tracking-widest uppercase">
@@ -927,122 +908,22 @@ export default function TournamentBracketModal({
                   </div>
                 ) : (
                   <>
-                    <div className="flex items-stretch min-w-max mx-auto gap-6 select-none py-6">
-                      {winnersRounds.map((round, idx) => (
-                        <div key={`w-${idx}`} className="flex items-stretch gap-6">
-                          <BracketColumn
-                            round={round}
-                            highlight={!grandFinalRound && idx === winnersRounds.length - 1}
-                            onViewBoxScore={setActiveBoxScore}
-                            canReportResults={canReportResults}
-                            onReportResult={setReportingMatch}
-                            featuredMatchId={tournamentDetail?.featuredMatchId}
-                          />
-                          <BracketConnector />
-                        </div>
-                      ))}
-
-                      {grandFinalRound && (
-                        <div className="flex items-stretch gap-6">
-                          <BracketColumn
-                            round={grandFinalRound}
-                            highlight
-                            onViewBoxScore={setActiveBoxScore}
-                            canReportResults={canReportResults}
-                            onReportResult={setReportingMatch}
-                            featuredMatchId={tournamentDetail?.featuredMatchId}
-                          />
-                          <BracketConnector />
-                        </div>
-                      )}
-
-                      {/* CHAMPIONSHIP PODIUM */}
-                      <div className="w-64 shrink-0 flex flex-col justify-between z-10">
-                        <div className="text-center font-display text-xs font-black tracking-widest text-amber-400 uppercase mb-4 pb-2 border-b border-amber-500/40">
-                          CHAMPIONSHIP PODIUM
-                        </div>
-
-                        <div className="flex-1 flex flex-col items-center justify-center relative group py-4">
-                          <div className="relative mb-6">
-                            <div
-                              className="w-28 h-28 bg-gradient-to-br from-amber-300 via-amber-500 to-amber-700 p-[2.5px] shadow-2xl flex items-center justify-center relative transition-transform duration-300 group-hover:scale-105"
-                              style={{
-                                clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
-                              }}
-                            >
-                              <div
-                                className="w-full h-full bg-[#0D0F18] flex flex-col items-center justify-center p-3 text-center space-y-1"
-                                style={{
-                                  clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
-                                }}
-                              >
-                                <TrophyIcon className="w-10 h-10 text-amber-400 drop-shadow-md animate-pulse" />
-                                <span className="font-mono text-[8px] font-bold text-amber-300 uppercase tracking-widest block">
-                                  SEASON 1
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Champion Winner Card */}
-                          <div
-                            className={`w-56 border-2 p-4 shadow-2xl text-center space-y-2 ${
-                              champion
-                                ? "bg-gradient-to-b from-[#1C1708] via-[#0E101B] to-[#070912] border-amber-500/80 shadow-[0_0_20px_rgba(245,158,11,0.2)]"
-                                : "bg-[#090C16] border-[#22304A]"
-                            }`}
-                            style={{
-                              clipPath: "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
-                            }}
-                          >
-                            <div className={`flex items-center justify-center gap-1.5 font-display text-[10px] font-black uppercase tracking-widest ${
-                              champion ? "text-amber-400" : "text-emerald-400"
-                            }`}>
-                              <CrownIcon className="w-3.5 h-3.5" />
-                              <span>{champion ? "TOURNAMENT CHAMPION" : "CHAMPIONSHIP TROPHY"}</span>
-                            </div>
-
-                            <h3 className="font-display text-base font-black uppercase text-white tracking-wide">
-                              {champion || "Awaiting Finalists"}
-                            </h3>
-
-                            <div className="pt-2 border-t border-white/10">
-                              <span
-                                className={`px-2.5 py-0.5 font-mono text-[9px] font-black uppercase tracking-wider inline-block ${
-                                  champion ? "bg-amber-500 text-black" : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
-                                }`}
-                                style={{
-                                  clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-                                }}
-                              >
-                                {champion ? "GOLD MEDALIST" : "MATCHES IN PROGRESS"}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                    <div className="mx-auto">
+                      <BracketTree
+                        rounds={mainRounds}
+                        projectToFinal={losersRounds.length === 0}
+                        champion={champion ?? null}
+                        {...treeHandlers}
+                      />
                     </div>
 
                     {/* LOSERS BRACKET — Double Elimination only */}
                     {losersRounds.length > 0 && (
                       <div className="pt-8 border-t border-[#1E293B]">
-                        <div className="text-center font-mono text-[10px] font-black text-rose-400 uppercase tracking-widest mb-6">
+                        <div className="mb-4 font-display text-sm font-black uppercase tracking-[0.2em] text-slate-300">
                           Losers Bracket
                         </div>
-                        <div className="flex items-stretch min-w-max mx-auto gap-6 select-none">
-                          {losersRounds.map((round, idx) => (
-                            <div key={`l-${idx}`} className="flex items-stretch gap-6">
-                              <BracketColumn
-                                round={round}
-                                onViewBoxScore={setActiveBoxScore}
-                                canReportResults={canReportResults}
-                                onReportResult={setReportingMatch}
-                                featuredMatchId={tournamentDetail?.featuredMatchId}
-                              />
-                              {idx < losersRounds.length - 1 && <BracketConnector />}
-                            </div>
-                          ))}
-                        </div>
+                        <BracketTree rounds={losersRounds} {...treeHandlers} />
                       </div>
                     )}
                   </>

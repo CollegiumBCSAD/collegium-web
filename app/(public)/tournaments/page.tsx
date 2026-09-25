@@ -2,72 +2,57 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useGame } from "@/context/GameContext";
 import { useAuth } from "@/context/AuthContext";
-import Link from "next/link";
-import PostTournamentModal from "@/components/dashboard/PostTournamentModal";
 import TournamentBracketModal from "@/components/tournaments/TournamentBracketModal";
 import SquadRegistrationModal from "@/components/tournaments/SquadRegistrationModal";
 import TournamentCard from "@/components/tournaments/TournamentCard";
+import TournamentsHero from "@/components/tournaments/TournamentsHero";
+import TournamentsFilterTabs from "@/components/tournaments/TournamentsFilterTabs";
 import { TournamentCardSkeleton } from "@/components/ui/Skeleton";
-import { TrophyIcon, PlusIcon } from "@/components/ui/Icons";
-import { Tournament } from "@/types";
+import { Tournament, TournamentDetailTab } from "@/types";
 import { tournamentsService } from "@/services";
+import { GAMES, getGameInfo } from "@/lib/games";
 
 export default function TournamentsPage() {
   const router = useRouter();
   const { user, isLoggedIn } = useAuth();
-  const { selectedGame: globalGame, selectedGameInfo } = useGame();
+  const { selectedGame } = useGame();
+  const game = GAMES[selectedGame as keyof typeof GAMES] || GAMES.valo;
+
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
-  const [selectedTournamentTab, setSelectedTournamentTab] = useState<"bracket" | "teams" | "overview">("bracket");
+  const [selectedTournamentTab, setSelectedTournamentTab] = useState<TournamentDetailTab>("bracket");
   const [registeringTournament, setRegisteringTournament] = useState<Tournament | null>(null);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isHostModalOpen, setIsHostModalOpen] = useState(false);
-  
-  // Application state
   const [appliedIds, setAppliedIds] = useState<string[]>([]);
   const [applyingId, setApplyingId] = useState<string | null>(null);
-
-  // Status Filter
-  const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>("ALL");
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
 
   const loadTournaments = useCallback(() => {
     const promises: Promise<unknown>[] = [tournamentsService.getTournaments()];
-    if (user?.role === "ORGANIZER") {
-      promises.push(tournamentsService.getMyTournaments());
-    }
+    if (user?.role === "ORGANIZER") promises.push(tournamentsService.getMyTournaments());
 
     Promise.allSettled(promises)
       .then(([publicRes, myRes]) => {
-        const publicList =
-          publicRes && publicRes.status === "fulfilled" && Array.isArray(publicRes.value)
-            ? (publicRes.value as Tournament[])
-            : [];
-        const myList =
-          myRes && myRes.status === "fulfilled" && Array.isArray(myRes.value)
-            ? (myRes.value as Tournament[])
-            : [];
-
+        const listOf = (res?: PromiseSettledResult<unknown>) =>
+          res && res.status === "fulfilled" && Array.isArray(res.value) ? (res.value as Tournament[]) : [];
         const map = new Map<string, Tournament>();
-        publicList.forEach((t) => map.set(t.id, t));
-        myList.forEach((t) => map.set(t.id, t));
-
-        const allTourneys = Array.from(map.values());
-        setTournaments(allTourneys);
+        [...listOf(publicRes), ...listOf(myRes)].forEach((t) => map.set(t.id, t));
+        const all = Array.from(map.values());
+        setTournaments(all);
 
         if (user?.id && user?.role !== "ORGANIZER" && user?.role !== "ADMIN") {
-          const applied = allTourneys
-            .filter((t) =>
-              (t.applications as Array<{ userId?: string; universityId?: string; status?: string }>)?.some(
-                (app) =>
-                  (app.userId === user.id || (user.universityId && app.universityId === user.universityId)) &&
-                  app.status !== "REJECTED"
-              ) ||
-              (t.universities as Array<{ id?: string }>)?.some((u) => u.id === user.universityId)
-            )
-            .map((t) => t.id);
-          setAppliedIds(applied);
+          setAppliedIds(
+            all
+              .filter((t) =>
+                (t.applications as Array<{ userId?: string; status?: string }>)?.some(
+                  (app) => app.userId === user.id && app.status !== "REJECTED"
+                )
+              )
+              .map((t) => t.id)
+          );
         } else {
           setAppliedIds([]);
         }
@@ -76,12 +61,16 @@ export default function TournamentsPage() {
         setTournaments([]);
         setAppliedIds([]);
       })
-      .finally(() => {
-        setIsLoading(false);
-      });
+      .finally(() => setIsLoading(false));
   }, [user]);
 
-  const handleApplyTournament = (t: Tournament) => {
+  useEffect(() => {
+    loadTournaments();
+  }, [loadTournaments]);
+
+  const canApply = Boolean(user && user.role !== "ORGANIZER" && user.role !== "ADMIN");
+
+  const handleApply = (t: Tournament) => {
     if (!isLoggedIn) {
       router.push("/login");
       return;
@@ -95,274 +84,116 @@ export default function TournamentsPage() {
     setApplyingId(t.id);
     try {
       await tournamentsService.applyForTournament(t.id, teamId);
-      setAppliedIds((prev) => Array.from(new Set([...prev, t.id])));
-      loadTournaments();
-    } catch {
-      setAppliedIds((prev) => Array.from(new Set([...prev, t.id])));
-      loadTournaments();
     } finally {
+      setAppliedIds((prev) => Array.from(new Set([...prev, t.id])));
+      loadTournaments();
       setApplyingId(null);
     }
   };
 
-  const handleWithdrawTournament = async (t: Tournament) => {
+  const handleWithdraw = async (t: Tournament) => {
     setApplyingId(t.id);
     try {
       await tournamentsService.withdrawApplication(t.id);
-      setAppliedIds((prev) => prev.filter((id) => id !== t.id));
-      loadTournaments();
-    } catch {
-      setAppliedIds((prev) => prev.filter((id) => id !== t.id));
-      loadTournaments();
     } finally {
+      setAppliedIds((prev) => prev.filter((id) => id !== t.id));
+      loadTournaments();
       setApplyingId(null);
     }
   };
 
-  useEffect(() => {
-    loadTournaments();
-  }, [loadTournaments]);
+  const userId = user?.id;
+  const isMine = useCallback(
+    (t: Tournament) => Boolean(userId && (t.organizerId === userId || t.organizer?.id === userId)),
+    [userId]
+  );
 
-  // Filter tournaments exclusively by the selected game from the game selector and status
-  const filteredTournaments = useMemo(() => {
-    return tournaments.filter((t) => {
-      const gameUpper = (t.game || "").toUpperCase();
-      const titleUpper = (t.title || "").toUpperCase();
-      const combined = `${gameUpper} ${titleUpper}`;
+  // Everything on the page is scoped to the game picked in the header switcher.
+  const gameTournaments = useMemo(
+    () => tournaments.filter((t) => getGameInfo(t.gameTitle || t.game).id === game.id),
+    [tournaments, game.id]
+  );
 
-      let matchesGame = true;
-      if (globalGame === "valo") {
-        matchesGame = combined.includes("VALO");
-      } else if (globalGame === "lol") {
-        matchesGame = combined.includes("LEAGUE") || combined.includes("LOL") || combined.includes("RIFT");
-      } else if (globalGame === "ml") {
-        matchesGame = combined.includes("MOBILE") || combined.includes("MLBB") || combined.includes("ML");
-      } else if (globalGame === "codm") {
-        matchesGame = combined.includes("CALL") || combined.includes("CODM") || combined.includes("WARFARE");
-      }
+  const visible = useMemo(() => {
+    if (statusFilter === "ALL") return gameTournaments;
+    if (statusFilter === "MINE") return gameTournaments.filter(isMine);
+    return gameTournaments.filter((t) => t.status === statusFilter);
+  }, [gameTournaments, statusFilter, isMine]);
 
-      if (!matchesGame) return false;
-
-      if (selectedStatusFilter === "MINE") {
-        return Boolean(user?.id && (t.organizerId === user.id || t.organizer?.id === user.id));
-      }
-
-      if (selectedStatusFilter !== "ALL") {
-        return t.status === selectedStatusFilter;
-      }
-
-      return true;
-    });
-  }, [tournaments, selectedStatusFilter, globalGame, user]);
-
-  const statusCounts = useMemo(() => {
-    const gameTournaments = tournaments.filter((t) => {
-      const gameUpper = (t.game || "").toUpperCase();
-      const titleUpper = (t.title || "").toUpperCase();
-      const combined = `${gameUpper} ${titleUpper}`;
-      if (globalGame === "valo") return combined.includes("VALO");
-      if (globalGame === "lol") return combined.includes("LEAGUE") || combined.includes("LOL") || combined.includes("RIFT");
-      if (globalGame === "ml") return combined.includes("MOBILE") || combined.includes("MLBB") || combined.includes("ML");
-      if (globalGame === "codm") return combined.includes("CALL") || combined.includes("CODM") || combined.includes("WARFARE");
-      return true;
-    });
-
-    const myTourneys = gameTournaments.filter((t) =>
-      Boolean(user?.id && (t.organizerId === user.id || t.organizer?.id === user.id))
-    );
-
-    return {
-      ALL: gameTournaments.length,
-      MINE: myTourneys.length,
-      LIVE: gameTournaments.filter((t) => t.status === "LIVE").length,
-      UPCOMING: gameTournaments.filter((t) => t.status === "UPCOMING").length,
-      COMPLETED: gameTournaments.filter((t) => t.status === "COMPLETED").length,
-    };
-  }, [tournaments, globalGame, user]);
-
-  const filterTabs = useMemo(() => {
+  const tabs = useMemo(() => {
+    const mine = gameTournaments.filter(isMine).length;
+    const count = (s: string) => gameTournaments.filter((t) => t.status === s).length;
     return [
-      { id: "ALL", label: "ALL", count: statusCounts.ALL },
-      ...(user?.role === "ORGANIZER" || statusCounts.MINE > 0
-        ? [{ id: "MINE", label: "YOUR TOURNAMENTS", count: statusCounts.MINE }]
-        : []),
-      { id: "LIVE", label: "LIVE", count: statusCounts.LIVE },
-      { id: "UPCOMING", label: "UPCOMING", count: statusCounts.UPCOMING },
-      { id: "COMPLETED", label: "COMPLETED", count: statusCounts.COMPLETED },
+      { id: "ALL", label: "All", count: gameTournaments.length },
+      ...(user?.role === "ORGANIZER" || mine > 0 ? [{ id: "MINE", label: "Hosted by you", count: mine }] : []),
+      { id: "LIVE", label: "Live", count: count("LIVE") },
+      { id: "UPCOMING", label: "Upcoming", count: count("UPCOMING") },
+      { id: "COMPLETED", label: "Completed", count: count("COMPLETED") },
     ];
-  }, [statusCounts, user?.role]);
+  }, [gameTournaments, isMine, user?.role]);
+
+  const openTournament = (t: Tournament, tab: TournamentDetailTab = "bracket") => {
+    setSelectedTournamentTab(tab);
+    setSelectedTournament(t);
+  };
 
   return (
     <div className="flex flex-col flex-1 game-theme-bg relative animate-page-slide-in">
-      <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 md:px-10 lg:px-16 py-8 sm:py-12 lg:py-16 space-y-8">
-        
-        {/* Sleek Integrated Header & Tactical Status Filter */}
-        <div className="border-b border-[#1E2538] pb-6 flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-          <div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <span 
-                className="text-[9px] font-mono font-bold tracking-widest text-primary-brand uppercase px-2.5 py-0.5 bg-primary-brand/10 border border-primary-brand/30 flex items-center gap-1.5"
-                style={{
-                  clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-                }}
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-primary-brand animate-pulse" />
-                PHILIPPINE COLLEGIATE CIRCUIT • {selectedGameInfo?.name || "ARENA"}
-              </span>
-            </div>
-            <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white uppercase drop-shadow-sm">
-              OFFICIAL TOURNAMENTS
-            </h1>
-            <p className="font-sans text-xs sm:text-sm text-slate-400 mt-1 max-w-xl leading-relaxed">
-              High-stakes championship bracketing, verified varsity match logs, and real-time War Room operations.
-            </p>
-          </div>
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-12 py-8 sm:py-12 space-y-10">
+        <TournamentsHero
+          gameName={game.name}
+          gameShortName={game.shortName}
+          tournaments={gameTournaments}
+          onOpen={(t) => openTournament(t)}
+        />
 
-          {/* Organizer Quick Direct Actions & Status Filter */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            {user?.role === "ORGANIZER" && (
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsHostModalOpen(true)}
-                  className="h-10 px-5 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 hover:from-amber-400 hover:to-amber-300 text-black font-display text-xs font-black uppercase tracking-wider transition-all active:scale-95 shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2 cursor-pointer"
-                  style={{
-                    clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
-                  }}
-                >
-                  <PlusIcon className="w-4 h-4 text-black" />
-                  <span>Host Tournament</span>
-                </button>
-                <Link
-                  href="/dashboard"
-                  className="h-10 px-4 bg-[#141A29] hover:bg-[#1E293B] text-amber-400 border border-amber-500/30 hover:border-amber-500/60 font-display text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5"
-                  style={{
-                    clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
-                  }}
-                >
-                  <span>Director Hub</span>
-                  <span>→</span>
-                </Link>
-              </div>
-            )}
+        <div className="space-y-6">
+          <TournamentsFilterTabs tabs={tabs} active={statusFilter} onChange={setStatusFilter} />
 
-            {/* Integrated Tactical Status Segmented Controls */}
-            <div 
-              className="flex items-center gap-1 p-1 bg-[#0A0D18] border border-[#1E293B] shadow-xl"
-              style={{
-                clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
-              }}
-            >
-              {filterTabs.map((st) => {
-                const isSelected = selectedStatusFilter === st.id;
-                const isMineTab = st.id === "MINE";
-                return (
-                  <button
-                    key={st.id}
-                    onClick={() => setSelectedStatusFilter(st.id)}
-                    className={`px-3 py-1.5 font-mono text-[10px] font-black uppercase tracking-wider transition-all duration-150 cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
-                      isSelected
-                        ? isMineTab
-                          ? "bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/25"
-                          : "game-theme-btn"
-                        : isMineTab
-                        ? "text-amber-300 bg-amber-950/40 border border-amber-500/40 hover:bg-amber-950/70"
-                        : "text-slate-400 hover:text-white hover:bg-[#141A29]"
-                    }`}
-                    style={{
-                      clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-                    }}
-                  >
-                    {isMineTab && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />}
-                    <span>{st.label}</span>
-                    <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold ${
-                      isSelected ? "bg-black/30 text-white" : isMineTab ? "bg-amber-900/60 text-amber-200" : "bg-[#141A29] text-slate-500"
-                    }`}>
-                      {st.count}
-                    </span>
-                  </button>
-                );
-              })}
+          {isLoading ? (
+            <div className="flex flex-col gap-6">
+              <TournamentCardSkeleton />
+              <TournamentCardSkeleton />
             </div>
-          </div>
-        </div>
-
-        {/* Tournament Cards List */}
-        {isLoading ? (
-          <div className="flex flex-col gap-6">
-            <TournamentCardSkeleton />
-            <TournamentCardSkeleton />
-          </div>
-        ) : filteredTournaments.length === 0 ? (
-          <div 
-            className="flex flex-col items-center justify-center text-center py-16 px-4 max-w-lg mx-auto space-y-4 bg-[#0A0D18] border border-[#1E293B] p-10 shadow-2xl"
-            style={{
-              clipPath: "polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px))",
-            }}
-          >
-            <div 
-              className="w-14 h-14 bg-[#141A29] border border-[#232D44] flex items-center justify-center text-slate-400"
-              style={{
-                clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
-              }}
-            >
-              <TrophyIcon className="w-6 h-6 text-amber-400" />
-            </div>
-            <div className="space-y-2">
-              <h3 className="font-display text-lg font-black text-white uppercase tracking-wider">
-                {selectedStatusFilter === "MINE"
-                  ? "NO HOSTED TOURNAMENTS YET"
-                  : `NO ${selectedStatusFilter !== "ALL" ? selectedStatusFilter : ""} ${selectedGameInfo?.name?.toUpperCase() || "GAME"} TOURNAMENTS`}
+          ) : visible.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-white/10 py-16 px-6 text-center">
+              <h3 className="font-display text-lg font-black uppercase text-white">
+                {statusFilter === "MINE" ? "You haven't hosted one yet" : `No ${game.shortName} tournaments here`}
               </h3>
-              <p className="font-sans text-xs text-slate-400 leading-relaxed">
-                {selectedStatusFilter === "MINE"
-                  ? "You haven't established any tournaments for this esports title yet. Click below to host your first sanctioned collegiate bracket."
-                  : "There are currently no tournaments matching your selected filter. New collegiate circuits are scheduled weekly."}
+              <p className="mt-2 text-sm font-sans text-slate-400">
+                {statusFilter === "MINE"
+                  ? `Host your first ${game.name} tournament from your Organize workspace.`
+                  : "Nothing matches this filter right now. New circuits open regularly."}
               </p>
-              <div className="pt-2 flex items-center justify-center gap-3">
+              <div className="mt-5 flex justify-center gap-5 text-[11px] font-mono font-bold uppercase tracking-[0.2em]">
                 {user?.role === "ORGANIZER" && (
-                  <button
-                    onClick={() => setIsHostModalOpen(true)}
-                    className="px-5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-display text-xs font-black uppercase tracking-wider cursor-pointer shadow-lg shadow-amber-500/20"
-                    style={{
-                      clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-                    }}
-                  >
-                    + Host Tournament
-                  </button>
+                  <Link href="/organize" className="text-primary-brand hover:text-white transition-colors">
+                    Go to Organize →
+                  </Link>
                 )}
-                {selectedStatusFilter !== "ALL" && (
-                  <button
-                    onClick={() => setSelectedStatusFilter("ALL")}
-                    className="px-4 py-2 game-theme-btn font-display text-xs font-black uppercase tracking-wider cursor-pointer"
-                    style={{
-                      clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-                    }}
-                  >
-                    Show All Tournaments
+                {statusFilter !== "ALL" && (
+                  <button type="button" onClick={() => setStatusFilter("ALL")} className="text-slate-400 hover:text-white transition-colors">
+                    Show all
                   </button>
                 )}
               </div>
             </div>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-6 sm:gap-8">
-            {filteredTournaments.map((tournament) => (
-              <TournamentCard
-                key={tournament.id}
-                tournament={tournament}
-                onSelect={(t, tab = "bracket") => {
-                  setSelectedTournamentTab(tab);
-                  setSelectedTournament(t);
-                }}
-                onApply={user?.role === "ORGANIZER" ? undefined : handleApplyTournament}
-                onWithdraw={user?.role === "ORGANIZER" ? undefined : handleWithdrawTournament}
-                isApplied={appliedIds.includes(tournament.id)}
-                isApplying={applyingId === tournament.id}
-              />
-            ))}
-          </div>
-        )}
+          ) : (
+            <div className="flex flex-col gap-6">
+              {visible.map((t) => (
+                <TournamentCard
+                  key={t.id}
+                  tournament={t}
+                  onSelect={openTournament}
+                  onApply={canApply ? handleApply : undefined}
+                  onWithdraw={canApply ? handleWithdraw : undefined}
+                  isApplied={canApply && appliedIds.includes(t.id)}
+                  isApplying={applyingId === t.id}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <TournamentBracketModal
@@ -380,16 +211,8 @@ export default function TournamentsPage() {
         tournament={registeringTournament}
         onSuccess={handleConfirmApplication}
         onViewBracket={() => {
-          if (registeringTournament) {
-            setSelectedTournament(registeringTournament);
-          }
+          if (registeringTournament) setSelectedTournament(registeringTournament);
         }}
-      />
-
-      <PostTournamentModal
-        isOpen={isHostModalOpen}
-        onClose={() => setIsHostModalOpen(false)}
-        onTournamentCreated={loadTournaments}
       />
     </div>
   );

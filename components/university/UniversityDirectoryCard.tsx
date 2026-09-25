@@ -1,114 +1,99 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { UniversityDirectoryCardProps } from "@/types";
-import { TrophyIcon, ShieldIcon } from "@/components/ui/Icons";
+import { getUniversityBranding, mutedBranding } from "@/lib/universityBranding";
+import UniversityShield from "./UniversityShield";
+import { DOT_SURFACE } from "./surface";
 
 export default function UniversityDirectoryCard({
   university,
+  gameShortName,
   rank,
 }: UniversityDirectoryCardProps) {
-  const initials = university.name
-    .split(" ")
-    .filter((word) => /^[A-Za-z]/.test(word))
-    .slice(0, 3)
-    .map((word) => word[0])
-    .join("")
-    .toUpperCase();
-
-  const hasRecord =
-    university.wins !== undefined || university.losses !== undefined;
+  const brand = getUniversityBranding(university.name, university.domain);
+  const muted = mutedBranding(brand);
   const wins = university.wins ?? 0;
   const losses = university.losses ?? 0;
+  const rating = university.glicko2_rating;
+  const streak = university.streak && university.streak !== "-" ? university.streak : null;
+
+  const stats = [
+    { label: "Rating", value: rating !== undefined ? Math.round(rating) : "—" },
+    { label: "Record", value: `${wins}–${losses}` },
+    { label: "Streak", value: streak ?? "—", tone: streak?.endsWith("W") ? "text-success" : undefined },
+  ];
 
   return (
     <Link
       href={`/university/${university.id}`}
-      className="group p-5 bg-[#0A0D18] border border-[#1E293B] hover:border-primary-brand/50 transition-colors shadow-xl flex flex-col gap-4 relative"
-      style={{
-        clipPath:
-          "polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))",
-      }}
+      id={`uni-${university.id}`}
+      // School colors are blended toward slate so they tint rather than shout.
+      style={{ "--school": muted.primary } as CSSProperties}
+      className={`group relative flex flex-col scroll-mt-24 overflow-hidden rounded-2xl border border-white/[0.07] ${DOT_SURFACE} shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_18px_40px_-24px_rgba(0,0,0,0.9)] transition-all duration-300 hover:-translate-y-1 hover:border-[color-mix(in_srgb,var(--school)_45%,transparent)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_28px_60px_-28px_color-mix(in_srgb,var(--school)_80%,transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-brand`}
     >
-      <div className="flex items-center gap-3 min-w-0">
-        {/* 8-Sided Octagonal Varsity Emblem */}
-        <div
-          className="w-12 h-12 bg-[#121828] text-white flex items-center justify-center font-display font-black text-sm border border-white/10 shrink-0 group-hover:border-primary-brand/60 transition-colors"
-          style={{
-            clipPath:
-              "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
-          }}
-        >
-          {initials || "UNI"}
-        </div>
+      {/* Light source: school-tinted wash in the crest corner */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-60 transition-opacity duration-500 group-hover:opacity-100"
+        style={{ background: "radial-gradient(90% 60% at 12% 0%, color-mix(in srgb, var(--school) 16%, transparent), transparent 70%)" }}
+      />
+      {/* Accent rule: a short school-color line that extends on hover */}
+      <span
+        aria-hidden
+        className="absolute left-6 top-0 h-[3px] w-10 rounded-b-full bg-[var(--school)] transition-all duration-500 group-hover:w-24"
+      />
 
-        <div className="min-w-0 flex-1">
-          <span className="font-display text-sm font-black uppercase text-white block truncate group-hover:text-primary-brand transition-colors">
-            {university.name}
-          </span>
-          <span className="text-[10px] font-mono text-slate-400 block truncate">
-            {university.domain}
-          </span>
+      <div className="relative flex items-start gap-4 px-6 pt-6">
+        <UniversityShield
+          abbr={brand.abbr}
+          primary={muted.primary}
+          secondary={muted.secondary}
+          className="w-12 h-14 shrink-0 transition-transform duration-500 group-hover:-rotate-3 group-hover:scale-105"
+        />
+        <div className="min-w-0 flex-1 pt-1">
+          <h3 className="font-display text-lg font-black uppercase leading-tight text-white">{university.name}</h3>
+          <p className="mt-1 text-[11px] font-mono text-slate-500">{university.domain}</p>
         </div>
-
         {rank !== undefined && (
-          <span
-            className="text-[10px] font-mono font-black text-slate-300 bg-[#121828] border border-[#202C45] px-2.5 py-1 shrink-0"
-            style={{
-              clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
-            }}
-          >
-            #{rank}
+          <span className="font-display text-2xl font-black leading-none tabular-nums text-transparent [-webkit-text-stroke:1px_rgba(148,163,184,0.5)]">
+            {String(rank).padStart(2, "0")}
           </span>
         )}
       </div>
 
-      <div className="grid grid-cols-3 gap-2 pt-3 border-t border-[#182338]">
-        <div>
-          <span className="text-[9px] font-mono text-slate-400 uppercase tracking-widest block">
-            Rating
-          </span>
-          <span className="font-display text-base font-black text-white mt-0.5 block">
-            {university.glicko2_rating
-              ? Math.round(university.glicko2_rating)
-              : "—"}
-          </span>
+      <div className="relative mx-6 mt-5 pt-4 border-t border-white/[0.06]">
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-slate-500">{gameShortName} squad</span>
+          {university.isProvisional && (
+            <span
+              className="text-[10px] font-mono uppercase tracking-widest text-slate-600"
+              title="Provisional rating — settles after more verified tournament matches"
+            >
+              Provisional
+            </span>
+          )}
         </div>
-        <div>
-          <span className="text-[9px] font-mono text-slate-400 uppercase tracking-widest block">
-            Record
-          </span>
-          <span className="font-display text-base font-black text-white mt-0.5 block">
-            {hasRecord ? `${wins}W-${losses}L` : "—"}
-          </span>
-        </div>
-        <div>
-          <span className="text-[9px] font-mono text-slate-400 uppercase tracking-widest block">
-            Squad
-          </span>
-          <span className="font-mono text-[11px] font-bold text-slate-300 mt-1 block truncate">
-            {university.teamName || "Unregistered"}
-          </span>
-        </div>
+        <p className="mt-1 text-[15px] font-sans font-semibold text-slate-100 truncate">
+          {university.teamName || "No registered squad"}
+        </p>
       </div>
 
-      <div className="flex items-center justify-between text-[9px] font-mono uppercase tracking-widest">
-        <span className="flex items-center gap-1.5 text-slate-400">
-          {university.isProvisional ? (
-            <>
-              <ShieldIcon className="w-3 h-3 text-amber-400" />
-              <span className="text-amber-400">Provisional Rating</span>
-            </>
-          ) : (
-            <>
-              <TrophyIcon className="w-3 h-3 text-primary-brand" />
-              <span>{university.streak && university.streak !== "-" ? `${university.streak} Streak` : "Accredited Varsity"}</span>
-            </>
-          )}
-        </span>
-        <span className="text-slate-500 group-hover:text-primary-brand transition-colors">
-          View Profile →
-        </span>
+      <dl className="relative mx-6 mt-5 grid grid-cols-3">
+        {stats.map((stat, idx) => (
+          <div key={stat.label} className={idx > 0 ? "pl-4 border-l border-white/[0.06]" : ""}>
+            <dt className="text-[9px] font-mono uppercase tracking-[0.2em] text-slate-500">{stat.label}</dt>
+            <dd className={`mt-1 font-display text-2xl font-black tabular-nums leading-none ${stat.tone ?? "text-white"}`}>
+              {stat.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+
+      <div className="relative mt-6 px-6 pb-5 flex items-center gap-2 text-[11px] font-mono font-bold uppercase tracking-[0.2em] text-slate-500 transition-colors group-hover:text-white">
+        View program
+        <span className="inline-block transition-transform duration-300 group-hover:translate-x-1.5 text-primary-brand">→</span>
       </div>
     </Link>
   );

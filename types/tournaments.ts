@@ -1,4 +1,6 @@
+import type { ReactNode } from "react";
 import { University } from "./auth";
+import type { GameId } from "./games";
 
 export type TournamentStatus = "COMPLETED" | "UPCOMING" | "LIVE";
 
@@ -232,12 +234,6 @@ export interface TournamentBracketModalProps {
   initialTab?: "bracket" | "teams" | "channel" | "overview" | "watch";
 }
 
-export interface MatchCardProps {
-  match: BracketMatch;
-  onViewBoxScore: () => void;
-  isFeatured?: boolean;
-}
-
 export interface PendingSquadApplication {
   id: string;
   tournamentId: string;
@@ -279,3 +275,176 @@ export interface TournamentDetail extends Tournament {
 }
 
 
+
+// ── Organize workspace ────────────────────────────────────────────────────
+
+/** Lifecycle column a hosted tournament sits in on the Organize board. */
+export type OrganizeStage = "review" | "registration" | "live" | "completed";
+
+export type OrganizeActionKind = "edit" | "applications" | "start" | "bracket";
+
+/** Something the organizer should do next, derived from a hosted tournament. */
+export interface OrganizeActionItem {
+  id: string;
+  kind: OrganizeActionKind;
+  tone: "danger" | "warn" | "go" | "live";
+  title: string;
+  detail: string;
+  cta: string;
+  tournament: Tournament;
+}
+
+export interface OrganizeTournamentHandlers {
+  onEdit: (tournament: Tournament) => void;
+  onReviewApplications: (tournament: Tournament) => void;
+  onOpenBracket: (tournament: Tournament) => void;
+  onStart: (tournamentId: string) => Promise<void>;
+  onDelete: (tournamentId: string) => Promise<void>;
+}
+
+export interface OrganizeHeaderProps {
+  gameId: GameId;
+  gameName: string;
+  hostName: string;
+  universityName?: string;
+  tournaments: Tournament[];
+  onHost: () => void;
+}
+
+export interface OrganizeSectionHeadingProps {
+  index: string;
+  title: string;
+  subtitle?: string;
+  id: string;
+  children?: ReactNode;
+}
+
+export interface OrganizeActionQueueProps {
+  items: OrganizeActionItem[];
+  isLoading: boolean;
+  handlers: OrganizeTournamentHandlers;
+}
+
+export interface OrganizePipelineBoardProps {
+  gameShortName: string;
+  tournaments: Tournament[];
+  isLoading: boolean;
+  handlers: OrganizeTournamentHandlers;
+  onHost: () => void;
+}
+
+export interface OrganizeTournamentTileProps {
+  tournament: Tournament;
+  stage: OrganizeStage;
+  handlers: OrganizeTournamentHandlers;
+}
+// ── Host tournament wizard ────────────────────────────────────────────────
+
+export type HostGameTitle = "VALORANT" | "LOL" | "MLBB" | "CODM";
+
+/** Everything the host wizard collects before submitting. */
+export interface HostTournamentDraft {
+  gameTitle: HostGameTitle;
+  name: string;
+  bracketFormat: string;
+  teamQuota: number;
+  /** Local "YYYY-MM-DDTHH:mm", empty when unscheduled. */
+  startDate: string;
+  rules: string;
+  imagePreview: string;
+  imageFile: File | null;
+}
+
+export interface HostStepProps {
+  draft: HostTournamentDraft;
+  onChange: (patch: Partial<HostTournamentDraft>) => void;
+}
+
+export interface HostPreviewCardProps {
+  draft: HostTournamentDraft;
+}
+
+export interface OrganizeNavButtonProps {
+  /** "bar" sits in the header's right cluster; "menu" is the mobile menu card. */
+  variant?: "bar" | "menu";
+  onNavigate?: () => void;
+}
+
+// ── Bracket tree ──────────────────────────────────────────────────────────
+
+/** A round as the bracket view draws it; projected rounds are placeholders. */
+export interface BracketTreeRound {
+  name: string;
+  bracketSide?: BracketSide;
+  matches: BracketMatch[];
+  isProjected?: boolean;
+}
+
+export interface BracketTreeProps {
+  rounds: BracketTreeRound[];
+  onViewBoxScore: (match: BracketMatch) => void;
+  canReportResults?: boolean;
+  onReportResult?: (match: BracketMatch) => void;
+  featuredMatchId?: string | null;
+  /** Append empty rounds so a partially generated bracket still shows its full path. */
+  projectToFinal?: boolean;
+  /** Show the champion slot after the last round (undefined = hide). */
+  champion?: string | null;
+  compact?: boolean;
+}
+
+export interface BracketMatchCardProps {
+  match: BracketMatch;
+  label: string;
+  isPlaceholder?: boolean;
+  isFeatured?: boolean;
+  canReport?: boolean;
+  onOpen: () => void;
+  onReport?: () => void;
+}
+
+export interface BracketTeamRowProps {
+  team: MatchTeam;
+  decided: boolean;
+  won: boolean;
+}
+
+// ── Tournaments page ──────────────────────────────────────────────────────
+
+export type TournamentDetailTab = "bracket" | "teams" | "overview";
+
+export interface TournamentCardProps {
+  tournament: Tournament;
+  onSelect: (tournament: Tournament, tab?: TournamentDetailTab) => void;
+  onApply?: (tournament: Tournament) => void;
+  onWithdraw?: (tournament: Tournament) => void;
+  isApplied?: boolean;
+  isApplying?: boolean;
+}
+
+export interface TournamentApplicationStateProps {
+  tournament: Tournament;
+  onApply?: (tournament: Tournament) => void;
+  onWithdraw?: (tournament: Tournament) => void;
+  isApplied?: boolean;
+  isApplying?: boolean;
+}
+
+export interface TournamentsHeroProps {
+  gameName: string;
+  gameShortName: string;
+  tournaments: Tournament[];
+  onOpen: (tournament: Tournament) => void;
+}
+
+export interface TournamentsFilterTab {
+  id: string;
+  label: string;
+  count: number;
+}
+
+export interface TournamentsFilterTabsProps {
+  tabs: TournamentsFilterTab[];
+  active: string;
+  onChange: (id: string) => void;
+}

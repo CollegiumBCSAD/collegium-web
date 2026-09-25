@@ -1,3 +1,5 @@
+import type { GameId } from "./games";
+
 export interface UniversityInfo {
   id: string;
   name: string;
@@ -27,6 +29,12 @@ export interface UserProfile {
   id: string;
   email: string;
   displayName: string;
+  avatar?: string | null;
+  avatarOriginal?: string | null;
+  avatarZoom?: number | null;
+  avatarOffsetX?: number | null;
+  avatarOffsetY?: number | null;
+  avatarRotation?: number | null;
   role: string;
   status: string;
   universityId: string;
@@ -43,6 +51,8 @@ export interface AuthContextType {
   isLoaded: boolean;
   loginWithToken: (token?: string) => Promise<UserProfile | null>;
   logoutUser: () => Promise<void>;
+  refreshProfile: () => Promise<UserProfile | null>;
+  setUserAvatar: (avatarUrl: string | null) => void;
 }
 
 export interface UniversityGameRating {
@@ -100,13 +110,42 @@ export interface University {
 
 export interface UniversityDirectoryCardProps {
   university: University;
+  gameShortName: string;
+  // Only passed when the directory is ordered by rating.
   rank?: number;
+}
+
+export interface UniversityBranding {
+  abbr: string;
+  primary: string;
+  secondary: string;
+}
+
+export type UniversitySortKey = "name" | "rating";
+
+export interface UniversityDirectoryToolbarProps {
+  sortKey: UniversitySortKey;
+  onSortChange: (key: UniversitySortKey) => void;
+  resultCount: number;
+  // Starting letters that have at least one school, for the A–Z index.
+  availableLetters: string[];
+  activeLetter: string | null;
+  onLetterChange: (letter: string | null) => void;
+}
+
+export interface UniversityDirectoryHeroProps {
+  gameId: GameId;
+  universities: University[];
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
 }
 
 export interface LeaderboardEntry {
   id: string;
   rank: number;
   university: string;
+  /** University email domain, used only to pick the school's crest colors. */
+  domain?: string;
   teamId?: string;
   teamName?: string;
   rating: number;
@@ -157,4 +196,60 @@ export interface AthleteProfile {
   gameHandles: UserGameHandle[];
   teams: AthleteTeamMembership[];
   recentMatches: AthleteRecentMatch[];
+}
+
+export interface UniversityTopTableProps {
+  universities: University[];
+}
+
+export interface UniversityMemberStripProps {
+  universities: University[];
+}
+
+export interface UniversityShieldProps {
+  abbr: string;
+  /** Muted school colors (CSS color strings). */
+  primary: string;
+  secondary: string;
+  className?: string;
+}
+
+// ── Rankings page ─────────────────────────────────────────────────────────
+
+export type RankingsSortOption = "rating" | "winRate" | "wins";
+
+export interface RankingsHeroProps {
+  activeGame: string;
+  gameDisplayName: string;
+  programCount: number;
+  onSelectGame: (gameId: GameId) => void;
+}
+
+export interface RankingsPodiumProps {
+  top: LeaderboardEntry[];
+  gameDisplayName: string;
+}
+
+export interface RankingsToolbarProps {
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+  sortBy: RankingsSortOption;
+  onSortChange: (sort: RankingsSortOption) => void;
+  showAll: boolean;
+  onToggleShowAll: () => void;
+  canToggleShowAll: boolean;
+  resultCount: number;
+}
+
+export interface RankingsTableProps {
+  entries: LeaderboardEntry[];
+  isLoading: boolean;
+  title: string;
+  gameDisplayName: string;
+  searchQuery: string;
+  onReset: () => void;
+}
+
+export interface RankingsRowProps {
+  entry: LeaderboardEntry;
 }

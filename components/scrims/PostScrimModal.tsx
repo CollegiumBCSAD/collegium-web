@@ -200,6 +200,7 @@ export default function PostScrimModal({
             </label>
             <div className="w-full h-11 px-3.5 rounded-xl bg-[#080C14] border border-[#1C2538] flex items-center justify-between">
               <div className="flex items-center gap-2.5">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={gameInfo.image}
                   alt={gameInfo.name}
