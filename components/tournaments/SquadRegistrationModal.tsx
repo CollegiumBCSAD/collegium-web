@@ -384,24 +384,18 @@ export default function SquadRegistrationModal({
                       <Link
                         href="/team/create"
                         onClick={onClose}
-                        className="w-full sm:w-auto h-10 px-5 game-theme-btn font-display text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg active:scale-95"
-                        style={{
-                          clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-                        }}
+                        className="game-theme-btn w-full sm:w-auto h-10 px-5 gap-2 text-xs"
                       >
-                        <PlusIcon className="w-3.5 h-3.5 text-white" />
+                        <PlusIcon className="w-3.5 h-3.5" />
                         <span>Establish {gameInfo.shortName} Squad</span>
                       </Link>
 
                       <Link
                         href="/team/join"
                         onClick={onClose}
-                        className="w-full sm:w-auto h-10 px-5 bg-[#121828] hover:bg-[#1A233A] text-slate-200 hover:text-white border border-[#202C48] font-display text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
-                        style={{
-                          clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-                        }}
+                        className="tactical-btn-secondary w-full sm:w-auto h-10 px-5 gap-2 text-xs"
                       >
-                        <UsersIcon className="w-3.5 h-3.5 text-slate-400" />
+                        <UsersIcon className="w-3.5 h-3.5" />
                         <span>Join Existing Squad</span>
                       </Link>
                     </div>
@@ -493,7 +487,7 @@ export default function SquadRegistrationModal({
               type="button"
               onClick={handleClose}
               disabled={isSubmitting}
-              className="h-10 px-5 bg-[#121828] hover:bg-[#1A233A] border border-[#202C48] text-slate-300 hover:text-white font-display text-xs font-bold uppercase tracking-wider transition-colors rounded cursor-pointer disabled:opacity-50"
+              className="tactical-btn-secondary h-10 px-5 text-xs disabled:opacity-50"
             >
               Cancel
             </button>
@@ -502,10 +496,7 @@ export default function SquadRegistrationModal({
               type="button"
               disabled={isSubmitting || teams.length === 0}
               onClick={handleSubmit}
-              className="h-10 px-6 game-theme-btn font-display text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer shadow-lg active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
-              style={{
-                clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
-              }}
+              className="game-theme-btn h-10 px-6 gap-2 text-xs disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none"
             >
               {isSubmitting ? (
                 <>
