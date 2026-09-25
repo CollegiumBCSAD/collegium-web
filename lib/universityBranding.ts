@@ -47,3 +47,14 @@ export function getUniversityBranding(name: string, domain: string): UniversityB
   const [primary, secondary] = SCHOOL_COLORS[slug] ?? generatedColors(slug);
   return { abbr: abbreviate(name, slug), primary, secondary };
 }
+
+/**
+ * School colors blended toward slate, so they tint the dark UI instead of
+ * overpowering it. Use these for anything drawn larger than a dot.
+ */
+export function mutedBranding(brand: UniversityBranding): Pick<UniversityBranding, "primary" | "secondary"> {
+  return {
+    primary: `color-mix(in srgb, ${brand.primary} 62%, #64748B)`,
+    secondary: `color-mix(in srgb, ${brand.secondary} 55%, #64748B)`,
+  };
+}

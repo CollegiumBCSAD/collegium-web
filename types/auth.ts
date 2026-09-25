@@ -144,6 +144,8 @@ export interface LeaderboardEntry {
   id: string;
   rank: number;
   university: string;
+  /** University email domain, used only to pick the school's crest colors. */
+  domain?: string;
   teamId?: string;
   teamName?: string;
   rating: number;
@@ -196,6 +198,58 @@ export interface AthleteProfile {
   recentMatches: AthleteRecentMatch[];
 }
 
-export interface UniversityCrestWallProps {
+export interface UniversityTopTableProps {
   universities: University[];
+}
+
+export interface UniversityMemberStripProps {
+  universities: University[];
+}
+
+export interface UniversityShieldProps {
+  abbr: string;
+  /** Muted school colors (CSS color strings). */
+  primary: string;
+  secondary: string;
+  className?: string;
+}
+
+// ── Rankings page ─────────────────────────────────────────────────────────
+
+export type RankingsSortOption = "rating" | "winRate" | "wins";
+
+export interface RankingsHeroProps {
+  activeGame: string;
+  gameDisplayName: string;
+  programCount: number;
+  onSelectGame: (gameId: GameId) => void;
+}
+
+export interface RankingsPodiumProps {
+  top: LeaderboardEntry[];
+  gameDisplayName: string;
+}
+
+export interface RankingsToolbarProps {
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+  sortBy: RankingsSortOption;
+  onSortChange: (sort: RankingsSortOption) => void;
+  showAll: boolean;
+  onToggleShowAll: () => void;
+  canToggleShowAll: boolean;
+  resultCount: number;
+}
+
+export interface RankingsTableProps {
+  entries: LeaderboardEntry[];
+  isLoading: boolean;
+  title: string;
+  gameDisplayName: string;
+  searchQuery: string;
+  onReset: () => void;
+}
+
+export interface RankingsRowProps {
+  entry: LeaderboardEntry;
 }

@@ -403,3 +403,43 @@ export interface BracketTeamRowProps {
   decided: boolean;
   won: boolean;
 }
+
+// ── Tournaments page ──────────────────────────────────────────────────────
+
+export type TournamentDetailTab = "bracket" | "teams" | "overview";
+
+export interface TournamentCardProps {
+  tournament: Tournament;
+  onSelect: (tournament: Tournament, tab?: TournamentDetailTab) => void;
+  onApply?: (tournament: Tournament) => void;
+  onWithdraw?: (tournament: Tournament) => void;
+  isApplied?: boolean;
+  isApplying?: boolean;
+}
+
+export interface TournamentApplicationStateProps {
+  tournament: Tournament;
+  onApply?: (tournament: Tournament) => void;
+  onWithdraw?: (tournament: Tournament) => void;
+  isApplied?: boolean;
+  isApplying?: boolean;
+}
+
+export interface TournamentsHeroProps {
+  gameName: string;
+  gameShortName: string;
+  tournaments: Tournament[];
+  onOpen: (tournament: Tournament) => void;
+}
+
+export interface TournamentsFilterTab {
+  id: string;
+  label: string;
+  count: number;
+}
+
+export interface TournamentsFilterTabsProps {
+  tabs: TournamentsFilterTab[];
+  active: string;
+  onChange: (id: string) => void;
+}
