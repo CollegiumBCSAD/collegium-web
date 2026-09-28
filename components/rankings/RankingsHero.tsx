@@ -12,7 +12,7 @@ export default function RankingsHero({ activeGame, gameDisplayName, programCount
       <div>
         <p className="flex items-center gap-3 text-[11px] font-mono font-bold uppercase tracking-[0.3em] text-slate-400">
           <span className="h-px w-8 bg-primary-brand" />
-          Glicko-2 Rankings
+          Rankings
           <span className="text-primary-brand">{gameDisplayName}</span>
         </p>
         <h1 className="mt-5 font-display font-black uppercase leading-[0.88] tracking-tight text-[3.25rem] sm:text-7xl">
@@ -20,8 +20,8 @@ export default function RankingsHero({ activeGame, gameDisplayName, programCount
           <span className="block text-transparent [-webkit-text-stroke:1.5px_var(--primary-brand)]">Earned.</span>
         </h1>
         <p className="mt-6 max-w-md text-[15px] font-sans leading-relaxed text-slate-400">
-          <span className="text-white font-semibold">{programCount} varsity programs</span> ranked by Glicko-2 rating and rating
-          deviation (<span className="font-mono text-slate-300">RD</span>). Only verified tournament results move the table.
+          <span className="text-white font-semibold">{programCount} varsity programs</span> ranked by rating. The ± next to a rating
+          shows how sure that number is. Only verified tournament results move the table.
         </p>
       </div>
 

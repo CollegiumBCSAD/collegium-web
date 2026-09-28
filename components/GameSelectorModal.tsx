@@ -300,7 +300,7 @@ export default function GameSelectorModal() {
               <div className="w-10 h-10 rounded-xl bg-[#141A29] border border-[#232D44] flex items-center justify-center text-slate-300 mb-3">
                 <TrophyIcon className="w-5 h-5" />
               </div>
-              <h3 className="font-display text-base font-bold text-white uppercase">GLICKO-2 MATCH ENGINE</h3>
+              <h3 className="font-display text-base font-bold text-white uppercase">TEAM RATING</h3>
               <p className="font-sans text-xs text-slate-400 leading-relaxed">
                 Automated inter-university scrimmage scheduling, rating adjustments, and peer-validated match reporting.
               </p>

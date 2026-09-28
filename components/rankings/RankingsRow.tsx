@@ -46,7 +46,7 @@ export default function RankingsRow({ entry }: RankingsRowProps) {
 
       <div className="flex items-baseline gap-1.5">
         <span className="font-display text-xl font-black tabular-nums text-white">{entry.rating.toFixed(1)}</span>
-        <span className="text-[10px] font-mono text-slate-500" title="Rating Deviation: the statistical uncertainty of the rating.">
+        <span className="text-[10px] font-mono text-slate-500" title="How sure this rating is. A wider ± means fewer verified matches.">
           ±{Math.round(entry.rd ?? 350)}
         </span>
       </div>

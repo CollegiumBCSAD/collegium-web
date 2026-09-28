@@ -80,7 +80,7 @@ export default function RankingsPodium({ top, gameDisplayName }: RankingsPodiumP
                 </div>
 
                 <div className="relative mt-6">
-                  <span className="text-[9px] font-mono uppercase tracking-[0.25em] text-slate-500">Glicko-2 rating</span>
+                  <span className="text-[9px] font-mono uppercase tracking-[0.25em] text-slate-500">Rating</span>
                   <div className="flex items-baseline gap-2">
                     <span
                       className={`font-display font-black tabular-nums leading-none ${champ ? "text-5xl xl:text-6xl text-transparent bg-clip-text" : "text-4xl xl:text-5xl text-white"}`}
@@ -88,8 +88,8 @@ export default function RankingsPodium({ top, gameDisplayName }: RankingsPodiumP
                     >
                       {entry.rating.toFixed(1)}
                     </span>
-                    <span className="text-xs font-mono text-slate-500" title="Rating deviation">
-                      ±{Math.round(entry.rd ?? 350)} RD
+                    <span className="text-xs font-mono text-slate-500" title="How sure this rating is. A wider ± means fewer verified matches.">
+                      ±{Math.round(entry.rd ?? 350)}
                     </span>
                   </div>
                 </div>

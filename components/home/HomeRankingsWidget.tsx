@@ -135,7 +135,7 @@ export default function HomeRankingsWidget({
                   {item.rating}
                 </span>
                 <span className="font-mono text-[8px] text-slate-500 uppercase tracking-widest font-bold">
-                  GLICKO-2
+                  RATING
                 </span>
               </div>
             </Link>

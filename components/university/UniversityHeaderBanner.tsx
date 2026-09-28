@@ -129,7 +129,7 @@ export default function UniversityHeaderBanner({ university }: UniversityHeaderB
             <div className="px-4 py-1">
               <span className="text-[9px] font-mono uppercase tracking-widest text-slate-400 block font-bold flex items-center justify-center gap-1">
                 <ZapIcon className="w-2.5 h-2.5 text-primary-brand" />
-                GLICKO-2
+                RATING
               </span>
               <span className="font-display text-xl sm:text-2xl font-black text-white block mt-0.5">
                 {displayRating !== undefined && displayRating !== null
@@ -138,7 +138,7 @@ export default function UniversityHeaderBanner({ university }: UniversityHeaderB
               </span>
               <span className="text-[9px] font-mono text-slate-400 block mt-0.5">
                 {displayRd !== undefined && displayRd !== null
-                  ? `±${displayRd.toFixed(0)} RD`
+                  ? `±${displayRd.toFixed(0)}`
                   : "UNRATED"}
               </span>
             </div>

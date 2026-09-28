@@ -223,7 +223,7 @@ export default function AthleteProfileBanner({ user, squadsCount = 0 }: AthleteP
                 <>
                   <div className="text-center pr-4 border-r border-[#162034]">
                     <span className="text-[9px] font-mono uppercase tracking-widest text-slate-400 block font-bold">
-                      GLICKO MMR
+                      RATING
                     </span>
                     <span className="font-display text-lg font-black text-white block mt-0.5">
                       1500.0

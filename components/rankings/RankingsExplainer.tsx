@@ -13,8 +13,8 @@ const TERMS = [
     ),
   },
   {
-    symbol: "RD",
-    name: "Rating deviation",
+    symbol: "±",
+    name: "How sure the rating is",
     body: (
       <>
         Starts at <strong className="text-white font-mono">350</strong> (provisional) and shrinks as more official matches are verified.
@@ -24,7 +24,7 @@ const TERMS = [
   {
     symbol: "T",
     name: "Tournaments only",
-    body: <>Only verified competitive tournament matches affect ratings. Scrims and casual games are unrated practice.</>,
+    body: <>Only verified tournament matches move a rating. Scrims stay practice and do not change it.</>,
   },
 ];
 
@@ -36,9 +36,8 @@ export default function RankingsExplainer() {
         How ratings work
       </p>
       <p className="mt-3 max-w-3xl text-sm font-sans leading-relaxed text-slate-400">
-        Collegium rates each varsity team under a persistent Glicko-2 system, weighing opponent strength, rating deviation (
-        <span className="font-mono text-slate-300">RD</span>) and volatility (<span className="font-mono text-slate-300">σ</span>).
-        Ratings are computed when a tournament&apos;s rating period closes.
+        Collegium rates each varsity team from verified tournament results. A win against a stronger team moves the rating more. The ±
+        figure is how sure that rating is, and it tightens as more official matches are played.
       </p>
 
       <div className="mt-6 grid gap-6 md:grid-cols-3">
