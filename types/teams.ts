@@ -47,3 +47,8 @@ export interface CaptainRequest {
   preferredRole?: string;
   createdAt: string;
 }
+
+export interface SquadModeTabsProps {
+  active: "create" | "join";
+  onClose: () => void;
+}

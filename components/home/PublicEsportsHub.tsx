@@ -39,16 +39,18 @@ export default function PublicEsportsHub({
   return (
     <div className="flex flex-col flex-1 game-theme-bg">
       {/* 1. Cinematic Hero with Orbital Radar & Featured Editorial News Dispatch */}
-      <PublicHeroBroadcast
-        activeGame={activeGame}
-        selectedGameInfo={selectedGameInfo}
-        openGameSelector={openGameSelector}
-        stats={stats}
-        articles={articles}
-      />
+      <div className="animate-home-hero">
+        <PublicHeroBroadcast
+          activeGame={activeGame}
+          selectedGameInfo={selectedGameInfo}
+          openGameSelector={openGameSelector}
+          stats={stats}
+          articles={articles}
+        />
+      </div>
 
       {/* 2. Main Matches, News, and Circuit Sidebar */}
-      <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-6 md:px-8 pt-2 sm:pt-3 pb-8 sm:pb-12 space-y-10">
+      <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-6 md:px-8 pt-2 sm:pt-3 pb-8 sm:pb-12 space-y-10 animate-home-content">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Main Left: Matches & News */}
           <div className="lg:col-span-8 space-y-8">

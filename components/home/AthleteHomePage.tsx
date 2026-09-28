@@ -252,7 +252,7 @@ export default function AthleteHomePage({
   return (
     <div className="flex flex-col flex-1 game-theme-bg">
       {/* 1. HERO ATHLETE COMMAND STATION */}
-      <section className="relative pt-8 sm:pt-12 pb-8 sm:pb-12">
+      <section className="relative pt-8 sm:pt-12 pb-8 sm:pb-12 animate-home-hero">
         {/* Background Tactical Collegiate Watermark */}
         <div className="pointer-events-none absolute -top-12 left-1/2 -translate-x-1/2 w-full max-w-[1500px] h-[580px] opacity-[0.09] overflow-hidden z-0 select-none">
           <svg viewBox="0 0 1200 500" fill="none" className="w-full h-full">
@@ -473,7 +473,7 @@ export default function AthleteHomePage({
       </section>
 
       {/* 2. CORE OPERATIONS MATRIX (DIMENSIONAL & SOPHISTICATED) */}
-      <section className="py-8 sm:py-12 border-t border-[#182338] relative">
+      <section className="py-8 sm:py-12 border-t border-[#182338] relative animate-home-content">
         <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-6 md:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
             {/* Left 8 Cols: Live Varsity Scrimmage Radar */}

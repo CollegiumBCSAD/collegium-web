@@ -188,8 +188,13 @@ export default function AdminSidebar() {
       {user && (
         <div className="p-3 border-t border-[#171717] bg-[#050505]/95">
           <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A]">
-            <div className="w-7 h-7 rounded-lg bg-emerald-400 text-black flex items-center justify-center font-display font-black text-xs shrink-0 shadow-sm">
-              {user.displayName.charAt(0).toUpperCase()}
+            <div className="w-7 h-7 rounded-lg bg-emerald-400 text-black flex items-center justify-center font-display font-black text-xs shrink-0 shadow-sm overflow-hidden">
+              {user.avatar ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={user.avatar} alt={user.displayName} className="w-full h-full object-cover" />
+              ) : (
+                user.displayName.charAt(0).toUpperCase()
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-display font-bold text-white truncate">

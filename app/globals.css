@@ -373,3 +373,59 @@ h1, h2, h3, h4, .font-display, .font-oswald {
 .animate-arena-header-down {
   animation: arenaHeaderDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
+
+/* Home Page Transition & Staggered Elements */
+@keyframes homeEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.995);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes homeHeroFade {
+  0% {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes homeSectionFade {
+  0% {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-home-entrance {
+  animation: homeEntrance 0.36s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-home-hero {
+  animation: homeHeroFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.04s both;
+}
+
+.animate-home-content {
+  animation: homeSectionFade 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-home-entrance,
+  .animate-home-hero,
+  .animate-home-content,
+  .animate-page-slide-in {
+    animation: none !important;
+    transform: none !important;
+  }
+}

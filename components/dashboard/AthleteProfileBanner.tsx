@@ -3,8 +3,9 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { UserProfile } from "@/types";
-import { CheckCircleIcon, ShieldIcon, PlusIcon, UsersIcon, TrophyIcon } from "@/components/ui/Icons";
+import { CheckCircleIcon, ShieldIcon, PlusIcon, UsersIcon, TrophyIcon, CameraIcon } from "@/components/ui/Icons";
 import EditGameHandlesModal from "./EditGameHandlesModal";
+import ProfilePictureModal from "./ProfilePictureModal";
 
 interface AthleteProfileBannerProps {
   user: UserProfile;
@@ -13,6 +14,7 @@ interface AthleteProfileBannerProps {
 
 export default function AthleteProfileBanner({ user, squadsCount = 0 }: AthleteProfileBannerProps) {
   const [isEditIgnOpen, setIsEditIgnOpen] = useState(false);
+  const [isProfilePicOpen, setIsProfilePicOpen] = useState(false);
   const initial = (user.displayName || "A").charAt(0).toUpperCase();
 
   return (
@@ -51,25 +53,57 @@ export default function AthleteProfileBanner({ user, squadsCount = 0 }: AthleteP
           {/* Athlete Identity: Octagonal Crest & Details */}
           <div className="flex items-center gap-5 min-w-0">
             
-            {/* Octagonal Avatar Crest with Game Ring */}
-            <div className="relative shrink-0">
-              <div 
-                className="w-18 h-18 sm:w-20 sm:h-20 bg-gradient-to-br from-[#1E293B] via-[#121929] to-[#0A0D18] p-[2px] shadow-2xl flex items-center justify-center"
+            {/* Octagonal Avatar Crest with Game Ring & Edit Overlay */}
+            <div className="relative shrink-0 group/avatar">
+              <button
+                type="button"
+                onClick={() => setIsProfilePicOpen(true)}
+                title="Edit profile picture"
+                className="w-18 h-18 sm:w-20 sm:h-20 bg-gradient-to-br from-[#1E293B] via-[#121929] to-[#0A0D18] p-[2px] shadow-2xl flex items-center justify-center cursor-pointer transition-transform duration-200 hover:scale-105 active:scale-95 focus:outline-none relative"
                 style={{
                   clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
                   boxShadow: `0 0 20px rgba(0,0,0,0.6)`,
                 }}
               >
                 <div 
-                  className="w-full h-full bg-[#080B14] flex items-center justify-center font-display text-2xl sm:text-3xl font-black text-white"
+                  className="w-full h-full bg-[#080B14] flex items-center justify-center font-display text-2xl sm:text-3xl font-black text-white relative overflow-hidden"
                   style={{
                     clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
                   }}
                 >
-                  {initial}
+                  {user.avatar ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={user.avatar}
+                      alt={user.displayName}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    initial
+                  )}
+
+                  {/* Hover Overlay with Camera Icon */}
+                  <div className="absolute inset-0 bg-black/70 opacity-0 group-hover/avatar:opacity-100 flex flex-col items-center justify-center transition-opacity duration-200 gap-1 text-primary-brand">
+                    <CameraIcon className="w-5 h-5 text-primary-brand animate-pulse" />
+                    <span className="text-[8px] font-mono font-bold uppercase tracking-wider text-white">
+                      EDIT
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-[#0A0D18] flex items-center justify-center text-white shadow-md">
+              </button>
+
+              {/* Edit Camera Quick-Badge on Bottom-Left */}
+              <button
+                type="button"
+                onClick={() => setIsProfilePicOpen(true)}
+                title="Edit profile picture"
+                className="absolute -bottom-1 -left-1 w-6 h-6 rounded-full bg-[#121929] hover:bg-primary-brand border-2 border-[#0A0D18] flex items-center justify-center text-slate-300 hover:text-black shadow-md cursor-pointer transition-colors duration-150 z-10"
+              >
+                <CameraIcon className="w-3 h-3" />
+              </button>
+
+              {/* Verified Athlete Crest Indicator on Bottom-Right */}
+              <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-[#0A0D18] flex items-center justify-center text-white shadow-md pointer-events-none">
                 <CheckCircleIcon className="w-3 h-3" />
               </span>
             </div>
@@ -220,7 +254,7 @@ export default function AthleteProfileBanner({ user, squadsCount = 0 }: AthleteP
               {user.role === "ORGANIZER" ? (
                 <>
                   <Link
-                    href="/tournaments"
+                    href="/organize"
                     className="h-9 px-4.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-display text-xs font-black uppercase tracking-wider transition-all shadow-lg active:scale-95 flex items-center gap-1.5 cursor-pointer shadow-amber-500/20"
                     style={{
                       clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
@@ -286,6 +320,12 @@ export default function AthleteProfileBanner({ user, squadsCount = 0 }: AthleteP
         key={`${user?.id}-${user?.gameHandles?.length ?? 0}`}
         isOpen={isEditIgnOpen}
         onClose={() => setIsEditIgnOpen(false)}
+        user={user}
+      />
+
+      <ProfilePictureModal
+        isOpen={isProfilePicOpen}
+        onClose={() => setIsProfilePicOpen(false)}
         user={user}
       />
     </div>

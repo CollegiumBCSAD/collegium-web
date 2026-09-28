@@ -144,8 +144,13 @@ export default function UserManagementTable({ users, onUpdateStatus }: UserManag
                   className="grid grid-cols-[2.5fr_2fr_1.2fr_1fr_1fr] gap-4 px-6 py-4 items-center hover:bg-[#111A15]/20 transition-colors group"
                 >
                   <div className="flex items-center gap-3.5 min-w-0">
-                    <div className="w-9 h-9 rounded-xl bg-[#141414] border border-[#222222] text-white flex items-center justify-center font-display font-black text-xs shrink-0 group-hover:border-emerald-500/40 transition-colors shadow-inner">
-                      {user.displayName.charAt(0).toUpperCase()}
+                    <div className="w-9 h-9 rounded-xl bg-[#141414] border border-[#222222] text-white flex items-center justify-center font-display font-black text-xs shrink-0 group-hover:border-emerald-500/40 transition-colors shadow-inner overflow-hidden">
+                      {user.avatar ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={user.avatar} alt={user.displayName} className="w-full h-full object-cover" />
+                      ) : (
+                        user.displayName.charAt(0).toUpperCase()
+                      )}
                     </div>
                     <div className="min-w-0">
                       <span className="text-xs sm:text-sm font-display font-bold text-white group-hover:text-emerald-300 transition-colors truncate block">

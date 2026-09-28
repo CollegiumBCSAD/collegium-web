@@ -30,7 +30,49 @@ export default function LoginPage() {
     return null;
   };
 
+  const getAccountRoleInfo = (emailStr: string) => {
+    const lower = emailStr.toLowerCase().trim();
+    const username = lower.split("@")[0] || "";
+
+    if (
+      username.includes("organizer") ||
+      username.includes("host") ||
+      username.includes("commission") ||
+      username.includes("tournament")
+    ) {
+      return {
+        role: "ORGANIZER" as const,
+        roleLabel: "ORGANIZER",
+        badgeClass: "bg-amber-500/20 text-amber-300 border border-amber-500/40",
+        btnText: "Log In to Organizer Dashboard",
+        heading: "Organizer Log In",
+        subtitle: "Access tournament hosting, brackets, and war rooms",
+      };
+    }
+
+    if (username.includes("admin")) {
+      return {
+        role: "ADMIN" as const,
+        roleLabel: "ADMINISTRATOR",
+        badgeClass: "bg-purple-500/20 text-purple-300 border border-purple-500/40",
+        btnText: "Log In to Admin Console",
+        heading: "Admin Log In",
+        subtitle: "Access system administration and university rosters",
+      };
+    }
+
+    return {
+      role: "ATHLETE" as const,
+      roleLabel: "ATHLETE",
+      badgeClass: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40",
+      btnText: "Log In to Athlete Dashboard",
+      heading: "Athlete Log In",
+      subtitle: "Access your scrims, tournaments, and team dashboard",
+    };
+  };
+
   const detectedUniversity = getUniversityFromEmail(email);
+  const roleInfo = getAccountRoleInfo(email);
 
   useEffect(() => {
     if (isLoaded && isLoggedIn) {
@@ -98,10 +140,10 @@ export default function LoginPage() {
             <span className="font-display text-xl font-bold">C</span>
           </div>
           <h1 className="font-display text-2xl sm:text-3xl font-bold uppercase tracking-wider text-foreground">
-            Athlete Log In
+            {roleInfo.heading}
           </h1>
           <p className="font-sans text-xs sm:text-sm text-secondary-text mt-1">
-            Access your scrims, tournaments, and team dashboard
+            {roleInfo.subtitle}
           </p>
         </div>
 
@@ -162,8 +204,8 @@ export default function LoginPage() {
                 <span className="text-[11px] font-sans font-semibold text-success uppercase tracking-wider">
                   ✓ {detectedUniversity}
                 </span>
-                <span className="text-[10px] font-sans font-bold bg-success/20 text-success px-2 py-0.5 rounded">
-                  ATHLETE
+                <span className={`text-[10px] font-sans font-bold px-2 py-0.5 rounded ${roleInfo.badgeClass}`}>
+                  {roleInfo.roleLabel}
                 </span>
               </div>
             )}
@@ -200,7 +242,7 @@ export default function LoginPage() {
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
               ) : (
-                "Log In to Athlete Dashboard"
+                roleInfo.btnText
               )}
             </button>
           </div>

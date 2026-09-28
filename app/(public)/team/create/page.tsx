@@ -5,10 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { GameId, GAMES } from "@/lib/games";
 import { Team } from "@/types";
+import { fetchTeamsApi } from "@/lib/teams";
 import { teamsService } from "@/services";
 import { useAuth } from "@/context/AuthContext";
 import { useGame } from "@/context/GameContext";
-import { PlusIcon, UsersIcon, ShieldIcon, AlertTriangleIcon, CheckCircleIcon, TrophyIcon } from "@/components/ui/Icons";
+import { ShieldIcon, AlertTriangleIcon, CheckCircleIcon, TrophyIcon } from "@/components/ui/Icons";
+import SquadModeTabs from "@/components/SquadModeTabs";
 
 const GAME_SPECIFIC_PLACEHOLDERS: Record<string, { tag: string; role: string; squadName: string }> = {
   valo: {
@@ -35,7 +37,7 @@ const GAME_SPECIFIC_PLACEHOLDERS: Record<string, { tag: string; role: string; sq
 
 export default function CreateTeamPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, refreshProfile, loginWithToken } = useAuth();
   const { selectedGame: globalGame } = useGame();
   const activeGame: GameId = globalGame || "valo";
   const activeGameInfo = GAMES[activeGame as keyof typeof GAMES] || GAMES.valo;
@@ -73,18 +75,15 @@ export default function CreateTeamPage() {
       }>;
       const myId = user.id;
       const myEmail = user.email ? user.email.toLowerCase().trim() : "";
-      const myName = user.displayName ? user.displayName.toLowerCase().trim() : "";
 
       const found = teams.find(
         (t) =>
           (myId && t.captainId === myId) ||
-          (myName && t.captainName && t.captainName.toLowerCase().trim() === myName) ||
           t.members?.some(
             (m) =>
               m.status === "ACCEPTED" &&
               ((myId && (m.userId === myId || m.user?.id === myId)) ||
-                (myEmail && (m.email?.toLowerCase().trim() === myEmail || m.user?.email?.toLowerCase().trim() === myEmail)) ||
-                (myName && (m.displayName?.toLowerCase().trim() === myName || m.user?.displayName?.toLowerCase().trim() === myName)))
+                (myEmail && (m.email?.toLowerCase().trim() === myEmail || m.user?.email?.toLowerCase().trim() === myEmail)))
           )
       );
       if (found) {
@@ -100,6 +99,8 @@ export default function CreateTeamPage() {
           createdAt: "",
           members: [],
         });
+      } else {
+        setExistingSquad(null);
       }
     }).catch(() => {});
   }, [user]);
@@ -180,6 +181,12 @@ export default function CreateTeamPage() {
       };
 
       setCreatedTeam(mappedTeam);
+      await fetchTeamsApi();
+      if (refreshProfile) {
+        await refreshProfile();
+      } else if (loginWithToken) {
+        await loginWithToken();
+      }
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
       setError(errorObj?.response?.data?.message || errorObj?.message || "Failed to create team.");
@@ -221,34 +228,7 @@ export default function CreateTeamPage() {
         />
 
         {/* Top Control Bar: Full-Width Tab Segmented Switcher + Aligned Close Button */}
-        <div className="flex items-center gap-3 w-full">
-          <div className="flex-1 grid grid-cols-2 p-1.5 rounded-2xl bg-[#080C14] border border-[#1C2538] gap-1.5 items-center">
-            <Link
-              href="/team/create"
-              className="h-11 game-theme-btn text-xs font-display font-black uppercase tracking-wider flex items-center justify-center gap-2 text-center w-full"
-            >
-              <PlusIcon className="w-4 h-4" />
-              <span>Create Squad</span>
-            </Link>
-            <Link
-              href="/team/join"
-              className="h-11 rounded-xl bg-transparent hover:bg-[#141A29] text-slate-400 hover:text-white text-xs font-display font-bold uppercase tracking-wider flex items-center justify-center gap-2 text-center transition-all cursor-pointer"
-            >
-              <UsersIcon className="w-4 h-4" />
-              <span>Join Squad</span>
-            </Link>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleClose}
-            className="w-12 h-12 rounded-2xl border border-[#232D44] bg-[#0E1424] hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 flex items-center justify-center text-base font-bold transition-all shrink-0 cursor-pointer shadow-md hover:border-rose-500/40 active:scale-95"
-            title="Close window"
-            aria-label="Close window"
-          >
-            ✕
-          </button>
-        </div>
+        <SquadModeTabs active="create" onClose={handleClose} />
 
         {/* Header Title */}
         <div className="border-b border-[#1C2538] pb-4">
