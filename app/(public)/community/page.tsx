@@ -1,43 +1,67 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useGame } from "@/context/GameContext";
-import { mockNewsArticles } from "@/lib/mock/news";
 import Link from "next/link";
 import { FlameIcon, CalendarIcon, ClockIcon } from "@/components/ui/Icons";
+import { newsService } from "@/services/newsService";
+import { GAME_ID_TO_ENUM } from "@/lib/games";
+import { GameId, NewsArticle, NewsCategory, NEWS_CATEGORY_LABELS } from "@/types";
+import { NewsCardSkeleton } from "@/components/ui/Skeleton";
+
+const CATEGORY_FILTERS: { id: "ALL" | NewsCategory; label: string }[] = [
+  { id: "ALL", label: "ALL TOPICS" },
+  { id: "TOURNAMENT_CIRCUIT", label: "CIRCUITS" },
+  { id: "TACTICAL_META", label: "META" },
+  { id: "RULESET_PATCH", label: "RULESETS" },
+  { id: "ATHLETE_SPOTLIGHT", label: "SPOTLIGHTS" },
+];
 
 export default function CommunityPage() {
   const { selectedGame: globalGame, selectedGameInfo } = useGame();
-  const [activeCategory, setActiveCategory] = useState<string>("ALL");
+  const activeGame = (globalGame || "valo") as GameId;
+  const [activeCategory, setActiveCategory] = useState<"ALL" | NewsCategory>("ALL");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [articles, setArticles] = useState<NewsArticle[]>([]);
+  const [loadedGame, setLoadedGame] = useState<string | null>(null);
 
-  const categories = [
-    { id: "ALL", label: "ALL TOPICS" },
-    { id: "TOURNAMENT CIRCUIT", label: "CIRCUITS" },
-    { id: "TACTICAL META", label: "META" },
-    { id: "RULESET & PATCH", label: "RULESETS" },
-    { id: "ATHLETE SPOTLIGHT", label: "SPOTLIGHTS" },
-  ];
+  const isLoading = loadedGame !== activeGame;
 
-  // Filter articles exclusively by the selected game from the game selector
-  const gameFilteredArticles = useMemo(() => {
-    const targetGame = globalGame || "valo";
-    return mockNewsArticles.filter((a) => a.gameId === targetGame || a.gameId === "general");
-  }, [globalGame]);
+  // The server already returns this division's articles plus the general ones.
+  useEffect(() => {
+    let cancelled = false;
+
+    newsService
+      .getNews(GAME_ID_TO_ENUM[activeGame])
+      .then((data) => {
+        if (cancelled) return;
+        setArticles(Array.isArray(data) ? data : []);
+        setLoadedGame(activeGame);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setArticles([]);
+        setLoadedGame(activeGame);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeGame]);
 
   const featuredArticle = useMemo(() => {
-    return gameFilteredArticles.find((a) => a.isFeatured) || gameFilteredArticles[0] || mockNewsArticles[0];
-  }, [gameFilteredArticles]);
+    return articles.find((a) => a.isFeatured) || articles[0];
+  }, [articles]);
 
   const secondaryArticles = useMemo(() => {
-    return gameFilteredArticles.filter((a) => a.id !== featuredArticle?.id);
-  }, [gameFilteredArticles, featuredArticle]);
+    return articles.filter((a) => a.id !== featuredArticle?.id);
+  }, [articles, featuredArticle]);
 
   const filteredArticles = useMemo(() => {
     return secondaryArticles.filter((a) => {
-      const matchesCategory = activeCategory === "ALL" || a.category.toUpperCase().includes(activeCategory.toUpperCase());
-      const matchesSearch = searchQuery === "" || 
-        a.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      const matchesCategory = activeCategory === "ALL" || a.category === activeCategory;
+      const matchesSearch = searchQuery === "" ||
+        a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         a.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
     });
@@ -87,7 +111,7 @@ export default function CommunityPage() {
         {/* Compact Topic Segmented Filter Pill Bar */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
           <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider mr-1.5 shrink-0">TOPIC:</span>
-          {categories.map((cat) => {
+          {CATEGORY_FILTERS.map((cat) => {
             const isSelected = activeCategory === cat.id;
             return (
               <button
@@ -109,7 +133,7 @@ export default function CommunityPage() {
         </div>
 
         {/* Featured Hero Article Spotlight */}
-        {featuredArticle && activeCategory === "ALL" && !searchQuery && (
+        {!isLoading && featuredArticle && activeCategory === "ALL" && !searchQuery && (
           <div 
             className="group relative overflow-hidden bg-[#0A0D18] border border-[#1E293B] shadow-2xl transition-all duration-300 hover:border-primary-brand/50"
             style={{
@@ -120,12 +144,16 @@ export default function CommunityPage() {
               
               {/* Featured Image Side */}
               <div className="lg:col-span-7 relative overflow-hidden h-64 lg:h-auto">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={featuredArticle.image}
-                  alt={featuredArticle.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
+                {featuredArticle.image ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={featuredArticle.image}
+                    alt={featuredArticle.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-[#060812]" />
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-r from-[#0A0D18] via-black/40 to-transparent" />
                 
                 <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
@@ -160,7 +188,7 @@ export default function CommunityPage() {
                         clipPath: "polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)",
                       }}
                     >
-                      {featuredArticle.category}
+                      {NEWS_CATEGORY_LABELS[featuredArticle.category]}
                     </span>
                     <span className="text-[10px] font-mono text-slate-400 flex items-center gap-1">
                       <CalendarIcon className="w-3 h-3 text-slate-400" />
@@ -182,7 +210,7 @@ export default function CommunityPage() {
                     BY {featuredArticle.author || "COLLEGIUM MEDIA"}
                   </span>
                   <Link
-                    href={`/community`}
+                    href={`/community/${featuredArticle.id}`}
                     className="h-9 px-4 game-theme-btn font-display text-[10px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md cursor-pointer"
                     style={{
                       clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
@@ -201,36 +229,49 @@ export default function CommunityPage() {
           <div className="flex items-center justify-between border-b border-[#182338] pb-3">
             <h3 className="font-display text-sm sm:text-base font-black uppercase text-white tracking-wider flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-primary-brand animate-pulse" />
-              <span>{activeCategory === "ALL" ? `${selectedGameInfo?.shortName || "CIRCUIT"} DISPATCHES & ARTICLES` : `${activeCategory} DISPATCHES`} ({filteredArticles.length})</span>
+              <span>{activeCategory === "ALL" ? `${selectedGameInfo?.shortName || "CIRCUIT"} DISPATCHES & ARTICLES` : `${NEWS_CATEGORY_LABELS[activeCategory]} DISPATCHES`}{isLoading ? "" : ` (${filteredArticles.length})`}</span>
             </h3>
           </div>
 
-          {filteredArticles.length === 0 ? (
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <NewsCardSkeleton />
+              <NewsCardSkeleton />
+              <NewsCardSkeleton />
+            </div>
+          ) : filteredArticles.length === 0 ? (
             <div 
               className="p-10 bg-[#0A0D18] border border-[#1E293B] text-center space-y-2"
               style={{
                 clipPath: "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
               }}
             >
-              <p className="text-xs font-mono text-slate-400">NO {selectedGameInfo?.name?.toUpperCase() || "GAME"} DISPATCHES FOUND MATCHING TOPIC</p>
+              <p className="text-xs font-mono text-slate-400">
+                {articles.length === 0
+                  ? `NO ${selectedGameInfo?.name?.toUpperCase() || "GAME"} DISPATCHES PUBLISHED YET`
+                  : `NO ${selectedGameInfo?.name?.toUpperCase() || "GAME"} DISPATCHES FOUND MATCHING TOPIC`}
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredArticles.map((article) => (
-                <article
+                <Link
                   key={article.id}
+                  href={`/community/${article.id}`}
                   className="group bg-[#0A0D18] border border-[#1E293B] hover:border-primary-brand/50 overflow-hidden transition-all duration-300 hover:-translate-y-1 shadow-xl flex flex-col justify-between"
                   style={{
                     clipPath: "polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px))",
                   }}
                 >
                   <div className="relative h-44 overflow-hidden bg-[#060812]">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={article.image}
-                      alt={article.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
+                    {article.image && (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={article.image}
+                        alt={article.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-t from-[#0A0D18] via-transparent to-transparent" />
                     <span
                       className="absolute top-3 left-3 text-[9px] font-mono font-bold uppercase px-2 py-0.5 text-white shadow bg-primary-brand"
@@ -238,7 +279,7 @@ export default function CommunityPage() {
                         clipPath: "polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)",
                       }}
                     >
-                      {article.category}
+                      {NEWS_CATEGORY_LABELS[article.category]}
                     </span>
                   </div>
 
@@ -259,14 +300,14 @@ export default function CommunityPage() {
 
                     <div className="pt-3 border-t border-[#182338] flex items-center justify-between">
                       <span className="text-[9px] font-mono text-slate-500 font-bold uppercase">
-                        {article.category}
+                        {NEWS_CATEGORY_LABELS[article.category]}
                       </span>
                       <span className="font-mono text-xs font-bold text-primary-brand group-hover:translate-x-1 transition-transform flex items-center gap-1">
                         <span>READ DISPATCH →</span>
                       </span>
                     </div>
                   </div>
-                </article>
+                </Link>
               ))}
             </div>
           )}

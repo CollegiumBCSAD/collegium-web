@@ -106,3 +106,28 @@ export function ScrimCardSkeleton() {
     </div>
   );
 }
+
+export function NewsCardSkeleton() {
+  return (
+    <div
+      className="bg-[#0A0D18] border border-[#1E293B] overflow-hidden shadow-xl"
+      style={{
+        clipPath:
+          "polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px))",
+      }}
+    >
+      <Skeleton className="h-44 w-full rounded-none" />
+      <div className="p-5 space-y-4">
+        <div className="space-y-2">
+          <Skeleton className="h-3 w-1/3" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-4/5" />
+        </div>
+        <div className="pt-3 border-t border-[#182338] flex justify-between">
+          <Skeleton className="h-3 w-1/4" />
+          <Skeleton className="h-3 w-1/5" />
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { NewsArticle, GameId } from "@/types";
+import { NewsArticle, GameId, NEWS_CATEGORY_LABELS } from "@/types";
 import { ClockIcon, CalendarIcon } from "@/components/ui/Icons";
 
 interface HomeNewsHubProps {
@@ -44,17 +44,19 @@ export default function HomeNewsHub({ articles, activeGame }: HomeNewsHubProps) 
         {featured && (
           <div className="lg:col-span-7">
             <Link
-              href="/community"
+              href={`/community/${featured.id}`}
               className="group relative flex flex-col justify-end overflow-hidden rounded-xl bg-[#0D1220] hover:bg-[#121828] border border-[#18233B] hover:border-primary-brand/50 transition-all duration-200 h-[260px] sm:h-[290px] p-5 shadow-md"
             >
               {/* Background Cover Image */}
               <div className="absolute inset-0 z-0">
-                <Image
-                  src={featured.image}
-                  alt={featured.title}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-500 opacity-40"
-                />
+                {featured.image && (
+                  <Image
+                    src={featured.image}
+                    alt={featured.title}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-500 opacity-40"
+                  />
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-[#090D18] via-[#090D18]/80 to-transparent" />
               </div>
 
@@ -62,7 +64,7 @@ export default function HomeNewsHub({ articles, activeGame }: HomeNewsHubProps) 
               <div className="relative z-10 space-y-1.5">
                 <div className="flex items-center gap-2">
                   <span className="px-2 py-0.5 rounded bg-primary-brand text-white font-mono text-[9px] font-black uppercase tracking-wider">
-                    {featured.category}
+                    {NEWS_CATEGORY_LABELS[featured.category]}
                   </span>
                   <span className="flex items-center gap-1 font-mono text-[10px] text-slate-400">
                     <CalendarIcon className="w-3 h-3" />
@@ -97,24 +99,26 @@ export default function HomeNewsHub({ articles, activeGame }: HomeNewsHubProps) 
           {sideArticles.map((article) => (
             <Link
               key={article.id}
-              href="/community"
+              href={`/community/${article.id}`}
               className="group flex items-center gap-3 p-2.5 rounded-xl bg-[#0D1220] hover:bg-[#121828] border border-[#18233B] hover:border-primary-brand/40 transition-all duration-150 shadow-sm"
             >
               {/* Thumbnail */}
               <div className="relative w-20 h-16 shrink-0 overflow-hidden rounded bg-[#070A12] border border-[#1E2942]">
-                <Image
-                  src={article.image}
-                  alt={article.title}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-300"
-                />
+                {article.image && (
+                  <Image
+                    src={article.image}
+                    alt={article.title}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                )}
               </div>
 
               {/* Text */}
               <div className="flex flex-col flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 mb-1">
                   <span className="text-[9px] font-mono font-bold text-primary-brand uppercase">
-                    {article.category}
+                    {NEWS_CATEGORY_LABELS[article.category]}
                   </span>
                   <span className="text-[8px] font-mono text-slate-500">•</span>
                   <span className="text-[9px] font-mono text-slate-400">

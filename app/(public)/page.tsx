@@ -3,10 +3,9 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useGame } from "@/context/GameContext";
 import { useAuth } from "@/context/AuthContext";
-import { universitiesService, scrimsService, tournamentsService } from "@/services";
+import { universitiesService, scrimsService, tournamentsService, newsService } from "@/services";
 import { fetchTeamsApi, Team } from "@/lib/teams";
-import { University, ScrimOffer, Tournament, GameId } from "@/types";
-import { mockNewsArticles } from "@/lib/mock/news";
+import { University, ScrimOffer, Tournament, GameId, NewsArticle } from "@/types";
 import GameSelectorLanding from "@/components/GameSelectorLanding";
 import MatchBoxScoreModal from "@/components/MatchBoxScoreModal";
 import AthleteHomePage from "@/components/home/AthleteHomePage";
@@ -23,6 +22,7 @@ export default function LandingPage() {
   const [scrims, setScrims] = useState<ScrimOffer[]>([]);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [realMatches, setRealMatches] = useState<HomeMatchItem[]>([]);
+  const [articles, setArticles] = useState<NewsArticle[]>([]);
 
   // Modal inspection state for Box Score
   const [selectedMatch, setSelectedMatch] = useState<HomeMatchItem | null>(null);
@@ -35,12 +35,14 @@ export default function LandingPage() {
       fetchTeamsApi(),
       scrimsService.getScrims(),
       tournamentsService.getTournaments(),
-    ]).then(([uniRes, teamsRes, scrimsRes, tourneyRes]) => {
+      newsService.getNews(),
+    ]).then(([uniRes, teamsRes, scrimsRes, tourneyRes, newsRes]) => {
       if (!isMounted) return;
       if (uniRes.status === "fulfilled") setUniversities(uniRes.value || []);
       if (teamsRes.status === "fulfilled") setTeams(teamsRes.value || []);
       if (scrimsRes.status === "fulfilled") setScrims(scrimsRes.value || []);
       if (tourneyRes.status === "fulfilled") setTournaments(tourneyRes.value || []);
+      if (newsRes.status === "fulfilled") setArticles(newsRes.value || []);
     });
 
     return () => {
@@ -130,7 +132,7 @@ export default function LandingPage() {
         tournaments={tournaments}
         scrims={scrims}
         universities={universities}
-        articles={mockNewsArticles}
+        articles={articles}
       />
     );
   }
@@ -146,7 +148,7 @@ export default function LandingPage() {
         selectGame={selectGame}
         stats={stats}
         matches={realMatches}
-        articles={mockNewsArticles}
+        articles={articles}
         universities={universities}
         scrims={scrims}
         tournaments={tournaments}
