@@ -80,6 +80,14 @@ export const GAME_ID_TO_ENUM: Record<GameId, string> = {
   codm: "CODM",
 };
 
+// The inverse of GAME_ID_TO_ENUM, for mapping server payloads back to GameId.
+export const GAME_ENUM_TO_ID: Record<string, GameId> = {
+  VALORANT: "valo",
+  LOL: "lol",
+  MLBB: "ml",
+  CODM: "codm",
+};
+
 export const GAME_LIST: GameInfo[] = [
   GAMES.valo,
   GAMES.lol,
