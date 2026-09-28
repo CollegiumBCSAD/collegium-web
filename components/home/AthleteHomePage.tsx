@@ -4,9 +4,8 @@ import React, { useMemo, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { UserProfile, GameInfo, GameId, University, Tournament, ScrimOffer, NewsArticle } from "@/types";
+import { UserProfile, GameInfo, GameId, University, Tournament, ScrimOffer, NewsArticle, NEWS_CATEGORY_LABELS } from "@/types";
 import { Team, fetchTeamsApi } from "@/lib/teams";
-import { mockNewsArticles } from "@/lib/mock/news";
 import {
   TrophyIcon,
   SwordsIcon,
@@ -41,7 +40,7 @@ export default function AthleteHomePage({
   tournaments,
   scrims = [],
   universities = [],
-  articles = mockNewsArticles,
+  articles = [],
 }: AthleteHomePageProps) {
   const router = useRouter();
   const [scrimFilter, setScrimFilter] = useState<"ALL" | "BO3" | "TIER1">("ALL");
@@ -414,7 +413,7 @@ export default function AthleteHomePage({
                   </button>
 
                   <Link
-                    href="/community"
+                    href={`/community/${activeArticle.id}`}
                     className="relative flex flex-col justify-end overflow-hidden bg-gradient-to-b from-[#0E1526]/90 via-[#0A0F1D]/90 to-[#070A12] border border-[#1E2B48]/80 group-hover/carousel:border-primary-brand/60 shadow-2xl p-5 sm:p-6 min-h-[300px] sm:min-h-[330px] rounded-2xl block"
                   >
                     {/* Subtle Fade-in Container */}
@@ -425,12 +424,14 @@ export default function AthleteHomePage({
                     >
                       {/* Background Artwork with Smooth Dark Vignette */}
                       <div className="absolute inset-0 z-0">
-                        <Image
-                          src={activeArticle.image}
-                          alt={activeArticle.title}
-                          fill
-                          className="object-cover opacity-35 group-hover/carousel:scale-105 group-hover/carousel:opacity-45 transition-all duration-700"
-                        />
+                        {activeArticle.image && (
+                          <Image
+                            src={activeArticle.image}
+                            alt={activeArticle.title}
+                            fill
+                            className="object-cover opacity-35 group-hover/carousel:scale-105 group-hover/carousel:opacity-45 transition-all duration-700"
+                          />
+                        )}
                         <div className="absolute inset-0 bg-gradient-to-t from-[#070A12] via-[#070A12]/80 to-transparent" />
                         <div className="absolute inset-0 bg-gradient-to-r from-[#070A12]/80 via-transparent to-transparent" />
                       </div>
@@ -439,7 +440,7 @@ export default function AthleteHomePage({
                       <div className="relative z-10 space-y-3 px-6 sm:px-8">
                         <div className="flex items-center gap-2">
                           <span className="px-2.5 py-0.5 rounded-full bg-primary-brand/20 border border-primary-brand/50 text-primary-brand font-mono text-[9px] font-black uppercase tracking-wider">
-                            {activeArticle.category || "CIRCUIT DISPATCH"}
+                            {NEWS_CATEGORY_LABELS[activeArticle.category] || "CIRCUIT DISPATCH"}
                           </span>
                           <span className="flex items-center gap-1 font-mono text-[10px] text-slate-400">
                             <ClockIcon className="w-3 h-3 text-slate-400" />
