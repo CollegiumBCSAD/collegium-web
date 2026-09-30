@@ -186,11 +186,11 @@ export default function ChatQuickAccess() {
   if (!isLoggedIn) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-40" ref={containerRef}>
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40" ref={containerRef}>
       {/* Floating Chat Drawer */}
       {isOpen && (
         <div
-          className="absolute bottom-16 right-0 w-[360px] sm:w-[400px] h-[520px] bg-[#0A0D18] border border-[#1E293B] shadow-2xl overflow-hidden flex flex-col z-50 animate-modal-enter"
+          className="absolute bottom-16 right-0 w-[min(400px,calc(100vw-2rem))] h-[min(520px,calc(100dvh-8rem))] bg-[#0A0D18] border border-[#1E293B] shadow-2xl overflow-hidden flex flex-col z-50 animate-modal-enter"
           style={{
             clipPath:
               "polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))",
