@@ -121,12 +121,12 @@ export default function UniversityHeaderBanner({ university }: UniversityHeaderB
 
           {/* Right Side: Asymmetrical Slanted Telemetry Pod */}
           <div 
-            className="grid grid-cols-3 gap-2 p-3.5 bg-[#050711] border border-[#1A253A] shrink-0 text-center shadow-inner"
+            className="grid grid-cols-3 gap-1 sm:gap-2 p-2.5 sm:p-3.5 bg-[#050711] border border-[#1A253A] w-full lg:w-auto lg:shrink-0 text-center shadow-inner"
             style={{
               clipPath: "polygon(14px 0, 100% 0, calc(100% - 14px) 100%, 0 100%)",
             }}
           >
-            <div className="px-4 py-1">
+            <div className="px-1.5 sm:px-4 py-1">
               <span className="text-[9px] font-mono uppercase tracking-widest text-slate-400 block font-bold flex items-center justify-center gap-1">
                 <ZapIcon className="w-2.5 h-2.5 text-primary-brand" />
                 RATING
@@ -143,7 +143,7 @@ export default function UniversityHeaderBanner({ university }: UniversityHeaderB
               </span>
             </div>
 
-            <div className="px-4 py-1 border-x border-[#182338]">
+            <div className="px-1.5 sm:px-4 py-1 border-x border-[#182338]">
               <span className="text-[9px] font-mono uppercase tracking-widest text-slate-400 block font-bold flex items-center justify-center gap-1">
                 <TrophyIcon className="w-2.5 h-2.5 text-amber-400" />
                 WIN RATE
@@ -156,7 +156,7 @@ export default function UniversityHeaderBanner({ university }: UniversityHeaderB
               </span>
             </div>
 
-            <div className="px-4 py-1">
+            <div className="px-1.5 sm:px-4 py-1">
               <span className="text-[9px] font-mono uppercase tracking-widest text-slate-400 block font-bold">
                 RECORD
               </span>

@@ -19,7 +19,7 @@ export default function UniversityMemberStrip({ universities }: UniversityMember
         <span className="text-[10px] font-mono font-bold uppercase tracking-[0.25em] text-slate-500">
           Member institutions <span className="text-white">· {members.length}</span>
         </span>
-        <span className="hidden sm:block text-[10px] font-mono uppercase tracking-widest text-slate-600">Hover to reveal · click to jump</span>
+        <span className="hidden sm:block text-[10px] font-mono uppercase tracking-widest text-slate-600">Tap or hover to reveal · click to jump</span>
       </div>
 
       <div className="flex h-28 overflow-hidden rounded-2xl border border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_24px_48px_-24px_rgba(0,0,0,0.95)]">
@@ -31,7 +31,7 @@ export default function UniversityMemberStrip({ universities }: UniversityMember
               key={u.id}
               href={`#uni-${u.id}`}
               aria-label={`Jump to ${u.name}`}
-              className="group relative flex-1 min-w-0 overflow-hidden border-r border-black/40 last:border-r-0 transition-[flex-grow] duration-500 ease-out hover:flex-[4] focus-visible:flex-[4] focus-visible:outline-none"
+              className="group relative flex-1 min-w-0 overflow-hidden border-r border-black/40 last:border-r-0 transition-[flex-grow] duration-500 ease-out hover:flex-[4] focus-visible:flex-[4] active:flex-[4] focus-visible:outline-none"
               style={{
                 background: `linear-gradient(165deg, color-mix(in srgb, ${muted.primary} 40%, #0B0F18), color-mix(in srgb, ${muted.primary} 12%, #07090F))`,
               }}
@@ -53,7 +53,7 @@ export default function UniversityMemberStrip({ universities }: UniversityMember
                   {brand.abbr}
                 </span>
                 {/* revealed on hover as the stripe widens */}
-                <span className="hidden min-w-0 border-l border-white/15 pl-3 text-left group-hover:block group-focus-visible:block animate-fade-in">
+                <span className="hidden min-w-0 border-l border-white/15 pl-3 text-left group-hover:block group-focus-visible:block group-active:block animate-fade-in">
                   <span className="block font-display text-sm font-black uppercase leading-tight text-white truncate">{u.name}</span>
                   <span className="block mt-0.5 text-[10px] font-mono text-white/60 truncate">
                     {u.glicko2_rating !== undefined ? `${Math.round(u.glicko2_rating)} RTG` : "Unrated"} · {u.wins ?? 0}–{u.losses ?? 0}
