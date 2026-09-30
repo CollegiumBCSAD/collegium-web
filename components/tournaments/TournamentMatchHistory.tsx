@@ -27,7 +27,7 @@ export default function TournamentMatchHistory({ rounds }: TournamentMatchHistor
     });
 
   return (
-    <div className="mt-8 space-y-3">
+    <div className="space-y-3">
       <h3 className="font-display text-sm font-black uppercase tracking-widest text-white">
         Match results
       </h3>

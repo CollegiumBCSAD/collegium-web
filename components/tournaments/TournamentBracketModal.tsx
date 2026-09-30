@@ -914,7 +914,9 @@ export default function TournamentBracketModal({
                   </>
                 )}
               </div>
-              <TournamentMatchHistory rounds={rounds} />
+              <div className="shrink-0 max-h-[35vh] overflow-y-auto border-t border-[#1E293B] bg-[#05070E] px-3 sm:px-6 md:px-10 py-5 sm:py-6">
+                <TournamentMatchHistory rounds={rounds} />
+              </div>
               </div>
             )}
           </div>
