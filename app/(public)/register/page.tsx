@@ -1,18 +1,30 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useOnboarding } from "@/context/OnboardingContext";
 import { authService } from "@/services/authService";
 import { TrophyIcon, UsersIcon, ShieldIcon, ZapIcon, CheckCircleIcon, AlertTriangleIcon } from "@/components/ui/Icons";
 
-export default function RegisterPage() {
-  const router = useRouter();
-  const { user, isLoggedIn, isLoaded } = useAuth();
+const LOADING_SCREEN = (
+  <div className="flex flex-1 items-center justify-center px-4 py-12 game-theme-bg">
+    <div className="w-8 h-8 border-2 border-primary-brand/30 border-t-primary-brand rounded-full animate-spin" />
+  </div>
+);
 
-  // Role Selection: "ATHLETE" (registered as NON_ATHLETE until joining roster) vs "ORGANIZER" (Instant Tournament Host)
-  const [accountType, setAccountType] = useState<"ATHLETE" | "ORGANIZER">("ATHLETE");
+function RegisterContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { isLoggedIn, isLoaded } = useAuth();
+  const { homeRoute } = useOnboarding();
+
+  // Role Selection: "ATHLETE" (registered as NON_ATHLETE until joining roster) vs "ORGANIZER" (Instant Tournament Host).
+  // The gateway's organizer card links here with ?as=organizer.
+  const [accountType, setAccountType] = useState<"ATHLETE" | "ORGANIZER">(() =>
+    searchParams.get("as") === "organizer" ? "ORGANIZER" : "ATHLETE"
+  );
 
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
@@ -46,16 +58,12 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (isLoaded && isLoggedIn) {
-      router.replace(user?.role === "ADMIN" ? "/admin" : "/dashboard");
+      router.replace(homeRoute);
     }
-  }, [isLoaded, isLoggedIn, user, router]);
+  }, [isLoaded, isLoggedIn, homeRoute, router]);
 
   if (!isLoaded || isLoggedIn) {
-    return (
-      <div className="flex flex-1 items-center justify-center px-4 py-12 game-theme-bg">
-        <div className="w-8 h-8 border-2 border-primary-brand/30 border-t-primary-brand rounded-full animate-spin" />
-      </div>
-    );
+    return LOADING_SCREEN;
   }
 
   const handleGoogleAuth = () => {
@@ -439,11 +447,22 @@ export default function RegisterPage() {
 
         <div className="text-center text-xs font-sans text-slate-400">
           Already registered?{" "}
-          <Link href="/login" className="text-primary-brand hover:underline font-bold">
+          <Link
+            href={isOrganizer ? "/login?as=organizer" : "/login?as=athlete"}
+            className="text-primary-brand hover:underline font-bold"
+          >
             Sign In
           </Link>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={LOADING_SCREEN}>
+      <RegisterContent />
+    </Suspense>
   );
 }

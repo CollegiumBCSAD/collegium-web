@@ -1,16 +1,30 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useGame } from "@/context/GameContext";
+import { useOnboarding } from "@/context/OnboardingContext";
+import { useGateway } from "@/context/GatewayContext";
 import { getGameInfo } from "@/lib/games";
 import { api } from "@/lib/api";
 
-export default function LoginPage() {
+const LOADING_SCREEN = (
+  <div className="flex flex-1 items-center justify-center px-4 py-12 game-theme-bg">
+    <div className="w-8 h-8 border-2 border-primary-brand/30 border-t-primary-brand rounded-full animate-spin" />
+  </div>
+);
+
+function LoginContent() {
   const router = useRouter();
-  const { user, isLoggedIn, isLoaded, loginWithToken } = useAuth();
+  const searchParams = useSearchParams();
+  // Set by the gateway: which card the user came from.
+  const asParam = searchParams.get("as");
+  const requestedRole = asParam === "athlete" || asParam === "organizer" ? asParam : null;
+  const { isLoggedIn, isLoaded, loginWithToken } = useAuth();
+  const { homeRoute } = useOnboarding();
+  const { openGateway } = useGateway();
   const { selectGame } = useGame();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,12 +48,13 @@ export default function LoginPage() {
     const lower = emailStr.toLowerCase().trim();
     const username = lower.split("@")[0] || "";
 
-    if (
+    const looksLikeOrganizer =
       username.includes("organizer") ||
       username.includes("host") ||
       username.includes("commission") ||
-      username.includes("tournament")
-    ) {
+      username.includes("tournament");
+
+    if (requestedRole === "organizer" || (!requestedRole && looksLikeOrganizer)) {
       return {
         role: "ORGANIZER" as const,
         roleLabel: "ORGANIZER",
@@ -74,18 +89,15 @@ export default function LoginPage() {
   const detectedUniversity = getUniversityFromEmail(email);
   const roleInfo = getAccountRoleInfo(email);
 
+  // Already signed in (or just signed in): onboarding first, then their home.
   useEffect(() => {
     if (isLoaded && isLoggedIn) {
-      router.replace(user?.role === "ADMIN" ? "/admin" : "/");
+      router.replace(homeRoute);
     }
-  }, [isLoaded, isLoggedIn, user, router]);
+  }, [isLoaded, isLoggedIn, homeRoute, router]);
 
   if (!isLoaded || isLoggedIn) {
-    return (
-      <div className="flex flex-1 items-center justify-center px-4 py-12 game-theme-bg">
-        <div className="w-8 h-8 border-2 border-primary-brand/30 border-t-primary-brand rounded-full animate-spin" />
-      </div>
-    );
+    return LOADING_SCREEN;
   }
 
   const handleGoogleAuth = () => {
@@ -116,15 +128,13 @@ export default function LoginPage() {
         true
       );
       const profile = await loginWithToken(res.access_token);
-      if (profile?.role === "ADMIN") {
-        router.push("/admin");
-      } else {
+      if (profile?.role !== "ADMIN") {
         const athleteGame = profile?.teamMemberships?.[0]?.team?.gameTitle || profile?.gameHandles?.[0]?.gameTitle;
         if (athleteGame) {
           selectGame(getGameInfo(athleteGame).id);
         }
-        router.push("/");
       }
+      // The signed-in effect above routes to onboarding or the role's home.
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Login failed. Please try again.");
     } finally {
@@ -250,11 +260,31 @@ export default function LoginPage() {
 
         <div className="mt-6 text-center text-xs font-sans text-secondary-text">
           Don&apos;t have an account yet?{" "}
-          <Link href="/register" className="text-primary-brand hover:underline font-semibold">
+          <Link
+            href={requestedRole ? `/register?as=${requestedRole}` : "/register"}
+            className="text-primary-brand hover:underline font-semibold"
+          >
             Register
           </Link>
         </div>
+        <div className="mt-2 text-center">
+          <button
+            type="button"
+            onClick={() => openGateway("signin")}
+            className="text-[11px] font-mono uppercase tracking-wider text-slate-500 hover:text-white transition-colors cursor-pointer"
+          >
+            ← Choose a different gateway
+          </button>
+        </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={LOADING_SCREEN}>
+      <LoginContent />
+    </Suspense>
   );
 }
