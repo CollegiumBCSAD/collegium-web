@@ -73,4 +73,4 @@ export const PROVISIONAL_HINT = "Rating Deviation > 100. Calibrates with verifie
 
 /** Column layout shared by the rankings table header and its rows. */
 export const RANKINGS_GRID =
-  "md:grid md:grid-cols-[3.5rem_minmax(0,1fr)_9rem_13rem_4.5rem_4.5rem_1.5rem] md:items-center md:gap-5";
+  "md:grid md:grid-cols-[2.5rem_minmax(0,1fr)_7rem_minmax(6rem,1fr)_3.5rem_3.5rem_1.25rem] md:items-center md:gap-3 lg:grid-cols-[3.5rem_minmax(0,1fr)_9rem_13rem_4.5rem_4.5rem_1.5rem] lg:gap-5";

@@ -94,9 +94,9 @@ export default function RankingsPodium({ top, gameDisplayName }: RankingsPodiumP
                   </div>
                 </div>
 
-                <div className="relative mt-5 grid grid-cols-3 items-center gap-3 rounded-xl border border-white/[0.06] bg-black/35 px-4 py-3">
+                <div className="relative mt-5 grid grid-cols-3 items-center gap-1.5 sm:gap-3 rounded-xl border border-white/[0.06] bg-black/35 px-2 sm:px-4 py-3">
                   <span className="flex items-center gap-2.5" title="Win rate">
-                    <svg viewBox="0 0 52 52" className="w-11 h-11 shrink-0 -rotate-90">
+                    <svg viewBox="0 0 52 52" className="w-8 h-8 sm:w-11 sm:h-11 shrink-0 -rotate-90">
                       <circle cx="26" cy="26" r="22" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="5" />
                       <circle
                         cx="26"
