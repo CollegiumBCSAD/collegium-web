@@ -6,15 +6,15 @@ import { GatewayFeatureListProps, GatewayRoleCardsProps } from "@/types";
 import { CheckCircleIcon, SwordsIcon, TrophyIcon } from "@/components/ui/Icons";
 
 const ATHLETE_FEATURES = [
-  "Main Athlete & Squad Dashboard",
-  "Inter-Collegiate Scrim Matchmaking",
-  "University Glicko-2 Standings & Rosters",
+  "Your team's verified match history",
+  "Scrim board for inter-school practice",
+  "Rankings built only from verified tournament results",
 ];
 
 const ORGANIZER_FEATURES = [
-  "Register Tournament Proposal for Approval",
-  "Single, Double, Round Robin & 2-Stage Brackets",
-  "EasyOCR Match Logging Verification",
+  "Submit a proposal; admins review it before it goes live",
+  "Single/double elimination, round robin, groups + playoffs",
+  "Verify results by uploading scoreboard screenshots",
 ];
 
 const CARD =
@@ -50,20 +50,20 @@ export default function GatewayRoleCards({ intent, onNavigate }: GatewayRoleCard
           </span>
           <div className="min-w-0">
             <span className="block text-[9px] font-mono font-bold uppercase tracking-[0.2em] text-primary-brand">
-              Main Athlete &amp; Fan Portal
+              Players · Coaches · Fans
             </span>
             <h2
               id="gateway-athlete-title"
               className="font-display text-xl sm:text-2xl font-black uppercase tracking-wide text-white leading-tight"
             >
-              Open Collegium in Browser
+              Compete &amp; follow the circuit
             </h2>
           </div>
         </div>
 
         <p className="mt-4 text-xs font-sans text-slate-400 leading-relaxed">
-          Explore varsity team rosters, book practice scrims, view Glicko-2 university leaderboards, and view
-          official tournament brackets.
+          Find scrims with schools at your level, build a verified match record, and follow official brackets and
+          rankings.
         </p>
         <div className="mt-4 mb-5">
           <FeatureList items={ATHLETE_FEATURES} tone="text-primary-brand" />
@@ -75,15 +75,17 @@ export default function GatewayRoleCards({ intent, onNavigate }: GatewayRoleCard
             onClick={onNavigate}
             className="w-full h-11 game-theme-btn rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg"
           >
-            {intent === "signup" ? "Create Athlete Account" : "Open Collegium in Browser"}
+            {intent === "signup" ? "Create Athlete Account" : "Enter Collegium"}
             <span aria-hidden>→</span>
           </Link>
           <p className="text-center text-[11px] font-sans text-slate-500">
-            {intent === "signup" ? "Already registered? " : "New athlete? "}
+            {intent === "signup" ? "Already registered? " : "New here? "}
             <Link href={athleteAltHref} onClick={onNavigate} className="font-semibold text-primary-brand hover:underline">
               {intent === "signup" ? "Athlete sign in" : "Create an account"}
             </Link>
+            {intent === "signup" ? "" : " with your .edu.ph email."}
           </p>
+          <p className="text-center text-[10px] font-sans text-slate-600">Coach accounts are approved by an admin.</p>
         </div>
       </section>
 
@@ -98,20 +100,20 @@ export default function GatewayRoleCards({ intent, onNavigate }: GatewayRoleCard
           </span>
           <div className="min-w-0">
             <span className="block text-[9px] font-mono font-bold uppercase tracking-[0.2em] text-amber-400">
-              Event Host &amp; Organizer Workspace
+              For organizers
             </span>
             <h2
               id="gateway-organizer-title"
               className="font-display text-xl sm:text-2xl font-black uppercase tracking-wide text-white leading-tight"
             >
-              Apply &amp; Host Tournament
+              Host a tournament
             </h2>
           </div>
         </div>
 
         <p className="mt-4 text-xs font-sans text-slate-400 leading-relaxed">
-          Submit event applications for admin review, manage auto-accepted team rosters, run multi-format
-          bracketing, and process EasyOCR match logs.
+          Propose your event for admin approval, then run brackets, team chat, and result verification in one
+          place.
         </p>
         <div className="mt-4 mb-5">
           <FeatureList items={ORGANIZER_FEATURES} tone="text-amber-400" />
@@ -124,7 +126,7 @@ export default function GatewayRoleCards({ intent, onNavigate }: GatewayRoleCard
             className="flex-1 h-11 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-amber-500/10 transition-all active:scale-[0.98]"
           >
             <TrophyIcon className="w-4 h-4" />
-            Apply for Tournament
+            Apply to host
             <span aria-hidden>→</span>
           </Link>
           <Link
@@ -132,10 +134,18 @@ export default function GatewayRoleCards({ intent, onNavigate }: GatewayRoleCard
             onClick={onNavigate}
             className="h-11 px-5 rounded-xl border border-amber-500/40 hover:border-amber-400 hover:bg-amber-500/10 text-amber-300 text-xs font-black uppercase tracking-wider flex items-center justify-center transition-colors"
           >
-            Dashboard Sign In
+            Already approved? Sign in
           </Link>
         </div>
+        {/* TODO: replace [X] with the confirmed organizer review time before shipping. */}
+        <p className="mt-2.5 text-center text-[11px] font-sans text-slate-500">
+          Prepare your event details and school endorsement. Review usually takes [X] days.
+        </p>
       </section>
+
+      <p className="md:col-span-2 text-center text-[11px] font-sans text-slate-500">
+        Scrims are practice records (unranked). Only Organizer-verified tournament matches affect rankings.
+      </p>
     </div>
   );
 }

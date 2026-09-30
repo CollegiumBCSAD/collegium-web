@@ -8,20 +8,20 @@ export default function GatewayHero({ titleId }: GatewayHeroProps) {
     <div className="text-center space-y-3">
       <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#232D44] bg-[#0D121F]/90 text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-amber-400">
         <ZapIcon className="w-3.5 h-3.5" />
-        Welcome to Collegium Philippines
+        Welcome to Collegium PH
       </span>
       <h1
         id={titleId}
         className="font-display text-3xl sm:text-5xl font-black uppercase tracking-tight text-white leading-none"
       >
-        Choose Your{" "}
+        How will you use{" "}
         <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-500 to-primary-brand">
-          Esports Gateway
+          Collegium?
         </span>
       </h1>
       <p className="max-w-lg mx-auto text-xs sm:text-sm font-sans text-slate-300 leading-relaxed">
-        Select whether you want to enter Collegium as an Athlete / Player or apply as a Tournament Organizer to
-        access full bracketing &amp; OCR match logging.
+        Join as a player, coach, or fan, or apply to host a tournament. All accounts use a verified .edu.ph
+        email.
       </p>
     </div>
   );
