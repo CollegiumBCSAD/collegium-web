@@ -7,6 +7,8 @@ import { approvedTeamCount, formatStart, matchProgress, tournamentCover } from "
 import { pendingApplicationCount, reportableMatchCount } from "@/lib/organize";
 import { BRAND_BTN, RAISED } from "./surfaces";
 
+import { bracketFormatLabel } from "@/lib/hostTournament";
+
 const secondaryBtn =
   "h-9 flex-1 px-3 text-[10px] font-mono font-bold uppercase tracking-wider bg-gradient-to-b from-white/[0.07] to-white/[0.02] border border-white/10 text-slate-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] hover:text-white hover:border-white/30 transition-colors";
 const primaryBtn =
@@ -73,7 +75,7 @@ export default function OrganizeTournamentTile({ tournament: t, stage, handlers 
 
       <div className="flex flex-1 flex-col px-3.5 pt-3 pb-3.5 gap-3">
         <p className="flex items-center gap-1.5 text-[10px] font-mono text-slate-400">
-          <span className="truncate">{t.bracketFormat || "Single Elimination"}</span>
+          <span className="truncate">{bracketFormatLabel(t.bracketFormat)}</span>
           {start && (
             <>
               <span className="text-slate-700">·</span>

@@ -2,19 +2,19 @@
 
 import { HostStepProps } from "@/types";
 import { HOST_FORMATS, HOST_QUOTAS } from "@/lib/hostTournament";
+import { BracketFormat } from "@/types";
 import CyberDateTimePicker from "@/components/ui/CyberDateTimePicker";
 
-// Tiny bracket diagrams so formats are recognizable at a glance.
-function formatGlyph(format: string) {
+function formatGlyph(format: BracketFormat) {
   const common = { fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round" as const };
-  if (format.startsWith("Double")) {
+  if (format === "DOUBLE_ELIM") {
     return (
       <svg viewBox="0 0 32 32" className="w-7 h-7" {...common}>
         <path d="M3 5h6v5h6M3 13h6v-3M3 19h6v5h6M3 27h6v-3M15 7.5h5v9h5M15 21.5h5v-5" />
       </svg>
     );
   }
-  if (format.startsWith("Round")) {
+  if (format === "ROUND_ROBIN" || format === "TWO_STAGE") {
     return (
       <svg viewBox="0 0 32 32" className="w-7 h-7" {...common}>
         <rect x="4" y="4" width="10" height="10" />
@@ -57,7 +57,7 @@ export default function HostStepFormat({ draft, onChange }: HostStepProps) {
                   {formatGlyph(format.value)}
                 </span>
                 <span className="min-w-0">
-                  <span className="block font-display text-sm font-black uppercase text-white">{format.value}</span>
+                  <span className="block font-display text-sm font-black uppercase text-white">{format.label}</span>
                   <span className="block text-[11px] font-sans text-slate-400">{format.blurb}</span>
                 </span>
               </button>

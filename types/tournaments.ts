@@ -34,7 +34,7 @@ export interface Tournament {
   universities?: { id: string; name: string }[];
   matches?: unknown[];
   applications?: unknown[];
-  bracketFormat?: string;
+  bracketFormat?: BracketFormat;
   teamQuota?: number;
   rules?: string;
   startDate?: string;
@@ -59,6 +59,12 @@ export interface TournamentMatch {
 }
 
 export type BracketSide = "WINNERS" | "LOSERS" | "GRAND_FINAL";
+
+export type BracketFormat =
+  | "SINGLE_ELIM"
+  | "DOUBLE_ELIM"
+  | "ROUND_ROBIN"
+  | "TWO_STAGE";
 
 export interface BracketRound {
   name: string;
@@ -346,7 +352,7 @@ export type HostGameTitle = "VALORANT" | "LOL" | "MLBB" | "CODM";
 export interface HostTournamentDraft {
   gameTitle: HostGameTitle;
   name: string;
-  bracketFormat: string;
+  bracketFormat: BracketFormat;
   teamQuota: number;
   /** Local "YYYY-MM-DDTHH:mm", empty when unscheduled. */
   startDate: string;

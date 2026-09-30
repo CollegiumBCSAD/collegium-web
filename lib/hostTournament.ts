@@ -1,4 +1,4 @@
-import { GameId, HostGameTitle, HostTournamentDraft, Tournament } from "@/types";
+import { BracketFormat, GameId, HostGameTitle, HostTournamentDraft, Tournament } from "@/types";
 
 export const HOST_GAMES: { title: HostGameTitle; gameId: GameId; label: string; art: string }[] = [
   { title: "VALORANT", gameId: "valo", label: "Valorant", art: "/valorant-art-1.png" },
@@ -7,11 +7,16 @@ export const HOST_GAMES: { title: HostGameTitle; gameId: GameId; label: string; 
   { title: "CODM", gameId: "codm", label: "Call of Duty: Mobile", art: "/codm-art-1.png" },
 ];
 
-export const HOST_FORMATS = [
-  { value: "Single Elimination", blurb: "Lose once and you're out. Fastest to run." },
-  { value: "Double Elimination", blurb: "Upper & lower brackets. Every team gets a second life." },
-  { value: "Round Robin + Playoffs", blurb: "Everyone plays everyone, top seeds advance." },
+export const HOST_FORMATS: { value: BracketFormat; label: string; blurb: string }[] = [
+  { value: "SINGLE_ELIM", label: "Single Elimination", blurb: "Lose once and you're out. Fastest to run." },
+  { value: "DOUBLE_ELIM", label: "Double Elimination", blurb: "Upper & lower brackets. Every team gets a second life." },
+  { value: "ROUND_ROBIN", label: "Round Robin Only", blurb: "Everyone plays everyone once. Best record takes the title." },
+  { value: "TWO_STAGE", label: "Round Robin + Playoffs", blurb: "Everyone plays everyone, then the top seeds meet in a double-elim playoff." },
 ];
+
+export function bracketFormatLabel(format: BracketFormat | null | undefined): string {
+  return HOST_FORMATS.find((f) => f.value === format)?.label ?? HOST_FORMATS[0].label;
+}
 
 export const HOST_QUOTAS = [8, 16, 32];
 

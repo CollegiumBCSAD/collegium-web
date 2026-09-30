@@ -8,6 +8,8 @@ import { DOT_SURFACE } from "@/components/university/surface";
 import { ShieldIcon } from "@/components/ui/Icons";
 import TournamentApplicationState from "./TournamentApplicationState";
 
+import { bracketFormatLabel } from "@/lib/hostTournament";
+
 const STATUS: Record<string, { label: string; className: string; pulse?: boolean }> = {
   LIVE: { label: "Live now", className: "text-primary-brand", pulse: true },
   UPCOMING: { label: "Registration open", className: "text-sky-300" },
@@ -27,7 +29,7 @@ export default function TournamentCard({ tournament: t, onSelect, onApply, onWit
   const progress = matchProgress(t);
 
   const stats = [
-    { label: "Format", value: t.bracketFormat || "Single Elim" },
+    { label: "Format", value: bracketFormatLabel(t.bracketFormat) },
     { label: "Squads", value: quota ? `${squads}/${quota}` : `${squads}`, bar: quota ? squads / quota : undefined },
     { label: "Matches", value: progress.total ? `${progress.played}/${progress.total}` : "—", bar: progress.total ? progress.played / progress.total : undefined },
   ];

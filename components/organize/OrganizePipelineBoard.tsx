@@ -8,6 +8,7 @@ import OrganizeTournamentTile from "./OrganizeTournamentTile";
 import OrganizeSectionHeading from "./OrganizeSectionHeading";
 import { RAISED, RECESSED } from "./surfaces";
 
+import { bracketFormatLabel } from "@/lib/hostTournament";
 // Only the active stage (Live) carries the game accent; the rest stay neutral
 // so the lanes read as one system rather than four competing colors.
 const isAccent = (stage: OrganizeStage) => stage === "live";
@@ -24,7 +25,7 @@ export default function OrganizePipelineBoard({
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return tournaments.filter(
-      (t) => !q || t.title.toLowerCase().includes(q) || (t.bracketFormat || "").toLowerCase().includes(q)
+      (t) => !q || t.title.toLowerCase().includes(q) || bracketFormatLabel(t.bracketFormat).toLowerCase().includes(q)
     );
   }, [tournaments, query]);
 

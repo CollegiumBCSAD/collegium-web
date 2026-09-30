@@ -18,6 +18,8 @@ import {
   CheckCircleIcon 
 } from "@/components/ui/Icons";
 
+import { bracketFormatLabel } from "@/lib/hostTournament";
+
 interface DashboardTournamentsShowcaseProps {
   onSelectTournament: (tournament: Tournament) => void;
   userTeams?: Team[];
@@ -358,7 +360,7 @@ export default function DashboardTournamentsShowcase({
                       <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
                         {t.bracketFormat && (
                           <span className="px-2 py-0.5 bg-[#0F1424] border border-[#1E2942] text-[10px] font-mono text-slate-300">
-                            Format: <strong className="text-white">{t.bracketFormat}</strong>
+                            Format: <strong className="text-white">{bracketFormatLabel(t.bracketFormat)}</strong>
                           </span>
                         )}
                         {t.teamQuota && (

@@ -1,3 +1,5 @@
+import { BracketFormat } from "./tournaments";
+
 export interface AdminUser {
   id: string;
   email: string;
@@ -17,7 +19,7 @@ export interface PendingTournamentPost {
   name: string;
   game: string;
   detail: string;
-  bracketFormat: string;
+  bracketFormat: BracketFormat;
   seeding: string;
   scheduleStart: string;
 }

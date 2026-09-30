@@ -31,6 +31,8 @@ import {
   FlameIcon
 } from "@/components/ui/Icons";
 
+import { bracketFormatLabel } from "@/lib/hostTournament";
+
 export default function TournamentBracketModal({
   isOpen,
   onClose,
@@ -250,7 +252,7 @@ export default function TournamentBracketModal({
   // Prefer the real bracket format/team count once loaded over the static
   // prop default, which otherwise always claims "Single Elimination".
   const displaySubtitle = tournamentDetail
-    ? `${(tournamentDetail.bracketFormat || "SINGLE ELIMINATION").toUpperCase()} • ${
+    ? `${bracketFormatLabel(tournamentDetail.bracketFormat).toUpperCase()} • ${
         tournamentDetail.teamQuota || participatingTeams.length || "?"
       } TEAMS`
     : subtitle;
@@ -800,7 +802,7 @@ export default function TournamentBracketModal({
                       Bracket Structure
                     </span>
                     <span className="font-display text-base font-black text-white uppercase block">
-                      {tournamentDetail?.bracketFormat || "Single Elimination"}
+                      {bracketFormatLabel(tournamentDetail?.bracketFormat)}
                     </span>
                     <p className="font-sans text-xs text-slate-400 mt-1">
                       Knockout playoff series with seeded varsity placements.

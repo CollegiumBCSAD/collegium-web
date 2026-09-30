@@ -5,6 +5,8 @@ import { Tournament } from "@/types";
 import { tournamentsService } from "@/services/tournamentsService";
 import { ShieldIcon, AlertTriangleIcon, SwordsIcon } from "@/components/ui/Icons";
 
+import { bracketFormatLabel } from "@/lib/hostTournament";
+
 interface TeamEntry {
   id: string;
   name: string;
@@ -129,7 +131,7 @@ function LockBracketModalContent({
                 Stage 4: Bracket Lock & Seed Confirmation
               </span>
               <span className="text-[10px] font-mono text-slate-400 uppercase">
-                {tournament.bracketFormat || "Single Elimination"}
+                {bracketFormatLabel(tournament.bracketFormat)}
               </span>
             </div>
             <h2 className="text-xl font-display font-black text-white uppercase tracking-wide">

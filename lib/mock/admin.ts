@@ -11,7 +11,7 @@ export const mockPendingTournamentPosts: PendingTournamentPost[] = [
     name: "Collegium Preseason Cup",
     game: "Mobile Legends: Bang Bang",
     detail: "Submitted by Admin queue · 12 teams interested",
-    bracketFormat: "Single Elimination",
+    bracketFormat: "SINGLE_ELIM",
     seeding: "Random Seeding",
     scheduleStart: "20/07/2026",
   },

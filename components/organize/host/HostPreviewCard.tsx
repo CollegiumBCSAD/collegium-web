@@ -4,13 +4,14 @@ import { HostPreviewCardProps } from "@/types";
 import { formatDraftStart, hostGameFor } from "@/lib/hostTournament";
 import { CalendarIcon, TrophyIcon, UsersIcon } from "@/components/ui/Icons";
 
+import { bracketFormatLabel } from "@/lib/hostTournament";
 // Live preview of the public tournament card, updating as the organizer types.
 export default function HostPreviewCard({ draft }: HostPreviewCardProps) {
   const game = hostGameFor(draft.gameTitle);
   const start = formatDraftStart(draft.startDate);
 
   const rows = [
-    { Icon: TrophyIcon, text: draft.bracketFormat },
+    { Icon: TrophyIcon, text: bracketFormatLabel(draft.bracketFormat) },
     { Icon: UsersIcon, text: `${draft.teamQuota} squad slots` },
     { Icon: CalendarIcon, text: start ?? "Start time not set", muted: !start },
   ];

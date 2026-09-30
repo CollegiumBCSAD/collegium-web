@@ -4,6 +4,7 @@ import {
   TournamentDetail,
   ParticipatingTeamDetail,
   TournamentApprovalStatus,
+  BracketFormat,
   BracketRound,
   BracketSide,
   ClosePlayerStatInput,
@@ -48,7 +49,7 @@ interface RawTournament {
   gameTitle?: string;
   status?: string;
   image?: string;
-  bracketFormat?: string;
+  bracketFormat?: BracketFormat;
   teamQuota?: number;
   rules?: string;
   startDate?: string;
@@ -611,7 +612,7 @@ export const tournamentsService = {
     name: string;
     gameTitle?: string;
     imageFile?: File;
-    bracketFormat?: string;
+    bracketFormat?: BracketFormat;
     teamQuota?: number;
     rules?: string;
     startDate?: string;
@@ -633,7 +634,7 @@ export const tournamentsService = {
       name?: string;
       gameTitle?: string;
       imageFile?: File;
-      bracketFormat?: string;
+      bracketFormat?: BracketFormat;
       teamQuota?: number;
       rules?: string;
       startDate?: string;

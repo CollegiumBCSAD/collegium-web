@@ -17,6 +17,8 @@ import {
 import { universitiesService, scrimsService } from "@/services";
 import RosterDetailsModal from "@/components/dashboard/RosterDetailsModal";
 
+import { bracketFormatLabel } from "@/lib/hostTournament";
+
 interface AthleteHomePageProps {
   user: UserProfile | null;
   activeGame: GameId;
@@ -682,7 +684,7 @@ export default function AthleteHomePage({
                       >
                         <div className="flex items-center justify-between">
                           <span className="px-2.5 py-0.5 rounded-full bg-[#121A2D] text-slate-300 border border-[#202E4C] font-mono text-[9px] font-bold uppercase">
-                            {tourney.bracketFormat || "Tournament"}
+                            {bracketFormatLabel(tourney.bracketFormat)}
                           </span>
                           <span className="text-[9px] font-mono text-emerald-300 bg-emerald-950/40 border border-emerald-500/20 px-2 py-0.5 rounded-full font-bold uppercase">
                             {tourney.statusText || tourney.status || "LIVE"}

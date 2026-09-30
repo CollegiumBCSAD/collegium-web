@@ -19,6 +19,8 @@ import {
   PlusIcon,
 } from "@/components/ui/Icons";
 
+import { bracketFormatLabel } from "@/lib/hostTournament";
+
 const normalizeGame = (g?: string | null): GameId => {
   if (!g) return "valo";
   const lower = g.toLowerCase().trim();
@@ -317,7 +319,7 @@ export default function SquadRegistrationModal({
                       BRACKET FORMAT
                     </span>
                     <span className="font-display text-xs font-black text-white uppercase block mt-0.5">
-                      {tournament.bracketFormat || "Single Elimination"}
+                      {bracketFormatLabel(tournament.bracketFormat)}
                     </span>
                     <span className="text-[9px] font-mono text-slate-400 block mt-0.5">
                       {tournament.teamQuota ? `Max ${tournament.teamQuota} Squads` : "Open Varsity"}

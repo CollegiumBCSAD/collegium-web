@@ -10,6 +10,8 @@ import {
   AlertTriangleIcon,
 } from "@/components/ui/Icons";
 
+import { bracketFormatLabel } from "@/lib/hostTournament";
+
 interface TournamentModerationPanelProps {
   initialTournaments?: Tournament[];
 }
@@ -277,7 +279,7 @@ export default function TournamentModerationPanel({
                       {/* Telemetry Chips */}
                       <div className="flex items-center gap-2 text-xs font-mono text-neutral-300 flex-wrap">
                         <span className="px-3 py-1 rounded-xl bg-[#141414] border border-[#222222] text-neutral-200 text-xs">
-                          Format: <strong className="text-white">{t.bracketFormat || "Single Elimination"}</strong>
+                          Format: <strong className="text-white">{bracketFormatLabel(t.bracketFormat)}</strong>
                         </span>
                         {t.teamQuota && (
                           <span className="px-3 py-1 rounded-xl bg-[#141414] border border-[#222222] text-neutral-200 text-xs">

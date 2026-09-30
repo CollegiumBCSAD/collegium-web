@@ -4,6 +4,7 @@ import Image from "next/image";
 import { TournamentsHeroProps } from "@/types";
 import { approvedTeamCount, formatStart, matchProgress, tournamentCover } from "@/lib/organize";
 
+import { bracketFormatLabel } from "@/lib/hostTournament";
 // Editorial header plus a spotlight on whatever is happening right now:
 // the live tournament (with its bracket progress) or, failing that, the next
 // one opening up.
@@ -58,7 +59,7 @@ export default function TournamentsHero({ gameName, gameShortName, tournaments, 
             </span>
             <h2 className="mt-2 font-display text-2xl font-black uppercase leading-tight text-white">{spotlight.title}</h2>
             <p className="mt-1 text-xs font-sans text-slate-300">
-              {spotlight.bracketFormat || "Single Elimination"} · {approvedTeamCount(spotlight)} squads
+              {bracketFormatLabel(spotlight.bracketFormat)} · {approvedTeamCount(spotlight)} squads
             </p>
 
             {live && progress.total > 0 && (
