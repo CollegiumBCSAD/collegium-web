@@ -83,7 +83,7 @@ export default function AthleteProfileBanner({ user, squadsCount = 0 }: AthleteP
                   )}
 
                   {/* Hover Overlay with Camera Icon */}
-                  <div className="absolute inset-0 bg-black/70 opacity-0 group-hover/avatar:opacity-100 flex flex-col items-center justify-center transition-opacity duration-200 gap-1 text-primary-brand">
+                  <div className="absolute inset-0 bg-black/70 opacity-100 sm:opacity-0 sm:group-hover/avatar:opacity-100 flex flex-col items-center justify-center transition-opacity duration-200 gap-1 text-primary-brand">
                     <CameraIcon className="w-5 h-5 text-primary-brand animate-pulse" />
                     <span className="text-[8px] font-mono font-bold uppercase tracking-wider text-white">
                       EDIT
@@ -183,11 +183,11 @@ export default function AthleteProfileBanner({ user, squadsCount = 0 }: AthleteP
           </div>
 
           {/* Unified Monochromatic Telemetry Pod & Primary Actions */}
-          <div className="flex flex-wrap items-center gap-4 lg:gap-6 shrink-0">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4 lg:gap-6 w-full sm:w-auto sm:shrink-0">
             
             {/* Telemetry Metrics Pod */}
             <div 
-              className="flex items-center gap-4 bg-[#050711] border border-[#162034] px-4 py-2.5 shadow-inner"
+              className="flex flex-wrap items-center gap-3 sm:gap-4 bg-[#050711] border border-[#162034] px-3 sm:px-4 py-2.5 shadow-inner w-full sm:w-auto"
               style={{
                 clipPath: "polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%)",
               }}
