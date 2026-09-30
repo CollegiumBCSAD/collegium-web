@@ -240,7 +240,7 @@ export default function ScrimCard({
 
         {/* Specification Dashboard Grid */}
         <div 
-          className="grid grid-cols-3 gap-3 p-3.5 bg-[#060912] border border-[#1E293B] text-xs font-mono shadow-inner"
+          className="grid grid-cols-3 gap-2 sm:gap-3 p-3 sm:p-3.5 bg-[#060912] border border-[#1E293B] text-xs font-mono shadow-inner min-w-0"
           style={{
             clipPath: "polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))",
           }}

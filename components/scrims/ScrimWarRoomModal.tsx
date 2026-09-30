@@ -231,8 +231,8 @@ export default function ScrimWarRoomModal({
           }}
         />
 
-        <div className="p-4 sm:p-5 bg-gradient-to-r from-[#0F1628]/98 via-[#0B101E]/95 to-[#0F1628]/98 border-b border-[#1F2C46] flex items-center justify-between gap-4 backdrop-blur-xl relative z-20 shadow-md">
-          <div className="flex items-center gap-3.5">
+        <div className="p-4 sm:p-5 bg-gradient-to-r from-[#0F1628]/98 via-[#0B101E]/95 to-[#0F1628]/98 border-b border-[#1F2C46] flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 backdrop-blur-xl relative z-20 shadow-md">
+          <div className="flex items-center gap-3.5 min-w-0">
             <div className="flex items-center -space-x-2.5 pointer-events-none select-none">
               <div 
                 className="w-10 h-10 text-white flex items-center justify-center font-display text-sm font-black shadow-lg ring-2 ring-[#0D121F] border border-white/20"
@@ -253,12 +253,12 @@ export default function ScrimWarRoomModal({
               </div>
             </div>
 
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="font-display text-sm sm:text-base font-black uppercase text-white tracking-wide drop-shadow-sm">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="font-display text-sm sm:text-base font-black uppercase text-white tracking-wide drop-shadow-sm truncate min-w-0">
                   {scrim.hostTeamName} <span className="text-primary-brand">VS</span> {scrim.opponentTeamName || "Challenger"}
                 </h2>
-                <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#131A2B] text-emerald-400 border border-emerald-500/30 shadow-sm flex items-center gap-1.5">
+                <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#131A2B] text-emerald-400 border border-emerald-500/30 shadow-sm flex items-center gap-1.5 shrink-0">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   {scrim.status === "CONFIRMED" ? "MATCH BOOKED" : "WAR ROOM ACTIVE"}
                 </span>
@@ -289,7 +289,7 @@ export default function ScrimWarRoomModal({
                 title="Log Scoreboard Screenshot (OCR) and finalize scrim match"
               >
                 <CheckCircleIcon className="w-3.5 h-3.5 text-black" />
-                <span>Log Scoreboard (OCR)</span>
+                <span className="sm:hidden">OCR</span><span className="hidden sm:inline">Log Scoreboard (OCR)</span>
               </button>
             )}
 
