@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Oswald } from "next/font/google";
+import InstallAppPrompt from "@/components/InstallAppPrompt";
 import "./globals.css";
 
 const inter = Inter({
@@ -16,6 +17,14 @@ const oswald = Oswald({
 export const metadata: Metadata = {
   title: "Collegium",
   description: "Philippine Collegiate Esports Circuit",
+  icons: {
+    apple: "/apple-touch-icon.png",
+  },
+  appleWebApp: {
+    capable: true,
+    title: "Collegium",
+    statusBarStyle: "black-translucent",
+  },
 };
 
 export const viewport: Viewport = {
@@ -36,6 +45,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col overflow-x-clip bg-background text-foreground">
         {children}
+        <InstallAppPrompt />
       </body>
     </html>
   );

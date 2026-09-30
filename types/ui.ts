@@ -25,3 +25,9 @@ export interface HeaderGameSwitcherProps {
   variant?: "bar" | "menu";
   onInteract?: () => void;
 }
+
+/** Chrome/Edge's non-standard `beforeinstallprompt` event, not in lib.dom. */
+export interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
+}
