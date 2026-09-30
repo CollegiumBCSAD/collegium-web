@@ -80,9 +80,9 @@ export default function TournamentCard({ tournament: t, onSelect, onApply, onWit
 
         <h2 className="mt-2 font-display text-2xl sm:text-3xl font-black uppercase leading-tight tracking-tight text-white">{t.title}</h2>
 
-        <dl className="mt-5 grid grid-cols-3 max-w-lg">
+        <dl className="mt-5 grid grid-cols-3 max-w-lg gap-y-3">
           {stats.map((s, i) => (
-            <div key={s.label} className={i > 0 ? "pl-5 border-l border-white/[0.07]" : "pr-5"}>
+            <div key={s.label} className={i > 0 ? "pl-3 sm:pl-5 border-l border-white/[0.07]" : "pr-3 sm:pr-5"}>
               <dt className="text-[9px] font-mono uppercase tracking-[0.2em] text-slate-500">{s.label}</dt>
               <dd className="mt-1 font-display text-lg font-black leading-tight text-white truncate">{s.value}</dd>
               {s.bar !== undefined && (

@@ -81,7 +81,7 @@ export default function HomeHeroBanner({
           </div>
 
           {/* Quick Metrics */}
-          <div className="flex items-center gap-5 text-xs font-mono text-slate-400 shrink-0">
+          <div className="flex items-center gap-3 sm:gap-5 text-xs font-mono text-slate-400 overflow-x-auto max-w-full md:shrink-0">
             {stats.map((s, idx) => (
               <div key={idx} className="flex items-center gap-1.5">
                 <span className="font-display font-bold text-white text-sm">
@@ -125,7 +125,7 @@ export default function HomeHeroBanner({
           </div>
 
           {/* Action CTAs */}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:shrink-0">
             {user && isAthlete ? (
               <>
                 <Link
