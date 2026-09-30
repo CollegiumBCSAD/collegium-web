@@ -6,6 +6,7 @@ import Image from "next/image";
 import { UserProfile, GameInfo, GameId } from "@/types";
 import { GAME_LIST } from "@/lib/games";
 import { SwordsIcon, ShieldIcon, UsersIcon } from "@/components/ui/Icons";
+import { useGateway } from "@/context/GatewayContext";
 
 interface HomeHeroBannerProps {
   user: UserProfile | null;
@@ -22,6 +23,7 @@ export default function HomeHeroBanner({
   selectGame,
   stats,
 }: HomeHeroBannerProps) {
+  const { openGateway } = useGateway();
   const isAthlete = user?.role === "ATHLETE" || (user && user.role !== "ORGANIZER" && user.role !== "ADMIN");
   const athleteTeam = user?.teamMemberships?.[0]?.team;
 
@@ -154,17 +156,18 @@ export default function HomeHeroBanner({
             ) : (
               <>
                 <Link
-                  href="/register"
+                  href="/register?as=athlete"
                   className="flex items-center justify-center h-8 px-4 rounded-lg game-theme-btn font-mono text-xs font-bold uppercase tracking-wider shadow-sm transition-all"
                 >
                   Join University Roster
                 </Link>
-                <Link
-                  href="/login"
-                  className="flex items-center justify-center h-8 px-3.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-white border border-white/[0.08] font-mono text-xs font-bold uppercase tracking-wider transition-all"
+                <button
+                  type="button"
+                  onClick={() => openGateway("signin")}
+                  className="flex items-center justify-center h-8 px-3.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-white border border-white/[0.08] font-mono text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
                 >
                   Log In
-                </Link>
+                </button>
               </>
             )}
           </div>
