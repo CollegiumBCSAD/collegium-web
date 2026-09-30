@@ -317,6 +317,13 @@ export interface OrganizeHeaderProps {
   onHost: () => void;
 }
 
+export interface OrganizeTitleStripProps {
+  /** Every tournament the organizer hosts, across all titles. */
+  tournaments: Tournament[];
+  activeGameId: GameId;
+  onSelect: (gameId: GameId) => void;
+}
+
 export interface OrganizeSectionHeadingProps {
   index: string;
   title: string;
@@ -364,6 +371,8 @@ export interface HostTournamentDraft {
 export interface HostStepProps {
   draft: HostTournamentDraft;
   onChange: (patch: Partial<HostTournamentDraft>) => void;
+  /** Editing an existing tournament: its title can no longer change. */
+  isEditing?: boolean;
 }
 
 export interface HostPreviewCardProps {

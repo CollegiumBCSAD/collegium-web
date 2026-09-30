@@ -311,6 +311,26 @@ h1, h2, h3, h4, .font-display, .font-oswald {
   }
 }
 
+@keyframes modalPopOut {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.96) translateY(6px);
+  }
+}
+
+@keyframes backdropFadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 @keyframes navGlowPulse {
   0%, 100% {
     opacity: 0.6;
@@ -337,6 +357,14 @@ h1, h2, h3, h4, .font-display, .font-oswald {
 
 .animate-backdrop-fade-in {
   animation: backdropFadeIn 0.2s ease-out forwards;
+}
+
+.animate-modal-pop-out {
+  animation: modalPopOut 0.18s ease-in forwards;
+}
+
+.animate-backdrop-fade-out {
+  animation: backdropFadeOut 0.18s ease-in forwards;
 }
 
 .animate-nav-glow {
@@ -424,7 +452,9 @@ h1, h2, h3, h4, .font-display, .font-oswald {
   .animate-home-entrance,
   .animate-home-hero,
   .animate-home-content,
-  .animate-page-slide-in {
+  .animate-page-slide-in,
+  .animate-modal-pop-in,
+  .animate-modal-pop-out {
     animation: none !important;
     transform: none !important;
   }

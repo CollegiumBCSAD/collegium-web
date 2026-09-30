@@ -3,6 +3,7 @@
 import React, { useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { resolvePostAuthRoute } from "@/lib/onboarding";
 
 function GoogleCallbackContent() {
   const searchParams = useSearchParams();
@@ -13,7 +14,7 @@ function GoogleCallbackContent() {
   useEffect(() => {
     loginWithToken(token || undefined)
       .then((profile) => {
-        router.push(profile?.role === "ADMIN" ? "/admin" : "/");
+        router.push(resolvePostAuthRoute(profile));
       })
       .catch(() => {
         router.push("/login?error=profile_failed");

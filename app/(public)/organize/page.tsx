@@ -9,6 +9,7 @@ import { OrganizeTournamentHandlers, Tournament } from "@/types";
 import { GAMES, getGameInfo } from "@/lib/games";
 import { buildActionQueue } from "@/lib/organize";
 import OrganizeHeader from "@/components/organize/OrganizeHeader";
+import OrganizeTitleStrip from "@/components/organize/OrganizeTitleStrip";
 import OrganizeActionQueue from "@/components/organize/OrganizeActionQueue";
 import OrganizePipelineBoard from "@/components/organize/OrganizePipelineBoard";
 import PostTournamentModal from "@/components/dashboard/PostTournamentModal";
@@ -18,7 +19,7 @@ import TournamentBracketModal from "@/components/tournaments/TournamentBracketMo
 export default function OrganizePage() {
   const router = useRouter();
   const { user, isLoaded, isLoggedIn } = useAuth();
-  const { selectedGame } = useGame();
+  const { selectedGame, selectGame } = useGame();
   const game = GAMES[selectedGame as keyof typeof GAMES] || GAMES.valo;
   const isOrganizer = user?.role === "ORGANIZER";
 
@@ -32,7 +33,7 @@ export default function OrganizePage() {
   // Organize is organizer-only; everyone else belongs on their dashboard.
   useEffect(() => {
     if (!isLoaded) return;
-    if (!isLoggedIn) router.replace("/login");
+    if (!isLoggedIn) router.replace("/login?as=organizer");
     else if (!isOrganizer) router.replace("/dashboard");
   }, [isLoaded, isLoggedIn, isOrganizer, router]);
 
@@ -102,6 +103,7 @@ export default function OrganizePage() {
           tournaments={gameTournaments}
           onHost={() => setIsHosting(true)}
         />
+        <OrganizeTitleStrip tournaments={tournaments} activeGameId={game.id} onSelect={selectGame} />
         <OrganizeActionQueue items={queue} isLoading={isLoading} handlers={handlers} />
         <OrganizePipelineBoard
           gameShortName={game.shortName}

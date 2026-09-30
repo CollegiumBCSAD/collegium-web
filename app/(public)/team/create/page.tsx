@@ -9,7 +9,9 @@ import { fetchTeamsApi } from "@/lib/teams";
 import { teamsService } from "@/services";
 import { useAuth } from "@/context/AuthContext";
 import { useGame } from "@/context/GameContext";
-import { ShieldIcon, AlertTriangleIcon, CheckCircleIcon, TrophyIcon } from "@/components/ui/Icons";
+import { useOnboarding } from "@/context/OnboardingContext";
+import { checkRosterGame } from "@/lib/onboarding";
+import { ShieldIcon, AlertTriangleIcon, CheckCircleIcon, TrophyIcon, LockIcon } from "@/components/ui/Icons";
 import SquadModeTabs from "@/components/SquadModeTabs";
 
 const GAME_SPECIFIC_PLACEHOLDERS: Record<string, { tag: string; role: string; squadName: string }> = {
@@ -39,7 +41,11 @@ export default function CreateTeamPage() {
   const router = useRouter();
   const { user, refreshProfile, loginWithToken } = useAuth();
   const { selectedGame: globalGame } = useGame();
-  const activeGame: GameId = globalGame || "valo";
+  const { profile } = useOnboarding();
+  // Title-locked athletes always create squads in their own title, whatever
+  // game the header switcher is browsing.
+  const lockedGame = profile?.role === "athlete" && profile.isGameLocked ? profile.primaryGameId : undefined;
+  const activeGame: GameId = lockedGame || globalGame || "valo";
   const activeGameInfo = GAMES[activeGame as keyof typeof GAMES] || GAMES.valo;
   const placeholders = GAME_SPECIFIC_PLACEHOLDERS[activeGame] || GAME_SPECIFIC_PLACEHOLDERS.valo;
 
@@ -120,6 +126,11 @@ export default function CreateTeamPage() {
 
     if (!user?.id || !user?.universityId) {
       setError("You must be logged in with a verified university to create a team.");
+      return;
+    }
+    const lockCheck = checkRosterGame(profile, activeGame, "create");
+    if (!lockCheck.allowed) {
+      setError(lockCheck.reason);
       return;
     }
 
@@ -345,13 +356,26 @@ export default function CreateTeamPage() {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="font-display text-sm font-black uppercase text-white tracking-wide">{activeGameInfo.name}</span>
-                    <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-primary-brand/20 text-primary-brand border border-primary-brand/40">
-                      ACTIVE TITLE
-                    </span>
+                    {lockedGame ? (
+                      <span className="flex items-center gap-1 text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/40">
+                        <LockIcon className="w-3 h-3" />
+                        LOCKED TITLE
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-primary-brand/20 text-primary-brand border border-primary-brand/40">
+                        ACTIVE TITLE
+                      </span>
+                    )}
                   </div>
                   <span className="text-[11px] font-sans text-slate-400 block mt-0.5">{activeGameInfo.genre} • {activeGameInfo.publisher}</span>
                 </div>
               </div>
+              {lockedGame && globalGame && globalGame !== lockedGame && (
+                <p className="mt-2 text-[11px] font-sans text-slate-400">
+                  You&apos;re browsing {GAMES[globalGame].shortName}, but your account is locked to{" "}
+                  {activeGameInfo.shortName}, so this squad is created under {activeGameInfo.shortName}.
+                </p>
+              )}
             </div>
 
             <div>
