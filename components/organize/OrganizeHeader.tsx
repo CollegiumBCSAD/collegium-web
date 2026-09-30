@@ -75,7 +75,7 @@ export default function OrganizeHeader({
         </button>
       </div>
 
-      <dl className="relative grid grid-cols-2 lg:grid-cols-4 gap-3 px-6 sm:px-9 pb-7">
+      <dl className="relative grid grid-cols-1 min-[400px]:grid-cols-2 lg:grid-cols-4 gap-3 px-4 sm:px-9 pb-7">
         {facts.map(({ label, value, Icon, pulse, hot }) => (
           <div
             key={label}

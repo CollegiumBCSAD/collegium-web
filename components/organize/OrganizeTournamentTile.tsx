@@ -67,7 +67,7 @@ export default function OrganizeTournamentTile({ tournament: t, stage, handlers 
           onClick={() => setConfirm(confirm === "delete" ? null : "delete")}
           aria-label="Remove tournament"
           title="Remove tournament"
-          className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center bg-black/50 backdrop-blur-md border border-white/15 text-slate-400 hover:text-rose-300 hover:border-rose-400/50 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
+          className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center bg-black/50 backdrop-blur-md border border-white/15 text-slate-400 hover:text-rose-300 hover:border-rose-400/50 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100 focus-visible:opacity-100 transition-opacity"
         >
           <TrashIcon className="w-3.5 h-3.5" />
         </button>
