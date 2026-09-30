@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Oswald } from "next/font/google";
 import "./globals.css";
 
@@ -18,6 +18,12 @@ export const metadata: Metadata = {
   description: "Philippine Collegiate Esports Circuit",
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#0A0C10",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -28,7 +34,7 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${oswald.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-background text-foreground">
+      <body className="min-h-full flex flex-col overflow-x-clip bg-background text-foreground">
         {children}
       </body>
     </html>
