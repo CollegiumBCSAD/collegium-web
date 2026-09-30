@@ -173,7 +173,7 @@ export default function PostTournamentModal({ isOpen, onClose, onTournamentCreat
                 </div>
               )}
               <div key={step} className="animate-fade-in">
-                <StepBody draft={draft} onChange={update} />
+                <StepBody draft={draft} onChange={update} isEditing={isEditing} />
               </div>
               {errorMsg && (
                 <p className="flex items-center gap-2 px-3 py-2 text-xs font-mono text-rose-200 border border-rose-500/40 bg-rose-500/10">

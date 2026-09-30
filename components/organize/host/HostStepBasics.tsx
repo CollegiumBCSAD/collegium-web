@@ -1,14 +1,15 @@
 "use client";
 
 import { HostStepProps } from "@/types";
-import { hostGameFor } from "@/lib/hostTournament";
+import { HOST_GAMES, hostGameFor } from "@/lib/hostTournament";
 import { LockIcon } from "@/components/ui/Icons";
 
 const NAME_LIMIT = 80;
 
-// The title isn't chosen here: new tournaments are hosted for the game picked
-// in the header switcher, and an existing tournament keeps its own game.
-export default function HostStepBasics({ draft, onChange }: HostStepProps) {
+// Organizers can host any title: a new tournament starts on the game picked in
+// the header switcher but can be moved to another title here. An existing
+// tournament keeps its own game.
+export default function HostStepBasics({ draft, onChange, isEditing = false }: HostStepProps) {
   const game = hostGameFor(draft.gameTitle);
 
   return (
@@ -23,12 +24,38 @@ export default function HostStepBasics({ draft, onChange }: HostStepProps) {
             <span className="block text-[9px] font-mono font-bold uppercase tracking-[0.25em] text-slate-400">Hosting for</span>
             <span className="block font-display text-xl font-black uppercase text-white leading-tight">{game.label}</span>
           </div>
-          <span className="flex items-center gap-1.5 px-2 py-1 text-[9px] font-mono font-bold uppercase tracking-widest text-slate-300 bg-black/50 backdrop-blur-md border border-white/15">
-            <LockIcon className="w-3 h-3" />
-            Set by game switcher
-          </span>
+          {isEditing && (
+            <span className="flex items-center gap-1.5 px-2 py-1 text-[9px] font-mono font-bold uppercase tracking-widest text-slate-300 bg-black/50 backdrop-blur-md border border-white/15">
+              <LockIcon className="w-3 h-3" />
+              Fixed after creation
+            </span>
+          )}
         </div>
       </div>
+
+      {!isEditing && (
+        <div role="radiogroup" aria-label="Tournament title" className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {HOST_GAMES.map((g) => {
+            const isActive = g.title === draft.gameTitle;
+            return (
+              <button
+                key={g.title}
+                type="button"
+                role="radio"
+                aria-checked={isActive}
+                onClick={() => onChange({ gameTitle: g.title })}
+                className={`h-10 px-3 border text-[10px] font-mono font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                  isActive
+                    ? "border-primary-brand bg-primary-brand/15 text-white"
+                    : "border-white/10 bg-black/30 text-slate-400 hover:text-white hover:border-white/25"
+                }`}
+              >
+                {g.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       <div>
         <div className="mb-2 flex items-baseline justify-between">
