@@ -20,8 +20,7 @@ export default function GatewayHero({ titleId }: GatewayHeroProps) {
         </span>
       </h1>
       <p className="max-w-lg mx-auto text-xs sm:text-sm font-sans text-slate-300 leading-relaxed">
-        Join as a player, coach, or fan, or apply to host a tournament. All accounts use a verified .edu.ph
-        email.
+        Join as a player, coach, or apply to host a tournament.
       </p>
     </div>
   );
