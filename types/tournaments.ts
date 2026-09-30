@@ -405,6 +405,7 @@ export interface BracketMatchCardProps {
   isPlaceholder?: boolean;
   isFeatured?: boolean;
   canReport?: boolean;
+  compact?: boolean;
   onOpen: () => void;
   onReport?: () => void;
 }

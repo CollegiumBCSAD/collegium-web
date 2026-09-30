@@ -41,7 +41,7 @@ function TeamRow({ team, decided, won }: BracketTeamRowProps) {
   );
 }
 
-export default function BracketMatchCard({ match, label, isPlaceholder, isFeatured, canReport, onOpen, onReport }: BracketMatchCardProps) {
+export default function BracketMatchCard({ match, label, isPlaceholder, isFeatured, canReport, compact, onOpen, onReport }: BracketMatchCardProps) {
   const decided = match.status === "COMPLETED";
   const live = match.status === "LIVE";
   const isBye = match.team2.name === "BYE";
@@ -57,7 +57,7 @@ export default function BracketMatchCard({ match, label, isPlaceholder, isFeatur
           : { text: match.timeLabel || "Upcoming", className: "text-slate-600" };
 
   return (
-    <div className={`w-64 ${isPlaceholder ? "opacity-60" : ""}`}>
+    <div className={`${compact ? "w-52" : "w-64"} ${isPlaceholder ? "opacity-60" : ""}`}>
       <button
         type="button"
         onClick={onOpen}

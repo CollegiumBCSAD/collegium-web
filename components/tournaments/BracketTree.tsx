@@ -7,6 +7,7 @@ import { CrownIcon, TrophyIcon } from "@/components/ui/Icons";
 import BracketMatchCard from "./BracketMatchCard";
 
 const GAP = 56; // px between round columns; connectors live in this gutter
+const GAP_COMPACT = 36;
 const LINE = "border-white/15";
 const LINE_DONE = "border-primary-brand/70";
 
@@ -27,12 +28,13 @@ export default function BracketTree({
   const labels = useMemo(() => matchLabels(rounds), [rounds]);
   const slots = useMemo(() => slotCounts(rounds), [rounds]);
 
+  const gap = compact ? GAP_COMPACT : GAP;
   const slotHeight = compact ? 128 : canReportResults ? 156 : 124;
   const height = Math.max(...slots) * slotHeight;
   const showChampion = champion !== undefined;
 
   return (
-    <div className="flex min-w-max select-none" style={{ gap: GAP }}>
+    <div className="flex min-w-max select-none" style={{ gap }}>
       {rounds.map((round, r) => {
         const count = slots[r];
         const halves = r + 1 < rounds.length && slots[r + 1] * 2 === count;
@@ -69,7 +71,7 @@ export default function BracketTree({
                         <div key={j} className="relative flex-1 flex items-center justify-center">
                           {/* stub into this match from the previous round */}
                           {r > 0 && match && (
-                            <span aria-hidden className={`absolute top-1/2 border-t ${LINE}`} style={{ left: -GAP / 2, width: GAP / 2 }} />
+                            <span aria-hidden className={`absolute top-1/2 border-t ${LINE}`} style={{ left: -gap / 2, width: gap / 2 }} />
                           )}
                           {match && (
                             <BracketMatchCard
@@ -78,13 +80,14 @@ export default function BracketTree({
                               isPlaceholder={round.isProjected}
                               isFeatured={featuredMatchId === match.id}
                               canReport={canReportResults}
+                              compact={compact}
                               onOpen={() => onViewBoxScore(match)}
                               onReport={() => onReportResult?.(match)}
                             />
                           )}
                           {/* straight run-out when the next round doesn't halve */}
                           {!halves && match && (!isLast || showChampion) && (
-                            <span aria-hidden className={`absolute top-1/2 border-t ${LINE}`} style={{ right: -GAP / 2, width: GAP / 2 }} />
+                            <span aria-hidden className={`absolute top-1/2 border-t ${LINE}`} style={{ right: -gap / 2, width: gap / 2 }} />
                           )}
                         </div>
                       );
@@ -94,7 +97,7 @@ export default function BracketTree({
                       <span
                         aria-hidden
                         className={`absolute border-r ${bottom ? "border-y top-1/4 bottom-1/4" : "border-t top-1/4 h-1/4"} ${done ? LINE_DONE : LINE}`}
-                        style={{ right: -GAP / 2, width: GAP / 2 }}
+                        style={{ right: -gap / 2, width: gap / 2 }}
                       />
                     )}
                   </div>
@@ -114,7 +117,7 @@ export default function BracketTree({
             <span className="mt-1 text-[9px] font-mono uppercase tracking-widest text-slate-600">{champion ? "Crowned" : "Awaiting final"}</span>
           </div>
           <div className="relative flex items-center" style={{ height }}>
-            <span aria-hidden className={`absolute top-1/2 border-t ${champion ? LINE_DONE : LINE}`} style={{ left: -GAP / 2, width: GAP / 2 }} />
+            <span aria-hidden className={`absolute top-1/2 border-t ${champion ? LINE_DONE : LINE}`} style={{ left: -gap / 2, width: gap / 2 }} />
             <div
               className={`w-56 px-5 py-6 text-center border ${
                 champion

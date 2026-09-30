@@ -259,7 +259,7 @@ export default function TournamentBracketModal({
 
   return createPortal(
     <>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-hidden">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-3 md:p-6 overflow-hidden">
         {/* Backdrop is a sibling — backdrop-blur on a parent of the iframe makes the embed look soft. */}
         <div
           className="absolute inset-0 bg-black/85 backdrop-blur-lg animate-fade-in"
@@ -268,68 +268,53 @@ export default function TournamentBracketModal({
 
         {/* Modal Window Container — spacious esports command center */}
         <div 
-          className="relative w-full max-w-[1720px] h-[92vh] max-h-[96vh] flex flex-col bg-[#080B14] border border-[#1E293B] shadow-2xl overflow-hidden z-10 animate-fade-in"
-          style={{
-            clipPath: "polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px))",
-          }}
+          className="relative w-full max-w-[1720px] h-[100dvh] sm:h-[92vh] max-h-[100dvh] sm:max-h-[96vh] flex flex-col bg-[#080B14] border-0 sm:border border-[#1E293B] shadow-2xl overflow-hidden z-10 animate-fade-in sm:[clip-path:polygon(0_0,calc(100%-20px)_0,100%_20px,100%_100%,20px_100%,0_calc(100%-20px))]"
         >
           {/* Top Brand Ambient Line (Prominent & High Z-Index) */}
           <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-primary-brand via-amber-400 to-primary-brand z-30 shadow-[0_0_15px_rgba(244,63,94,0.8)] pointer-events-none" />
 
           {/* Modal Header */}
-          <div className="relative flex flex-col lg:flex-row lg:items-center justify-between px-3 sm:px-6 md:px-8 py-4 sm:py-5 border-b border-[#182338] bg-[#0A0D18] gap-3 sm:gap-4 z-20 min-w-0">
-            <div className="min-w-0 pr-2">
-              <div className="flex flex-wrap items-center gap-2 mb-1">
-                <span 
-                  className="text-[9px] font-mono font-bold tracking-widest text-primary-brand uppercase px-2 py-0.5 bg-primary-brand/10 border border-primary-brand/30"
-                  style={{
-                    clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-                  }}
-                >
-                  {tournamentDetail?.game || "OFFICIAL COLLEGIATE CIRCUIT"}
-                </span>
-                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest truncate">
-                  {displaySubtitle}
-                </span>
+          <div className="relative z-20 border-b border-[#182338] bg-[#0A0D18] min-w-0">
+            <div className="flex items-start justify-between gap-3 px-3 sm:px-6 md:px-8 pt-4 sm:pt-5 pb-3">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2 mb-1">
+                  <span 
+                    className="text-[9px] font-mono font-bold tracking-widest text-primary-brand uppercase px-2 py-0.5 bg-primary-brand/10 border border-primary-brand/30"
+                    style={{
+                      clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
+                    }}
+                  >
+                    {tournamentDetail?.game || "OFFICIAL COLLEGIATE CIRCUIT"}
+                  </span>
+                  <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest truncate max-w-full">
+                    {displaySubtitle}
+                  </span>
+                </div>
+                <h2 className="font-display text-base sm:text-2xl lg:text-3xl font-black tracking-tight text-white uppercase drop-shadow-sm line-clamp-2 sm:truncate">
+                  {tournamentDetail?.title || title}
+                </h2>
               </div>
-              <h2 className="font-display text-lg sm:text-2xl lg:text-3xl font-black tracking-tight text-white uppercase drop-shadow-sm truncate">
-                {tournamentDetail?.title || title}
-              </h2>
-            </div>
 
-            <div className="flex items-center gap-2 sm:gap-3 min-w-0 w-full lg:w-auto">
-              {tournamentDetail?.streamUrl && (
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("watch")}
-                  className={`hidden sm:flex h-10 sm:h-11 px-4 sm:px-5 font-mono text-xs sm:text-[13px] font-black uppercase tracking-wider items-center gap-2 whitespace-nowrap cursor-pointer transition-all shrink-0 ${
-                    showWatchLive
-                      ? "text-white bg-rose-600 hover:bg-rose-500 shadow-lg shadow-rose-600/30"
-                      : "text-slate-300 bg-[#141A29] border border-[#232D44] hover:text-white hover:bg-[#1E293B]"
-                  }`}
-                  style={{
-                    clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
-                  }}
-                >
-                  {showWatchLive && (
-                    <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                  )}
-                  {showWatchLive ? "Watch Live" : "Stream"}
-                </button>
-              )}
-
-              {/* Tab Navigation Controls — Matching Tactical Segmented Shape */}
-              <div 
-                className="flex items-center gap-1.5 p-1.5 bg-[#0A0D18] border border-[#1E293B] shadow-xl overflow-x-auto max-w-full min-w-0 flex-1 lg:flex-initial"
+              <button
+                onClick={onClose}
+                aria-label="Close Modal"
+                className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center bg-[#141A29] hover:bg-[#1E273D] border border-[#232D44] hover:border-slate-500 text-slate-300 hover:text-white transition-colors cursor-pointer shrink-0"
                 style={{
-                  clipPath: "polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%)",
+                  clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
                 }}
               >
+                <XCircleIcon className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Tab strip — own row so it can scroll without fighting the close button */}
+            <div className="px-3 sm:px-6 md:px-8 pb-3">
+              <div className="flex items-center gap-1.5 p-1.5 bg-[#0A0D18] border border-[#1E293B] overflow-x-auto scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {tournamentDetail?.streamUrl && (
                   <button
                     type="button"
                     onClick={() => setActiveTab("watch")}
-                    className={`h-10 sm:h-11 px-3 sm:px-5 font-mono text-xs sm:text-[13px] font-black uppercase tracking-wider transition-all duration-150 cursor-pointer whitespace-nowrap flex items-center gap-2 shrink-0 ${
+                    className={`h-9 sm:h-10 px-3 sm:px-4 font-mono text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all duration-150 cursor-pointer whitespace-nowrap flex items-center gap-1.5 shrink-0 ${
                       activeTab === "watch"
                         ? "game-theme-btn"
                         : "text-slate-400 hover:text-white hover:bg-[#141A29]"
@@ -348,7 +333,7 @@ export default function TournamentBracketModal({
                 <button
                   type="button"
                   onClick={() => setActiveTab("bracket")}
-                  className={`h-10 sm:h-11 px-3 sm:px-6 font-mono text-xs sm:text-[13px] font-black uppercase tracking-wider transition-all duration-150 cursor-pointer whitespace-nowrap flex items-center gap-2 shrink-0 ${
+                  className={`h-9 sm:h-10 px-3 sm:px-4 font-mono text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all duration-150 cursor-pointer whitespace-nowrap flex items-center gap-1.5 shrink-0 ${
                     activeTab === "bracket"
                       ? "game-theme-btn"
                       : "text-slate-400 hover:text-white hover:bg-[#141A29]"
@@ -357,14 +342,14 @@ export default function TournamentBracketModal({
                     clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
                   }}
                 >
-                  <SwordsIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0" />
+                  <SwordsIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                   <span>Bracket</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setActiveTab("teams")}
-                  className={`h-10 sm:h-11 px-3 sm:px-6 font-mono text-xs sm:text-[13px] font-black uppercase tracking-wider transition-all duration-150 cursor-pointer whitespace-nowrap flex items-center gap-2 shrink-0 ${
+                  className={`h-9 sm:h-10 px-3 sm:px-4 font-mono text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all duration-150 cursor-pointer whitespace-nowrap flex items-center gap-1.5 shrink-0 ${
                     activeTab === "teams"
                       ? "game-theme-btn"
                       : "text-slate-400 hover:text-white hover:bg-[#141A29]"
@@ -373,11 +358,10 @@ export default function TournamentBracketModal({
                     clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
                   }}
                 >
-                  <UsersIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0" />
-                  <span className="sm:hidden">Teams</span>
-                  <span className="hidden sm:inline">Participating Teams</span>
+                  <UsersIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                  <span>Teams</span>
                   {participatingTeams.length > 0 && (
-                    <span className={`text-[10px] sm:text-[11px] px-2 py-0.5 rounded font-black ${
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-black ${
                       activeTab === "teams" ? "bg-black/30 text-white" : "bg-[#141A29] text-slate-400"
                     }`}>
                       {participatingTeams.length}
@@ -389,7 +373,7 @@ export default function TournamentBracketModal({
                   <button
                     type="button"
                     onClick={() => setActiveTab("channel")}
-                    className={`h-10 sm:h-11 px-3 sm:px-6 font-mono text-xs sm:text-[13px] font-black uppercase tracking-wider transition-all duration-150 cursor-pointer whitespace-nowrap flex items-center gap-2 shrink-0 ${
+                    className={`h-9 sm:h-10 px-3 sm:px-4 font-mono text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all duration-150 cursor-pointer whitespace-nowrap flex items-center gap-1.5 shrink-0 ${
                       activeTab === "channel"
                         ? "game-theme-btn"
                         : "text-slate-400 hover:text-white hover:bg-[#141A29]"
@@ -398,7 +382,7 @@ export default function TournamentBracketModal({
                       clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
                     }}
                   >
-                    <FlameIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0" />
+                    <FlameIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                     <span>Channel</span>
                   </button>
                 )}
@@ -406,7 +390,7 @@ export default function TournamentBracketModal({
                 <button
                   type="button"
                   onClick={() => setActiveTab("overview")}
-                  className={`h-10 sm:h-11 px-3 sm:px-6 font-mono text-xs sm:text-[13px] font-black uppercase tracking-wider transition-all duration-150 cursor-pointer whitespace-nowrap flex items-center gap-2 shrink-0 ${
+                  className={`h-9 sm:h-10 px-3 sm:px-4 font-mono text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all duration-150 cursor-pointer whitespace-nowrap flex items-center gap-1.5 shrink-0 ${
                     activeTab === "overview"
                       ? "game-theme-btn"
                       : "text-slate-400 hover:text-white hover:bg-[#141A29]"
@@ -415,22 +399,11 @@ export default function TournamentBracketModal({
                     clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
                   }}
                 >
-                  <ShieldIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0" />
+                  <ShieldIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                   <span className="sm:hidden">Rules</span>
-                  <span className="hidden sm:inline">Overview & Rules</span>
+                  <span className="hidden sm:inline">Overview</span>
                 </button>
               </div>
-
-              <button
-                onClick={onClose}
-                aria-label="Close Modal"
-                className="flex h-10 sm:h-11 w-10 sm:w-11 items-center justify-center bg-[#141A29] hover:bg-[#1E273D] border border-[#232D44] hover:border-slate-500 text-slate-300 hover:text-white transition-colors cursor-pointer shrink-0"
-                style={{
-                  clipPath: "polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)",
-                }}
-              >
-                <XCircleIcon className="h-5 w-5" />
-              </button>
             </div>
           </div>
 
@@ -468,7 +441,9 @@ export default function TournamentBracketModal({
           {/* Modal Content Area */}
           <div
             className={`flex-1 min-h-0 bg-gradient-to-b from-[#080B14] via-[#0A0D18] to-[#05070E] ${
-              activeTab === "watch" ? "overflow-hidden flex flex-col" : "overflow-y-auto"
+              activeTab === "watch" || activeTab === "bracket" || activeTab === "channel"
+                ? "overflow-hidden flex flex-col"
+                : "overflow-y-auto"
             }`}
           >
             {isLoading ? (
@@ -481,33 +456,33 @@ export default function TournamentBracketModal({
             ) : activeTab === "watch" && tournamentDetail?.streamUrl ? (
               /* WATCH DESK — stream + live bracket side by side */
               <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-0">
-                <div className="lg:w-[58%] xl:w-[62%] shrink-0 p-3 sm:p-4 flex flex-col min-h-[220px] lg:min-h-0 lg:h-full border-b lg:border-b-0 lg:border-r border-[#1E293B]">
+                <div className="lg:w-[58%] xl:w-[62%] shrink-0 p-3 sm:p-4 flex flex-col max-h-[42vh] lg:max-h-none min-h-[180px] lg:min-h-0 lg:h-full border-b lg:border-b-0 lg:border-r border-[#1E293B]">
                   <TournamentStreamPlayer
                     streamUrl={tournamentDetail.streamUrl}
                     streamIsLive={Boolean(tournamentDetail.streamIsLive)}
-                    className="flex-1 min-h-[200px] lg:min-h-0"
+                    className="flex-1 min-h-[160px] lg:min-h-0"
                   />
                 </div>
                 <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-                  <div className="shrink-0 px-4 py-2.5 border-b border-[#1E293B] bg-[#0A0D18] flex items-center justify-between gap-2">
-                    <div>
+                  <div className="shrink-0 px-3 sm:px-4 py-2.5 border-b border-[#1E293B] bg-[#0A0D18] flex items-center justify-between gap-2">
+                    <div className="min-w-0">
                       <span className="text-[10px] font-mono font-black uppercase tracking-widest text-slate-300 block">
                         Live bracket
                       </span>
-                      <span className="text-[10px] font-sans text-slate-500">
+                      <span className="text-[10px] font-sans text-slate-500 truncate block">
                         Same broadcast · follow the series here
                       </span>
                     </div>
                     <button
                       type="button"
                       onClick={() => setActiveTab("bracket")}
-                      className="text-[10px] font-mono text-rose-400 hover:text-rose-300 uppercase tracking-wider cursor-pointer"
+                      className="text-[10px] font-mono text-rose-400 hover:text-rose-300 uppercase tracking-wider cursor-pointer shrink-0"
                     >
-                      Full bracket →
+                      Full →
                     </button>
                   </div>
-                  <div className="flex-1 overflow-auto p-4">
-                    <p className="mb-2 text-[10px] font-mono uppercase tracking-widest text-slate-500 md:hidden">
+                  <div className="flex-1 overflow-auto overscroll-x-contain touch-pan-x p-3 sm:p-4">
+                    <p className="mb-2 text-[10px] font-mono uppercase tracking-widest text-slate-500 lg:hidden">
                       Swipe to pan the bracket
                     </p>
                     {normalizedRounds.length === 0 ? (
@@ -535,9 +510,9 @@ export default function TournamentBracketModal({
               </div>
             ) : activeTab === "teams" ? (
               /* TAB: PARTICIPATING TEAMS & ROSTERS */
-              <div className="p-5 sm:p-8 sm:px-10 space-y-8">
+              <div className="p-4 sm:p-6 md:p-8 md:px-10 space-y-6 sm:space-y-8">
                 {/* Top Highlight Metric Strip (Matching Bracket & Overview) */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
                   <div 
                     className="p-5 sm:p-6 bg-[#0A0D18] border border-[#1E293B] flex items-center justify-between relative overflow-hidden shadow-xl"
                     style={{
@@ -744,9 +719,9 @@ export default function TournamentBracketModal({
                           </div>
 
                           {/* Card Footer */}
-                          <div className="mt-4 pt-3 border-t border-[#141C2E] flex items-center justify-between text-xs font-sans text-slate-500">
+                          <div className="mt-4 pt-3 border-t border-[#141C2E] flex flex-wrap items-center justify-between gap-2 text-xs font-sans text-slate-500">
                             <span>VARSITY SQUAD</span>
-                            <span className="text-primary-brand font-display font-bold tracking-wider uppercase">COLLEGIUM VERIFIED</span>
+                            <span className="text-primary-brand font-display font-bold tracking-wider uppercase text-[10px] sm:text-xs">VERIFIED</span>
                           </div>
                         </div>
                       );
@@ -756,7 +731,7 @@ export default function TournamentBracketModal({
               </div>
             ) : activeTab === "channel" && canViewChannel ? (
               /* TAB: GLOBAL TOURNAMENT CHANNEL */
-              <div className="p-4 sm:p-6 sm:px-8 h-[calc(88vh-140px)] min-h-[500px]">
+              <div className="p-3 sm:p-6 sm:px-8 h-full min-h-0 flex flex-col">
                 <TournamentGlobalChannel
                   tournamentId={tournamentId || ""}
                   tournamentTitle={tournamentDetail?.title || title}
@@ -765,7 +740,7 @@ export default function TournamentBracketModal({
               </div>
             ) : activeTab === "overview" ? (
               /* TAB: OVERVIEW & RULES */
-              <div className="p-6 sm:p-10 space-y-8 max-w-5xl mx-auto">
+              <div className="p-4 sm:p-6 md:p-10 space-y-6 sm:space-y-8 max-w-5xl mx-auto">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   {tournamentDetail?.startDate ? (
                     <div className="p-5 bg-[#0A0D18] border border-cyan-500/30 shadow-[0_0_12px_rgba(6,182,212,0.08)]">
@@ -905,10 +880,10 @@ export default function TournamentBracketModal({
               </div>
             ) : (
               /* TAB: BRACKET CANVAS */
-              <>
-              <div className="overflow-auto p-4 sm:p-6 md:p-10 flex flex-col gap-8 sm:gap-10 min-h-[min(580px,70vh)] bg-[radial-gradient(rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:24px_24px]">
-                <p className="text-[10px] font-mono uppercase tracking-widest text-slate-500 md:hidden -mb-4">
-                  Swipe to pan the bracket
+              <div className="flex-1 min-h-0 flex flex-col">
+              <div className="overflow-auto overscroll-x-contain touch-pan-x p-3 sm:p-6 md:p-10 flex flex-col gap-6 sm:gap-10 min-h-0 flex-1 bg-[radial-gradient(rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:24px_24px]">
+                <p className="text-[10px] font-mono uppercase tracking-widest text-slate-500 lg:hidden sticky left-0 -mb-2 sm:-mb-4">
+                  Swipe sideways to pan the bracket
                 </p>
                 {normalizedRounds.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-20 space-y-4">
@@ -940,7 +915,7 @@ export default function TournamentBracketModal({
                 )}
               </div>
               <TournamentMatchHistory rounds={rounds} />
-              </>
+              </div>
             )}
           </div>
         </div>
