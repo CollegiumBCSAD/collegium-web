@@ -87,7 +87,6 @@ export default function AdminSidebar({ open = false, onClose }: AdminSidebarProp
       className={`w-64 shrink-0 bg-[#050505]/95 backdrop-blur-xl border-r border-[#171717] flex flex-col h-full z-50 shadow-2xl fixed lg:relative inset-y-0 left-0 transition-transform duration-200 ease-out ${
         open ? "translate-x-0" : "-translate-x-full"
       } lg:translate-x-0`}
-      aria-hidden={!open}
     >
       {/* Brand Header */}
       <div className="p-4 border-b border-[#171717] bg-[#070707]/90">
