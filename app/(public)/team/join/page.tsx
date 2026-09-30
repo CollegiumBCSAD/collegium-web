@@ -8,8 +8,11 @@ import { GAMES } from "@/lib/games";
 import { teamsService } from "@/services";
 import { useAuth } from "@/context/AuthContext";
 import { useGame } from "@/context/GameContext";
+import { useOnboarding } from "@/context/OnboardingContext";
+import { checkRosterGame } from "@/lib/onboarding";
 import { ShieldIcon, AlertTriangleIcon } from "@/components/ui/Icons";
 import SquadModeTabs from "@/components/SquadModeTabs";
+import GameLockNotice from "@/components/onboarding/GameLockNotice";
 
 const GAME_SPECIFIC_PLACEHOLDERS: Record<string, { tag: string; role: string }> = {
   valo: {
@@ -36,7 +39,10 @@ function JoinTeamContent() {
   const inviteCodeParam = searchParams.get("invite");
   const { user } = useAuth();
   const { selectedGame: globalGame } = useGame();
-  const activeGame: GameId = globalGame || "valo";
+  const { profile } = useOnboarding();
+  // Title-locked athletes only ever see and join squads in their own title.
+  const lockedGame = profile?.role === "athlete" && profile.isGameLocked ? profile.primaryGameId : undefined;
+  const activeGame: GameId = lockedGame || globalGame || "valo";
   const activeGameInfo = GAMES[activeGame as keyof typeof GAMES] || GAMES.valo;
   const placeholders = GAME_SPECIFIC_PLACEHOLDERS[activeGame] || GAME_SPECIFIC_PLACEHOLDERS.valo;
 
@@ -127,6 +133,9 @@ function JoinTeamContent() {
   }, [teams, activeGame]);
 
   const selectedTeam = userSelectedTeam || inviteTeam;
+  // An invite link can point at a squad in another title; the lock blocks that.
+  const lockCheck = selectedTeam ? checkRosterGame(profile, selectedTeam.gameTitle, "join") : null;
+  const lockBlock = lockCheck && !lockCheck.allowed ? lockCheck : null;
 
   const existingSquad = useMemo(() => {
     if (!user || teams.length === 0) return null;
@@ -185,6 +194,10 @@ function JoinTeamContent() {
     }
     if (!user?.id) {
       setError("You must be logged in to join a team.");
+      return;
+    }
+    if (lockBlock) {
+      setError(lockBlock.reason);
       return;
     }
 
@@ -390,6 +403,10 @@ function JoinTeamContent() {
               </div>
             )}
 
+            {lockBlock && (
+              <GameLockNotice lockedGameId={lockBlock.lockedGameId} action={`join ${selectedTeam?.name ?? "this squad"}`} />
+            )}
+
             {selectedTeam && (
               <div className="p-3.5 rounded-2xl bg-[#080C14] border border-[#1C2538] flex items-center justify-between">
                 <div>
@@ -437,8 +454,8 @@ function JoinTeamContent() {
             <div className="pt-3">
               <button
                 type="submit"
-                disabled={isLoading}
-                className="w-full h-11 game-theme-btn text-xs font-extrabold uppercase tracking-wider transition-transform active:scale-95 shadow-md flex items-center justify-center cursor-pointer disabled:opacity-50"
+                disabled={isLoading || !!lockBlock}
+                className="w-full h-11 game-theme-btn text-xs font-extrabold uppercase tracking-wider transition-transform active:scale-95 shadow-md flex items-center justify-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? "Submitting Request..." : inviteCodeParam ? "Instant Domain Join Roster" : "Submit Join Request to Captain"}
               </button>
