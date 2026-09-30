@@ -304,7 +304,7 @@ function HeaderAuthControls({ mobile = false }: { mobile?: boolean }) {
   }
 
   return (
-    <div className="hidden md:flex items-center gap-3">
+    <div className="hidden lg:flex items-center gap-3">
       <Link href="/login" className="inline-flex h-9 items-center justify-center tactical-btn-secondary px-5 text-xs font-bold uppercase tracking-wider text-white">
         Log In
       </Link>
@@ -357,14 +357,14 @@ function NavigationLinks({ mobile = false, onClose }: { mobile?: boolean; onClos
   }
 
   return (
-    <nav className="hidden md:flex items-center gap-1 sm:gap-2 h-16">
+    <nav className="hidden lg:flex items-center gap-1 xl:gap-2 h-16">
       {navItems.map((item) => {
         const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
         return (
           <Link
             key={item.href}
             href={item.href}
-            className={`font-display text-xs sm:text-sm font-black tracking-wider uppercase transition-all duration-200 relative flex items-center h-10 px-3.5 sm:px-4 cursor-pointer group ${
+            className={`font-display text-xs xl:text-sm font-black tracking-wider uppercase transition-all duration-200 relative flex items-center h-10 px-3 xl:px-4 cursor-pointer group ${
               isActive
                 ? "text-white"
                 : "text-slate-400 hover:text-white"
@@ -438,25 +438,29 @@ function PublicLayoutContent({ children }: { children: React.ReactNode }) {
 
       {showNavbar && (
         <header className="sticky top-0 z-40 border-b border-[#182338] bg-[#070912]/95 backdrop-blur-md">
-          <div className="flex h-14 sm:h-16 items-center justify-between gap-2 px-3 sm:px-6 md:px-10">
-            <div className="flex min-w-0 items-center gap-4 sm:gap-8">
-              <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-2.5 font-display text-lg sm:text-xl font-black tracking-wider text-white group">
+          <div className="flex h-14 lg:h-16 items-center justify-between gap-3 px-4 sm:px-6 lg:px-10">
+            <div className="flex min-w-0 items-center gap-6 lg:gap-8">
+              <Link href="/" className="flex items-center gap-2.5 font-display text-lg lg:text-xl font-black tracking-wider text-white group shrink-0">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/logo.png" alt="Collegium Logo" className="w-7 h-7 object-contain rounded-md shadow-md shadow-primary-brand/30 transition-transform duration-200 group-hover:scale-110 shrink-0" />
-                <span className="group-hover:text-primary-brand transition-colors max-[360px]:hidden">COLLEGIUM</span>
+                <span className="group-hover:text-primary-brand transition-colors">COLLEGIUM</span>
               </Link>
               <NavigationLinks />
             </div>
 
-            <div className="flex items-center gap-1.5 sm:gap-3.5 shrink-0">
-              <OrganizeNavButton />
-              <HeaderGameSwitcher />
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              <div className="hidden lg:flex items-center gap-3">
+                <OrganizeNavButton />
+                <HeaderGameSwitcher />
+              </div>
               <NotificationBell />
-              <HeaderAuthControls />
+              <div className="hidden lg:block">
+                <HeaderAuthControls />
+              </div>
 
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="flex md:hidden h-9 w-9 items-center justify-center rounded-xl bg-[#141A29] border border-[#232D44] text-slate-300 hover:text-white"
+                className="flex lg:hidden h-9 w-9 items-center justify-center rounded-xl bg-[#141A29] border border-[#232D44] text-slate-300 hover:text-white"
                 aria-label="Toggle mobile navigation menu"
                 aria-expanded={mobileMenuOpen}
               >
@@ -472,7 +476,10 @@ function PublicLayoutContent({ children }: { children: React.ReactNode }) {
           </div>
 
           {mobileMenuOpen && (
-            <div className="border-b border-[#182338] bg-[#0A0D18] p-4 md:hidden animate-page-slide-in max-h-[calc(100dvh-3.5rem)] overflow-y-auto">
+            <div className="border-b border-[#182338] bg-[#0A0D18] p-4 lg:hidden animate-page-slide-in max-h-[calc(100dvh-3.5rem)] overflow-y-auto">
+              <div className="mb-3">
+                <HeaderGameSwitcher variant="menu" onInteract={() => setMobileMenuOpen(false)} />
+              </div>
               <div className="mb-3 empty:hidden">
                 <OrganizeNavButton variant="menu" onNavigate={() => setMobileMenuOpen(false)} />
               </div>

@@ -20,3 +20,8 @@ export interface ToggleSwitchProps {
   checked: boolean;
   onChange: (checked: boolean) => void;
 }
+
+export interface HeaderGameSwitcherProps {
+  variant?: "bar" | "menu";
+  onInteract?: () => void;
+}

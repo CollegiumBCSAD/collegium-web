@@ -76,7 +76,7 @@ export default function OrganizeNavButton({ variant = "bar", onNavigate }: Organ
   }
 
   return (
-    <div className="hidden md:flex items-center gap-2.5 sm:gap-3.5">
+    <div className="hidden lg:flex items-center gap-2.5 sm:gap-3.5">
       <Link
         href="/organize"
         aria-current={active ? "page" : undefined}
