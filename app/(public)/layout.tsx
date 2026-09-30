@@ -19,7 +19,7 @@ import OrganizeNavButton from "@/components/OrganizeNavButton";
 import { HomeIcon, PlusIcon, UsersIcon, SwordsIcon, ShieldIcon } from "@/components/ui/Icons";
 import { fetchTeamsApi } from "@/lib/teams";
 
-function HeaderAuthControls() {
+function HeaderAuthControls({ mobile = false }: { mobile?: boolean }) {
   const { user, isLoggedIn, logoutUser, isLoaded } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [hasSquad, setHasSquad] = useState(false);
@@ -69,15 +69,94 @@ function HeaderAuthControls() {
   }, [user]);
 
   if (!isLoaded) {
-    return <div className="h-9 w-28 rounded-xl bg-[#141A29] border border-[#232D44] animate-pulse" />;
+    return (
+      <div
+        className={`h-9 rounded-xl bg-[#141A29] border border-[#232D44] animate-pulse ${
+          mobile ? "w-full" : "w-28"
+        }`}
+      />
+    );
   }
 
   if (isLoggedIn && user) {
+    if (mobile) {
+      return (
+        <div className="flex flex-col gap-1">
+          <div className="px-4 py-2 mb-1">
+            <span className="text-xs font-display font-black text-white uppercase block">
+              {user.displayName}
+            </span>
+            <span className="text-[10px] font-mono text-slate-400 block mt-0.5 truncate">
+              {user.email}
+            </span>
+          </div>
+          <Link
+            href="/dashboard"
+            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-mono font-bold uppercase tracking-wider text-slate-300 hover:text-white hover:bg-[#141A29] rounded-lg transition-all"
+          >
+            <HomeIcon className="w-3.5 h-3.5 text-primary-brand" />
+            <span>My Dashboard</span>
+          </Link>
+          {user.role !== "ADMIN" && user.role !== "ORGANIZER" && !hasSquad && (
+            <>
+              <Link
+                href="/team/create"
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-mono font-bold uppercase tracking-wider text-slate-300 hover:text-white hover:bg-[#141A29] rounded-lg transition-all"
+              >
+                <PlusIcon className="w-3.5 h-3.5 text-primary-brand" />
+                <span>Create Squad</span>
+              </Link>
+              <Link
+                href="/team/join"
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-mono font-bold uppercase tracking-wider text-slate-300 hover:text-white hover:bg-[#141A29] rounded-lg transition-all"
+              >
+                <UsersIcon className="w-3.5 h-3.5 text-primary-brand" />
+                <span>Join Squad</span>
+              </Link>
+            </>
+          )}
+          {user.role !== "ORGANIZER" && (
+            <Link
+              href="/scrims"
+              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-mono font-bold uppercase tracking-wider text-slate-300 hover:text-white hover:bg-[#141A29] rounded-lg transition-all"
+            >
+              <SwordsIcon className="w-3.5 h-3.5 text-primary-brand" />
+              <span>Scrims Board</span>
+            </Link>
+          )}
+          {user.role === "ORGANIZER" && (
+            <Link
+              href="/organize"
+              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-mono font-bold uppercase tracking-wider text-amber-400 hover:text-white hover:bg-[#141A29] rounded-lg transition-all"
+            >
+              <ShieldIcon className="w-3.5 h-3.5 text-amber-400" />
+              <span>Manage Tournaments</span>
+            </Link>
+          )}
+          {user.role === "ADMIN" && (
+            <Link
+              href="/admin"
+              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-mono font-bold uppercase tracking-wider text-slate-300 hover:text-white hover:bg-[#141A29] rounded-lg transition-all"
+            >
+              <ShieldIcon className="w-3.5 h-3.5 text-primary-brand" />
+              <span>Admin Console</span>
+            </Link>
+          )}
+          <button
+            onClick={() => logoutUser()}
+            className="w-full flex items-center gap-2.5 px-4 py-2.5 mt-1 text-xs font-mono font-bold uppercase tracking-wider text-rose-400 hover:bg-rose-950/40 hover:text-rose-300 transition-all rounded-lg cursor-pointer"
+          >
+            Sign Out
+          </button>
+        </div>
+      );
+    }
+
     return (
       <div className="relative" ref={dropdownRef}>
         <button
           onClick={() => setDropdownOpen(!dropdownOpen)}
-          className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-[#1E293B] bg-[#0A0D18] hover:border-primary-brand/60 hover:bg-[#101524] transition-all duration-200 focus:outline-none shadow-md cursor-pointer group"
+          className="flex items-center gap-2.5 px-2.5 sm:px-3 py-1.5 rounded-xl border border-[#1E293B] bg-[#0A0D18] hover:border-primary-brand/60 hover:bg-[#101524] transition-all duration-200 focus:outline-none shadow-md cursor-pointer group"
         >
           {/* Athlete Avatar Badge */}
           <div 
@@ -205,6 +284,25 @@ function HeaderAuthControls() {
     );
   }
 
+  if (mobile) {
+    return (
+      <div className="flex flex-col gap-2">
+        <Link
+          href="/login"
+          className="inline-flex h-11 w-full items-center justify-center tactical-btn-secondary px-5 text-xs font-bold uppercase tracking-wider text-white"
+        >
+          Log In
+        </Link>
+        <Link
+          href="/register"
+          className="inline-flex h-11 w-full items-center justify-center game-theme-btn px-5 text-xs font-bold uppercase tracking-wider shadow-md"
+        >
+          Sign Up
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="hidden md:flex items-center gap-3">
       <Link href="/login" className="inline-flex h-9 items-center justify-center tactical-btn-secondary px-5 text-xs font-bold uppercase tracking-wider text-white">
@@ -328,23 +426,27 @@ function PublicLayoutContent({ children }: { children: React.ReactNode }) {
 
   const showNavbar = !(pathname === "/" && !selectedGame && isLoaded && !user);
 
+  React.useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground relative">
+    <div className="flex min-h-screen min-w-0 flex-col bg-background text-foreground relative overflow-x-clip">
       <GameSelectorModal />
 
       {showNavbar && (
         <header className="sticky top-0 z-40 border-b border-[#182338] bg-[#070912]/95 backdrop-blur-md">
-          <div className="flex h-16 items-center justify-between px-4 sm:px-6 md:px-10">
-            <div className="flex items-center gap-6 sm:gap-8">
-              <Link href="/" className="flex items-center gap-2.5 font-display text-xl font-black tracking-wider text-white group">
+          <div className="flex h-14 sm:h-16 items-center justify-between gap-2 px-3 sm:px-6 md:px-10">
+            <div className="flex min-w-0 items-center gap-4 sm:gap-8">
+              <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-2.5 font-display text-lg sm:text-xl font-black tracking-wider text-white group">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/logo.png" alt="Collegium Logo" className="w-7 h-7 object-contain rounded-md shadow-md shadow-primary-brand/30 transition-transform duration-200 group-hover:scale-110" />
-                <span className="group-hover:text-primary-brand transition-colors">COLLEGIUM</span>
+                <img src="/logo.png" alt="Collegium Logo" className="w-7 h-7 object-contain rounded-md shadow-md shadow-primary-brand/30 transition-transform duration-200 group-hover:scale-110 shrink-0" />
+                <span className="group-hover:text-primary-brand transition-colors max-[360px]:hidden">COLLEGIUM</span>
               </Link>
               <NavigationLinks />
             </div>
 
-            <div className="flex items-center gap-2.5 sm:gap-3.5">
+            <div className="flex items-center gap-1.5 sm:gap-3.5 shrink-0">
               <OrganizeNavButton />
               <HeaderGameSwitcher />
               <NotificationBell />
@@ -354,6 +456,7 @@ function PublicLayoutContent({ children }: { children: React.ReactNode }) {
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="flex md:hidden h-9 w-9 items-center justify-center rounded-xl bg-[#141A29] border border-[#232D44] text-slate-300 hover:text-white"
                 aria-label="Toggle mobile navigation menu"
+                aria-expanded={mobileMenuOpen}
               >
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   {mobileMenuOpen ? (
@@ -367,20 +470,20 @@ function PublicLayoutContent({ children }: { children: React.ReactNode }) {
           </div>
 
           {mobileMenuOpen && (
-            <div className="border-b border-[#182338] bg-[#0A0D18] p-4 md:hidden animate-page-slide-in">
+            <div className="border-b border-[#182338] bg-[#0A0D18] p-4 md:hidden animate-page-slide-in max-h-[calc(100dvh-3.5rem)] overflow-y-auto">
               <div className="mb-3 empty:hidden">
                 <OrganizeNavButton variant="menu" onNavigate={() => setMobileMenuOpen(false)} />
               </div>
               <NavigationLinks mobile onClose={() => setMobileMenuOpen(false)} />
               <div className="mt-4 pt-4 border-t border-[#182338] flex flex-col gap-2">
-                <HeaderAuthControls />
+                <HeaderAuthControls mobile />
               </div>
             </div>
           )}
         </header>
       )}
 
-      <main className="flex flex-1 flex-col">{children}</main>
+      <main className="flex min-w-0 flex-1 flex-col">{children}</main>
 
       <ChatQuickAccess />
       <GlobalWarRoomModal />
