@@ -1,4 +1,18 @@
+import type { ReactNode } from "react";
 import { BracketFormat } from "./tournaments";
+
+export interface AdminNavItem {
+  label: string;
+  href: string;
+  icon: ReactNode;
+  badge?: number;
+  badgeType?: "warning" | "alert" | "neutral";
+}
+
+export interface AdminSidebarProps {
+  open?: boolean;
+  onClose?: () => void;
+}
 
 export interface AdminUser {
   id: string;

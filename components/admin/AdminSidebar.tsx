@@ -5,9 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { tournamentsService, scrimsService } from "@/services";
-import {
-  mockFlaggedMatches,
-} from "@/lib/mock/admin";
+import { mockFlaggedMatches } from "@/lib/mock/admin";
+import { AdminNavItem, AdminSidebarProps } from "@/types";
 import {
   TrophyIcon,
   SwordsIcon,
@@ -17,15 +16,7 @@ import {
   AlertTriangleIcon,
 } from "@/components/ui/Icons";
 
-interface AdminNavItem {
-  label: string;
-  href: string;
-  icon: React.ReactNode;
-  badge?: number;
-  badgeType?: "warning" | "alert" | "neutral";
-}
-
-export default function AdminSidebar() {
+export default function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
   const pathname = usePathname();
   const { user, logoutUser } = useAuth();
   const [pendingTournamentsCount, setPendingTournamentsCount] = useState<number>(0);
@@ -92,15 +83,20 @@ export default function AdminSidebar() {
   ];
 
   return (
-    <aside className="w-64 shrink-0 bg-[#050505]/95 backdrop-blur-xl border-r border-[#171717] flex flex-col h-full relative z-20 shadow-2xl">
+    <aside
+      className={`w-64 shrink-0 bg-[#050505]/95 backdrop-blur-xl border-r border-[#171717] flex flex-col h-full z-50 shadow-2xl fixed lg:relative inset-y-0 left-0 transition-transform duration-200 ease-out ${
+        open ? "translate-x-0" : "-translate-x-full"
+      } lg:translate-x-0`}
+      aria-hidden={!open}
+    >
       {/* Brand Header */}
       <div className="p-4 border-b border-[#171717] bg-[#070707]/90">
-        <div className="flex items-center justify-between">
-          <Link href="/admin" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center font-display font-black text-black text-sm shadow-[0_0_15px_rgba(52,211,153,0.35)] group-hover:scale-105 transition-transform">
+        <div className="flex items-center justify-between gap-2">
+          <Link href="/admin" onClick={onClose} className="flex items-center gap-2.5 group min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center font-display font-black text-black text-sm shadow-[0_0_15px_rgba(52,211,153,0.35)] group-hover:scale-105 transition-transform shrink-0">
               C
             </div>
-            <div>
+            <div className="min-w-0">
               <span className="font-display text-xs font-bold tracking-wider text-white block uppercase">
                 COLLEGIUM
               </span>
@@ -109,9 +105,21 @@ export default function AdminSidebar() {
               </span>
             </div>
           </Link>
-          <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" />
-            <span className="text-[9px] font-mono text-emerald-400 font-bold">ONLINE</span>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" />
+              <span className="text-[9px] font-mono text-emerald-400 font-bold">ONLINE</span>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="lg:hidden flex h-8 w-8 items-center justify-center rounded-lg border border-[#262626] bg-[#0A0A0A] text-neutral-400 hover:text-white"
+              aria-label="Close admin navigation"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
         </div>
       </div>
@@ -135,6 +143,7 @@ export default function AdminSidebar() {
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={onClose}
                   className={`flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-sans font-medium transition-all group ${
                     isActive
                       ? "bg-emerald-500/10 text-emerald-400 font-semibold border border-emerald-500/25 shadow-sm"
@@ -176,6 +185,7 @@ export default function AdminSidebar() {
         <div className="pt-3 border-t border-[#171717]">
           <Link
             href="/dashboard"
+            onClick={onClose}
             className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-[#0A0A0A] hover:bg-[#141414] text-neutral-400 hover:text-white border border-[#1A1A1A] hover:border-[#2A2A2A] text-xs font-sans transition-all group"
           >
             <span>Exit to Main App</span>
