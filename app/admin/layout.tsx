@@ -11,16 +11,18 @@ function AdminGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isAdmin = isLoggedIn && user?.role === "ADMIN";
   const [navOpen, setNavOpen] = useState(false);
+  const [navPath, setNavPath] = useState(pathname);
+
+  if (navPath !== pathname) {
+    setNavPath(pathname);
+    setNavOpen(false);
+  }
 
   useEffect(() => {
     if (isLoaded && !isAdmin) {
       router.replace("/dashboard");
     }
   }, [isLoaded, isAdmin, router]);
-
-  useEffect(() => {
-    setNavOpen(false);
-  }, [pathname]);
 
   useEffect(() => {
     if (!navOpen) return;

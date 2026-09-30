@@ -421,14 +421,16 @@ function GlobalTournamentModal() {
 function PublicLayoutContent({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const [menuPath, setMenuPath] = useState(pathname);
   const { user } = useAuth();
   const { selectedGame, isLoaded } = useGame();
 
-  const showNavbar = !(pathname === "/" && !selectedGame && isLoaded && !user);
-
-  React.useEffect(() => {
+  if (menuPath !== pathname) {
+    setMenuPath(pathname);
     setMobileMenuOpen(false);
-  }, [pathname]);
+  }
+
+  const showNavbar = !(pathname === "/" && !selectedGame && isLoaded && !user);
 
   return (
     <div className="flex min-h-screen min-w-0 flex-col bg-background text-foreground relative overflow-x-clip">
