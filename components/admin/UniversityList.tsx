@@ -69,7 +69,7 @@ export default function UniversityList({ initialUniversities }: UniversityListPr
     <div className="space-y-5">
       {/* Search Input Bar */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="relative flex-1 min-w-[260px]">
+        <div className="relative flex-1 min-w-0 w-full sm:min-w-[260px]">
           <input
             type="text"
             value={search}

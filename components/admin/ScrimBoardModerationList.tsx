@@ -231,7 +231,7 @@ export default function ScrimBoardModerationList() {
       {/* Main Admin Data Table */}
       <div className="rounded-2xl border border-[#1A1A1A] overflow-hidden bg-[#0A0A0A] shadow-md">
         {/* Table Header */}
-        <div className="grid grid-cols-[2.2fr_2fr_1fr_1.8fr_1.2fr_1.4fr] gap-4 px-6 py-4 bg-[#050505] text-[11px] font-mono font-bold text-neutral-400 uppercase tracking-wider border-b border-[#171717]">
+        <div className="hidden md:grid md:grid-cols-[2.2fr_2fr_1fr_1.8fr_1.2fr_1.4fr] gap-4 px-6 py-4 bg-[#050505] text-[11px] font-mono font-bold text-neutral-400 uppercase tracking-wider border-b border-[#171717]">
           <span>Host Team</span>
           <span>Opponent</span>
           <span>Game</span>
@@ -275,7 +275,7 @@ export default function ScrimBoardModerationList() {
               return (
                 <div
                   key={s.id}
-                  className="grid grid-cols-[2.2fr_2fr_1fr_1.8fr_1.2fr_1.4fr] gap-4 px-6 py-4 items-center hover:bg-[#111A15]/20 transition-colors group text-xs font-mono"
+                  className="flex flex-col gap-3 md:grid md:grid-cols-[2.2fr_2fr_1fr_1.8fr_1.2fr_1.4fr] md:gap-4 px-4 sm:px-6 py-4 md:items-center hover:bg-[#111A15]/20 transition-colors group text-xs font-mono"
                 >
                   {/* Host Team */}
                   <div className="min-w-0">
@@ -300,7 +300,8 @@ export default function ScrimBoardModerationList() {
                   </div>
 
                   {/* Opponent */}
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex items-center justify-between gap-2 md:block">
+                    <span className="md:hidden text-[10px] font-mono uppercase tracking-wider text-neutral-500 shrink-0">Opponent</span>
                     {s.opponentTeamName ? (
                       <div>
                         <span className="font-display text-sm font-bold text-teal-300 truncate block">
@@ -318,7 +319,8 @@ export default function ScrimBoardModerationList() {
                   </div>
 
                   {/* Game */}
-                  <div>
+                  <div className="flex items-center justify-between gap-2 md:block">
+                    <span className="md:hidden text-[10px] font-mono uppercase tracking-wider text-neutral-500">Game</span>
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg border border-[#222222] bg-[#141414] text-[10px] font-bold uppercase text-white">
                       <span
                         className="w-1.5 h-1.5 rounded-full inline-block"
@@ -330,6 +332,7 @@ export default function ScrimBoardModerationList() {
 
                   {/* Match Specs */}
                   <div className="min-w-0 space-y-0.5">
+                    <span className="md:hidden text-[10px] font-mono uppercase tracking-wider text-neutral-500 block mb-1">Match Specs</span>
                     <div className="text-neutral-300 font-semibold truncate">
                       {s.format || "BO3"} {s.rankRange ? `· ${s.rankRange}` : ""}
                     </div>
@@ -339,7 +342,8 @@ export default function ScrimBoardModerationList() {
                   </div>
 
                   {/* Status */}
-                  <div>
+                  <div className="flex items-center justify-between gap-2 md:block">
+                    <span className="md:hidden text-[10px] font-mono uppercase tracking-wider text-neutral-500">Status</span>
                     <span
                       className={`inline-flex items-center justify-center px-2.5 py-0.5 rounded-full border text-[10px] font-bold uppercase ${
                         s.status === "OPEN"
@@ -358,7 +362,7 @@ export default function ScrimBoardModerationList() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex justify-end items-center gap-2">
+                  <div className="flex justify-stretch sm:justify-end items-center gap-2 flex-wrap">
                     {isConfirming ? (
                       <div className="flex items-center gap-1.5">
                         {s.status !== "CANCELLED" && (

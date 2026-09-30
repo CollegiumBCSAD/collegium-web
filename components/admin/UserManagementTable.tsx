@@ -118,7 +118,7 @@ export default function UserManagementTable({ users, onUpdateStatus }: UserManag
       {/* Roster Table Card */}
       <div className="rounded-2xl border border-[#1A1A1A] overflow-hidden bg-[#0A0A0A] shadow-md flex flex-col">
         {/* Table Header */}
-        <div className="grid grid-cols-[2.5fr_2fr_1.2fr_1fr_1fr] gap-4 px-6 py-4 bg-[#050505] text-[11px] font-mono font-bold text-neutral-400 uppercase tracking-wider border-b border-[#171717]">
+        <div className="hidden md:grid md:grid-cols-[2.5fr_2fr_1.2fr_1fr_1fr] gap-4 px-6 py-4 bg-[#050505] text-[11px] font-mono font-bold text-neutral-400 uppercase tracking-wider border-b border-[#171717]">
           <span>Athlete / Account</span>
           <span>University</span>
           <span>Role</span>
@@ -141,7 +141,7 @@ export default function UserManagementTable({ users, onUpdateStatus }: UserManag
               return (
                 <div
                   key={user.id}
-                  className="grid grid-cols-[2.5fr_2fr_1.2fr_1fr_1fr] gap-4 px-6 py-4 items-center hover:bg-[#111A15]/20 transition-colors group"
+                  className="flex flex-col gap-3 md:grid md:grid-cols-[2.5fr_2fr_1.2fr_1fr_1fr] md:gap-4 px-4 sm:px-6 py-4 md:items-center hover:bg-[#111A15]/20 transition-colors group"
                 >
                   <div className="flex items-center gap-3.5 min-w-0">
                     <div className="w-9 h-9 rounded-xl bg-[#141414] border border-[#222222] text-white flex items-center justify-center font-display font-black text-xs shrink-0 group-hover:border-emerald-500/40 transition-colors shadow-inner overflow-hidden">
@@ -162,17 +162,22 @@ export default function UserManagementTable({ users, onUpdateStatus }: UserManag
                     </div>
                   </div>
 
-                  <span className="text-xs font-sans text-neutral-300 truncate">
-                    {user.university?.name ?? <span className="text-neutral-600 font-mono">—</span>}
-                  </span>
+                  <div className="flex items-center justify-between gap-2 md:block min-w-0">
+                    <span className="md:hidden text-[10px] font-mono uppercase tracking-wider text-neutral-500">University</span>
+                    <span className="text-xs font-sans text-neutral-300 truncate">
+                      {user.university?.name ?? <span className="text-neutral-600 font-mono">—</span>}
+                    </span>
+                  </div>
 
-                  <div>
+                  <div className="flex items-center justify-between gap-2 md:block">
+                    <span className="md:hidden text-[10px] font-mono uppercase tracking-wider text-neutral-500">Role</span>
                     <span className={`inline-flex items-center justify-center px-2.5 py-0.5 rounded-lg border text-[10px] font-mono font-bold uppercase ${roleBadge}`}>
                       {user.role.replace("_", "-")}
                     </span>
                   </div>
 
-                  <div>
+                  <div className="flex items-center justify-between gap-2 md:block">
+                    <span className="md:hidden text-[10px] font-mono uppercase tracking-wider text-neutral-500">Status</span>
                     <span className={`text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border uppercase ${
                       user.status === "ACTIVE"
                         ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
@@ -184,7 +189,7 @@ export default function UserManagementTable({ users, onUpdateStatus }: UserManag
                     </span>
                   </div>
 
-                  <div className="flex justify-end">
+                  <div className="flex justify-stretch md:justify-end">
                     {action && (
                       <button
                         onClick={() => onUpdateStatus(user.id, action.nextStatus)}
