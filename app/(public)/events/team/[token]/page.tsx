@@ -126,7 +126,7 @@ export default function EventTeamPage() {
       </section>
 
       <Link
-        href={`/events/${team.eventId}/bracket`}
+        href={`/events/bracket/${team.eventId}`}
         className="self-start text-sm text-primary-brand hover:underline"
       >
         View the bracket

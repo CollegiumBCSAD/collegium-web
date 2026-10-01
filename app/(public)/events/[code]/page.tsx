@@ -98,7 +98,7 @@ export default function EventInvitePage() {
             The organizer has stopped accepting squads for this event.
           </p>
           <Link
-            href={`/events/${invite.id}/bracket`}
+            href={`/events/bracket/${invite.id}`}
             className="inline-block mt-4 text-sm text-primary-brand hover:underline"
           >
             View the bracket
