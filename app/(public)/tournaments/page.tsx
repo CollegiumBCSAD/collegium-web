@@ -10,6 +10,8 @@ import SquadRegistrationModal from "@/components/tournaments/SquadRegistrationMo
 import TournamentCard from "@/components/tournaments/TournamentCard";
 import TournamentsHero from "@/components/tournaments/TournamentsHero";
 import TournamentsFilterTabs from "@/components/tournaments/TournamentsFilterTabs";
+import InviteEventsPanel from "@/components/events/InviteEventsPanel";
+import OrganizerInviteEventsPanel from "@/components/events/OrganizerInviteEventsPanel";
 import { TournamentCardSkeleton } from "@/components/ui/Skeleton";
 import { Tournament, TournamentDetailTab } from "@/types";
 import { tournamentsService } from "@/services";
@@ -17,7 +19,7 @@ import { GAMES, getGameInfo } from "@/lib/games";
 
 export default function TournamentsPage() {
   const router = useRouter();
-  const { user, isLoggedIn } = useAuth();
+  const { user, isLoggedIn, isLoaded } = useAuth();
   const { selectedGame } = useGame();
   const game = GAMES[selectedGame as keyof typeof GAMES] || GAMES.valo;
 
@@ -146,6 +148,11 @@ export default function TournamentsPage() {
           tournaments={gameTournaments}
           onOpen={(t) => openTournament(t)}
         />
+
+        {/* Invite-only strip: organizers see the events they run, athletes see
+            the code box and their squads; guests and non-athletes see nothing. */}
+        {isLoaded && isLoggedIn && user?.role === "ORGANIZER" && <OrganizerInviteEventsPanel />}
+        {isLoaded && isLoggedIn && user?.role === "ATHLETE" && <InviteEventsPanel />}
 
         <div className="space-y-6">
           <TournamentsFilterTabs tabs={tabs} active={statusFilter} onChange={setStatusFilter} />

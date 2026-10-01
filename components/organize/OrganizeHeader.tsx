@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { OrganizeHeaderProps } from "@/types";
-import { PlusIcon, TrophyIcon, UsersIcon, ZapIcon } from "@/components/ui/Icons";
+import { LockIcon, PlusIcon, TrophyIcon, UsersIcon, ZapIcon } from "@/components/ui/Icons";
 import { approvedTeamCount, pendingApplicationCount } from "@/lib/organize";
 import { BRAND_BTN, GAME_ART, RAISED } from "./surfaces";
 
@@ -64,15 +65,26 @@ export default function OrganizeHeader({
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={onHost}
-          className={`group relative self-start lg:self-auto h-12 pl-5 pr-7 ${BRAND_BTN} font-display text-sm font-black uppercase tracking-wider flex items-center gap-2.5`}
-          style={{ clipPath: "polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%)" }}
-        >
-          <PlusIcon className="w-4 h-4 transition-transform duration-300 group-hover:rotate-90" />
-          Host a tournament
-        </button>
+        <div className="flex flex-wrap items-center gap-3 self-start lg:self-auto">
+          <Link
+            href="/organize/events#new-event"
+            className="group relative h-12 pl-5 pr-7 bg-black/45 backdrop-blur-md border border-white/15 text-white hover:border-primary-brand/60 hover:bg-primary-brand/10 transition font-display text-sm font-black uppercase tracking-wider flex items-center gap-2.5"
+            style={{ clipPath: "polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%)" }}
+            title="Intra-department events — separate from varsity, never affect rankings"
+          >
+            <LockIcon className="w-4 h-4 text-primary-brand" />
+            Invite-only event
+          </Link>
+          <button
+            type="button"
+            onClick={onHost}
+            className={`group relative h-12 pl-5 pr-7 ${BRAND_BTN} font-display text-sm font-black uppercase tracking-wider flex items-center gap-2.5`}
+            style={{ clipPath: "polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%)" }}
+          >
+            <PlusIcon className="w-4 h-4 transition-transform duration-300 group-hover:rotate-90" />
+            Host a tournament
+          </button>
+        </div>
       </div>
 
       <dl className="relative grid grid-cols-1 min-[400px]:grid-cols-2 lg:grid-cols-4 gap-3 px-4 sm:px-9 pb-7">
