@@ -11,8 +11,9 @@ export default function RegisterPage() {
   const router = useRouter();
   const { user, isLoggedIn, isLoaded } = useAuth();
 
-  // Role Selection: "ATHLETE" (registered as NON_ATHLETE until joining roster) vs "ORGANIZER" (Instant Tournament Host)
-  const [accountType, setAccountType] = useState<"ATHLETE" | "ORGANIZER">("ATHLETE");
+  // Role Selection: "ATHLETE" (registered as NON_ATHLETE until joining roster), "COACH" (Coach/Manager,
+  // admin-approved before first login), or "ORGANIZER" (Instant Tournament Host)
+  const [accountType, setAccountType] = useState<"ATHLETE" | "COACH" | "ORGANIZER">("ATHLETE");
 
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
@@ -96,7 +97,7 @@ export default function RegisterPage() {
         displayName: finalDisplayName,
         email: email.trim(),
         password,
-        role: accountType === "ORGANIZER" ? "ORGANIZER" : "NON_ATHLETE",
+        role: accountType === "ATHLETE" ? "NON_ATHLETE" : accountType,
       });
 
       setRegisteredEmail(email.trim());
@@ -121,6 +122,7 @@ export default function RegisterPage() {
   };
 
   const isOrganizer = accountType === "ORGANIZER";
+  const isCoach = accountType === "COACH";
 
   if (registeredEmail) {
     return (
@@ -144,6 +146,11 @@ export default function RegisterPage() {
               We sent a verification link to <span className="text-white font-bold">{registeredEmail}</span>.
               Click it to activate your account — this page won&apos;t log you in until you do.
             </p>
+            {isCoach && (
+              <p className="font-sans text-xs text-amber-300/90">
+                Coach/Manager accounts also need System Administrator approval before you can sign in.
+              </p>
+            )}
           </div>
 
           {resendMessage && (
@@ -206,13 +213,26 @@ export default function RegisterPage() {
             type="button"
             onClick={() => { setAccountType("ATHLETE"); setError(""); }}
             className={`flex-1 h-11 rounded-xl text-xs font-mono font-bold uppercase tracking-wider flex items-center justify-center gap-2 text-center transition-all cursor-pointer ${
-              !isOrganizer
+              accountType === "ATHLETE"
                 ? "game-theme-btn shadow-md"
                 : "bg-transparent hover:bg-[#141A29] text-slate-400 hover:text-white"
             }`}
           >
-            <UsersIcon className="w-4 h-4" />
+            <UsersIcon className="w-4 h-4 hidden sm:block" />
             <span>Student / Athlete</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => { setAccountType("COACH"); setError(""); }}
+            className={`flex-1 h-11 rounded-xl text-xs font-mono font-bold uppercase tracking-wider flex items-center justify-center gap-2 text-center transition-all cursor-pointer ${
+              isCoach
+                ? "game-theme-btn shadow-md"
+                : "bg-transparent hover:bg-[#141A29] text-slate-400 hover:text-white"
+            }`}
+          >
+            <ShieldIcon className="w-4 h-4 hidden sm:block" />
+            <span>Coach / Manager</span>
           </button>
 
           <button
@@ -224,7 +244,7 @@ export default function RegisterPage() {
                 : "bg-transparent hover:bg-[#141A29] text-slate-400 hover:text-white"
             }`}
           >
-            <TrophyIcon className="w-4 h-4 text-inherit" />
+            <TrophyIcon className="w-4 h-4 text-inherit hidden sm:block" />
             <span>Tournament Host</span>
           </button>
         </div>
@@ -246,14 +266,31 @@ export default function RegisterPage() {
           </div>
 
           <h1 className="font-display text-2xl sm:text-3xl font-black uppercase tracking-wide text-white">
-            {isOrganizer ? "ORGANIZER SIGN UP" : "ATHLETE REGISTRATION"}
+            {isOrganizer ? "ORGANIZER SIGN UP" : isCoach ? "COACH / MANAGER SIGN UP" : "ATHLETE REGISTRATION"}
           </h1>
           <p className="font-sans text-xs text-slate-400">
             {isOrganizer
               ? "Host tournaments, generate brackets, and verify match logs under your banner."
-              : "Register your institutional account to join varsity rosters and compete."}
+              : isCoach
+                ? "Manage your varsity squads, register them for tournaments, and run practice schedules."
+                : "Register your institutional account to join varsity rosters and compete."}
           </p>
         </div>
+
+        {isCoach && (
+          <div className="p-3.5 rounded-2xl bg-[#080C14] border border-primary-brand/30 text-xs font-sans flex items-start gap-2.5 shadow-inner">
+            <ShieldIcon className="w-4 h-4 text-primary-brand shrink-0 mt-0.5" />
+            <div>
+              <span className="font-bold text-white block uppercase font-mono text-[11px] tracking-wider">
+                Requires Admin Approval
+              </span>
+              <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
+                Coach accounts are separate from athlete accounts and enter a review queue. You can sign in once a
+                System Administrator approves your request.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Instant Approval Banner for Organizers */}
         {isOrganizer && (
@@ -277,40 +314,45 @@ export default function RegisterPage() {
           </div>
         )}
 
-        {/* Google SSO Button */}
-        <div>
-          <button
-            type="button"
-            onClick={handleGoogleAuth}
-            disabled={isGoogleLoading}
-            className="w-full h-11 rounded-xl bg-white text-gray-900 hover:bg-gray-100 font-sans text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-3 cursor-pointer shadow-md disabled:opacity-50"
-          >
-            {isGoogleLoading ? (
-              <div className="w-5 h-5 border-2 border-gray-400 border-t-gray-900 rounded-full animate-spin" />
-            ) : (
-              <>
-                <svg className="w-4 h-4" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-                </svg>
-                <span>Continue with Institutional Google Account</span>
-              </>
-            )}
-          </button>
-          <span className="block text-[10px] font-sans text-slate-400 text-center mt-1.5">
-            Auto-verifies institutional .edu.ph Google Workspace domains
-          </span>
-        </div>
-
-        <div className="relative flex py-1 items-center">
-          <div className="flex-grow border-t border-[#1C2538]"></div>
-          <span className="flex-shrink mx-4 text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold">
-            Or Register with Institutional Email
-          </span>
-          <div className="flex-grow border-t border-[#1C2538]"></div>
-        </div>
+        {/* Google SSO creates athlete accounts only; coaches register by email */}
+        {!isCoach && (
+          <>
+          {/* Google SSO Button */}
+          <div>
+            <button
+              type="button"
+              onClick={handleGoogleAuth}
+              disabled={isGoogleLoading}
+              className="w-full h-11 rounded-xl bg-white text-gray-900 hover:bg-gray-100 font-sans text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-3 cursor-pointer shadow-md disabled:opacity-50"
+            >
+              {isGoogleLoading ? (
+                <div className="w-5 h-5 border-2 border-gray-400 border-t-gray-900 rounded-full animate-spin" />
+              ) : (
+                <>
+                  <svg className="w-4 h-4" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                  </svg>
+                  <span>Continue with Institutional Google Account</span>
+                </>
+              )}
+            </button>
+            <span className="block text-[10px] font-sans text-slate-400 text-center mt-1.5">
+              Auto-verifies institutional .edu.ph Google Workspace domains
+            </span>
+          </div>
+  
+          <div className="relative flex py-1 items-center">
+            <div className="flex-grow border-t border-[#1C2538]"></div>
+            <span className="flex-shrink mx-4 text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold">
+              Or Register with Institutional Email
+            </span>
+            <div className="flex-grow border-t border-[#1C2538]"></div>
+          </div>
+          </>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -363,7 +405,7 @@ export default function RegisterPage() {
                     ? "bg-amber-400/20 text-amber-300 border border-amber-400/30"
                     : "bg-emerald-400/20 text-emerald-300 border border-emerald-400/30"
                 }`}>
-                  {isOrganizer ? "TOURNAMENT ORGANIZER" : "STUDENT ATHLETE"}
+                  {isOrganizer ? "TOURNAMENT ORGANIZER" : isCoach ? "COACH / MANAGER" : "STUDENT ATHLETE"}
                 </span>
               </div>
             )}
@@ -430,6 +472,8 @@ export default function RegisterPage() {
                   <TrophyIcon className="w-4 h-4 text-black" />
                   <span>Create Organizer Account & Access Hub</span>
                 </>
+              ) : isCoach ? (
+                <span>Submit Coach Account for Approval</span>
               ) : (
                 <span>Create Student Athlete Account</span>
               )}

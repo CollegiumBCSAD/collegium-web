@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useGame } from "@/context/GameContext";
 import { getGameInfo } from "@/lib/games";
 import { api } from "@/lib/api";
+import BrandEmblem from "@/components/ui/BrandEmblem";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -73,7 +74,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isLoaded && isLoggedIn) {
-      router.replace(user?.role === "ADMIN" ? "/admin" : "/");
+      router.replace(user?.role === "ADMIN" ? "/admin" : user?.role === "COACH" ? "/coach" : "/");
     }
   }, [isLoaded, isLoggedIn, user, router]);
 
@@ -115,6 +116,8 @@ export default function LoginPage() {
       const profile = await loginWithToken(res.access_token);
       if (profile?.role === "ADMIN") {
         router.push("/admin");
+      } else if (profile?.role === "COACH") {
+        router.push("/coach");
       } else {
         const athleteGame = profile?.teamMemberships?.[0]?.team?.gameTitle || profile?.gameHandles?.[0]?.gameTitle;
         if (athleteGame) {
@@ -133,9 +136,7 @@ export default function LoginPage() {
     <div className="flex flex-col flex-1 items-center justify-center px-4 py-12 game-theme-bg">
       <div className="w-full max-w-md bg-card-bg border border-raised-panel rounded-2xl p-6 sm:p-8 shadow-2xl">
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary-brand/10 text-primary-brand mb-3 border border-primary-brand/20">
-            <span className="font-display text-xl font-bold">C</span>
-          </div>
+          <BrandEmblem size={60} className="mx-auto mb-4" />
           <h1 className="font-display text-2xl sm:text-3xl font-bold uppercase tracking-wider text-foreground">
             {roleInfo.heading}
           </h1>
