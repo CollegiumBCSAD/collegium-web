@@ -66,6 +66,11 @@ export default function DashboardPage() {
     return userTeams.filter((t) => t.gameTitle === activeGame);
   }, [userTeams, activeGame]);
 
+  const memberGameTeams = useMemo(
+    () => userGameTeams.filter((t) => !user || t.captainId !== user.id),
+    [userGameTeams, user],
+  );
+
   const pendingUserTeams = useMemo(() => {
     if (!user) return [];
     const myId = user.id;
@@ -99,8 +104,10 @@ export default function DashboardPage() {
   useEffect(() => {
     if (isLoaded && !isLoggedIn) {
       router.push("/login");
+    } else if (isLoaded && user?.role === "COACH") {
+      router.replace("/coach");
     }
-  }, [isLoaded, isLoggedIn, router]);
+  }, [isLoaded, isLoggedIn, user, router]);
 
   if (!isLoaded || !isLoggedIn || !user) {
     return (
@@ -227,7 +234,9 @@ export default function DashboardPage() {
               userTeams={userTeams}
             />
 
-            {/* Active Varsity Squads */}
+            {/* Active Varsity Squads — squads you captain are managed in the
+                Lineup Command card above, so only list the ones you play on */}
+            {(userGameTeams.length === 0 || memberGameTeams.length > 0) && (
             <div className="space-y-4">
               <div className="flex items-center justify-between border-b border-[#1E293B] pb-3">
                 <div className="flex items-center gap-2">
@@ -310,12 +319,13 @@ export default function DashboardPage() {
                 )
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                  {userGameTeams.map((t) => (
+                  {memberGameTeams.map((t) => (
                     <TeamRosterCard key={t.id} team={t} onRosterUpdated={refreshTeams} />
                   ))}
                 </div>
               )}
             </div>
+            )}
 
           </div>
 

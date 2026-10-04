@@ -3,6 +3,24 @@ import { GameId, Team, TeamMember, JoinRequest } from "@/types";
 
 export type { Team, TeamMember, JoinRequest };
 
+/** Positional roles per title, used when a player hasn't set their own. */
+export const DEFAULT_ROLES: Record<GameId, string[]> = {
+  valo: ["Duelist", "Initiator", "Controller", "Sentinel", "Flex"],
+  lol: ["Top Laner", "Jungler", "Mid Laner", "Bot Laner", "Support"],
+  ml: ["Jungler", "Mid Laner", "Gold Laner", "EXP Laner", "Roamer"],
+  codm: ["Main Slayer", "SMG Entry", "Anchor", "Sniper / Flex", "Support"],
+};
+
+export const STARTER_COUNT = 5;
+
+/** Roster cap per title (LoL carries an extra bench slot), mirroring the server. */
+export const maxRosterFor = (game: GameId) => (game === "lol" ? 7 : 6);
+
+/** Captain first; everyone else keeps their incoming order. */
+export function captainFirst<T extends { userId: string }>(members: T[], captainId?: string | null): T[] {
+  return [...members].sort((a, b) => Number(b.userId === captainId) - Number(a.userId === captainId));
+}
+
 const TEAMS_STORAGE_KEY = "collegium_teams_data";
 
 const reverseGameTitleMap: Record<string, GameId> = {
@@ -21,8 +39,10 @@ interface RawServerTeam {
   name: string;
   gameTitle: string;
   universityId: string;
-  captainId: string;
+  captainId: string | null;
   captainName?: string;
+  coachId?: string | null;
+  coach?: { id: string; displayName: string } | null;
   inviteCode: string;
   createdAt: string;
   university?: { name: string };
@@ -68,8 +88,10 @@ export async function fetchTeamsApi(): Promise<Team[]> {
           gameTitle,
           universityId: t.universityId,
           universityName: t.university?.name || "Unknown University",
-          captainId: t.captainId,
-          captainName,
+          captainId: t.captainId ?? "",
+          captainName: t.captainId ? captainName : "No captain yet",
+          coachId: t.coachId ?? null,
+          coachName: t.coach?.displayName ?? null,
           inviteCode: t.inviteCode,
           createdAt: t.createdAt,
           members: (t.members || []).map((m) => ({

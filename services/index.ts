@@ -8,3 +8,5 @@ export * from "./adminService";
 export * from "./athletesService";
 export * from "./newsService";
 export * from "./eventsService";
+export * from "./coachService";
+export * from "./rostersService";

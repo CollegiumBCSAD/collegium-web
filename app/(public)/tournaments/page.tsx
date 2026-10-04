@@ -86,8 +86,8 @@ export default function TournamentsPage() {
     setApplyingId(t.id);
     try {
       await tournamentsService.applyForTournament(t.id, teamId);
-    } finally {
       setAppliedIds((prev) => Array.from(new Set([...prev, t.id])));
+    } finally {
       loadTournaments();
       setApplyingId(null);
     }

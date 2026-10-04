@@ -8,3 +8,5 @@ export * from "./news";
 export * from "./events";
 
 export * from "./ui";
+export * from "./coach";
+export * from "./rosters";

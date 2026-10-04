@@ -18,6 +18,7 @@ import HeaderGameSwitcher from "@/components/HeaderGameSwitcher";
 import OrganizeNavButton from "@/components/OrganizeNavButton";
 import { HomeIcon, PlusIcon, UsersIcon, SwordsIcon, ShieldIcon } from "@/components/ui/Icons";
 import { fetchTeamsApi } from "@/lib/teams";
+import BrandEmblem from "@/components/ui/BrandEmblem";
 
 function HeaderAuthControls({ mobile = false }: { mobile?: boolean }) {
   const { user, isLoggedIn, logoutUser, isLoaded } = useAuth();
@@ -97,7 +98,7 @@ function HeaderAuthControls({ mobile = false }: { mobile?: boolean }) {
             <HomeIcon className="w-3.5 h-3.5 text-primary-brand" />
             <span>My Dashboard</span>
           </Link>
-          {user.role !== "ADMIN" && user.role !== "ORGANIZER" && !hasSquad && (
+          {user.role !== "ADMIN" && user.role !== "ORGANIZER" && user.role !== "COACH" && !hasSquad && (
             <>
               <Link
                 href="/team/create"
@@ -122,6 +123,15 @@ function HeaderAuthControls({ mobile = false }: { mobile?: boolean }) {
             >
               <SwordsIcon className="w-3.5 h-3.5 text-primary-brand" />
               <span>Scrims Board</span>
+            </Link>
+          )}
+          {user.role === "COACH" && (
+            <Link
+              href="/coach"
+              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-mono font-bold uppercase tracking-wider text-slate-300 hover:text-white hover:bg-[#141A29] rounded-lg transition-all"
+            >
+              <ShieldIcon className="w-3.5 h-3.5 text-primary-brand" />
+              <span>Coach Hub</span>
             </Link>
           )}
           {user.role === "ORGANIZER" && (
@@ -216,7 +226,7 @@ function HeaderAuthControls({ mobile = false }: { mobile?: boolean }) {
                 <HomeIcon className="w-3.5 h-3.5 text-primary-brand" />
                 <span>My Dashboard</span>
               </Link>
-              {user.role !== "ADMIN" && user.role !== "ORGANIZER" && !hasSquad && (
+              {user.role !== "ADMIN" && user.role !== "ORGANIZER" && user.role !== "COACH" && !hasSquad && (
                 <>
                   <Link
                     href="/team/create"
@@ -244,6 +254,16 @@ function HeaderAuthControls({ mobile = false }: { mobile?: boolean }) {
                 >
                   <SwordsIcon className="w-3.5 h-3.5 text-primary-brand" />
                   <span>Scrims Board</span>
+                </Link>
+              )}
+              {user.role === "COACH" && (
+                <Link
+                  href="/coach"
+                  onClick={() => setDropdownOpen(false)}
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-mono font-bold uppercase tracking-wider text-slate-300 hover:text-white hover:bg-[#141A29] hover:translate-x-1 transition-all duration-150"
+                >
+                  <ShieldIcon className="w-3.5 h-3.5 text-primary-brand" />
+                  <span>Coach Hub</span>
                 </Link>
               )}
               {user.role === "ORGANIZER" && (
@@ -441,8 +461,7 @@ function PublicLayoutContent({ children }: { children: React.ReactNode }) {
           <div className="flex h-14 lg:h-16 items-center justify-between gap-3 px-4 sm:px-6 lg:px-10">
             <div className="flex min-w-0 items-center gap-6 lg:gap-8">
               <Link href="/" className="flex items-center gap-2.5 font-display text-lg lg:text-xl font-black tracking-wider text-white group shrink-0">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/logo.png" alt="Collegium Logo" className="w-7 h-7 object-contain rounded-md shadow-md shadow-primary-brand/30 transition-transform duration-200 group-hover:scale-110 shrink-0" />
+                <BrandEmblem size={30} className="shrink-0 transition-transform duration-200 group-hover:scale-110" />
                 <span className="group-hover:text-primary-brand transition-colors">COLLEGIUM</span>
               </Link>
               <NavigationLinks />
