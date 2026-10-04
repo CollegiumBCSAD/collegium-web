@@ -13,7 +13,8 @@ import TournamentsFilterTabs from "@/components/tournaments/TournamentsFilterTab
 import InviteEventsPanel from "@/components/events/InviteEventsPanel";
 import OrganizerInviteEventsPanel from "@/components/events/OrganizerInviteEventsPanel";
 import { TournamentCardSkeleton } from "@/components/ui/Skeleton";
-import { Tournament, TournamentDetailTab } from "@/types";
+import { Team, Tournament, TournamentDetailTab } from "@/types";
+import { fetchTeamsApi } from "@/lib/teams";
 import { tournamentsService } from "@/services";
 import { GAMES, getGameInfo } from "@/lib/games";
 
@@ -31,13 +32,30 @@ export default function TournamentsPage() {
   const [appliedIds, setAppliedIds] = useState<string[]>([]);
   const [applyingId, setApplyingId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [myTeams, setMyTeams] = useState<Team[]>([]);
 
   const loadTournaments = useCallback(() => {
     const promises: Promise<unknown>[] = [tournamentsService.getTournaments()];
     if (user?.role === "ORGANIZER") promises.push(tournamentsService.getMyTournaments());
 
-    Promise.allSettled(promises)
-      .then(([publicRes, myRes]) => {
+    // Squads the viewer coaches, captains, or plays on: an entry filed by any
+    // of them counts for everyone on that squad.
+    const teamsPromise: Promise<Team[]> =
+      user?.id && user.role !== "ORGANIZER" && user.role !== "ADMIN"
+        ? fetchTeamsApi().then((all) =>
+            all.filter(
+              (t) =>
+                t.coachId === user.id ||
+                t.captainId === user.id ||
+                t.members.some((m) => m.userId === user.id && m.status === "ACCEPTED"),
+            ),
+          )
+        : Promise.resolve([]);
+
+    Promise.all([Promise.allSettled(promises), teamsPromise.catch((): Team[] => [])])
+      .then(([[publicRes, myRes], teams]) => {
+        setMyTeams(teams);
+        const teamIds = new Set(teams.map((t) => t.id));
         const listOf = (res?: PromiseSettledResult<unknown>) =>
           res && res.status === "fulfilled" && Array.isArray(res.value) ? (res.value as Tournament[]) : [];
         const map = new Map<string, Tournament>();
@@ -49,8 +67,10 @@ export default function TournamentsPage() {
           setAppliedIds(
             all
               .filter((t) =>
-                (t.applications as Array<{ userId?: string; status?: string }>)?.some(
-                  (app) => app.userId === user.id && app.status !== "REJECTED"
+                (t.applications as Array<{ userId?: string; teamId?: string; status?: string }>)?.some(
+                  (app) =>
+                    app.status !== "REJECTED" &&
+                    (app.userId === user.id || Boolean(app.teamId && teamIds.has(app.teamId)))
                 )
               )
               .map((t) => t.id)
@@ -196,6 +216,7 @@ export default function TournamentsPage() {
                   onWithdraw={canApply ? handleWithdraw : undefined}
                   isApplied={canApply && appliedIds.includes(t.id)}
                   isApplying={applyingId === t.id}
+                  myTeams={myTeams}
                 />
               ))}
             </div>

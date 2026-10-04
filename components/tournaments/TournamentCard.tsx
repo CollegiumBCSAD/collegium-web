@@ -18,7 +18,7 @@ const STATUS: Record<string, { label: string; className: string; pulse?: boolean
   REJECTED: { label: "Changes requested", className: "text-rose-300" },
 };
 
-export default function TournamentCard({ tournament: t, onSelect, onApply, onWithdraw, isApplied, isApplying }: TournamentCardProps) {
+export default function TournamentCard({ tournament: t, onSelect, onApply, onWithdraw, isApplied, isApplying, myTeams }: TournamentCardProps) {
   const { user } = useAuth();
   const isHost = Boolean(user?.id && (t.organizerId === user.id || t.organizer?.id === user.id));
   const isLive = t.status === "LIVE";
@@ -101,6 +101,7 @@ export default function TournamentCard({ tournament: t, onSelect, onApply, onWit
             onWithdraw={onWithdraw}
             isApplied={isApplied}
             isApplying={isApplying}
+            myTeams={myTeams}
           />
 
           <div className="ml-auto flex flex-wrap items-center gap-3">
