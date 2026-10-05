@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { EventTeam } from "@/types";
+import { CheckCircleIcon, LockIcon } from "@/components/ui/Icons";
+import { CARD, MONO_LABEL } from "./eventSurfaces";
 
 interface EventSignupSuccessProps {
   team: EventTeam;
@@ -41,51 +43,58 @@ export default function EventSignupSuccess({ team }: EventSignupSuccessProps) {
   };
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 p-5">
-        <h2 className="font-display text-lg text-emerald-200 mb-1">
+    <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr] animate-page-slide-in">
+      <div className="relative overflow-hidden rounded-2xl border border-emerald-400/25 bg-emerald-500/[0.06] p-7">
+        <span aria-hidden className="absolute left-0 inset-y-0 w-1 bg-emerald-400 shadow-[0_0_14px_rgba(52,211,153,0.6)]" />
+        <span className="flex items-center gap-2 text-[10px] font-mono font-bold uppercase tracking-[0.25em] text-emerald-300">
+          <CheckCircleIcon className="w-3.5 h-3.5" />
+          Sign-up sent
+        </span>
+        <h2 className="mt-3 font-display text-3xl font-black uppercase leading-tight text-white break-words">
           {team.name} is signed up
         </h2>
-        <p className="text-sm text-emerald-100/80">
+        <p className="mt-2 text-sm text-emerald-100/80">
           The organizer will review your roster and documents. You do not need
           an account.
         </p>
+        <Link
+          href={`/events/team/${team.editToken}`}
+          className="game-theme-btn mt-6 h-11 px-6 gap-2 text-sm"
+        >
+          Upload documents
+          <span>→</span>
+        </Link>
       </div>
 
-      <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
-        <h3 className="font-display text-sm tracking-[0.14em] uppercase text-white/50 mb-2">
-          Save this link
-        </h3>
-        <p className="text-sm text-white/60 mb-4">
+      <div className={`relative overflow-hidden ${CARD} p-7`}>
+        <span aria-hidden className="absolute left-6 top-0 h-[3px] w-12 rounded-b-full bg-primary-brand" />
+        <div className="flex items-center gap-2">
+          <LockIcon className="w-4 h-4 text-primary-brand" />
+          <h3 className={MONO_LABEL}>Save this link</h3>
+        </div>
+        <p className="mt-3 text-sm leading-relaxed text-slate-300">
           It is the only way back into your squad to upload documents or fix
           details. Bookmark it, or send it to yourself. If you lose it, ask the
           organizer to resend it.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="mt-5 flex flex-col sm:flex-row gap-2">
           <input
             readOnly
             id="edit-link"
             value={editUrl}
             onFocus={(e) => e.currentTarget.select()}
-            className="flex-1 rounded-lg bg-black/50 border border-white/10 px-3 py-2 text-xs text-white/80 font-mono"
+            className="flex-1 min-w-0 rounded-xl bg-[#0E121C] border border-white/10 px-4 py-3 text-xs text-slate-100 font-mono focus:outline-none focus:border-primary-brand/70"
           />
           <button
             type="button"
             onClick={copy}
-            className="rounded-lg border border-white/15 px-4 py-2 text-sm text-white/80 hover:bg-white/5 transition"
+            className={`tactical-btn-secondary h-11 px-6 text-xs ${copied ? "!text-emerald-300" : ""}`}
           >
-            {copied ? "Copied" : "Copy"}
+            {copied ? "Copied ✓" : "Copy"}
           </button>
         </div>
       </div>
-
-      <Link
-        href={`/events/team/${team.editToken}`}
-        className="self-start rounded-lg bg-primary-brand px-6 py-3 font-display text-sm tracking-wide text-[var(--game-btn-text,#fff)] hover:brightness-110 transition"
-      >
-        Upload documents
-      </Link>
     </div>
   );
 }

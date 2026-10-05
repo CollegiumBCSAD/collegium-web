@@ -17,6 +17,9 @@ export interface AuthTokens {
   access_token: string;
 }
 
+// A coach awaiting admin approval verifies their email without being signed in.
+export type VerifyEmailResult = AuthTokens | { pendingApproval: true };
+
 export const authService = {
   login: (dto: LoginDto): Promise<AuthTokens> => {
     return apiClient.post<AuthTokens>("/auth/login", dto, true);
@@ -26,8 +29,8 @@ export const authService = {
     return apiClient.post<{ message: string }>("/auth/register", dto, true);
   },
 
-  verifyEmail: (token: string): Promise<AuthTokens> => {
-    return apiClient.get<AuthTokens>(`/auth/verify-email?token=${encodeURIComponent(token)}`);
+  verifyEmail: (token: string): Promise<VerifyEmailResult> => {
+    return apiClient.get<VerifyEmailResult>(`/auth/verify-email?token=${encodeURIComponent(token)}`);
   },
 
   resendVerification: (email: string): Promise<{ message: string }> => {

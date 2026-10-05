@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { tournamentsService, scrimsService } from "@/services";
+import { tournamentsService, scrimsService, coachService } from "@/services";
 import { mockFlaggedMatches } from "@/lib/mock/admin";
 import { AdminNavItem, AdminSidebarProps } from "@/types";
 import {
@@ -21,6 +21,7 @@ export default function AdminSidebar({ open = false, onClose }: AdminSidebarProp
   const { user, logoutUser } = useAuth();
   const [pendingTournamentsCount, setPendingTournamentsCount] = useState<number>(0);
   const [scrimsCount, setScrimsCount] = useState<number>(0);
+  const [pendingCoachesCount, setPendingCoachesCount] = useState<number>(0);
 
   useEffect(() => {
     tournamentsService
@@ -32,6 +33,11 @@ export default function AdminSidebar({ open = false, onClose }: AdminSidebarProp
       .getScrims()
       .then((scrims) => setScrimsCount(scrims.length))
       .catch(() => setScrimsCount(0));
+
+    coachService
+      .getApplications()
+      .then((apps) => setPendingCoachesCount(apps.length))
+      .catch(() => setPendingCoachesCount(0));
   }, [pathname]);
 
   const NAV_ITEMS: AdminNavItem[] = [
@@ -67,6 +73,13 @@ export default function AdminSidebar({ open = false, onClose }: AdminSidebarProp
       label: "Rosters & Users",
       href: "/admin/users",
       icon: <UsersIcon className="w-4 h-4" />,
+    },
+    {
+      label: "Coach Approvals",
+      href: "/admin/coaches",
+      icon: <ShieldIcon className="w-4 h-4" />,
+      badge: pendingCoachesCount,
+      badgeType: "warning",
     },
     {
       label: "Campus Newsfeed",

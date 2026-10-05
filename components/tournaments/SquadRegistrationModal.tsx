@@ -87,7 +87,8 @@ export default function SquadRegistrationModal({
             )
           );
 
-          const isMyTeam = isCaptain || isMember;
+          const isCoach = Boolean(myId && t.coachId === myId);
+          const isMyTeam = isCaptain || isMember || isCoach;
           return matchesGame && isMyTeam;
         });
 
@@ -116,6 +117,11 @@ export default function SquadRegistrationModal({
   const isLive = tournament.status === "LIVE";
 
   const activeTeam = teams.find((t) => t.id === selectedTeamId) || teams[0];
+
+  // Registration belongs to the team's coach; a team without one falls back
+  // to its captain. Other roster members can see the squad but not enlist it.
+  const canRegister = (t: Team) => Boolean(user?.id && (t.coachId ? t.coachId === user.id : t.captainId === user.id));
+  const activeCanRegister = activeTeam ? canRegister(activeTeam) : false;
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -276,6 +282,17 @@ export default function SquadRegistrationModal({
                 </div>
               )}
 
+              {activeTeam && !activeCanRegister && (
+                <div className="p-3.5 bg-amber-950/40 border border-amber-500/40 text-amber-200 text-xs font-sans rounded flex items-center gap-2.5">
+                  <AlertTriangleIcon className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span>
+                    {activeTeam.coachId
+                      ? `Only ${activeTeam.coachName ?? "the team coach"} can register ${activeTeam.name} for tournaments.`
+                      : `Only the team captain (${activeTeam.captainName}) can register ${activeTeam.name} while it has no coach.`}
+                  </span>
+                </div>
+              )}
+
               {/* Tournament Telemetry Briefing HUD Card */}
               <div 
                 className="relative overflow-hidden bg-[#060812] border border-[#1A253C] p-4 sm:p-5 shadow-xl flex flex-col sm:flex-row items-center gap-4 sm:gap-5"
@@ -433,7 +450,11 @@ export default function SquadRegistrationModal({
                                 <h4 className="font-display text-sm font-black text-white uppercase tracking-wide truncate">
                                   {t.name}
                                 </h4>
-                                {isCaptainOfThisTeam ? (
+                                {t.coachId && t.coachId === user?.id ? (
+                                  <span className="text-[9px] font-mono font-black px-2 py-0.5 bg-primary-brand/15 border border-primary-brand/40 text-white uppercase rounded">
+                                    COACH
+                                  </span>
+                                ) : isCaptainOfThisTeam ? (
                                   <span className="text-[9px] font-mono font-black px-2 py-0.5 bg-amber-500/15 border border-amber-500/40 text-amber-300 uppercase rounded">
                                     CAPTAIN
                                   </span>
@@ -496,7 +517,7 @@ export default function SquadRegistrationModal({
 
             <button
               type="button"
-              disabled={isSubmitting || teams.length === 0}
+              disabled={isSubmitting || teams.length === 0 || !activeCanRegister}
               onClick={handleSubmit}
               className="game-theme-btn h-10 px-6 gap-2 text-xs disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none"
             >

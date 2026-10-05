@@ -21,6 +21,9 @@ export interface Team {
   universityName: string;
   captainId: string;
   captainName: string;
+  /** The team's coach, if it has one. Tournament registration is theirs. */
+  coachId?: string | null;
+  coachName?: string | null;
   inviteCode: string;
   createdAt: string;
   members: TeamMember[];

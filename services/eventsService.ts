@@ -7,6 +7,7 @@ import {
   EventSummary,
   EventTeam,
   EventTeamStatus,
+  MyEventSquad,
   SubmitEventTeamPayload,
 } from "@/types";
 
@@ -36,11 +37,19 @@ export const eventsService = {
   updateEvent: (id: string, payload: Partial<CreateEventPayload> & { status?: string }) =>
     apiClient.patch<EventSummary>(`/events/${id}`, payload),
 
+  deleteEvent: (id: string) =>
+    apiClient.delete<{ id: string; deleted: boolean }>(`/events/${id}`),
+
+  clearResult: (eventId: string, matchId: string) =>
+    apiClient.delete<EventBracket>(`/events/${eventId}/matches/${matchId}/result`),
+
   getInvite: (code: string) =>
     apiClient.get<EventInvite>(`/events/invite/${code}`),
 
   submitTeam: (code: string, payload: SubmitEventTeamPayload) =>
     apiClient.post<EventTeam>(`/events/invite/${code}/teams`, payload, true),
+
+  getMySquads: () => apiClient.get<MyEventSquad[]>("/events/my-squads"),
 
   getTeamByToken: (token: string) =>
     apiClient.get<EventTeam>(`/events/teams/${token}`),

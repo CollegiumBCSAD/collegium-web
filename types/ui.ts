@@ -1,3 +1,5 @@
+import type { GameId } from "./games";
+
 export interface SegmentedOption<T extends string = string> {
   id: T;
   label: string;
@@ -30,4 +32,33 @@ export interface HeaderGameSwitcherProps {
 export interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
+}
+
+export interface BrandEmblemProps {
+  /** Rendered width and height in pixels. */
+  size?: number;
+  className?: string;
+}
+
+export interface OctagonAvatarProps {
+  label: string;
+  /** Captain gets the gold ring. */
+  highlight?: boolean;
+  className?: string;
+}
+
+export interface LineupSlotProps {
+  slot: number;
+  gameHandle: string;
+  displayName: string;
+  role: string;
+  isCaptain: boolean;
+}
+
+export interface LineupGridProps {
+  members: Array<{ id: string; userId: string; gameHandle: string; displayName: string; preferredRole?: string | null }>;
+  captainId?: string | null;
+  gameTitle: GameId;
+  /** Shows clickable "open slot" cards when provided. */
+  onRecruit?: () => void;
 }

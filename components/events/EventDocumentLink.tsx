@@ -20,7 +20,11 @@ export default function EventDocumentLink({
   const [error, setError] = useState<string | null>(null);
 
   if (!doc) {
-    return <span className="text-xs text-white/25">{label}: missing</span>;
+    return (
+      <span className="text-xs text-slate-500">
+        {label}: <span className="text-amber-300/70">missing</span>
+      </span>
+    );
   }
 
   const open = async () => {

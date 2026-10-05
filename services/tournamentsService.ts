@@ -734,8 +734,8 @@ export const tournamentsService = {
     });
   },
 
-  withdrawApplication: (tournamentId: string): Promise<unknown> => {
-    return apiClient.post(`/tournaments/${tournamentId}/withdraw`, {});
+  withdrawApplication: (tournamentId: string, teamId?: string): Promise<unknown> => {
+    return apiClient.post(`/tournaments/${tournamentId}/withdraw`, teamId ? { teamId } : {});
   },
 
   getApplications: (tournamentId: string): Promise<unknown[]> => {

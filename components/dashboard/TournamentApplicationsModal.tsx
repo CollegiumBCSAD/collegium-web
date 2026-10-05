@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { tournamentsService } from "@/services/tournamentsService";
 import { ShieldIcon, CheckCircleIcon, UsersIcon, CrownIcon } from "@/components/ui/Icons";
+import RosterChangeReviewPanel from "@/components/rosters/RosterChangeReviewPanel";
 
 interface TournamentApplication {
   id: string;
@@ -159,6 +160,14 @@ export default function TournamentApplicationsModal({
 
   if (!isOpen) return null;
 
+  // Requests awaiting a decision stay on top, newest first; decided ones follow.
+  const STATUS_ORDER: Record<string, number> = { PENDING: 0, APPROVED: 1, REJECTED: 2 };
+  const sortedApplications = [...applications].sort(
+    (a, b) =>
+      (STATUS_ORDER[a.status] ?? 3) - (STATUS_ORDER[b.status] ?? 3) ||
+      new Date(b.appliedAt).getTime() - new Date(a.appliedAt).getTime(),
+  );
+
   const handleApprove = async (appId: string) => {
     setProcessingId(appId);
     try {
@@ -270,6 +279,10 @@ export default function TournamentApplicationsModal({
 
         {/* Application List Body or Roster View Drawer */}
         <div className="p-6 overflow-y-auto space-y-3 flex-1">
+          {!selectedApp && (
+            <RosterChangeReviewPanel tournamentId={tournamentId} onReviewed={onApplicationUpdated} />
+          )}
+
           {selectedApp ? (
             /* STANDALONE ROSTER VIEW PANEL */
             <div className="space-y-4 animate-fade-in">
@@ -439,7 +452,7 @@ export default function TournamentApplicationsModal({
               </p>
             </div>
           ) : (
-            applications.map((app) => {
+            sortedApplications.map((app) => {
               const isPending = app.status === "PENDING";
               const isApproved = app.status === "APPROVED";
               const isProcessing = processingId === app.id;

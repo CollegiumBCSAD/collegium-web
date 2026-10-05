@@ -6,6 +6,8 @@ import { GAMES } from "@/lib/games";
 import { Team } from "@/types";
 import { UsersIcon, CrownIcon } from "@/components/ui/Icons";
 import RosterDetailsModal from "./RosterDetailsModal";
+import TeamCoachStrip from "./TeamCoachStrip";
+import { useAuth } from "@/context/AuthContext";
 
 interface TeamRosterCardProps {
   team: Team;
@@ -20,6 +22,7 @@ const GAME_ART: Record<string, string> = {
 };
 
 export default function TeamRosterCard({ team, onRosterUpdated }: TeamRosterCardProps) {
+  const { user } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const game = GAMES[team.gameTitle as keyof typeof GAMES] || GAMES.valo;
@@ -149,6 +152,13 @@ export default function TeamRosterCard({ team, onRosterUpdated }: TeamRosterCard
                 ))}
               </div>
             )}
+
+            <TeamCoachStrip
+              teamId={team.id}
+              coachName={team.coachName}
+              isCaptain={Boolean(user?.id && user.id === team.captainId)}
+              onChanged={onRosterUpdated}
+            />
 
             {/* Bottom Actions Bar */}
             <div className="pt-3 border-t border-[#182338] flex items-center justify-between gap-3 text-xs">

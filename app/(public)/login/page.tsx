@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useGame } from "@/context/GameContext";
 import { getGameInfo } from "@/lib/games";
 import { api } from "@/lib/api";
+import BrandEmblem from "@/components/ui/BrandEmblem";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -43,7 +44,6 @@ export default function LoginPage() {
       return {
         role: "ORGANIZER" as const,
         roleLabel: "ORGANIZER",
-        badgeClass: "bg-amber-500/20 text-amber-300 border border-amber-500/40",
         btnText: "Log In to Organizer Dashboard",
         heading: "Organizer Log In",
         subtitle: "Access tournament hosting, brackets, and war rooms",
@@ -54,7 +54,6 @@ export default function LoginPage() {
       return {
         role: "ADMIN" as const,
         roleLabel: "ADMINISTRATOR",
-        badgeClass: "bg-purple-500/20 text-purple-300 border border-purple-500/40",
         btnText: "Log In to Admin Console",
         heading: "Admin Log In",
         subtitle: "Access system administration and university rosters",
@@ -64,7 +63,6 @@ export default function LoginPage() {
     return {
       role: "ATHLETE" as const,
       roleLabel: "ATHLETE",
-      badgeClass: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40",
       btnText: "Log In to Athlete Dashboard",
       heading: "Athlete Log In",
       subtitle: "Access your scrims, tournaments, and team dashboard",
@@ -76,7 +74,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isLoaded && isLoggedIn) {
-      router.replace(user?.role === "ADMIN" ? "/admin" : "/");
+      router.replace(user?.role === "ADMIN" ? "/admin" : user?.role === "COACH" ? "/coach" : "/");
     }
   }, [isLoaded, isLoggedIn, user, router]);
 
@@ -118,6 +116,8 @@ export default function LoginPage() {
       const profile = await loginWithToken(res.access_token);
       if (profile?.role === "ADMIN") {
         router.push("/admin");
+      } else if (profile?.role === "COACH") {
+        router.push("/coach");
       } else {
         const athleteGame = profile?.teamMemberships?.[0]?.team?.gameTitle || profile?.gameHandles?.[0]?.gameTitle;
         if (athleteGame) {
@@ -136,9 +136,7 @@ export default function LoginPage() {
     <div className="flex flex-col flex-1 items-center justify-center px-4 py-12 game-theme-bg">
       <div className="w-full max-w-md bg-card-bg border border-raised-panel rounded-2xl p-6 sm:p-8 shadow-2xl">
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary-brand/10 text-primary-brand mb-3 border border-primary-brand/20">
-            <span className="font-display text-xl font-bold">C</span>
-          </div>
+          <BrandEmblem size={60} className="mx-auto mb-4" />
           <h1 className="font-display text-2xl sm:text-3xl font-bold uppercase tracking-wider text-foreground">
             {roleInfo.heading}
           </h1>
@@ -200,11 +198,24 @@ export default function LoginPage() {
               className="w-full h-11 px-4 rounded-lg bg-background border border-panel-border focus:border-primary-brand text-foreground text-sm font-sans focus:outline-none transition-colors"
             />
             {detectedUniversity && (
-              <div className="mt-2 p-2.5 rounded bg-success/10 border border-success/30 flex items-center justify-between">
-                <span className="text-[11px] font-sans font-semibold text-success uppercase tracking-wider">
-                  ✓ {detectedUniversity}
+              // One accent for every role: the selected game's brand colour.
+              <div className="relative mt-2.5 overflow-hidden rounded-xl border border-primary-brand/30 bg-primary-brand/[0.07] pl-4 pr-3 py-2.5 flex items-center gap-3 animate-page-slide-in">
+                <span aria-hidden className="absolute left-0 inset-y-0 w-[3px] bg-primary-brand shadow-[0_0_10px_var(--primary-brand)]" />
+                <span className="w-8 h-8 shrink-0 flex items-center justify-center rounded-lg border border-primary-brand/30 bg-primary-brand/15 text-primary-brand">
+                  <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    <path d="m9 12 2 2 4-4" />
+                  </svg>
                 </span>
-                <span className={`text-[10px] font-sans font-bold px-2 py-0.5 rounded ${roleInfo.badgeClass}`}>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[9px] font-mono font-bold uppercase tracking-[0.2em] text-slate-500">
+                    University detected
+                  </span>
+                  <span className="block truncate text-xs font-sans font-semibold text-foreground">
+                    {detectedUniversity}
+                  </span>
+                </span>
+                <span className="shrink-0 rounded-full border border-primary-brand/40 bg-primary-brand/15 px-2.5 py-1 text-[9px] font-mono font-bold uppercase tracking-[0.15em] text-primary-brand">
                   {roleInfo.roleLabel}
                 </span>
               </div>

@@ -1,11 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
+import Image from "next/image";
 import { createPortal } from "react-dom";
 import { Team } from "@/types";
 import { GAMES } from "@/lib/games";
+import { maxRosterFor } from "@/lib/teams";
 import { useAuth } from "@/context/AuthContext";
 import { teamsService } from "@/services/teamsService";
+import RosterEditor from "@/components/rosters/RosterEditor";
+import LineupGrid from "@/components/dashboard/LineupGrid";
+import { CrownIcon, ShieldIcon, UsersIcon } from "@/components/ui/Icons";
 
 interface RosterDetailsModalProps {
   team: Team | null;
@@ -21,211 +26,160 @@ export default function RosterDetailsModal({ team, isOpen, onClose, onRosterUpda
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [leaveError, setLeaveError] = useState("");
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = "unset";
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen || !team) return null;
 
   const game = GAMES[team.gameTitle] || GAMES.valo;
+  const accepted = team.members.filter((m) => m.status === "ACCEPTED");
+  // The captain edits the roster in place; everyone else gets the read-only lineup.
+  const isCaptain = Boolean(user?.id && team.captainId === user.id);
+  const isMember = Boolean(user?.id && (isCaptain || team.members.some((m) => m.userId === user.id)));
 
-  const getInviteUrl = () => {
-    if (typeof window === "undefined") return "";
-    return `${window.location.origin}/team/join?invite=${team.inviteCode}`;
-  };
+  const inviteUrl = typeof window === "undefined" ? "" : `${window.location.origin}/team/join?invite=${team.inviteCode}`;
 
   const copyInviteLink = () => {
-    navigator.clipboard.writeText(getInviteUrl());
+    navigator.clipboard.writeText(inviteUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleLeaveTeam = async () => {
-    if (!user || !team) return;
+    if (!user) return;
     setIsLeaving(true);
     setLeaveError("");
     try {
       await teamsService.leaveTeam(team.id, user.id);
       onClose();
-      if (onRosterUpdated) {
-        onRosterUpdated();
-      } else if (typeof window !== "undefined") {
-        window.location.reload();
-      }
+      if (onRosterUpdated) onRosterUpdated();
+      else window.location.reload();
     } catch (err: unknown) {
-      const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
-      setLeaveError(errorObj?.response?.data?.message || errorObj?.message || "Failed to leave squad.");
+      setLeaveError(err instanceof Error ? err.message : "Failed to leave squad.");
     } finally {
       setIsLeaving(false);
     }
   };
 
-  const isMember = user && team.members.some(
-    (m) =>
-      (user.id && m.userId === user.id) ||
-      (user.email && m.email && m.email.toLowerCase() === user.email.toLowerCase()) ||
-      (user.displayName && m.displayName && m.displayName.toLowerCase() === user.displayName.toLowerCase()) ||
-      (user.id && team.captainId === user.id)
-  );
+  const stats = [
+    { label: "Players", value: `${accepted.length}/${maxRosterFor(team.gameTitle)}`, icon: <UsersIcon className="w-3.5 h-3.5" /> },
+    { label: "Captain", value: team.captainName, icon: <CrownIcon className="w-3.5 h-3.5 text-amber-400" /> },
+    { label: "Coach", value: team.coachName || "None", icon: <ShieldIcon className="w-3.5 h-3.5" /> },
+  ];
 
   const modalContent = (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-      <div className="w-full max-w-xl bg-[#121520] border border-[#272D40] rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6 relative overflow-hidden">
-        {/* Header Bar */}
-        <div className="flex items-center justify-between border-b border-raised-panel pb-4">
-          <div className="flex items-center gap-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={game.image} alt={game.name} className="w-10 h-10 rounded-xl object-cover border border-panel-border shadow-md" />
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-sans font-extrabold uppercase tracking-widest text-secondary-brand">
-                  {team.universityName || "University Varsity"} Squad
-                </span>
-                <span
-                  className="text-[10px] font-sans font-bold uppercase px-2 py-0.5 rounded-full text-white"
-                  style={{ backgroundColor: game.accentColor }}
-                >
-                  {game.shortName}
-                </span>
-              </div>
-              <h2 className="font-display text-2xl font-bold uppercase text-foreground">
-                {team.name}
-              </h2>
-            </div>
-          </div>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-backdrop-fade-in" onClick={onClose}>
+      <div
+        className="animate-modal-pop-in w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl bg-[#0B0F1A] border border-white/10 shadow-2xl overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header: game art wash behind the squad identity */}
+        <div className="relative shrink-0 px-6 pt-6 pb-5 overflow-hidden">
+          <Image src={game.image} alt="" fill className="object-cover opacity-20 scale-110 blur-[1px]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0B0F1A]/40 via-[#0B0F1A]/80 to-[#0B0F1A]" />
+          <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-primary-brand to-transparent" />
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-9 h-9 rounded-xl border border-panel-border bg-background hover:bg-raised-panel text-secondary-text hover:text-foreground flex items-center justify-center transition-colors cursor-pointer text-sm"
-          >
-            ✕
-          </button>
-        </div>
-
-        {/* Squad Overview Stats */}
-        <div className="grid grid-cols-3 gap-3 p-4 rounded-xl bg-background border border-panel-border text-center">
-          <div>
-            <span className="text-[10px] font-sans text-secondary-text uppercase block">Roster Size</span>
-            <span className="font-display text-lg font-bold text-foreground">{team.members.length} Athletes</span>
-          </div>
-          <div className="border-x border-panel-border">
-            <span className="text-[10px] font-sans text-secondary-text uppercase block">Captain</span>
-            <span className="font-sans text-xs font-bold text-secondary-brand truncate block px-1">{team.captainName}</span>
-          </div>
-          <div>
-            <span className="text-[10px] font-sans text-secondary-text uppercase block">Game Title</span>
-            <span className="font-sans text-xs font-bold text-success">{game.name}</span>
-          </div>
-        </div>
-
-        {/* Roster Athletes List */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="font-display text-sm font-bold uppercase tracking-wider text-foreground">
-              Official Squad Roster ({team.members.length})
-            </h3>
-            <span className="text-[11px] font-sans text-secondary-text">Verified University Roster</span>
-          </div>
-
-          <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-            {team.members.map((m) => (
+          <div className="relative flex items-start justify-between gap-4">
+            <div className="flex items-center gap-4 min-w-0">
               <div
-                key={m.id}
-                className="p-3.5 rounded-xl bg-card-bg/80 border border-raised-panel flex items-center justify-between gap-3 hover:border-panel-border transition-colors"
+                className="relative w-14 h-14 shrink-0 overflow-hidden border border-white/15"
+                style={{ clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)" }}
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-primary-brand/10 border border-primary-brand/20 text-primary-brand flex items-center justify-center font-display text-sm font-bold uppercase">
-                    {(m.displayName || m.gameHandle || "A").charAt(0)}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-sans text-xs font-bold text-foreground">
-                        {m.gameHandle || m.displayName}
-                      </span>
-                      {m.displayName && (
-                        <span className="text-[10px] font-sans text-secondary-text">({m.displayName})</span>
-                      )}
-                    </div>
-                    <span className="text-[10px] font-sans text-secondary-text block">
-                      {m.preferredRole ? `Role: ${m.preferredRole}` : "Flex Roster Athlete"}
-                    </span>
-                  </div>
-                </div>
+                <Image src={game.image} alt={game.name} fill className="object-cover" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-primary-brand truncate">
+                  {team.universityName} · {game.shortName}
+                </p>
+                <h2 className="font-display text-2xl sm:text-3xl font-black uppercase tracking-wide text-white truncate">{team.name}</h2>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close Modal"
+              className="w-9 h-9 shrink-0 rounded-lg border border-white/10 bg-black/40 text-slate-400 hover:text-white hover:border-white/25 flex items-center justify-center cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
 
-                <span className={`text-[10px] font-sans font-extrabold uppercase px-2.5 py-1 rounded ${
-                  m.status === "ACCEPTED"
-                    ? "bg-success/10 text-success border border-success/20"
-                    : "bg-secondary-brand/10 text-secondary-brand border border-secondary-brand/20"
-                }`}>
-                  {m.status === "ACCEPTED" ? "VERIFIED" : "PENDING"}
-                </span>
+          <dl className="relative grid grid-cols-3 gap-2 mt-5">
+            {stats.map((s) => (
+              <div key={s.label} className="rounded-xl bg-black/40 border border-white/[0.07] px-3 py-2.5 min-w-0">
+                <dt className="text-[9px] font-mono font-bold uppercase tracking-widest text-slate-500 flex items-center gap-1.5">
+                  {s.icon}
+                  {s.label}
+                </dt>
+                <dd className="font-display text-sm sm:text-base font-black uppercase text-white truncate mt-0.5">{s.value}</dd>
               </div>
             ))}
-          </div>
+          </dl>
         </div>
 
-        {/* Shareable Invite Code Section */}
-        <div className="p-4 rounded-xl bg-background border border-panel-border space-y-2">
-          <label className="block text-[11px] font-sans font-semibold uppercase tracking-wider text-secondary-text">
-            Shareable Roster Invite Link
-          </label>
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              readOnly
-              value={getInviteUrl()}
-              className="flex-1 h-10 px-3 rounded-lg bg-card-bg border border-panel-border text-foreground text-xs font-mono select-all focus:outline-none"
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-5">
+          {isCaptain ? (
+            <RosterEditor teamId={team.id} gameTitle={team.gameTitle} onChanged={onRosterUpdated} />
+          ) : (
+            <LineupGrid
+              members={accepted}
+              captainId={team.captainId}
+              gameTitle={team.gameTitle}
             />
+          )}
+
+          <div className="rounded-xl bg-black/30 border border-white/[0.07] p-3 flex items-center gap-2">
+            <div className="min-w-0 flex-1">
+              <p className="text-[9px] font-mono font-bold uppercase tracking-widest text-slate-500">Invite Link</p>
+              <p className="text-xs font-mono text-slate-300 truncate select-all">{inviteUrl}</p>
+            </div>
             <button
               type="button"
               onClick={copyInviteLink}
-              className="h-10 px-5 game-theme-btn text-xs font-bold uppercase tracking-wider shrink-0 cursor-pointer"
+              className="h-9 px-4 rounded-lg game-theme-btn text-[11px] font-mono font-black uppercase tracking-wider shrink-0 cursor-pointer"
             >
-              {copied ? "Copied! ✓" : "Copy Link"}
+              {copied ? "Copied ✓" : "Copy"}
             </button>
           </div>
+
+          {leaveError && <p className="text-xs font-sans text-rose-400">{leaveError}</p>}
         </div>
 
-        {leaveError && (
-          <div className="p-3 rounded-lg bg-error/10 border border-error/30 text-error text-xs font-sans">
-            {leaveError}
-          </div>
-        )}
-
+        {/* Footer */}
         {isMember && (
-          <div className="pt-3 border-t border-raised-panel">
+          <div className="shrink-0 px-6 py-4 border-t border-white/[0.07] bg-black/30">
             {confirmLeave ? (
-              <div className="p-3.5 bg-rose-950/40 border border-rose-500/40 rounded-xl space-y-2 animate-fade-in">
-                <p className="text-xs font-sans text-rose-200">
-                  Are you sure you want to leave <strong>{team.name}</strong>? If you are the last member or captain, leadership will be transferred or the roster disbanded.
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <p className="flex-1 text-xs font-sans text-rose-200">
+                  Leave <strong>{team.name}</strong>? If you&apos;re captain, the armband passes to the next player.
                 </p>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={handleLeaveTeam}
-                    disabled={isLeaving}
-                    className="flex-1 h-8 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-mono font-bold uppercase transition-colors cursor-pointer disabled:opacity-50"
-                  >
-                    {isLeaving ? "Leaving..." : "Yes, Confirm Leave"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setConfirmLeave(false)}
-                    className="flex-1 h-8 bg-[#121828] text-slate-300 hover:text-white rounded-lg text-xs font-mono font-bold uppercase transition-colors border border-[#222E48] cursor-pointer"
-                  >
+                <div className="flex gap-2 shrink-0">
+                  <button type="button" onClick={() => setConfirmLeave(false)} className="h-9 px-4 rounded-lg text-[11px] font-mono font-bold uppercase text-slate-300 bg-white/5 hover:bg-white/10 cursor-pointer">
                     Cancel
+                  </button>
+                  <button type="button" onClick={handleLeaveTeam} disabled={isLeaving} className="h-9 px-4 rounded-lg text-[11px] font-mono font-black uppercase text-white bg-rose-600 hover:bg-rose-500 cursor-pointer disabled:opacity-50">
+                    {isLeaving ? "Leaving..." : "Leave Squad"}
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-sans text-secondary-text">Need to exit this squad?</span>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-xs font-sans text-slate-500">Need to exit this squad?</span>
                 <button
                   type="button"
                   onClick={() => setConfirmLeave(true)}
-                  className="h-9 px-4 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 hover:text-white border border-rose-500/40 text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer"
-                  style={{
-                    clipPath: "polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%)",
-                  }}
+                  className="h-9 px-4 rounded-lg text-[11px] font-mono font-bold uppercase text-rose-300 border border-rose-500/30 hover:bg-rose-500/10 cursor-pointer"
                 >
-                  Leave Squad Roster
+                  Leave Squad
                 </button>
               </div>
             )}

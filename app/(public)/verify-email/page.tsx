@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { authService } from "@/services/authService";
-import { CheckCircleIcon, AlertTriangleIcon } from "@/components/ui/Icons";
+import { CheckCircleIcon, AlertTriangleIcon, ClockIcon } from "@/components/ui/Icons";
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
@@ -13,7 +13,7 @@ function VerifyEmailContent() {
   const { loginWithToken } = useAuth();
   const token = searchParams.get("token");
 
-  const [status, setStatus] = useState<"verifying" | "error">(() =>
+  const [status, setStatus] = useState<"verifying" | "error" | "pending">(() =>
     token ? "verifying" : "error",
   );
 
@@ -23,8 +23,12 @@ function VerifyEmailContent() {
     authService
       .verifyEmail(token)
       .then(async (res) => {
-        await loginWithToken(res.access_token);
-        router.push("/dashboard");
+        if ("pendingApproval" in res) {
+          setStatus("pending");
+          return;
+        }
+        const profile = await loginWithToken(res.access_token);
+        router.push(profile?.role === "COACH" ? "/coach" : "/dashboard");
       })
       .catch(() => {
         setStatus("error");
@@ -32,6 +36,29 @@ function VerifyEmailContent() {
     // Only ever run once per token — loginWithToken/router are stable app-level refs.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
+
+  if (status === "pending") {
+    return (
+      <div className="min-h-[85vh] flex flex-col items-center justify-center px-4 bg-background">
+        <div className="p-8 rounded-2xl bg-card-bg border border-raised-panel text-center max-w-sm w-full space-y-4 shadow-2xl">
+          <ClockIcon className="w-10 h-10 text-amber-400 mx-auto" />
+          <h2 className="font-display text-xl font-bold uppercase tracking-wider text-foreground">
+            Email Verified
+          </h2>
+          <p className="text-xs font-sans text-secondary-text">
+            Your Coach/Manager account is now in the System Administrator&apos;s review queue. You can sign in
+            once it&apos;s approved.
+          </p>
+          <Link
+            href="/login"
+            className="inline-flex h-10 px-5 rounded-lg game-theme-btn font-sans text-xs font-bold uppercase tracking-wider items-center justify-center"
+          >
+            Go to Sign In
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (status === "error") {
     return (
