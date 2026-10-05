@@ -108,8 +108,32 @@ async function request<T>(
   }
 }
 
+async function requestBlob(path: string): Promise<Blob> {
+  const headers: Record<string, string> = {};
+  if (_getAccessToken) {
+    const token = _getAccessToken();
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(`${BASE_URL}${path}`, {
+    headers,
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    throw new Error(
+      res.status === 401 || res.status === 403
+        ? "You are not allowed to open this file."
+        : "That file could not be opened.",
+    );
+  }
+
+  return res.blob();
+}
+
 export const apiClient = {
   get: <T>(path: string) => request<T>(path),
+  getBlob: (path: string) => requestBlob(path),
   post: <T>(path: string, body?: unknown, skipAuth = false) =>
     request<T>(path, { method: "POST", body: body !== undefined ? JSON.stringify(body) : undefined }, skipAuth),
   postForm: <T>(path: string, formData: FormData) =>

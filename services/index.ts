@@ -7,3 +7,4 @@ export * from "./universitiesService";
 export * from "./adminService";
 export * from "./athletesService";
 export * from "./newsService";
+export * from "./eventsService";
