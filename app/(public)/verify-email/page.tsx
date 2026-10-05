@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { authService } from "@/services/authService";
+import { resolvePostAuthRoute } from "@/lib/onboarding";
 import { CheckCircleIcon, AlertTriangleIcon, ClockIcon } from "@/components/ui/Icons";
 
 function VerifyEmailContent() {
@@ -28,7 +29,7 @@ function VerifyEmailContent() {
           return;
         }
         const profile = await loginWithToken(res.access_token);
-        router.push(profile?.role === "COACH" ? "/coach" : "/dashboard");
+        router.push(resolvePostAuthRoute(profile));
       })
       .catch(() => {
         setStatus("error");

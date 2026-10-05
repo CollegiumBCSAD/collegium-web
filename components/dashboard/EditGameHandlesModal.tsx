@@ -6,6 +6,7 @@ import { UserProfile, UserGameHandle } from "@/types";
 import { GAMES } from "@/lib/games";
 import { authService } from "@/services/authService";
 import { useAuth } from "@/context/AuthContext";
+import { useOnboarding } from "@/context/OnboardingContext";
 
 interface EditGameHandlesModalProps {
   isOpen: boolean;
@@ -26,6 +27,10 @@ export default function EditGameHandlesModal({
   user,
 }: EditGameHandlesModalProps) {
   const { loginWithToken } = useAuth();
+  const { profile } = useOnboarding();
+  // A title-locked athlete keeps a single IGN, for their locked title only.
+  const lockedGame = profile?.role === "athlete" && profile.isGameLocked ? profile.primaryGameId : undefined;
+  const visibleTitles = lockedGame ? GAME_TITLES.filter((t) => t.gameId === lockedGame) : GAME_TITLES;
   const [handles, setHandles] = useState<Record<string, string>>(() => {
     const initialMap: Record<string, string> = {};
     if (user?.gameHandles) {
@@ -117,7 +122,9 @@ export default function EditGameHandlesModal({
         </div>
 
         <p className="text-xs text-slate-300 font-sans">
-          Set your default handle for each title. These will auto-populate when joining rosters, creating teams, or participating in tournaments.
+          {lockedGame
+            ? `Your athlete account is locked to ${GAMES[lockedGame].name}, so you keep one handle for that title. It auto-populates when joining rosters, creating teams, or participating in tournaments.`
+            : "Set your default handle for each title. These will auto-populate when joining rosters, creating teams, or participating in tournaments."}
         </p>
 
         {errorMsg && (
@@ -128,7 +135,7 @@ export default function EditGameHandlesModal({
 
         {/* List of Game Titles & Handles */}
         <div className="space-y-4 max-h-96 overflow-y-auto pr-1">
-          {GAME_TITLES.map(({ key, label, gameId }) => {
+          {visibleTitles.map(({ key, label, gameId }) => {
             const gameInfo = GAMES[gameId as keyof typeof GAMES] || GAMES.valo;
             const currentVal = handles[key] || "";
             const isSaving = savingKey === key;

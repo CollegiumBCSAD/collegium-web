@@ -8,6 +8,8 @@ import { GameProvider, useGame } from "@/context/GameContext";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { NotificationProvider } from "@/context/NotificationContext";
 import { WarRoomProvider, useWarRoom } from "@/context/WarRoomContext";
+import { OnboardingProvider } from "@/context/OnboardingContext";
+import { GatewayProvider, useGateway } from "@/context/GatewayContext";
 import NotificationBell from "@/components/NotificationBell";
 import FloatingNotificationToast from "@/components/FloatingNotificationToast";
 import ChatQuickAccess from "@/components/ChatQuickAccess";
@@ -16,12 +18,15 @@ import TournamentBracketModal from "@/components/tournaments/TournamentBracketMo
 import GameSelectorModal from "@/components/GameSelectorModal";
 import HeaderGameSwitcher from "@/components/HeaderGameSwitcher";
 import OrganizeNavButton from "@/components/OrganizeNavButton";
+import GatewayModal from "@/components/gateway/GatewayModal";
+import OnboardingGuard from "@/components/auth/OnboardingGuard";
 import { HomeIcon, PlusIcon, UsersIcon, SwordsIcon, ShieldIcon } from "@/components/ui/Icons";
 import { fetchTeamsApi } from "@/lib/teams";
 import BrandEmblem from "@/components/ui/BrandEmblem";
 
 function HeaderAuthControls({ mobile = false }: { mobile?: boolean }) {
   const { user, isLoggedIn, logoutUser, isLoaded } = useAuth();
+  const { openGateway } = useGateway();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [hasSquad, setHasSquad] = useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
@@ -307,33 +312,40 @@ function HeaderAuthControls({ mobile = false }: { mobile?: boolean }) {
   if (mobile) {
     return (
       <div className="flex flex-col gap-2">
-        <Link
-          href="/login"
-          className="inline-flex h-11 w-full items-center justify-center tactical-btn-secondary px-5 text-xs font-bold uppercase tracking-wider text-white"
+        <button
+          type="button"
+          onClick={() => openGateway("signin")}
+          className="inline-flex h-11 w-full items-center justify-center tactical-btn-secondary px-5 text-xs font-bold uppercase tracking-wider text-white cursor-pointer"
         >
           Log In
-        </Link>
-        <Link
-          href="/register"
-          className="inline-flex h-11 w-full items-center justify-center game-theme-btn px-5 text-xs font-bold uppercase tracking-wider shadow-md"
+        </button>
+        <button
+          type="button"
+          onClick={() => openGateway("signup")}
+          className="inline-flex h-11 w-full items-center justify-center game-theme-btn px-5 text-xs font-bold uppercase tracking-wider shadow-md cursor-pointer"
         >
           Sign Up
-        </Link>
+        </button>
       </div>
     );
   }
 
   return (
     <div className="hidden lg:flex items-center gap-3">
-      <Link href="/login" className="inline-flex h-9 items-center justify-center tactical-btn-secondary px-5 text-xs font-bold uppercase tracking-wider text-white">
+      <button
+        type="button"
+        onClick={() => openGateway("signin")}
+        className="inline-flex h-9 items-center justify-center tactical-btn-secondary px-5 text-xs font-bold uppercase tracking-wider text-white cursor-pointer"
+      >
         Log In
-      </Link>
-      <Link
-        href="/register"
-        className="inline-flex h-9 items-center justify-center game-theme-btn px-5 text-xs font-bold uppercase tracking-wider shadow-md"
+      </button>
+      <button
+        type="button"
+        onClick={() => openGateway("signup")}
+        className="inline-flex h-9 items-center justify-center game-theme-btn px-5 text-xs font-bold uppercase tracking-wider shadow-md cursor-pointer"
       >
         Sign Up
-      </Link>
+      </button>
     </div>
   );
 }
@@ -438,6 +450,15 @@ function GlobalTournamentModal() {
   );
 }
 
+function GlobalGatewayModal() {
+  const { isOpen, intent, closeGateway } = useGateway();
+
+  return <GatewayModal isOpen={isOpen} intent={intent} onClose={closeGateway} />;
+}
+
+// Full-screen flows that bring their own header.
+const CHROMELESS_PREFIXES = ["/gateway", "/onboarding"];
+
 function PublicLayoutContent({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
@@ -450,7 +471,8 @@ function PublicLayoutContent({ children }: { children: React.ReactNode }) {
     setMobileMenuOpen(false);
   }
 
-  const showNavbar = !(pathname === "/" && !selectedGame && isLoaded && !user);
+  const isChromeless = CHROMELESS_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+  const showNavbar = !isChromeless && !(pathname === "/" && !selectedGame && isLoaded && !user);
 
   return (
     <div className="flex min-h-screen min-w-0 flex-col bg-background text-foreground relative overflow-x-clip">
@@ -511,12 +533,15 @@ function PublicLayoutContent({ children }: { children: React.ReactNode }) {
         </header>
       )}
 
-      <main className="flex min-w-0 flex-1 flex-col">{children}</main>
+      <main className="flex min-w-0 flex-1 flex-col">
+        <OnboardingGuard>{children}</OnboardingGuard>
+      </main>
 
       <ChatQuickAccess />
       <GlobalWarRoomModal />
       <GlobalTournamentModal />
       <FloatingNotificationToast />
+      <GlobalGatewayModal />
     </div>
   );
 }
@@ -529,11 +554,15 @@ export default function PublicLayout({
   return (
     <AuthProvider>
       <GameProvider>
-        <NotificationProvider>
-          <WarRoomProvider>
-            <PublicLayoutContent>{children}</PublicLayoutContent>
-          </WarRoomProvider>
-        </NotificationProvider>
+        <OnboardingProvider>
+          <GatewayProvider>
+            <NotificationProvider>
+              <WarRoomProvider>
+                <PublicLayoutContent>{children}</PublicLayoutContent>
+              </WarRoomProvider>
+            </NotificationProvider>
+          </GatewayProvider>
+        </OnboardingProvider>
       </GameProvider>
     </AuthProvider>
   );

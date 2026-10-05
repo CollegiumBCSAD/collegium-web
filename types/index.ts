@@ -5,6 +5,7 @@ export * from "./scrims";
 export * from "./tournaments";
 export * from "./admin";
 export * from "./news";
+export * from "./onboarding";
 export * from "./events";
 
 export * from "./ui";
