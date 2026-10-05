@@ -112,6 +112,7 @@ export function deriveOnboardingProfile(
 /** Where a user belongs right after authenticating: onboarding first, then their home. */
 export function resolveHomeRoute(user: UserProfile | null, profile: OnboardingProfile | null): string {
   if (user?.role === "ADMIN") return "/admin";
+  if (user?.role === "COACH") return "/coach";
   if (!profile) return "/";
   return profile.isOnboarded ? ROLE_HOME_ROUTES[profile.role] : ONBOARDING_ROUTES[profile.role];
 }

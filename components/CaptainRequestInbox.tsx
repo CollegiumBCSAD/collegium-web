@@ -3,19 +3,15 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { teamsService } from "@/services/teamsService";
-import { fetchTeamsApi, saveStoredTeams, Team, TeamMember } from "@/lib/teams";
+import { fetchTeamsApi, saveStoredTeams, maxRosterFor, Team, TeamMember } from "@/lib/teams";
+import RosterEditor from "@/components/rosters/RosterEditor";
+import TeamCoachStrip from "@/components/dashboard/TeamCoachStrip";
 import { JoinRequest } from "@/types";
 import { GAMES } from "@/lib/games";
 import { useAuth } from "@/context/AuthContext";
 import { useGame } from "@/context/GameContext";
-import { UsersIcon, ShieldIcon, CheckCircleIcon, CrownIcon, PlusIcon } from "@/components/ui/Icons";
+import { UsersIcon, ShieldIcon, CheckCircleIcon } from "@/components/ui/Icons";
 
-const DEFAULT_ROLES: Record<string, string[]> = {
-  valo: ["Duelist", "Initiator", "Controller", "Sentinel", "Flex"],
-  lol: ["Top Laner", "Jungler", "Mid Laner", "Bot Laner", "Support"],
-  ml: ["Jungler", "Mid Laner", "Gold Laner", "EXP Laner", "Roamer"],
-  codm: ["Main Slayer", "SMG Entry", "Anchor", "Sniper / Flex", "Support"],
-};
 
 export default function CaptainRequestInbox() {
   const { user } = useAuth();
@@ -60,7 +56,6 @@ export default function CaptainRequestInbox() {
   }, [captainTeams, selectedTeamId]);
 
   const teamGame = activeTeam ? GAMES[activeTeam.gameTitle as keyof typeof GAMES] || GAMES.valo : GAMES.valo;
-  const roleSlots = DEFAULT_ROLES[activeTeam?.gameTitle || "valo"] || DEFAULT_ROLES.valo;
 
   useEffect(() => {
     if (!activeTeam || !user) return;
@@ -85,10 +80,12 @@ export default function CaptainRequestInbox() {
 
   if (!activeTeam) return null;
 
+  const refreshTeams = () => {
+    fetchTeamsApi().then((fresh) => setTeams(fresh));
+  };
+
   const pendingMembers = activeTeam.members.filter((m) => m.status === "PENDING");
   const acceptedMembers = activeTeam.members.filter((m) => m.status === "ACCEPTED");
-  const totalSlots = 5;
-  const emptySlotsCount = Math.max(0, totalSlots - acceptedMembers.length);
 
   const handleCopyInvite = () => {
     if (typeof window === "undefined") return;
@@ -233,111 +230,20 @@ export default function CaptainRequestInbox() {
           </div>
         )}
 
-        {/* Tactical 5-Slot Varsity Lineup Grid */}
-        <div className="space-y-3.5 relative z-10">
+        {/* Starting five + bench */}
+        <div className="space-y-3 relative z-10">
           <div className="flex items-center justify-between">
             <h3 className="font-display text-sm font-black uppercase text-white tracking-wider flex items-center gap-2">
               <ShieldIcon className="w-4 h-4 text-primary-brand" />
-              <span>Active Lineup Matrix ({acceptedMembers.length} / {totalSlots} Active)</span>
+              <span>Varsity Lineup</span>
             </h3>
             <span className="text-[10px] font-mono text-slate-400 font-bold">
-              5v5 VARSITY ROSTER
+              {acceptedMembers.length}/{maxRosterFor(activeTeam.gameTitle)} PLAYERS
             </span>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-            {/* Render Confirmed Athletes */}
-            {acceptedMembers.map((m, idx) => (
-              <div 
-                key={m.id} 
-                className="p-4 bg-[#060812] border border-[#1E293B] shadow-inner flex items-center justify-between gap-3 hover:border-primary-brand/70 hover:bg-[#0A0F1D] transition-all duration-200 group/slot relative"
-                style={{
-                  clipPath: "polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%)",
-                }}
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  {/* Octagonal Avatar */}
-                  <div 
-                    className="w-10 h-10 bg-[#121929] text-white flex items-center justify-center font-display font-black text-xs border border-white/10 shrink-0 group-hover/slot:border-primary-brand/60"
-                    style={{
-                      clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
-                    }}
-                  >
-                    {m.displayName.charAt(0).toUpperCase()}
-                  </div>
-
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-display text-xs font-bold uppercase text-white truncate group-hover/slot:text-primary-brand transition-colors">
-                        {m.displayName}
-                      </span>
-                      {idx === 0 && <CrownIcon className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
-                    </div>
-                    <span className="text-[10px] font-mono text-slate-400 block truncate">
-                      {m.gameHandle || "Athlete"}
-                    </span>
-                    <span className="text-[9px] font-mono text-emerald-400 flex items-center gap-1 mt-0.5">
-                      <CheckCircleIcon className="w-2.5 h-2.5 text-emerald-400" />
-                      {roleSlots[idx] || "Starter"}
-                    </span>
-                  </div>
-                </div>
-
-                <span 
-                  className="text-[9px] font-mono font-bold text-slate-300 bg-[#101626] px-2 py-0.5 border border-[#202C45] shrink-0 group-hover/slot:border-primary-brand/40"
-                  style={{
-                    clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-                  }}
-                >
-                  SLOT #{idx + 1}
-                </span>
-              </div>
-            ))}
-
-            {/* Render Vacant Open Roster Slots with Quick Recruit Action */}
-            {Array.from({ length: emptySlotsCount }).map((_, i) => {
-              const slotIdx = acceptedMembers.length + i;
-              const expectedRole = roleSlots[slotIdx] || `Roster Slot ${slotIdx + 1}`;
-              return (
-                <div
-                  key={`empty-${i}`}
-                  onClick={handleCopyInvite}
-                  className="p-4 bg-[#050711]/60 border border-dashed border-[#1E293B] hover:border-primary-brand/60 hover:bg-[#0A0E1A] flex items-center justify-between gap-3 transition-all duration-200 cursor-pointer group/slot"
-                  style={{
-                    clipPath: "polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%)",
-                  }}
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div 
-                      className="w-10 h-10 bg-[#0A0D18] text-slate-500 group-hover/slot:text-primary-brand flex items-center justify-center font-black text-sm border border-dashed border-[#202C45] group-hover/slot:border-primary-brand/50 shrink-0 transition-colors"
-                      style={{
-                        clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
-                      }}
-                    >
-                      <PlusIcon className="w-4 h-4" />
-                    </div>
-
-                    <div className="min-w-0">
-                      <span className="font-display text-xs font-bold uppercase text-slate-400 group-hover/slot:text-white block truncate transition-colors">
-                        Empty Slot #{slotIdx + 1}
-                      </span>
-                      <span className="text-[10px] font-mono text-slate-500 block truncate group-hover/slot:text-slate-300">
-                        {expectedRole}
-                      </span>
-                    </div>
-                  </div>
-
-                  <span 
-                    className="text-[9px] font-mono font-bold text-slate-400 group-hover/slot:text-primary-brand bg-[#0C101E] px-2 py-0.5 border border-[#1A253C] group-hover/slot:border-primary-brand/40 shrink-0 transition-colors"
-                    style={{
-                      clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)",
-                    }}
-                  >
-                    + Recruit
-                  </span>
-                </div>
-              );
-            })}
+          <RosterEditor teamId={activeTeam.id} gameTitle={activeTeam.gameTitle} onChanged={refreshTeams} />
+          <div className="pt-3 border-t border-[#182338]">
+            <TeamCoachStrip teamId={activeTeam.id} coachName={activeTeam.coachName} isCaptain onChanged={refreshTeams} />
           </div>
         </div>
 

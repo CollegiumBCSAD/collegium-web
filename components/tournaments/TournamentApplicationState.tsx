@@ -14,6 +14,7 @@ export default function TournamentApplicationState({
   onWithdraw,
   isApplied = false,
   isApplying = false,
+  myTeams = [],
 }: TournamentApplicationStateProps) {
   const { user } = useAuth();
   const [confirmWithdraw, setConfirmWithdraw] = useState(false);
@@ -21,10 +22,20 @@ export default function TournamentApplicationState({
   const isHost = Boolean(user?.id && (tournament.organizerId === user.id || tournament.organizer?.id === user.id));
   if (tournament.status === "COMPLETED" || user?.role === "ORGANIZER" || user?.role === "ADMIN" || isHost) return null;
 
-  const application = (tournament.applications as Array<{ userId?: string; status?: string }> | undefined)?.find(
-    (app) => app.status !== "REJECTED" && Boolean(user?.id && app.userId === user.id)
+  // An entry belongs to the squad: the coach, captain, and every rostered
+  // player see it, whoever filed it.
+  const myTeamIds = new Set(myTeams.map((t) => t.id));
+  const application = (tournament.applications as Array<{ userId?: string; teamId?: string; status?: string }> | undefined)?.find(
+    (app) =>
+      app.status !== "REJECTED" &&
+      Boolean((app.teamId && myTeamIds.has(app.teamId)) || (user?.id && app.userId === user.id))
   );
   const status = application?.status || (isApplied ? "PENDING" : null);
+  // Withdrawing is the registrar's call: the coach, or the captain when there's none.
+  const entryTeam = myTeams.find((t) => t.id === application?.teamId);
+  const canWithdraw = entryTeam
+    ? Boolean(user?.id && (entryTeam.coachId ? entryTeam.coachId === user.id : entryTeam.captainId === user.id))
+    : Boolean(user?.id && application?.userId === user.id);
 
   if (status === "APPROVED") {
     return (
@@ -67,7 +78,7 @@ export default function TournamentApplicationState({
           <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
           Application pending
         </span>
-        {onWithdraw && (
+        {onWithdraw && canWithdraw && (
           <button
             type="button"
             disabled={isApplying}

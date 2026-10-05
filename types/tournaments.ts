@@ -1,3 +1,4 @@
+import type { Team } from "./teams";
 import type { ReactNode } from "react";
 import { University } from "./auth";
 import type { GameId } from "./games";
@@ -436,6 +437,8 @@ export interface TournamentCardProps {
   onWithdraw?: (tournament: Tournament) => void;
   isApplied?: boolean;
   isApplying?: boolean;
+  /** Squads the viewer coaches, captains, or plays on. */
+  myTeams?: Team[];
 }
 
 export interface TournamentApplicationStateProps {
@@ -444,6 +447,8 @@ export interface TournamentApplicationStateProps {
   onWithdraw?: (tournament: Tournament) => void;
   isApplied?: boolean;
   isApplying?: boolean;
+  /** A squad's entry counts for its whole roster, not just whoever filed it. */
+  myTeams?: Team[];
 }
 
 export interface TournamentsHeroProps {

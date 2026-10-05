@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { AdminUser } from "@/types";
 
-const ROLE_FILTERS = ["All Roles", "ATHLETE", "NON_ATHLETE", "ADMIN"] as const;
+const ROLE_FILTERS = ["All Roles", "ATHLETE", "COACH", "NON_ATHLETE", "ADMIN"] as const;
 
 function nextAction(status: string): { label: string; nextStatus: string; isDanger?: boolean } | null {
   switch (status) {
@@ -23,6 +23,8 @@ function getRoleBadgeStyle(role: string): string {
   switch (role) {
     case "ADMIN":
       return "bg-emerald-500/15 text-emerald-300 border-emerald-500/40";
+    case "COACH":
+      return "bg-sky-500/15 text-sky-300 border-sky-500/40";
     case "NON_ATHLETE":
     case "ORGANIZER":
       return "bg-amber-500/15 text-amber-300 border-amber-500/40";
@@ -43,6 +45,7 @@ export default function UserManagementTable({ users, onUpdateStatus }: UserManag
   const counts = {
     "All Roles": users.length,
     ATHLETE: users.filter((u) => u.role === "ATHLETE").length,
+    COACH: users.filter((u) => u.role === "COACH").length,
     NON_ATHLETE: users.filter((u) => u.role === "NON_ATHLETE").length,
     ADMIN: users.filter((u) => u.role === "ADMIN").length,
   };

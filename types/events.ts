@@ -62,6 +62,19 @@ export interface EventTeam {
   event?: { name: string; gameTitle: EventGameTitle; status: EventStatus };
 }
 
+/** A squad the signed-in user captains, from GET /events/my-squads. */
+export interface MyEventSquad {
+  id: string;
+  name: string;
+  status: EventTeamStatus;
+  reviewNote: string | null;
+  editToken: string;
+  eventId: string;
+  createdAt: string;
+  playerCount: number;
+  event: { name: string; gameTitle: EventGameTitle; status: EventStatus };
+}
+
 export interface EventDocument {
   id: string;
   rosterPlayerId: string;
