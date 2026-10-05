@@ -1,4 +1,7 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+// Routed through next.config.ts's rewrite rather than NEXT_PUBLIC_API_URL
+// directly, so these credentialed requests stay same-origin in the browser —
+// see the comment on that rewrite for why.
+const BASE_URL = "/api";
 
 let _getAccessToken: (() => string | null) | null = null;
 let _onUnauthorized: (() => void) | null = null;
