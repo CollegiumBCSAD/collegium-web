@@ -4,12 +4,14 @@
 const BASE_URL = "/api";
 
 let _getAccessToken: (() => string | null) | null = null;
-let _onUnauthorized: (() => void) | null = null;
+// Receives the token the failed request was sent with, so the caller can
+// ignore a stale 401 from a request that predates a fresh login.
+let _onUnauthorized: ((rejectedToken: string | null) => void) | null = null;
 let _onTokenRefreshed: ((token: string) => void) | null = null;
 
 export function configureApiClient(
   getAccessToken: () => string | null,
-  onUnauthorized: () => void,
+  onUnauthorized: (rejectedToken: string | null) => void,
   onTokenRefreshed?: (token: string) => void
 ) {
   _getAccessToken = getAccessToken;
@@ -32,11 +34,9 @@ async function request<T>(
     ...(options.headers as Record<string, string>),
   };
 
-  if (!skipAuth && _getAccessToken) {
-    const token = _getAccessToken();
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
+  const token = !skipAuth && _getAccessToken ? _getAccessToken() : null;
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
   }
 
   try {
@@ -46,12 +46,12 @@ async function request<T>(
       credentials: "include",
     });
 
-    if (res.status === 401) {
-      if (
-        path !== "/auth/refresh" &&
-        path !== "/auth/login" &&
-        path !== "/auth/register"
-      ) {
+    // A 401 from login/register is a credentials error, not an expired
+    // session — let it fall through so the server's message is surfaced.
+    const isCredentialsRequest = path === "/auth/login" || path === "/auth/register";
+
+    if (res.status === 401 && !isCredentialsRequest) {
+      if (path !== "/auth/refresh") {
         try {
           const refreshRes = await fetch(`${BASE_URL}/auth/refresh`, {
             method: "POST",
@@ -82,7 +82,7 @@ async function request<T>(
       }
 
       if (_onUnauthorized) {
-        _onUnauthorized();
+        _onUnauthorized(token);
       }
       throw new Error("Unauthorized");
     }
