@@ -238,7 +238,6 @@ export interface CoachAuditLogPanelProps {
 
 export interface CoachJoinRequestsPanelProps {
   teamId: string;
-  coachId: string;
   onChanged: () => void;
 }
 

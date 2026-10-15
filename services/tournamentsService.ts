@@ -668,10 +668,6 @@ export const tournamentsService = {
     return apiClient.post(`/tournaments/${tournamentId}/start`, {});
   },
 
-  registerTournament: (tournamentId: string): Promise<unknown> => {
-    return apiClient.post(`/tournaments/${tournamentId}/register`, {});
-  },
-
   closeMatch: (
     tournamentId: string,
     matchId: string,

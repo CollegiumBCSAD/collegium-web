@@ -69,8 +69,8 @@ export const coachService = {
   },
 
   // Same endpoint the captain uses; the server lets a team's coach manage it too.
-  getJoinRequests: (teamId: string, coachId: string): Promise<CoachJoinRequest[]> => {
-    return apiClient.get<CoachJoinRequest[]>(`/teams/${teamId}/requests?captainId=${coachId}`);
+  getJoinRequests: (teamId: string): Promise<CoachJoinRequest[]> => {
+    return apiClient.get<CoachJoinRequest[]>(`/teams/${teamId}/requests`);
   },
 
   // ── Team-side (captain + roster) ──
