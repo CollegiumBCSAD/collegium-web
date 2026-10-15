@@ -34,15 +34,9 @@ function LoginContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
-  const getUniversityFromEmail = (emailStr: string) => {
+  const getEduDomainFromEmail = (emailStr: string) => {
     const domain = emailStr.split("@")[1]?.toLowerCase() || "";
-    if (domain === "umak.edu.ph") return "University of Makati (UMAK)";
-    if (domain === "ust.edu.ph") return "University of Santo Tomas (UST)";
-    if (domain === "dlsu.edu.ph") return "De La Salle University (DLSU)";
-    if (domain === "admu.edu.ph") return "Ateneo de Manila University (ADMU)";
-    if (domain === "up.edu.ph") return "University of the Philippines (UP)";
-    if (domain.endsWith(".edu.ph")) return `${domain.split(".")[0].toUpperCase()} University`;
-    return null;
+    return domain.endsWith(".edu.ph") ? domain : null;
   };
 
   const getAccountRoleInfo = (emailStr: string) => {
@@ -84,7 +78,7 @@ function LoginContent() {
     };
   };
 
-  const detectedUniversity = getUniversityFromEmail(email);
+  const detectedDomain = getEduDomainFromEmail(email);
   const roleInfo = getAccountRoleInfo(email);
 
   // Already signed in (or just signed in): onboarding first, then their home.
@@ -205,7 +199,7 @@ function LoginContent() {
               placeholder="student@umak.edu.ph"
               className="w-full h-11 px-4 rounded-lg bg-background border border-panel-border focus:border-primary-brand text-foreground text-sm font-sans focus:outline-none transition-colors"
             />
-            {detectedUniversity && (
+            {detectedDomain && (
               // One accent for every role: the selected game's brand colour.
               <div className="relative mt-2.5 overflow-hidden rounded-xl border border-primary-brand/30 bg-primary-brand/[0.07] pl-4 pr-3 py-2.5 flex items-center gap-3 animate-page-slide-in">
                 <span aria-hidden className="absolute left-0 inset-y-0 w-[3px] bg-primary-brand shadow-[0_0_10px_var(--primary-brand)]" />
@@ -217,10 +211,10 @@ function LoginContent() {
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-[9px] font-mono font-bold uppercase tracking-[0.2em] text-slate-500">
-                    University detected
+                    Institution domain
                   </span>
                   <span className="block truncate text-xs font-sans font-semibold text-foreground">
-                    {detectedUniversity}
+                    {detectedDomain}
                   </span>
                 </span>
                 <span className="shrink-0 rounded-full border border-primary-brand/40 bg-primary-brand/15 px-2.5 py-1 text-[9px] font-mono font-bold uppercase tracking-[0.15em] text-primary-brand">

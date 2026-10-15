@@ -43,18 +43,12 @@ function RegisterContent() {
   const [isResending, setIsResending] = useState(false);
   const [resendMessage, setResendMessage] = useState("");
 
-  const getUniversityFromEmail = (emailStr: string) => {
+  const getEduDomainFromEmail = (emailStr: string) => {
     const domain = emailStr.split("@")[1]?.toLowerCase() || "";
-    if (domain === "umak.edu.ph") return "University of Makati (UMAK)";
-    if (domain === "ust.edu.ph") return "University of Santo Tomas (UST)";
-    if (domain === "dlsu.edu.ph") return "De La Salle University (DLSU)";
-    if (domain === "admu.edu.ph") return "Ateneo de Manila University (ADMU)";
-    if (domain === "up.edu.ph") return "University of the Philippines (UP)";
-    if (domain.endsWith(".edu.ph")) return `${domain.split(".")[0].toUpperCase()} University`;
-    return null;
+    return domain.endsWith(".edu.ph") ? domain : null;
   };
 
-  const detectedUniversity = getUniversityFromEmail(email);
+  const detectedDomain = getEduDomainFromEmail(email);
   const isEduPh = email.toLowerCase().includes("@") && email.toLowerCase().split("@")[1]?.endsWith(".edu.ph");
 
   useEffect(() => {
@@ -402,11 +396,11 @@ function RegisterContent() {
               placeholder={isOrganizer ? "organizer@umak.edu.ph" : "student@umak.edu.ph"}
               className="w-full h-11 px-4 rounded-xl bg-[#080C14] border border-[#1C2538] focus:border-primary-brand text-white text-sm font-sans focus:outline-none transition-colors"
             />
-            {detectedUniversity && (
+            {detectedDomain && (
               <div className="mt-2 p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30 flex items-center justify-between">
                 <span className="text-[11px] font-mono font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
                   <CheckCircleIcon className="w-3.5 h-3.5 text-emerald-400" />
-                  {detectedUniversity}
+                  {detectedDomain}
                 </span>
                 <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md ${
                   isOrganizer
