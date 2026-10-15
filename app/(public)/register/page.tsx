@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { authService } from "@/services/authService";
+import { PASSWORD_MAX_LENGTH, PASSWORD_RULES, firstFailedPasswordRule } from "@/lib/password";
 import { TrophyIcon, UsersIcon, ShieldIcon, ZapIcon, CheckCircleIcon, AlertTriangleIcon } from "@/components/ui/Icons";
 
 const LOADING_SCREEN = (
@@ -80,8 +81,9 @@ function RegisterContent() {
       setError("Registration requires a valid Philippine institutional email (.edu.ph).");
       return;
     }
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
+    const failedRule = firstFailedPasswordRule(password);
+    if (failedRule) {
+      setError(`Password must meet every requirement: ${failedRule.label.toLowerCase()}.`);
       return;
     }
     if (password !== confirmPassword) {
@@ -422,6 +424,8 @@ function RegisterContent() {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                maxLength={PASSWORD_MAX_LENGTH}
+                aria-describedby="password-rules"
                 placeholder="••••••••"
                 className="w-full h-11 px-4 pr-16 rounded-xl bg-[#080C14] border border-[#1C2538] focus:border-primary-brand text-white text-sm font-sans focus:outline-none transition-colors"
               />
@@ -433,6 +437,20 @@ function RegisterContent() {
                 {showPassword ? "Hide" : "Show"}
               </button>
             </div>
+            <ul id="password-rules" className="mt-2 space-y-1">
+              {PASSWORD_RULES.map((rule) => {
+                const met = rule.test(password);
+                return (
+                  <li
+                    key={rule.label}
+                    className={`flex items-center gap-1.5 text-[11px] font-mono ${met ? "text-emerald-400" : "text-slate-500"}`}
+                  >
+                    <CheckCircleIcon className="w-3 h-3" />
+                    <span>{rule.label}</span>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
 
           <div>
@@ -444,6 +462,7 @@ function RegisterContent() {
                 type={showConfirmPassword ? "text" : "password"}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
+                maxLength={PASSWORD_MAX_LENGTH}
                 placeholder="••••••••"
                 className="w-full h-11 px-4 pr-16 rounded-xl bg-[#080C14] border border-[#1C2538] focus:border-primary-brand text-white text-sm font-sans focus:outline-none transition-colors"
               />
