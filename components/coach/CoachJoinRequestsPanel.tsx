@@ -8,13 +8,13 @@ import OctagonAvatar from "@/components/ui/OctagonAvatar";
 import { UsersIcon } from "@/components/ui/Icons";
 import CoachPanel from "./CoachPanel";
 
-export default function CoachJoinRequestsPanel({ teamId, coachId, onChanged }: CoachJoinRequestsPanelProps) {
+export default function CoachJoinRequestsPanel({ teamId, onChanged }: CoachJoinRequestsPanelProps) {
   const [requests, setRequests] = useState<CoachJoinRequest[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const load = useCallback(() => {
-    coachService.getJoinRequests(teamId, coachId).then(setRequests).catch(() => setRequests([]));
-  }, [teamId, coachId]);
+    coachService.getJoinRequests(teamId).then(setRequests).catch(() => setRequests([]));
+  }, [teamId]);
 
   useEffect(load, [load]);
 
@@ -23,7 +23,7 @@ export default function CoachJoinRequestsPanel({ teamId, coachId, onChanged }: C
   const respond = async (requestId: string, accept: boolean) => {
     setBusyId(requestId);
     try {
-      await teamsService.handleJoinRequest(teamId, requestId, coachId, accept ? "ACCEPTED" : "DECLINED");
+      await teamsService.handleJoinRequest(teamId, requestId, accept ? "ACCEPTED" : "DECLINED");
       load();
       onChanged();
     } finally {

@@ -155,7 +155,7 @@ export default function CoachHubPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] gap-6 items-start">
               <div className="space-y-6">
-                <CoachJoinRequestsPanel teamId={activeDashboard.id} coachId={user.id} onChanged={handleTeamChanged} />
+                <CoachJoinRequestsPanel teamId={activeDashboard.id} onChanged={handleTeamChanged} />
                 <CoachRosterPanel team={activeDashboard} onChanged={handleTeamChanged} />
                 <CoachTournamentPanel team={activeDashboard} onChanged={handleTeamChanged} />
                 <CoachStatsPanel teamId={activeDashboard.id} />

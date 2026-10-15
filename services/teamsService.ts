@@ -4,14 +4,11 @@ import { Team, GameId, JoinRequest } from "@/types";
 export interface CreateTeamDto {
   name: string;
   gameTitle: GameId;
-  universityId: string;
-  captainId: string;
   gameHandle: string;
   preferredRole?: string;
 }
 
 export interface JoinTeamDto {
-  userId: string;
   inviteCode?: string;
   gameHandle: string;
   preferredRole?: string;
@@ -38,23 +35,21 @@ export const teamsService = {
     return apiClient.post<{ success: boolean; message: string; status?: string }>(`/teams/${teamId}/join`, dto);
   },
 
-  getJoinRequests: (teamId: string, captainId: string): Promise<JoinRequest[]> => {
-    return apiClient.get<JoinRequest[]>(`/teams/${teamId}/requests?captainId=${captainId}`);
+  getJoinRequests: (teamId: string): Promise<JoinRequest[]> => {
+    return apiClient.get<JoinRequest[]>(`/teams/${teamId}/requests`);
   },
 
   handleJoinRequest: (
     teamId: string,
     requestId: string,
-    captainId: string,
     status: "ACCEPTED" | "DECLINED"
   ): Promise<{ success: boolean; message: string }> => {
     return apiClient.patch<{ success: boolean; message: string }>(`/teams/${teamId}/requests/${requestId}`, {
-      captainId,
       accept: status === "ACCEPTED",
     });
   },
 
-  leaveTeam: (teamId: string, userId: string): Promise<{ success: boolean; message: string }> => {
-    return apiClient.post<{ success: boolean; message: string }>(`/teams/${teamId}/leave`, { userId });
+  leaveTeam: (teamId: string): Promise<{ success: boolean; message: string }> => {
+    return apiClient.post<{ success: boolean; message: string }>(`/teams/${teamId}/leave`, {});
   },
 };

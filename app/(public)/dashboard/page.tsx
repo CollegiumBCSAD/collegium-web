@@ -37,7 +37,7 @@ export default function DashboardPage() {
   const handleCancelPendingRequest = async (teamId: string) => {
     if (!user) return;
     try {
-      await teamsService.leaveTeam(teamId, user.id);
+      await teamsService.leaveTeam(teamId);
       refreshTeams();
     } catch {}
   };
