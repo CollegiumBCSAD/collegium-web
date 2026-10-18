@@ -169,10 +169,12 @@ export default function TournamentsPage() {
           onOpen={(t) => openTournament(t)}
         />
 
-        {/* Invite-only strip: organizers see the events they run, athletes see
-            the code box and their squads; guests and non-athletes see nothing. */}
+        {/* Invite-only strip: organizers see the events they run, everyone else
+            gets the code box, plus their squads if they're an athlete. */}
         {isLoaded && isLoggedIn && user?.role === "ORGANIZER" && <OrganizerInviteEventsPanel />}
-        {isLoaded && isLoggedIn && user?.role === "ATHLETE" && <InviteEventsPanel />}
+        {isLoaded && user?.role !== "ORGANIZER" && (
+          <InviteEventsPanel showSquads={isLoggedIn && user?.role === "ATHLETE"} />
+        )}
 
         <div className="space-y-6">
           <TournamentsFilterTabs tabs={tabs} active={statusFilter} onChange={setStatusFilter} />
