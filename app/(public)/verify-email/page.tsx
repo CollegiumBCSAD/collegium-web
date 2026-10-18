@@ -47,8 +47,8 @@ function VerifyEmailContent() {
             Email Verified
           </h2>
           <p className="text-xs font-sans text-secondary-text">
-            Your Coach/Manager account is now in the System Administrator&apos;s review queue. You can sign in
-            once it&apos;s approved.
+            Your email is verified, but this account isn&apos;t active. Try signing in to see why, or contact
+            support.
           </p>
           <Link
             href="/login"

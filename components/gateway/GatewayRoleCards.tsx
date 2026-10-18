@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { GatewayFeatureListProps, GatewayRoleCardsProps } from "@/types";
 import { CheckCircleIcon, SwordsIcon, TrophyIcon } from "@/components/ui/Icons";
+import { ORGANIZER_BUTTON_VARS } from "@/lib/organize";
 
 const ATHLETE_FEATURES = [
   "Your team's verified match history",
@@ -25,13 +26,7 @@ const CARD =
 const PRIMARY_CTA =
   "group/cta w-full h-11 game-theme-btn text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg focus-visible:outline-none focus-visible:brightness-110";
 
-// Recalibrated tournament gold for the organizer card: uses white text and rich amber
-// so it matches the high-end esports finish of the primary athlete card.
-const ORGANIZER_CTA_VARS = {
-  "--primary-brand": "#D97706",
-  "--game-glow-rgb": "217, 119, 6",
-  "--game-btn-text": "#FFFFFF",
-} as React.CSSProperties;
+const ORGANIZER_CTA_VARS = ORGANIZER_BUTTON_VARS;
 
 const CTA_ARROW = "transition-transform duration-200 group-hover/cta:translate-x-1";
 

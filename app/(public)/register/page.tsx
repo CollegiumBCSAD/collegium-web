@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { authService } from "@/services/authService";
+import { ORGANIZER_BUTTON_VARS } from "@/lib/organize";
 import { TrophyIcon, UsersIcon, ShieldIcon, ZapIcon, CheckCircleIcon, AlertTriangleIcon } from "@/components/ui/Icons";
 
 const LOADING_SCREEN = (
@@ -20,8 +21,8 @@ function RegisterContent() {
   const { isLoggedIn, isLoaded } = useAuth();
   const { homeRoute } = useOnboarding();
 
-  // Role Selection: "ATHLETE" (registered as NON_ATHLETE until joining roster), "COACH" (Coach/Manager,
-  // admin-approved before first login), or "ORGANIZER" (Instant Tournament Host).
+  // Role Selection: "ATHLETE" (registered as NON_ATHLETE until joining roster), "COACH" (Coach/Manager),
+  // or "ORGANIZER" (Instant Tournament Host).
   // The gateway's organizer card links here with ?as=organizer.
   const [accountType, setAccountType] = useState<"ATHLETE" | "COACH" | "ORGANIZER">(() =>
     searchParams.get("as") === "organizer" ? "ORGANIZER" : "ATHLETE"
@@ -154,11 +155,6 @@ function RegisterContent() {
               We sent a verification link to <span className="text-white font-bold">{registeredEmail}</span>.
               Click it to activate your account — this page won&apos;t log you in until you do.
             </p>
-            {isCoach && (
-              <p className="font-sans text-xs text-amber-300/90">
-                Coach/Manager accounts also need System Administrator approval before you can sign in.
-              </p>
-            )}
           </div>
 
           {resendMessage && (
@@ -216,13 +212,13 @@ function RegisterContent() {
         />
 
         {/* Account Role Switcher Tabs */}
-        <div className="flex border border-[#1C2538] rounded-2xl bg-[#080C14] p-1 gap-2">
+        <div className="flex border border-[#1C2538] rounded-2xl bg-[#080C14] p-1 gap-1">
           <button
             type="button"
             onClick={() => { setAccountType("ATHLETE"); setError(""); }}
-            className={`flex-1 h-11 rounded-xl text-xs font-mono font-bold uppercase tracking-wider flex items-center justify-center gap-2 text-center transition-all cursor-pointer ${
+            className={`flex-1 min-w-0 h-11 px-3 rounded-xl text-xs font-mono font-bold uppercase tracking-wider whitespace-nowrap flex items-center justify-center gap-2 text-center transition-all cursor-pointer ${
               accountType === "ATHLETE"
-                ? "game-theme-btn shadow-md"
+                ? "game-theme-btn shadow-md !rounded-none"
                 : "bg-transparent hover:bg-[#141A29] text-slate-400 hover:text-white"
             }`}
           >
@@ -233,9 +229,9 @@ function RegisterContent() {
           <button
             type="button"
             onClick={() => { setAccountType("COACH"); setError(""); }}
-            className={`flex-1 h-11 rounded-xl text-xs font-mono font-bold uppercase tracking-wider flex items-center justify-center gap-2 text-center transition-all cursor-pointer ${
+            className={`flex-1 min-w-0 h-11 px-3 rounded-xl text-xs font-mono font-bold uppercase tracking-wider whitespace-nowrap flex items-center justify-center gap-2 text-center transition-all cursor-pointer ${
               isCoach
-                ? "game-theme-btn shadow-md"
+                ? "game-theme-btn shadow-md !rounded-none"
                 : "bg-transparent hover:bg-[#141A29] text-slate-400 hover:text-white"
             }`}
           >
@@ -246,11 +242,12 @@ function RegisterContent() {
           <button
             type="button"
             onClick={() => { setAccountType("ORGANIZER"); setError(""); }}
-            className={`flex-1 h-11 rounded-xl text-xs font-mono font-bold uppercase tracking-wider flex items-center justify-center gap-2 text-center transition-all cursor-pointer ${
+            className={`flex-1 min-w-0 h-11 px-3 rounded-xl text-xs font-mono font-bold uppercase tracking-wider whitespace-nowrap flex items-center justify-center gap-2 text-center transition-all cursor-pointer ${
               isOrganizer
-                ? "bg-gradient-to-r from-amber-500 to-amber-600 text-black font-black shadow-md"
+                ? "game-theme-btn shadow-md !rounded-none"
                 : "bg-transparent hover:bg-[#141A29] text-slate-400 hover:text-white"
             }`}
+            style={isOrganizer ? ORGANIZER_BUTTON_VARS : undefined}
           >
             <TrophyIcon className="w-4 h-4 text-inherit hidden sm:block" />
             <span>Tournament Host</span>
@@ -290,11 +287,11 @@ function RegisterContent() {
             <ShieldIcon className="w-4 h-4 text-primary-brand shrink-0 mt-0.5" />
             <div>
               <span className="font-bold text-white block uppercase font-mono text-[11px] tracking-wider">
-                Requires Admin Approval
+                Separate Coach Account
               </span>
               <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
-                Coach accounts are separate from athlete accounts and enter a review queue. You can sign in once a
-                System Administrator approves your request.
+                Coach accounts are separate from athlete accounts. Verify your university email and you can sign in
+                right away.
               </p>
             </div>
           </div>
@@ -467,21 +464,18 @@ function RegisterContent() {
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full h-11 text-xs font-mono font-black uppercase tracking-wider transition-all active:scale-[0.98] shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 rounded-xl ${
-                isOrganizer
-                  ? "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black shadow-amber-500/20"
-                  : "game-theme-btn shadow-md"
-              }`}
+              className="game-theme-btn !rounded-none w-full h-11 text-xs font-mono font-black uppercase tracking-wider transition-all active:scale-[0.98] shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              style={isOrganizer ? ORGANIZER_BUTTON_VARS : undefined}
             >
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
               ) : isOrganizer ? (
                 <>
-                  <TrophyIcon className="w-4 h-4 text-black" />
+                  <TrophyIcon className="w-4 h-4" />
                   <span>Create Organizer Account & Access Hub</span>
                 </>
               ) : isCoach ? (
-                <span>Submit Coach Account for Approval</span>
+                <span>Create Coach Account</span>
               ) : (
                 <span>Create Student Athlete Account</span>
               )}

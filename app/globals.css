@@ -154,6 +154,8 @@ button:active, a:active {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   clip-path: polygon(12px 0, 100% 0, calc(100% - 12px) 100%, 0 100%) !important;
+  /* Sharp parallelogram everywhere, even where a rounded-* utility is also applied. */
+  border-radius: 0 !important;
   box-shadow: 
     inset 0 1px 1px rgba(255, 255, 255, 0.6),
     inset 0 -2px 4px rgba(0, 0, 0, 0.5),

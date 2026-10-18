@@ -17,7 +17,7 @@ export interface AuthTokens {
   access_token: string;
 }
 
-// A coach awaiting admin approval verifies their email without being signed in.
+// A non-active account (e.g. suspended) verifies its email without being signed in.
 export type VerifyEmailResult = AuthTokens | { pendingApproval: true };
 
 export const authService = {
