@@ -1,241 +1,217 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { CSSProperties } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { tournamentsService, scrimsService, coachService } from "@/services";
-import { mockFlaggedMatches } from "@/lib/mock/admin";
-import { AdminNavItem, AdminSidebarProps } from "@/types";
+import { useAdminQueueCounts } from "@/lib/useAdminQueueCounts";
+import { AdminNavGroup, AdminNavItem, AdminSidebarProps } from "@/types";
+import BrandEmblem from "@/components/ui/BrandEmblem";
 import {
-  TrophyIcon,
-  SwordsIcon,
-  UsersIcon,
-  ShieldIcon,
-  FlameIcon,
   AlertTriangleIcon,
+  FlameIcon,
+  LayoutGridIcon,
+  ShieldIcon,
+  SwordsIcon,
+  TrophyIcon,
+  UsersIcon,
 } from "@/components/ui/Icons";
+
+// Tints the shared Collegium mark emerald for the admin console.
+const ADMIN_BRAND = { "--primary-brand": "#34D399", "--game-glow-rgb": "52, 211, 153" } as CSSProperties;
+
+const BADGE: Record<NonNullable<AdminNavItem["badgeType"]>, string> = {
+  alert: "bg-rose-500/15 text-rose-300 ring-rose-500/30",
+  warning: "bg-amber-400/15 text-amber-300 ring-amber-400/30",
+  neutral: "bg-white/[0.06] text-neutral-400 ring-white/10",
+};
 
 export default function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
   const pathname = usePathname();
   const { user, logoutUser } = useAuth();
-  const [pendingTournamentsCount, setPendingTournamentsCount] = useState<number>(0);
-  const [scrimsCount, setScrimsCount] = useState<number>(0);
-  const [pendingCoachesCount, setPendingCoachesCount] = useState<number>(0);
+  const { counts, pendingTotal } = useAdminQueueCounts(pathname);
 
-  useEffect(() => {
-    tournamentsService
-      .getPendingTournaments()
-      .then((tourneys) => setPendingTournamentsCount(tourneys.length))
-      .catch(() => setPendingTournamentsCount(0));
-
-    scrimsService
-      .getScrims()
-      .then((scrims) => setScrimsCount(scrims.length))
-      .catch(() => setScrimsCount(0));
-
-    coachService
-      .getApplications()
-      .then((apps) => setPendingCoachesCount(apps.length))
-      .catch(() => setPendingCoachesCount(0));
-  }, [pathname]);
-
-  const NAV_ITEMS: AdminNavItem[] = [
+  const GROUPS: AdminNavGroup[] = [
     {
-      label: "Command Hub",
-      href: "/admin",
-      icon: (
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-        </svg>
-      ),
+      label: "Overview",
+      items: [{ label: "Command Hub", href: "/admin", icon: <LayoutGridIcon className="w-4 h-4" /> }],
     },
     {
-      label: "Tournaments",
-      href: "/admin/tournaments",
-      icon: <TrophyIcon className="w-4 h-4" />,
-      badge: pendingTournamentsCount,
-      badgeType: "warning",
+      label: "Review queues",
+      items: [
+        {
+          label: "Tournaments",
+          href: "/admin/tournaments",
+          icon: <TrophyIcon className="w-4 h-4" />,
+          // Tournaments and invite-only events share one review page.
+          badge: counts.tournaments + counts.events,
+          badgeType: "warning",
+        },
+        {
+          label: "Coach Approvals",
+          href: "/admin/coaches",
+          icon: <ShieldIcon className="w-4 h-4" />,
+          badge: counts.coaches,
+          badgeType: "warning",
+        },
+        {
+          label: "Match Disputes",
+          href: "/admin/disputes",
+          icon: <AlertTriangleIcon className="w-4 h-4" />,
+          badge: counts.disputes,
+          badgeType: "alert",
+        },
+      ],
     },
     {
-      label: "Universities",
-      href: "/admin/universities",
-      icon: <ShieldIcon className="w-4 h-4" />,
+      label: "Circuit",
+      items: [
+        { label: "Universities", href: "/admin/universities", icon: <ShieldIcon className="w-4 h-4" /> },
+        { label: "Rosters & Users", href: "/admin/users", icon: <UsersIcon className="w-4 h-4" /> },
+        {
+          label: "Scrim Board",
+          href: "/admin/scrim-board",
+          icon: <SwordsIcon className="w-4 h-4" />,
+          badge: counts.scrims,
+          badgeType: "neutral",
+        },
+      ],
     },
     {
-      label: "Scrim Board",
-      href: "/admin/scrim-board",
-      icon: <SwordsIcon className="w-4 h-4" />,
-      badge: scrimsCount,
-      badgeType: "neutral",
-    },
-    {
-      label: "Rosters & Users",
-      href: "/admin/users",
-      icon: <UsersIcon className="w-4 h-4" />,
-    },
-    {
-      label: "Coach Approvals",
-      href: "/admin/coaches",
-      icon: <ShieldIcon className="w-4 h-4" />,
-      badge: pendingCoachesCount,
-      badgeType: "warning",
-    },
-    {
-      label: "Campus Newsfeed",
-      href: "/admin/newsfeed",
-      icon: <FlameIcon className="w-4 h-4" />,
-    },
-    {
-      label: "Match Disputes",
-      href: "/admin/disputes",
-      icon: <AlertTriangleIcon className="w-4 h-4" />,
-      badge: mockFlaggedMatches.length,
-      badgeType: "alert",
+      label: "Content",
+      items: [{ label: "Campus Newsfeed", href: "/admin/newsfeed", icon: <FlameIcon className="w-4 h-4" /> }],
     },
   ];
 
+  const isActive = (href: string) => pathname === href || (href !== "/admin" && pathname.startsWith(href));
+
   return (
     <aside
-      className={`w-64 shrink-0 bg-[#050505]/95 backdrop-blur-xl border-r border-[#171717] flex flex-col h-full z-50 shadow-2xl fixed lg:relative inset-y-0 left-0 transition-transform duration-200 ease-out ${
+      className={`fixed inset-y-0 left-0 z-50 flex h-full w-64 shrink-0 flex-col border-r border-white/[0.06] bg-[#060807]/95 backdrop-blur-xl transition-transform duration-200 ease-out lg:relative lg:translate-x-0 ${
         open ? "translate-x-0" : "-translate-x-full"
-      } lg:translate-x-0`}
+      }`}
     >
-      {/* Brand Header */}
-      <div className="p-4 border-b border-[#171717] bg-[#070707]/90">
-        <div className="flex items-center justify-between gap-2">
-          <Link href="/admin" onClick={onClose} className="flex items-center gap-2.5 group min-w-0">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center font-display font-black text-black text-sm shadow-[0_0_15px_rgba(52,211,153,0.35)] group-hover:scale-105 transition-transform shrink-0">
-              C
-            </div>
-            <div className="min-w-0">
-              <span className="font-display text-xs font-bold tracking-wider text-white block uppercase">
-                COLLEGIUM
-              </span>
-              <span className="text-[9px] font-mono font-medium tracking-widest text-emerald-400 block uppercase">
-                ADMIN CONSOLE
-              </span>
-            </div>
-          </Link>
-          <div className="flex items-center gap-1.5 shrink-0">
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" />
-              <span className="text-[9px] font-mono text-emerald-400 font-bold">ONLINE</span>
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="lg:hidden flex h-8 w-8 items-center justify-center rounded-lg border border-[#262626] bg-[#0A0A0A] text-neutral-400 hover:text-white"
-              aria-label="Close admin navigation"
-            >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
+      {/* Brand */}
+      <div className="flex items-center justify-between gap-2 px-4 py-4">
+        <Link href="/admin" onClick={onClose} className="group flex min-w-0 items-center gap-2.5" style={ADMIN_BRAND}>
+          <BrandEmblem size={30} className="shrink-0 transition-transform group-hover:scale-105" />
+          <span className="min-w-0">
+            <span className="block font-display text-sm font-black uppercase tracking-wider text-white">Collegium</span>
+            <span className="block font-mono text-[9px] font-bold uppercase tracking-[0.25em] text-emerald-400">Admin console</span>
+          </span>
+        </Link>
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 text-neutral-400 hover:text-white lg:hidden"
+          aria-label="Close admin navigation"
+        >
+          ✕
+        </button>
       </div>
 
-      {/* Moderation Desk Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-4 overflow-y-auto">
-        <div className="space-y-1">
-          <div className="px-3 pb-2 flex items-center justify-between">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-neutral-500">
-              MODERATION DESK
-            </span>
-          </div>
+      {/* What's waiting */}
+      <div className="px-3">
+        <Link
+          href="/admin"
+          onClick={onClose}
+          className={`flex items-center gap-3 rounded-xl border px-3.5 py-3 transition-colors ${
+            pendingTotal > 0
+              ? "border-amber-400/25 bg-amber-400/[0.06] hover:border-amber-400/45"
+              : "border-emerald-500/20 bg-emerald-500/[0.05] hover:border-emerald-500/40"
+          }`}
+        >
+          <span className={`font-display text-2xl font-black tabular-nums leading-none ${pendingTotal > 0 ? "text-amber-300" : "text-emerald-300"}`}>
+            {pendingTotal}
+          </span>
+          <span className="min-w-0 text-[11px] leading-tight text-neutral-400">
+            {pendingTotal > 0 ? (
+              <>
+                <span className="block font-semibold text-neutral-200">Waiting for review</span>
+                across all queues
+              </>
+            ) : (
+              <>
+                <span className="block font-semibold text-neutral-200">All caught up</span>
+                no pending reviews
+              </>
+            )}
+          </span>
+        </Link>
+      </div>
 
-          <div className="space-y-1">
-            {NAV_ITEMS.map((item) => {
-              const isActive =
-                pathname === item.href ||
-                (item.href !== "/admin" && pathname.startsWith(item.href));
-
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={onClose}
-                  className={`flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-sans font-medium transition-all group ${
-                    isActive
-                      ? "bg-emerald-500/10 text-emerald-400 font-semibold border border-emerald-500/25 shadow-sm"
-                      : "text-neutral-400 hover:text-white hover:bg-white/[0.04] border border-transparent"
-                  }`}
-                >
-                  <span
-                    className={`transition-colors shrink-0 ${
-                      isActive
-                        ? "text-emerald-400"
-                        : "text-neutral-500 group-hover:text-neutral-300"
-                    }`}
-                  >
-                    {item.icon}
-                  </span>
-
-                  <span className="flex-1 truncate">{item.label}</span>
-
-                  {typeof item.badge === "number" && item.badge > 0 && (
-                    <span
-                      className={`min-w-5 h-5 px-1.5 rounded-md text-[10px] font-mono font-bold flex items-center justify-center border shrink-0 ${
-                        item.badgeType === "alert"
-                          ? "bg-rose-500/15 border-rose-500/30 text-rose-300"
-                          : item.badgeType === "warning"
-                          ? "bg-amber-500/15 border-amber-500/30 text-amber-300"
-                          : "bg-[#171717] border-[#262626] text-neutral-400"
+      {/* Navigation */}
+      <nav className="mt-4 flex-1 space-y-5 overflow-y-auto px-3 pb-4">
+        {GROUPS.map((group) => (
+          <div key={group.label}>
+            <p className="px-3 pb-1.5 font-mono text-[9px] font-bold uppercase tracking-[0.25em] text-neutral-600">{group.label}</p>
+            <ul className="space-y-0.5">
+              {group.items.map((item) => {
+                const active = isActive(item.href);
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      onClick={onClose}
+                      className={`group relative flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-colors ${
+                        active ? "bg-emerald-500/10 font-semibold text-white" : "text-neutral-400 hover:bg-white/[0.04] hover:text-white"
                       }`}
                     >
-                      {item.badge}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
+                      {active && <span aria-hidden className="absolute inset-y-1.5 left-0 w-[3px] rounded-r bg-emerald-400" />}
+                      <span className={active ? "text-emerald-400" : "text-neutral-500 group-hover:text-neutral-300"}>{item.icon}</span>
+                      <span className="flex-1 truncate">{item.label}</span>
+                      {typeof item.badge === "number" && item.badge > 0 && (
+                        <span
+                          className={`min-w-5 rounded-md px-1.5 py-0.5 text-center font-mono text-[10px] font-bold ring-1 ${BADGE[item.badgeType ?? "neutral"]}`}
+                        >
+                          {item.badge}
+                        </span>
+                      )}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
-        </div>
-
-        {/* Quick App Link */}
-        <div className="pt-3 border-t border-[#171717]">
-          <Link
-            href="/dashboard"
-            onClick={onClose}
-            className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-[#0A0A0A] hover:bg-[#141414] text-neutral-400 hover:text-white border border-[#1A1A1A] hover:border-[#2A2A2A] text-xs font-sans transition-all group"
-          >
-            <span>Exit to Main App</span>
-            <span className="text-emerald-400 group-hover:translate-x-1 transition-transform">→</span>
-          </Link>
-        </div>
+        ))}
       </nav>
 
-      {/* Admin Profile Footer */}
-      {user && (
-        <div className="p-3 border-t border-[#171717] bg-[#050505]/95">
-          <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A]">
-            <div className="w-7 h-7 rounded-lg bg-emerald-400 text-black flex items-center justify-center font-display font-black text-xs shrink-0 shadow-sm overflow-hidden">
+      {/* Footer */}
+      <div className="space-y-2 border-t border-white/[0.06] p-3">
+        <Link
+          href="/dashboard"
+          onClick={onClose}
+          className="group flex items-center justify-between rounded-lg px-3 py-2 text-xs text-neutral-400 transition-colors hover:bg-white/[0.04] hover:text-white"
+        >
+          Back to main app
+          <span className="text-emerald-400 transition-transform group-hover:translate-x-0.5">→</span>
+        </Link>
+        {user && (
+          <div className="flex items-center gap-2.5 rounded-xl border border-white/[0.06] bg-white/[0.02] p-2.5">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-emerald-400 font-display text-xs font-black text-black">
               {user.avatar ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={user.avatar} alt={user.displayName} className="w-full h-full object-cover" />
+                <img src={user.avatar} alt="" className="h-full w-full object-cover" />
               ) : (
                 user.displayName.charAt(0).toUpperCase()
               )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-display font-bold text-white truncate">
-                {user.displayName}
-              </p>
-              <span className="text-[9px] font-mono text-emerald-400 block uppercase font-bold">
-                ROOT CLEARANCE
-              </span>
-            </div>
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-xs font-semibold text-white">{user.displayName}</span>
+              <span className="block font-mono text-[9px] font-bold uppercase tracking-widest text-emerald-400">Administrator</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => logoutUser()}
+              title="Sign out"
+              aria-label="Sign out"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 transition-colors hover:bg-rose-500/10 hover:text-rose-300"
+            >
+              ⏻
+            </button>
           </div>
-          <button
-            onClick={() => logoutUser()}
-            className="w-full mt-2 px-3 py-1.5 rounded-lg text-left text-[10px] font-mono font-medium uppercase text-neutral-400 hover:text-rose-400 hover:bg-[#190D10] transition-colors cursor-pointer flex items-center justify-between"
-          >
-            <span>Terminate Session</span>
-            <span>⏻</span>
-          </button>
-        </div>
-      )}
+        )}
+      </div>
     </aside>
   );
 }

@@ -49,19 +49,13 @@ function AdminGate({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen bg-[#000000] text-white selection:bg-emerald-500/30 selection:text-emerald-300 font-sans antialiased relative overflow-hidden admin-theme">
-      {/* Top Radiant Emerald Spotlight (Emphasized) */}
-      <div className="fixed top-0 left-0 right-0 h-[500px] bg-[radial-gradient(ellipse_75%_50%_at_50%_-10%,rgba(16,185,129,0.24),transparent_75%)] pointer-events-none z-0" />
-
-      {/* Secondary Ambient Corner Aura Glows */}
-      <div className="fixed top-[10%] right-[-5%] w-[650px] h-[500px] bg-emerald-500/12 rounded-full blur-[150px] pointer-events-none z-0 animate-pulse" style={{ animationDuration: "8s" }} />
-      <div className="fixed bottom-[-100px] left-[30%] w-[550px] h-[400px] bg-teal-500/8 rounded-full blur-[140px] pointer-events-none z-0" />
-
-      {/* Subtle Tactical Tech Grid Overlay */}
-      <div className="fixed inset-0 bg-[radial-gradient(#1B3828_1px,transparent_1px)] [background-size:28px_28px] opacity-20 pointer-events-none z-0" />
+    <div className="flex h-screen bg-[#040605] text-white selection:bg-emerald-500/30 selection:text-emerald-300 font-sans antialiased relative overflow-hidden admin-theme">
+      {/* One soft emerald wash and a faint dot grid; content stays the focus. */}
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-0 h-[420px] bg-[radial-gradient(ellipse_70%_55%_at_50%_-15%,rgba(16,185,129,0.14),transparent_75%)]" />
+      <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(rgba(255,255,255,0.035)_1px,transparent_1px)] [background-size:24px_24px]" />
 
       {/* Mobile top bar */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-[#171717] bg-[#050505]/95 px-3 backdrop-blur-xl">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-white/[0.06] bg-[#060807]/95 px-3 backdrop-blur-xl">
         <button
           type="button"
           onClick={() => setNavOpen(true)}
@@ -73,18 +67,9 @@ function AdminGate({ children }: { children: React.ReactNode }) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
-        <div className="min-w-0 flex-1">
-          <p className="font-display text-xs font-bold uppercase tracking-wider text-white truncate">
-            Collegium Admin
-          </p>
-          <p className="text-[9px] font-mono uppercase tracking-widest text-emerald-400">
-            Moderation Desk
-          </p>
-        </div>
-        <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 shrink-0">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" />
-          <span className="text-[9px] font-mono text-emerald-400 font-bold">ONLINE</span>
-        </span>
+        <p className="min-w-0 flex-1 truncate font-display text-sm font-black uppercase tracking-wider text-white">
+          Collegium <span className="text-emerald-400">Admin</span>
+        </p>
       </div>
 
       {navOpen && (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Tournament } from "@/types";
+import { Tournament, TournamentModerationPanelProps } from "@/types";
 import { tournamentsService, adminService } from "@/services";
 import { GAMES, GAME_LIST } from "@/lib/games";
 import {
@@ -12,14 +12,15 @@ import {
 
 import { bracketFormatLabel } from "@/lib/hostTournament";
 
-interface TournamentModerationPanelProps {
-  initialTournaments?: Tournament[];
-}
-
 export default function TournamentModerationPanel({
   initialTournaments = [],
+  onCountChange,
 }: TournamentModerationPanelProps) {
   const [tournaments, setTournaments] = useState<Tournament[]>(initialTournaments);
+
+  useEffect(() => {
+    onCountChange?.(tournaments.length);
+  }, [tournaments.length, onCountChange]);
   const [loading, setLoading] = useState(initialTournaments.length === 0);
   const [activeGameFilter, setActiveGameFilter] = useState("all");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -222,16 +223,14 @@ export default function TournamentModerationPanel({
           <p>Querying collegiate circuit sanctioning database...</p>
         </div>
       ) : filteredTournaments.length === 0 ? (
-        <div className="py-20 text-center rounded-3xl border border-[#1A1A1A] bg-[#0A0A0A] p-8 space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-[#141414] border border-[#222222] text-neutral-500 mx-auto flex items-center justify-center">
-            <TrophyIcon className="w-6 h-6" />
+        <div className="flex items-center gap-4 rounded-xl border border-dashed border-white/10 px-6 py-8">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/25">
+            <TrophyIcon className="h-5 w-5" />
           </div>
-          <h3 className="font-display text-base font-bold text-white uppercase tracking-wider">
-            Review Queue Clean
-          </h3>
-          <p className="text-xs font-mono text-neutral-500 max-w-md mx-auto">
-            All organizer-submitted tournaments have been audited and resolved. New sanction requests will appear here automatically.
-          </p>
+          <div>
+            <h3 className="font-display text-base font-black uppercase tracking-wide text-white">All caught up</h3>
+            <p className="text-sm text-neutral-500">No tournaments waiting for sanction. New submissions show up here automatically.</p>
+          </div>
         </div>
       ) : (
         <div className="space-y-4">

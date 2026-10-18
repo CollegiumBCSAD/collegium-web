@@ -1,11 +1,14 @@
 "use client";
 
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
+import { useConfirm } from "@/context/ConfirmContext";
 import { useEffect, useState } from "react";
 import { CoachApplication } from "@/types";
 import { coachService } from "@/services";
 import CoachApprovalQueue from "@/components/admin/CoachApprovalQueue";
 
 export default function AdminCoachesPage() {
+  const confirm = useConfirm();
   const [applications, setApplications] = useState<CoachApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -19,6 +22,7 @@ export default function AdminCoachesPage() {
   }, []);
 
   const handleReview = async (userId: string, approve: boolean) => {
+    if (!(await confirm(approve ? { title: "Approve this coach?", message: "They'll be able to sign in and manage squads.", confirmLabel: "Approve" } : { title: "Deny this coach?", message: "Their coach account request will be declined.", confirmLabel: "Deny", tone: "danger" }))) return;
     setError("");
     try {
       await coachService.reviewApplication(userId, approve);
@@ -29,21 +33,12 @@ export default function AdminCoachesPage() {
   };
 
   return (
-    <div className="p-6 sm:p-8 lg:p-10 space-y-6 max-w-5xl">
-      <div className="border-b border-[#1A1A1A] pb-5">
-        <div className="flex items-center gap-2 mb-1.5">
-          <span className="text-[10px] font-mono font-bold tracking-widest text-emerald-400 uppercase px-3 py-0.5 bg-emerald-500/10 border border-emerald-500/30 rounded-full">
-            COACH / MANAGER TIER
-          </span>
-        </div>
-        <h1 className="font-display text-2xl sm:text-3xl font-black tracking-tight text-white uppercase">
-          Coach Approvals
-        </h1>
-        <p className="font-sans text-xs sm:text-sm text-neutral-400 mt-1 max-w-2xl leading-relaxed">
-          Coach accounts can&apos;t sign in until approved here. Denied coaches may reapply by registering again with
-          the same email.
-        </p>
-      </div>
+    <div className="mx-auto w-full max-w-6xl space-y-8 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
+      <AdminPageHeader
+        eyebrow="Review queue"
+        title="Coach approvals"
+        description="Coach accounts can't sign in until approved here. Denied coaches may reapply by registering again with the same email."
+      />
 
       {error && <p className="text-xs font-sans text-rose-400">{error}</p>}
 
