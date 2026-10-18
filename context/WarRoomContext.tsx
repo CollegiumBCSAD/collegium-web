@@ -1,7 +1,9 @@
 "use client";
 
 import { createContext, useContext, useState, useCallback, ReactNode } from "react";
-import { ScrimOffer } from "@/types";
+import { ScrimOffer, TournamentBracketModalProps } from "@/types";
+
+type TournamentTab = NonNullable<TournamentBracketModalProps["initialTab"]>;
 
 interface WarRoomState {
   scrim: ScrimOffer;
@@ -13,7 +15,9 @@ interface WarRoomContextType {
   openWarRoom: (scrim: ScrimOffer, isHost: boolean) => void;
   closeWarRoom: () => void;
   activeTournamentBracketId: string | null;
-  openTournamentBracket: (tournamentId: string) => void;
+  activeTournamentTab: TournamentTab;
+  /** Opens the global bracket modal; pass "channel" to land in its chat. */
+  openTournamentBracket: (tournamentId: string, tab?: TournamentTab) => void;
   closeTournamentBracket: () => void;
 }
 
@@ -22,6 +26,7 @@ const WarRoomContext = createContext<WarRoomContextType | undefined>(undefined);
 export function WarRoomProvider({ children }: { children: ReactNode }) {
   const [activeWarRoom, setActiveWarRoom] = useState<WarRoomState | null>(null);
   const [activeTournamentBracketId, setActiveTournamentBracketId] = useState<string | null>(null);
+  const [activeTournamentTab, setActiveTournamentTab] = useState<TournamentTab>("bracket");
 
   const openWarRoom = useCallback((scrim: ScrimOffer, isHost: boolean) => {
     setActiveWarRoom({ scrim, isHost });
@@ -31,7 +36,8 @@ export function WarRoomProvider({ children }: { children: ReactNode }) {
     setActiveWarRoom(null);
   }, []);
 
-  const openTournamentBracket = useCallback((tournamentId: string) => {
+  const openTournamentBracket = useCallback((tournamentId: string, tab: TournamentTab = "bracket") => {
+    setActiveTournamentTab(tab);
     setActiveTournamentBracketId(tournamentId);
   }, []);
 
@@ -46,6 +52,7 @@ export function WarRoomProvider({ children }: { children: ReactNode }) {
         openWarRoom,
         closeWarRoom,
         activeTournamentBracketId,
+        activeTournamentTab,
         openTournamentBracket,
         closeTournamentBracket,
       }}

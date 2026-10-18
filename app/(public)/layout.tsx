@@ -437,13 +437,14 @@ function GlobalWarRoomModal() {
 }
 
 function GlobalTournamentModal() {
-  const { activeTournamentBracketId, closeTournamentBracket } = useWarRoom();
+  const { activeTournamentBracketId, activeTournamentTab, closeTournamentBracket } = useWarRoom();
 
   return (
     <TournamentBracketModal
       isOpen={!!activeTournamentBracketId}
       onClose={closeTournamentBracket}
       tournamentId={activeTournamentBracketId ?? undefined}
+      initialTab={activeTournamentTab}
       title="TOURNAMENT WAR ROOM & BRACKET"
       subtitle="SANCTIONED COLLEGIATE CIRCUIT"
     />
