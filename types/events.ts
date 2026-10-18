@@ -142,3 +142,28 @@ export interface InviteEventsPanelProps {
   /** Squads are matched to a signed-in athlete's account; everyone else only gets the code box. */
   showSquads?: boolean;
 }
+
+/** An approved intra event as anyone can see it: no invite code. */
+export interface PublicEventSummary {
+  id: string;
+  name: string;
+  gameTitle: EventGameTitle;
+  bracketFormat: EventBracketFormat;
+  status: EventStatus;
+  signupsCloseAt: string | null;
+  createdAt: string;
+  organizer: { displayName: string };
+  _count: { teams: number; matches: number };
+}
+
+export interface IntraEventCardProps {
+  event: PublicEventSummary;
+}
+
+export type TournamentScope = "CIRCUIT" | "INTRA";
+
+export interface TournamentScopeToggleProps {
+  scope: TournamentScope;
+  intraCount: number;
+  onChange: (scope: TournamentScope) => void;
+}

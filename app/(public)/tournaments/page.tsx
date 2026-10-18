@@ -10,10 +10,14 @@ import SquadRegistrationModal from "@/components/tournaments/SquadRegistrationMo
 import TournamentCard from "@/components/tournaments/TournamentCard";
 import TournamentsHero from "@/components/tournaments/TournamentsHero";
 import TournamentsFilterTabs from "@/components/tournaments/TournamentsFilterTabs";
+import TournamentScopeToggle from "@/components/tournaments/TournamentScopeToggle";
+import IntraEventCard from "@/components/events/IntraEventCard";
+import { eventsService } from "@/services/eventsService";
+import { GAME_ID_TO_ENUM } from "@/lib/games";
 import InviteEventsPanel from "@/components/events/InviteEventsPanel";
 import OrganizerInviteEventsPanel from "@/components/events/OrganizerInviteEventsPanel";
 import { TournamentCardSkeleton } from "@/components/ui/Skeleton";
-import { Team, Tournament, TournamentDetailTab } from "@/types";
+import { Team, Tournament, TournamentDetailTab, PublicEventSummary, TournamentScope } from "@/types";
 import { fetchTeamsApi } from "@/lib/teams";
 import { tournamentsService } from "@/services";
 import { GAMES, getGameInfo } from "@/lib/games";
@@ -32,6 +36,8 @@ export default function TournamentsPage() {
   const [appliedIds, setAppliedIds] = useState<string[]>([]);
   const [applyingId, setApplyingId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [scope, setScope] = useState<TournamentScope>("CIRCUIT");
+  const [intraEvents, setIntraEvents] = useState<PublicEventSummary[] | null>(null);
   const [myTeams, setMyTeams] = useState<Team[]>([]);
 
   const loadTournaments = useCallback(() => {
@@ -142,6 +148,37 @@ export default function TournamentsPage() {
     return gameTournaments.filter((t) => t.status === statusFilter);
   }, [gameTournaments, statusFilter, isMine]);
 
+  // Intra (department) events are public to spectate; fetched per game title.
+  const gameEnum = GAME_ID_TO_ENUM[game.id];
+  useEffect(() => {
+    let cancelled = false;
+    eventsService
+      .getPublicEvents(gameEnum)
+      .then((list) => !cancelled && setIntraEvents(list))
+      .catch(() => !cancelled && setIntraEvents([]));
+    return () => {
+      cancelled = true;
+    };
+  }, [gameEnum]);
+
+  // Circuit statuses mapped onto an event's lifecycle.
+  const intraStatus = (e: PublicEventSummary) =>
+    e.status === "ONGOING" ? "LIVE" : e.status === "COMPLETED" ? "COMPLETED" : "UPCOMING";
+  const intraVisible = useMemo(
+    () => (intraEvents ?? []).filter((e) => statusFilter === "ALL" || intraStatus(e) === statusFilter),
+    [intraEvents, statusFilter],
+  );
+  const intraTabs = useMemo(() => {
+    const list = intraEvents ?? [];
+    const count = (s: string) => list.filter((e) => intraStatus(e) === s).length;
+    return [
+      { id: "ALL", label: "All", count: list.length },
+      { id: "LIVE", label: "Live", count: count("LIVE") },
+      { id: "UPCOMING", label: "Upcoming", count: count("UPCOMING") },
+      { id: "COMPLETED", label: "Completed", count: count("COMPLETED") },
+    ];
+  }, [intraEvents]);
+
   const tabs = useMemo(() => {
     const mine = gameTournaments.filter(isMine).length;
     const count = (s: string) => gameTournaments.filter((t) => t.status === s).length;
@@ -177,9 +214,42 @@ export default function TournamentsPage() {
         )}
 
         <div className="space-y-6">
-          <TournamentsFilterTabs tabs={tabs} active={statusFilter} onChange={setStatusFilter} />
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <TournamentsFilterTabs
+              tabs={scope === "INTRA" ? intraTabs : tabs}
+              active={statusFilter}
+              onChange={setStatusFilter}
+            />
+            <TournamentScopeToggle
+              scope={scope}
+              intraCount={intraEvents?.length ?? 0}
+              onChange={(next) => {
+                setScope(next);
+                setStatusFilter("ALL");
+              }}
+            />
+          </div>
 
-          {isLoading ? (
+          {scope === "INTRA" ? (
+            intraEvents === null ? (
+              <div className="flex flex-col gap-6">
+                <TournamentCardSkeleton />
+              </div>
+            ) : intraVisible.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-white/10 py-16 px-6 text-center">
+                <h3 className="font-display text-lg font-black uppercase text-white">No {game.shortName} intra events here</h3>
+                <p className="mt-2 text-sm font-sans text-slate-400">
+                  Department cups show up here once an admin approves them, so anyone can follow the bracket.
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-5">
+                {intraVisible.map((e) => (
+                  <IntraEventCard key={e.id} event={e} />
+                ))}
+              </div>
+            )
+          ) : isLoading ? (
             <div className="flex flex-col gap-6">
               <TournamentCardSkeleton />
               <TournamentCardSkeleton />
