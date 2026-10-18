@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/context/ConfirmContext";
 import { useState } from "react";
 import { EventDocument, EventTeam, EventTeamStatus } from "@/types";
 import { CheckCircleIcon, LockIcon } from "@/components/ui/Icons";
@@ -26,6 +27,7 @@ export default function EventSquadReviewCard({
   bracketDrawn = false,
   onReview,
 }: EventSquadReviewCardProps) {
+  const confirm = useConfirm();
   const [note, setNote] = useState(team.reviewNote ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +39,7 @@ export default function EventSquadReviewCard({
       setError("Tell the captain what to fix.");
       return;
     }
+    if (!(await confirm(status === "APPROVED" ? { title: "Approve this squad?", message: "They'll be locked into the event roster.", confirmLabel: "Approve" } : { title: "Reject this squad?", message: "The captain will see your note and can resubmit.", confirmLabel: "Reject", tone: "danger" }))) return;
     setBusy(true);
     setError(null);
     try {

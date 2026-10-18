@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/context/ConfirmContext";
 import React, { useState, useEffect } from "react";
 import { tournamentsService } from "@/services/tournamentsService";
 import { ShieldIcon, CheckCircleIcon, UsersIcon, CrownIcon } from "@/components/ui/Icons";
@@ -69,6 +70,7 @@ export default function TournamentApplicationsModal({
   gameTitle,
   onApplicationUpdated,
 }: TournamentApplicationsModalProps) {
+  const confirm = useConfirm();
   const [applications, setApplications] = useState<TournamentApplication[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -169,6 +171,7 @@ export default function TournamentApplicationsModal({
   );
 
   const handleApprove = async (appId: string) => {
+    if (!(await confirm({ title: "Approve this squad?", message: "They'll be entered into the tournament and notified.", confirmLabel: "Approve" }))) return;
     setProcessingId(appId);
     try {
       await tournamentsService.approveApplication(tournamentId, appId);
@@ -191,6 +194,7 @@ export default function TournamentApplicationsModal({
   };
 
   const handleReject = async (appId: string) => {
+    if (!(await confirm({ title: "Reject this squad?", message: "Their application will be declined.", confirmLabel: "Reject", tone: "danger" }))) return;
     setProcessingId(appId);
     try {
       await tournamentsService.rejectApplication(tournamentId, appId);

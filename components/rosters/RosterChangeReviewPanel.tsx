@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/context/ConfirmContext";
 import { useCallback, useEffect, useState } from "react";
 import { rostersService } from "@/services";
 import { RosterChange, RosterChangeReviewPanelProps } from "@/types";
@@ -7,6 +8,7 @@ import { reasonLabel } from "./RosterChangeHistory";
 
 // Organizer/admin queue of last-minute substitutions for one tournament.
 export default function RosterChangeReviewPanel({ tournamentId, onReviewed }: RosterChangeReviewPanelProps) {
+  const confirm = useConfirm();
   const [changes, setChanges] = useState<RosterChange[]>([]);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -22,6 +24,7 @@ export default function RosterChangeReviewPanel({ tournamentId, onReviewed }: Ro
   if (pending.length === 0) return null;
 
   const review = async (changeId: string, approve: boolean) => {
+    if (!(await confirm(approve ? { title: "Approve this roster change?", message: "The substitution will apply to the squad's tournament roster.", confirmLabel: "Approve" } : { title: "Reject this roster change?", message: "The squad keeps its current roster.", confirmLabel: "Reject", tone: "danger" }))) return;
     setBusyId(changeId);
     setError("");
     try {

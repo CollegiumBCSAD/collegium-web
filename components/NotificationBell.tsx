@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/context/ConfirmContext";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -10,6 +11,7 @@ export default function NotificationBell() {
   const router = useRouter();
   const { isLoggedIn } = useAuth();
   const { notifications, unreadCount, markAsRead, markAllAsRead, clearAll } = useNotifications();
+  const confirm = useConfirm();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -108,7 +110,9 @@ export default function NotificationBell() {
                 </button>
                 <span className="text-slate-600">•</span>
                 <button
-                  onClick={clearAll}
+                  onClick={async () => {
+                    if (await confirm({ title: "Clear all notifications?", message: "This removes every notification and cannot be undone.", confirmLabel: "Clear all", tone: "danger" })) clearAll();
+                  }}
                   className="text-[10px] font-mono font-bold text-rose-400 hover:text-rose-300 transition-colors"
                 >
                   CLEAR

@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { GameId } from "./games";
 
 export interface SegmentedOption<T extends string = string> {
@@ -61,4 +62,14 @@ export interface LineupGridProps {
   gameTitle: GameId;
   /** Shows clickable "open slot" cards when provided. */
   onRecruit?: () => void;
+}
+
+/** Options for the app-wide confirm dialog (`useConfirm`). */
+export interface ConfirmOptions {
+  title: string;
+  message: ReactNode;
+  details?: string[];
+  confirmLabel?: string;
+  /** "danger" for reject / delete / remove. */
+  tone?: "danger" | "default";
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/context/ConfirmContext";
 import { useCallback, useEffect, useState } from "react";
 import { coachService } from "@/services";
 import { CoachTeamPanelProps, PracticeSchedule } from "@/types";
@@ -12,6 +13,7 @@ const INPUT = `${RECESSED} h-10 px-3 border border-white/[0.06] focus:border-pri
 const timeOf = (iso: string) => new Date(iso).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 
 export default function PracticeSchedulePanel({ team, onChanged }: CoachTeamPanelProps) {
+  const confirm = useConfirm();
   const [schedules, setSchedules] = useState<PracticeSchedule[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [title, setTitle] = useState("");
@@ -59,6 +61,7 @@ export default function PracticeSchedulePanel({ team, onChanged }: CoachTeamPane
   };
 
   const handleDelete = async (scheduleId: string) => {
+    if (!(await confirm({ title: "Cancel this practice?", message: "It will be removed from the squad's schedule.", confirmLabel: "Cancel practice", tone: "danger" }))) return;
     try {
       await coachService.deleteSchedule(team.id, scheduleId);
       load();

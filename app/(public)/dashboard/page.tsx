@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/context/ConfirmContext";
 import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -23,6 +24,7 @@ export default function DashboardPage() {
   const activeGame = selectedGame || "valo";
   const activeGameInfo = GAMES[activeGame as keyof typeof GAMES] || GAMES.valo;
 
+  const confirm = useConfirm();
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
   const [allTeams, setAllTeams] = useState<Team[]>(() => getStoredTeams());
 
@@ -35,6 +37,7 @@ export default function DashboardPage() {
   }, []);
 
   const handleCancelPendingRequest = async (teamId: string) => {
+    if (!(await confirm({ title: "Withdraw your join request?", message: "The captain will no longer see your request.", confirmLabel: "Withdraw", tone: "danger" }))) return;
     if (!user) return;
     try {
       await teamsService.leaveTeam(teamId, user.id);

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Oswald } from "next/font/google";
 import InstallAppPrompt from "@/components/InstallAppPrompt";
+import { ConfirmProvider } from "@/context/ConfirmContext";
 import "./globals.css";
 
 const inter = Inter({
@@ -44,8 +45,10 @@ export default function RootLayout({
       className={`${inter.variable} ${oswald.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col overflow-x-clip bg-background text-foreground">
-        {children}
-        <InstallAppPrompt />
+        <ConfirmProvider>
+          {children}
+          <InstallAppPrompt />
+        </ConfirmProvider>
       </body>
     </html>
   );

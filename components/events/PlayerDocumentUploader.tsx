@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/context/ConfirmContext";
 import { useRef, useState } from "react";
 import { EventDocument, EventDocumentKind, RosterPlayer } from "@/types";
 import { eventsService } from "@/services/eventsService";
@@ -26,6 +27,7 @@ export default function PlayerDocumentUploader({
   disabled,
   onChanged,
 }: PlayerDocumentUploaderProps) {
+  const confirm = useConfirm();
   const [busy, setBusy] = useState<EventDocumentKind | null>(null);
   const [error, setError] = useState<string | null>(null);
   const inputs = useRef<Record<string, HTMLInputElement | null>>({});
@@ -50,6 +52,7 @@ export default function PlayerDocumentUploader({
   };
 
   const remove = async (documentId: string) => {
+    if (!(await confirm({ title: "Remove this document?", message: "You'll need to upload it again before the squad can be approved.", confirmLabel: "Remove", tone: "danger" }))) return;
     setError(null);
     try {
       await eventsService.deleteTeamDocument(token, documentId);

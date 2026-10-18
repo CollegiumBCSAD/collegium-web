@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/context/ConfirmContext";
 import React, { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { teamsService } from "@/services/teamsService";
@@ -18,6 +19,7 @@ export default function CaptainRequestInbox() {
   const { selectedGame } = useGame();
   const activeGame = selectedGame || "valo";
 
+  const confirm = useConfirm();
   const [teams, setTeams] = useState<Team[]>([]);
   const [apiRequests, setApiRequests] = useState<JoinRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -96,6 +98,7 @@ export default function CaptainRequestInbox() {
   };
 
   const handleDecision = async (memberId: string, accept: boolean) => {
+    if (!(await confirm(accept ? { title: "Accept this player?", message: "They'll join your squad's roster.", confirmLabel: "Accept" } : { title: "Decline this player?", message: "Their join request will be declined.", confirmLabel: "Decline", tone: "danger" }))) return;
     const status = accept ? "ACCEPTED" : "DECLINED";
     try {
       if (!user) throw new Error("Not authenticated");

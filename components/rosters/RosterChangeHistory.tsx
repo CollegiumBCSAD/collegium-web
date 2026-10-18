@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/context/ConfirmContext";
 import { rostersService, ROSTER_CHANGE_REASONS } from "@/services";
 import { RosterChangeHistoryProps, RosterChangeStatus } from "@/types";
 
@@ -13,9 +14,11 @@ const STATUS_STYLE: Record<RosterChangeStatus, string> = {
 export const reasonLabel = (value: string) => ROSTER_CHANGE_REASONS.find((r) => r.value === value)?.label ?? value;
 
 export default function RosterChangeHistory({ teamId, changes, onChanged }: RosterChangeHistoryProps) {
+  const confirm = useConfirm();
   if (changes.length === 0) return null;
 
   const cancel = async (changeId: string) => {
+    if (!(await confirm({ title: "Cancel this roster change?", message: "The request will be withdrawn before review.", confirmLabel: "Cancel request", tone: "danger" }))) return;
     try {
       await rostersService.cancelChange(teamId, changeId);
     } finally {
