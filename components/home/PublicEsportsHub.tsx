@@ -1,10 +1,10 @@
 "use client";
 
-import React from "react";
-import { UserProfile, GameInfo, GameId, University, Tournament, NewsArticle, ScrimOffer } from "@/types";
+import { useMemo } from "react";
+import { UserProfile, GameInfo, GameId, University, Tournament, NewsArticle, ScrimOffer, HomeDomainLookup, HomeMatchItem, HomeStat } from "@/types";
 import { Team } from "@/lib/teams";
 import PublicHeroBroadcast from "./PublicHeroBroadcast";
-import HomeMatchesHub, { HomeMatchItem } from "./HomeMatchesHub";
+import HomeMatchesHub from "./HomeMatchesHub";
 import HomeNewsHub from "./HomeNewsHub";
 import HomeTournamentsWidget from "./HomeTournamentsWidget";
 import HomeRankingsWidget from "./HomeRankingsWidget";
@@ -15,7 +15,7 @@ interface PublicEsportsHubProps {
   selectedGameInfo: GameInfo | null;
   openGameSelector: () => void;
   selectGame: (gameId: GameId) => void;
-  stats: { value: string; label: string }[];
+  stats: HomeStat[];
   matches: HomeMatchItem[];
   articles: NewsArticle[];
   universities: University[];
@@ -25,6 +25,8 @@ interface PublicEsportsHubProps {
   onOpenBoxScore: (match: HomeMatchItem) => void;
 }
 
+// vlr.gg-style hub under the hero: matches in the main column; rankings, events
+// and (only when the game has any) news in the rail.
 export default function PublicEsportsHub({
   activeGame,
   selectedGameInfo,
@@ -36,51 +38,32 @@ export default function PublicEsportsHub({
   tournaments,
   onOpenBoxScore,
 }: PublicEsportsHubProps) {
+  // An empty news column just wastes a third of the screen, so it only appears with content.
+  const hasNews = articles.some((a) => a.gameId === activeGame || a.gameId === "general");
+  const domains = useMemo<HomeDomainLookup>(
+    () => Object.fromEntries(universities.map((u) => [u.id, u.domain])),
+    [universities],
+  );
+
   return (
-    <div className="flex flex-col flex-1 game-theme-bg">
-      {/* 1. Cinematic Hero with Orbital Radar & Featured Editorial News Dispatch */}
-      <div className="animate-home-hero">
-        <PublicHeroBroadcast
-          activeGame={activeGame}
-          selectedGameInfo={selectedGameInfo}
-          openGameSelector={openGameSelector}
-          stats={stats}
-          articles={articles}
-        />
-      </div>
+    <div className="flex flex-1 flex-col game-theme-bg">
+      <PublicHeroBroadcast
+        activeGame={activeGame}
+        selectedGameInfo={selectedGameInfo}
+        openGameSelector={openGameSelector}
+        stats={stats}
+        tournaments={tournaments}
+      />
 
-      {/* 2. Main Matches, News, and Circuit Sidebar */}
-      <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-6 md:px-8 pt-2 sm:pt-3 pb-8 sm:pb-12 space-y-10 animate-home-content">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Main Left: Matches & News */}
-          <div className="lg:col-span-8 space-y-8">
-            <HomeMatchesHub
-              matches={matches}
-              activeGame={activeGame}
-              onOpenBoxScore={onOpenBoxScore}
-            />
+      <div className="mx-auto grid w-full max-w-[1600px] items-start gap-5 px-4 pb-16 pt-4 sm:px-6 md:px-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <HomeMatchesHub matches={matches} domains={domains} activeGame={activeGame} onOpenBoxScore={onOpenBoxScore} />
 
-            <HomeNewsHub
-              articles={articles}
-              activeGame={activeGame}
-            />
-          </div>
-
-          {/* Right Rail: Power Rankings & Tournaments */}
-          <div className="lg:col-span-4 space-y-6">
-            <HomeRankingsWidget
-              universities={universities}
-              activeGame={activeGame}
-            />
-
-            <HomeTournamentsWidget
-              tournaments={tournaments}
-              activeGame={activeGame}
-            />
-          </div>
-        </div>
+        <aside className="space-y-5">
+          <HomeRankingsWidget activeGame={activeGame} />
+          <HomeTournamentsWidget tournaments={tournaments} activeGame={activeGame} />
+          {hasNews && <HomeNewsHub articles={articles} activeGame={activeGame} />}
+        </aside>
       </div>
     </div>
   );
 }
-

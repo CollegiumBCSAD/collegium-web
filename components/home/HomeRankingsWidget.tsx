@@ -1,148 +1,107 @@
 "use client";
 
-import React from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { University, GameId } from "@/types";
-import { mockLeaderboards } from "@/lib/mock/leaderboard";
-import { CrownIcon } from "@/components/ui/Icons";
+import { HomeRankingsWidgetProps, LeaderboardEntry } from "@/types";
+import { universitiesService } from "@/services";
+import { GAME_ID_TO_ENUM } from "@/lib/games";
+import { GAME_ID_TO_DISPLAY, MEDALS, mapUniversitiesToLeaderboard } from "@/lib/rankings";
+import HomePanel from "./HomePanel";
+import HomeCrest from "./HomeCrest";
 
-interface HomeRankingsWidgetProps {
-  universities: University[];
-  activeGame: GameId;
-}
+const TOP_N = 5;
 
-const GAME_DISPLAY_KEY: Record<GameId, string> = {
-  valo: "VALORANT",
-  lol: "LEAGUE OF LEGENDS",
-  ml: "MOBILE LEGENDS: BANG BANG",
-  codm: "CALL OF DUTY: MOBILE",
+/** The API returns one row per team; the board shows each school once, at its best team's rating. */
+const bestPerUniversity = (entries: LeaderboardEntry[]) => {
+  const seen = new Set<string>();
+  return [...entries]
+    .sort((a, b) => b.rating - a.rating)
+    .filter((e) => !seen.has(e.id) && Boolean(seen.add(e.id)));
 };
 
-export default function HomeRankingsWidget({
-  universities,
-  activeGame,
-}: HomeRankingsWidgetProps) {
-  const items = React.useMemo(() => {
-    const key = GAME_DISPLAY_KEY[activeGame] || "VALORANT";
+// Same source as /leaderboard: the server rates each school for the requested
+// game, so wins/losses/streak are real rather than the all-games defaults.
+export default function HomeRankingsWidget({ activeGame }: HomeRankingsWidgetProps) {
+  const [loaded, setLoaded] = useState<{ game: string; entries: LeaderboardEntry[]; failed: boolean } | null>(null);
+  const isLoading = loaded?.game !== activeGame;
 
-    if (universities.length > 0) {
-      return universities
-        .map((u) => {
-          const gameRating = u.gameRatings?.find(
-            (r) => r.gameTitle.toLowerCase().includes(activeGame)
-          );
-          const rating = gameRating ? gameRating.glicko2_rating.toFixed(1) : (u.glicko2_rating || 1500).toFixed(1);
-          const wins = gameRating ? gameRating.wins : u.wins || 0;
-          const losses = gameRating ? gameRating.losses : u.losses || 0;
-          const total = wins + losses;
-          const winRate = total > 0 ? Math.round((wins / total) * 100) : 50;
+  useEffect(() => {
+    let cancelled = false;
+    universitiesService
+      .getUniversities(GAME_ID_TO_ENUM[activeGame])
+      .then((unis) => {
+        if (cancelled) return;
+        const entries = bestPerUniversity(mapUniversitiesToLeaderboard(unis ?? [], GAME_ID_TO_DISPLAY[activeGame]));
+        setLoaded({ game: activeGame, entries, failed: false });
+      })
+      .catch(() => !cancelled && setLoaded({ game: activeGame, entries: [], failed: true }));
+    return () => {
+      cancelled = true;
+    };
+  }, [activeGame]);
 
-          return {
-            id: u.id,
-            name: u.name,
-            rating,
-            winRate,
-            streak: wins > 0 ? `${Math.min(wins, 9)}W` : `${Math.min(losses, 9)}L`,
-          };
-        })
-        .sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating))
-        .slice(0, 5);
-    }
-
-    // Match the leaderboard page data
-    const fallback = mockLeaderboards[key] || mockLeaderboards.VALORANT || [];
-    return fallback.slice(0, 5).map((e) => ({
-      id: e.id,
-      name: e.university,
-      rating: typeof e.rating === "number" ? e.rating.toFixed(1) : String(e.rating),
-      winRate: e.winRate,
-      streak: e.streak,
-    }));
-  }, [universities, activeGame]);
+  const items = isLoading ? [] : loaded.entries.slice(0, TOP_N);
 
   return (
-    <div className="w-full space-y-2.5">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-[#202C48]/50 pb-2.5">
-        <div className="flex items-center gap-2">
-          <CrownIcon className="w-4 h-4 text-amber-400" />
-          <h2 className="font-display text-sm sm:text-base font-black uppercase tracking-wider text-white">
-            Power Rankings (Top 5)
-          </h2>
-        </div>
-
-        <Link
-          href="/leaderboard"
-          className="font-mono text-xs font-bold text-primary-brand hover:underline flex items-center gap-1 uppercase tracking-wider"
-        >
-          <span>Full Board</span>
-          <span>→</span>
-        </Link>
-      </div>
-
-      {/* Standings Table */}
-      {items.length === 0 ? (
-        <div className="p-6 text-center rounded-2xl bg-gradient-to-b from-[#0B101E]/40 via-[#0B101E]/20 to-transparent border border-dashed border-[#202E4C]/50 backdrop-blur-xs space-y-1.5">
-          <p className="font-mono text-xs font-bold text-slate-300 uppercase tracking-wider">
-            No university rankings recorded yet
-          </p>
-          <p className="font-sans text-[11px] text-slate-400">
-            Rankings update automatically after verified tournament matches.
-          </p>
-        </div>
+    <HomePanel title="Power Rankings" href="/leaderboard" hrefLabel="Full board">
+      {isLoading ? (
+        <ul aria-busy className="divide-y divide-white/[0.04]">
+          {Array.from({ length: TOP_N }, (_, i) => (
+            <li key={i} className="flex items-center gap-3 px-4 py-3">
+              <div className="h-8 w-8 animate-pulse rounded-md bg-white/[0.05]" />
+              <div className="h-3 flex-1 animate-pulse rounded bg-white/[0.05]" />
+            </li>
+          ))}
+        </ul>
+      ) : items.length === 0 ? (
+        <p className="px-4 py-10 text-center text-xs text-slate-500">
+          {loaded.failed ? "Rankings are unavailable right now." : "No rated universities yet."}
+        </p>
       ) : (
-        <div className="rounded-xl bg-[#0D1220] border border-[#18233B] divide-y divide-[#141B2D] overflow-hidden shadow-sm">
-          {items.map((item, index) => {
-            const isFirst = index === 0;
-
-          return (
-            <Link
-              key={item.id}
-              href="/leaderboard"
-              className="group flex items-center justify-between gap-3 p-2.5 hover:bg-[#121828] transition-colors"
-            >
-              {/* Rank & Name */}
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div
-                  className={`w-5 h-5 rounded flex items-center justify-center font-display font-black text-[10px] shrink-0 ${
-                    isFirst
-                      ? "bg-amber-500 text-black shadow-sm"
-                      : index === 1
-                      ? "bg-slate-300 text-black"
-                      : index === 2
-                      ? "bg-amber-700 text-white"
-                      : "bg-[#141B2D] text-slate-400"
-                  }`}
+        <ol className="divide-y divide-white/[0.04]">
+          {items.map((e, i) => {
+            const medal = MEDALS[i + 1];
+            const played = (e.wins ?? 0) + (e.losses ?? 0) > 0;
+            const streakColor = e.streak.endsWith("W") ? "text-emerald-400" : e.streak.endsWith("L") ? "text-rose-400" : "text-slate-500";
+            return (
+              <li key={e.id}>
+                <Link
+                  href={`/university/${e.id}`}
+                  className="group relative flex items-center gap-3 px-4 py-3 transition-colors hover:bg-white/[0.025]"
+                  style={i === 0 ? { background: `linear-gradient(90deg, rgba(${medal.rgb},0.10), transparent 70%)` } : undefined}
                 >
-                  {index + 1}
-                </div>
-
-                <div className="flex flex-col min-w-0">
-                  <span className="font-sans text-xs sm:text-sm font-bold tracking-wide uppercase text-slate-100 group-hover:text-primary-brand transition-colors truncate">
-                    {item.name}
+                  <span
+                    className="w-4 shrink-0 text-center font-display text-base font-black tabular-nums"
+                    style={{ color: medal?.color ?? "#475569" }}
+                  >
+                    {i + 1}
                   </span>
-                  <div className="flex items-center gap-1.5 font-mono text-[9px] text-slate-400">
-                    <span>Streak: <span className="text-emerald-400 font-bold">{item.streak}</span></span>
-                    <span>•</span>
-                    <span>{item.winRate}% WR</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Rating Score */}
-              <div className="flex flex-col items-end shrink-0">
-                <span className="font-display text-xs sm:text-sm font-black text-primary-brand">
-                  {item.rating}
-                </span>
-                <span className="font-mono text-[8px] text-slate-500 uppercase tracking-widest font-bold">
-                  RATING
-                </span>
-              </div>
-            </Link>
-          );
-        })}
-      </div>
-    )}
-  </div>
+                  <HomeCrest name={e.university} domain={e.domain} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-sans text-[13px] font-bold uppercase leading-tight text-slate-100 transition-colors group-hover:text-white">
+                      {e.university}
+                    </span>
+                    <span className="mt-1 flex items-center gap-1.5 font-mono text-[10px] text-slate-500">
+                      <span className={`font-bold ${streakColor}`}>{e.streak}</span>
+                      <span className="text-slate-700">/</span>
+                      <span>{played ? `${e.wins}–${e.losses} · ${e.winRate}%` : "Unplayed"}</span>
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-right">
+                    <span className="block font-display text-lg font-black leading-none tabular-nums text-white">{e.rating.toFixed(0)}</span>
+                    <span
+                      className={`mt-1 block font-mono text-[8px] font-bold uppercase tracking-widest ${e.isProvisional ? "text-amber-400/70" : "text-slate-500"}`}
+                      title={e.isProvisional ? "Provisional: still calibrating" : undefined}
+                    >
+                      {e.isProvisional ? "Prov." : "Rating"}
+                    </span>
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
+        </ol>
+      )}
+    </HomePanel>
   );
 }
