@@ -19,7 +19,7 @@ export default function BracketTree({
   onViewBoxScore,
   canReportResults,
   onReportResult,
-  featuredMatchId,
+  featuredMatchIds,
   projectToFinal: project,
   champion,
   compact,
@@ -78,7 +78,7 @@ export default function BracketTree({
                               match={match}
                               label={labels[r][idx] ?? ""}
                               isPlaceholder={round.isProjected}
-                              isFeatured={featuredMatchId === match.id}
+                              isFeatured={Boolean(featuredMatchIds?.includes(match.id))}
                               canReport={canReportResults}
                               compact={compact}
                               onOpen={() => onViewBoxScore(match)}
@@ -111,31 +111,65 @@ export default function BracketTree({
       {showChampion && (
         <div className="flex flex-col">
           <div className="h-12 mb-2 flex flex-col items-center justify-center">
-            <span className="px-3 py-1 font-display text-xs font-black uppercase tracking-[0.2em] text-amber-300 bg-amber-400/10 border border-amber-400/30">
+            <span
+              className={`px-3 py-1 font-display text-xs font-black uppercase tracking-[0.2em] ${
+                champion
+                  ? "text-[#1A1205] bg-gradient-to-b from-amber-200 to-amber-400 shadow-[0_0_22px_-2px_rgba(251,191,36,0.85)]"
+                  : "text-amber-300/70 bg-amber-400/5 border border-amber-400/20"
+              }`}
+            >
               Champion
             </span>
-            <span className="mt-1 text-[9px] font-mono uppercase tracking-widest text-slate-600">{champion ? "Crowned" : "Awaiting final"}</span>
+            <span
+              className={`mt-1 text-[9px] font-mono uppercase tracking-widest ${
+                champion ? "text-amber-300 [text-shadow:0_0_10px_rgba(251,191,36,0.7)]" : "text-slate-600"
+              }`}
+            >
+              {champion ? "Crowned" : "Awaiting final"}
+            </span>
           </div>
           <div className="relative flex items-center" style={{ height }}>
-            <span aria-hidden className={`absolute top-1/2 border-t ${champion ? LINE_DONE : LINE}`} style={{ left: -gap / 2, width: gap / 2 }} />
+            <span
+              aria-hidden
+              className={`absolute top-1/2 border-t ${champion ? "border-amber-300/80 shadow-[0_0_8px_rgba(251,191,36,0.8)]" : LINE}`}
+              style={{ left: -gap / 2, width: gap / 2 }}
+            />
             <div
-              className={`w-56 px-5 py-6 text-center border ${
+              className={`relative w-56 overflow-hidden px-5 py-7 text-center border ${
                 champion
-                  ? "border-amber-400/60 bg-gradient-to-b from-amber-400/15 to-[#0B0E17] shadow-[0_0_40px_-10px_rgba(251,191,36,0.6)]"
+                  ? "border-amber-300/70 bg-gradient-to-b from-amber-400/20 via-[#120F0A] to-[#0B0E17] shadow-[0_0_60px_-8px_rgba(251,191,36,0.65),inset_0_0_30px_-12px_rgba(251,191,36,0.5)]"
                   : "border-white/10 bg-gradient-to-b from-[#141A2A] to-[#0B0E17]"
               }`}
             >
+              {champion && (
+                <>
+                  {/* halo behind the trophy and a bright rim along the top edge */}
+                  <span aria-hidden className="absolute inset-x-0 -top-12 mx-auto h-32 w-32 rounded-full bg-amber-300/35 blur-3xl" />
+                  <span aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-100 to-transparent" />
+                  <span aria-hidden className="absolute inset-x-6 bottom-0 h-px bg-gradient-to-r from-transparent via-amber-300/60 to-transparent" />
+                </>
+              )}
               <span
-                className={`mx-auto w-14 h-14 flex items-center justify-center rounded-full border ${
-                  champion ? "border-amber-400/60 bg-amber-400/15 text-amber-300" : "border-white/10 bg-white/[0.04] text-slate-500"
+                className={`relative mx-auto w-14 h-14 flex items-center justify-center rounded-full border ${
+                  champion
+                    ? "border-amber-300/70 bg-amber-400/20 text-amber-200 shadow-[0_0_28px_-2px_rgba(251,191,36,0.9)] animate-[pulse_3s_ease-in-out_infinite]"
+                    : "border-white/10 bg-white/[0.04] text-slate-500"
                 }`}
               >
                 <TrophyIcon className="w-7 h-7" />
               </span>
-              <p className={`mt-3 font-display text-lg font-black uppercase leading-tight ${champion ? "text-white" : "text-slate-500"}`}>
+              <p
+                className={`relative mt-4 font-display text-lg font-black uppercase leading-tight ${
+                  champion ? "text-white [text-shadow:0_0_18px_rgba(251,191,36,0.55)]" : "text-slate-500"
+                }`}
+              >
                 {champion || "To be decided"}
               </p>
-              <p className="mt-1 flex items-center justify-center gap-1 text-[9px] font-mono uppercase tracking-widest text-slate-500">
+              <p
+                className={`relative mt-1.5 flex items-center justify-center gap-1 text-[9px] font-mono uppercase tracking-widest ${
+                  champion ? "text-amber-300/90" : "text-slate-500"
+                }`}
+              >
                 {champion && <CrownIcon className="w-3 h-3 text-amber-300" />}
                 {champion ? "Tournament champion" : "Winner of the grand final"}
               </p>

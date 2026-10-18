@@ -11,7 +11,9 @@ import {
   MatchPlayerStat,
   TournamentMatch,
   PendingSquadApplication,
-  ScanResult
+  ScanResult,
+  TournamentStream,
+  TournamentStreamInput
 } from "@/types";
 
 const GAME_DISPLAY: Record<string, { label: string; gradient: string }> = {
@@ -59,6 +61,7 @@ interface RawTournament {
   streamUrl?: string | null;
   streamIsLive?: boolean;
   featuredMatchId?: string | null;
+  streams?: TournamentStream[];
   matches?: Array<{ title?: string; gameTitle?: string }>;
   universities?: Array<{ id?: string; name?: string }>;
   applications?: PendingSquadApplication[];
@@ -120,6 +123,7 @@ function mapTournaments(data: RawTournament[]): Tournament[] {
       streamUrl: t.streamUrl ?? null,
       streamIsLive: Boolean(t.streamIsLive),
       featuredMatchId: t.featuredMatchId ?? null,
+      streams: Array.isArray(t.streams) ? t.streams : [],
       bgGradient: gameDisplay.gradient,
       universities: t.universities as { id: string; name: string }[],
       matches: t.matches as unknown[],
@@ -663,6 +667,15 @@ export const tournamentsService = {
   ): Promise<unknown> => {
     return apiClient.patch(`/tournaments/${tournamentId}/stream`, payload);
   },
+
+  addStream: (tournamentId: string, input: TournamentStreamInput): Promise<TournamentStream[]> =>
+    apiClient.post(`/tournaments/${tournamentId}/streams`, input),
+
+  updateStreamEntry: (tournamentId: string, streamId: string, input: TournamentStreamInput): Promise<TournamentStream[]> =>
+    apiClient.patch(`/tournaments/${tournamentId}/streams/${streamId}`, input),
+
+  removeStream: (tournamentId: string, streamId: string): Promise<TournamentStream[]> =>
+    apiClient.delete(`/tournaments/${tournamentId}/streams/${streamId}`),
 
   startTournament: (tournamentId: string): Promise<unknown> => {
     return apiClient.post(`/tournaments/${tournamentId}/start`, {});

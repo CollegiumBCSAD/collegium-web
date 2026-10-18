@@ -46,14 +46,16 @@ export default function BracketMatchCard({ match, label, isPlaceholder, isFeatur
   const live = match.status === "LIVE";
   const isBye = match.team2.name === "BYE";
 
+  // Three levels, one meaning each: the match on stream gets a filled header
+  // and glow; any other live match a red "Live" dot; everything else is quiet.
   const status = isFeatured
-    ? { text: "On stream", className: "text-rose-300" }
+    ? { text: "▶ On stream", className: "text-[var(--game-btn-text,#fff)]" }
     : isBye
       ? { text: "Bye", className: "text-slate-500" }
       : decided
-        ? { text: "Final", className: "text-slate-400" }
+        ? { text: "Final", className: "text-slate-500" }
         : live
-          ? { text: "Live", className: "text-emerald-400" }
+          ? { text: "Live", className: "text-rose-400" }
           : { text: match.timeLabel || "Upcoming", className: "text-slate-600" };
 
   return (
@@ -65,17 +67,23 @@ export default function BracketMatchCard({ match, label, isPlaceholder, isFeatur
         className={`group block w-full text-left overflow-hidden transition-all duration-200 ${
           isPlaceholder
             ? "border border-dashed border-white/10 bg-black/20 cursor-default"
-            : `bg-gradient-to-b from-[#141A2A] to-[#0B0E17] border shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_14px_30px_-16px_rgba(0,0,0,0.9)] hover:-translate-y-0.5 hover:border-primary-brand/60 ${
-                live || isFeatured
-                  ? "border-primary-brand/45 shadow-[0_0_24px_-8px_rgba(var(--game-glow-rgb),0.55)]"
-                  : "border-white/[0.08]"
+            : `bg-gradient-to-b from-[#141A2A] to-[#0B0E17] border hover:-translate-y-0.5 ${
+                isFeatured
+                  ? "border-primary-brand shadow-[0_0_0_1px_rgba(var(--game-glow-rgb),0.35),0_0_32px_-6px_rgba(var(--game-glow-rgb),0.7)]"
+                  : live
+                    ? "border-rose-400/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_14px_30px_-16px_rgba(0,0,0,0.9)] hover:border-rose-400/60"
+                    : "border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_14px_30px_-16px_rgba(0,0,0,0.9)] hover:border-white/25"
               }`
         }`}
       >
-        <div className="flex items-center justify-between h-6 px-2.5 border-b border-white/[0.06] bg-black/25 text-[9px] font-mono font-bold uppercase tracking-widest">
-          <span className="text-slate-500">{label}</span>
+        <div
+          className={`flex items-center justify-between h-6 px-2.5 border-b text-[9px] font-mono font-bold uppercase tracking-widest ${
+            isFeatured ? "bg-primary-brand border-primary-brand" : "bg-black/25 border-white/[0.06]"
+          }`}
+        >
+          <span className={isFeatured ? "text-[var(--game-btn-text,#fff)] opacity-70" : "text-slate-500"}>{label}</span>
           <span className={`flex items-center gap-1.5 ${status.className}`}>
-            {(live || isFeatured) && <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />}
+            {live && !isFeatured && <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />}
             {status.text}
           </span>
         </div>
