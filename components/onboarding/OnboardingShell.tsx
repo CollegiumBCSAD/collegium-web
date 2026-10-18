@@ -3,6 +3,7 @@
 import React from "react";
 import { OnboardingShellProps } from "@/types";
 import { useAuth } from "@/context/AuthContext";
+import BrandEmblem from "@/components/ui/BrandEmblem";
 
 /** Full-screen frame for the onboarding screens, matching the gateway page. */
 export default function OnboardingShell({ stepLabel, accent, children }: OnboardingShellProps) {
@@ -17,8 +18,7 @@ export default function OnboardingShell({ stepLabel, accent, children }: Onboard
 
       <header className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 py-6 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="Collegium Logo" className="w-8 h-8 object-contain rounded-md shadow-md shadow-primary-brand/30" />
+          <BrandEmblem size={32} className="shrink-0" />
           <span className="min-w-0">
             <span className="block font-display text-lg font-black tracking-wider text-white leading-none">COLLEGIUM</span>
             <span className="block text-[9px] font-mono text-slate-400 truncate">
