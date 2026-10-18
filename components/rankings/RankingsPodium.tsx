@@ -40,7 +40,7 @@ export default function RankingsPodium({ top, gameDisplayName }: RankingsPodiumP
           const streakTone = entry.streak.includes("W") ? "text-success" : entry.streak.includes("L") ? "text-rose-400" : "text-slate-400";
 
           return (
-            <div key={entry.id} className={`flex min-w-0 flex-col ${champ ? "order-first md:order-none" : ""}`}>
+            <div key={`${entry.id}-${entry.teamId ?? entry.rank}`} className={`flex min-w-0 flex-col ${champ ? "order-first md:order-none" : ""}`}>
               <Link
                 href={`/university/${entry.id}`}
                 className={`group relative overflow-hidden rounded-2xl border bg-[#0A0D15]/95 backdrop-blur-md transition-all duration-500 hover:-translate-y-1.5 ${champ ? "p-7" : "p-6"}`}
