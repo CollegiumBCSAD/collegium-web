@@ -8,7 +8,7 @@ import { useGame } from "@/context/GameContext";
 import { GAMES, GAME_ID_TO_ENUM } from "@/lib/games";
 import { eventsService } from "@/services/eventsService";
 import { LockIcon, PlusIcon, UsersIcon } from "@/components/ui/Icons";
-import { CARD, EVENT_STATUS, MONO_LABEL, eventCover } from "./eventSurfaces";
+import { CARD, MONO_LABEL, eventCover, eventStatusView } from "./eventSurfaces";
 
 // Organizer's view of the invite-only strip on Tournaments: the events they
 // run, instead of the code box and captain squads players get.
@@ -104,7 +104,7 @@ export default function OrganizerInviteEventsPanel() {
           ) : (
             <ul className="mt-3 flex gap-3 overflow-x-auto pb-1 snap-x">
               {events.map((event) => {
-                const status = EVENT_STATUS[event.status];
+                const status = eventStatusView(event);
                 const teams = event._count?.teams ?? 0;
                 return (
                   <li key={event.id} className="snap-start shrink-0 w-[260px]">

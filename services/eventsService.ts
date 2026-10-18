@@ -5,6 +5,7 @@ import {
   EventDocumentKind,
   EventInvite,
   EventSummary,
+  PendingEventApproval,
   EventTeam,
   EventTeamStatus,
   MyEventSquad,
@@ -112,6 +113,11 @@ export const eventsService = {
       `/events/${id}/close`,
       {},
     ),
+
+  getPendingApproval: () => apiClient.get<PendingEventApproval[]>("/events/pending-approval"),
+
+  reviewEvent: (id: string, approve: boolean, reason?: string) =>
+    apiClient.patch<EventSummary>(`/events/${id}/review`, { approve, reason }),
 
   documentUrl: (eventId: string, documentId: string) =>
     `/events/${eventId}/documents/${documentId}`,

@@ -12,7 +12,7 @@ import BackLink from "@/components/events/BackLink";
 import DeleteEventButton from "@/components/events/DeleteEventButton";
 import {
   CARD,
-  EVENT_STATUS,
+  eventStatusView,
   EYEBROW,
   FIELD,
   GAME_LABEL,
@@ -28,6 +28,7 @@ export default function OrganizeEventsPage() {
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   // One title at a time, driven by the game switcher in the header, the same
@@ -68,6 +69,7 @@ export default function OrganizeEventsPage() {
       await eventsService.createEvent({ name: name.trim(), gameTitle });
       setEvents(await eventsService.getMyEvents());
       setName("");
+      setNotice("Event created and sent to an admin for approval. You can open sign-ups once it's approved.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not create it.");
     } finally {
@@ -203,6 +205,11 @@ export default function OrganizeEventsPage() {
             {error}
           </p>
         )}
+        {notice && !error && (
+          <p className="rounded-xl border border-amber-400/30 bg-amber-400/[0.08] px-4 py-3 text-sm text-amber-100">
+            {notice}
+          </p>
+        )}
 
         {/* List */}
         <section className="space-y-6">
@@ -233,7 +240,7 @@ export default function OrganizeEventsPage() {
             <div className="grid gap-5 md:grid-cols-2">
               {gameEvents.map((event) => {
                 const squads = event._count?.teams ?? 0;
-                const status = EVENT_STATUS[event.status];
+                const status = eventStatusView(event);
                 const stats = [
                   { label: "Game", value: event.gameTitle },
                   { label: "Squads", value: squads },
@@ -310,7 +317,17 @@ export default function OrganizeEventsPage() {
                             }
                           />
                         </span>
-                        {event.status === "DRAFT" && (
+                        {event.approvalStatus === "PENDING" && (
+                          <span className="text-[10px] font-mono uppercase tracking-widest text-amber-300/80">
+                            Sign-ups unlock once approved
+                          </span>
+                        )}
+                        {event.approvalStatus === "REJECTED" && (
+                          <span className="text-[10px] font-mono uppercase tracking-widest text-rose-300/80">
+                            Open it to see why and resubmit
+                          </span>
+                        )}
+                        {event.status === "DRAFT" && (event.approvalStatus ?? "APPROVED") === "APPROVED" && (
                           <button
                             type="button"
                             onClick={() => open(event)}
