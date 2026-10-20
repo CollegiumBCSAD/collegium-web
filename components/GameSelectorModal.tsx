@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useGame } from "@/context/GameContext";
 import { GAME_LIST, GAMES, GameId, GameInfo } from "@/lib/games";
 import { ShieldIcon, TrophyIcon, SwordsIcon } from "@/components/ui/Icons";
+import BrandEmblem from "@/components/ui/BrandEmblem";
 
 const ARENA_DETAILS: Record<string, { num: string; initial: string; genre: string; gradient: string }> = {
   valo: {
@@ -89,8 +90,7 @@ export default function GameSelectorModal() {
       <header className="relative z-10 w-full max-w-7xl mx-auto px-6 py-6 flex items-center justify-between animate-arena-header-down">
         {/* Left: Brand Logo */}
         <div className="flex items-center gap-3">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="Collegium Logo" className="w-7 h-7 object-contain" />
+          <BrandEmblem size={30} className="shrink-0" />
           <span className="font-display text-xl font-bold tracking-wider text-white">
             COLLEGIUM
           </span>

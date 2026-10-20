@@ -4,6 +4,9 @@ export type EventStatus = "DRAFT" | "OPEN" | "LOCKED" | "ONGOING" | "COMPLETED";
 
 export type EventTeamStatus = "PENDING" | "APPROVED" | "REJECTED";
 
+/** Admin sign-off; an event can't open sign-ups until it is APPROVED. */
+export type EventApprovalStatus = "PENDING" | "APPROVED" | "REJECTED";
+
 export type EventDocumentKind = "COR" | "SCHOOL_ID";
 
 export type EventBracketFormat =
@@ -35,7 +38,19 @@ export interface EventSummary {
   maxSubs: number;
   signupsCloseAt: string | null;
   createdAt: string;
+  approvalStatus?: EventApprovalStatus;
+  rejectionReason?: string | null;
   _count?: { teams: number; matches?: number };
+}
+
+export interface PendingEventApproval extends EventSummary {
+  organizer: { id: string; displayName: string; email: string };
+}
+
+export interface EventApprovalNoticeProps {
+  event: Pick<EventSummary, "approvalStatus" | "rejectionReason">;
+  /** Sends a rejected event back to the admin queue. */
+  onResubmit?: () => Promise<void>;
 }
 
 export interface RosterPlayer {
@@ -121,4 +136,34 @@ export interface SubmitEventTeamPayload {
   captainName: string;
   captainEmail: string;
   roster: RosterPlayer[];
+}
+
+export interface InviteEventsPanelProps {
+  /** Squads are matched to a signed-in athlete's account; everyone else only gets the code box. */
+  showSquads?: boolean;
+}
+
+/** An approved intra event as anyone can see it: no invite code. */
+export interface PublicEventSummary {
+  id: string;
+  name: string;
+  gameTitle: EventGameTitle;
+  bracketFormat: EventBracketFormat;
+  status: EventStatus;
+  signupsCloseAt: string | null;
+  createdAt: string;
+  organizer: { displayName: string };
+  _count: { teams: number; matches: number };
+}
+
+export interface IntraEventCardProps {
+  event: PublicEventSummary;
+}
+
+export type TournamentScope = "CIRCUIT" | "INTRA";
+
+export interface TournamentScopeToggleProps {
+  scope: TournamentScope;
+  intraCount: number;
+  onChange: (scope: TournamentScope) => void;
 }

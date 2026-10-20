@@ -9,6 +9,7 @@ import { teamsService, tournamentsService, universitiesService } from "@/service
 import { GatewayStat } from "@/types";
 import GatewayHero from "@/components/gateway/GatewayHero";
 import GatewayRoleCards from "@/components/gateway/GatewayRoleCards";
+import BrandEmblem from "@/components/ui/BrandEmblem";
 
 const SPINNER = (
   <div className="flex flex-1 min-h-screen items-center justify-center bg-[#080A10]">
@@ -62,8 +63,7 @@ function GatewayContent() {
 
       <header className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 py-6 flex items-center justify-between gap-4">
         <Link href="/" className="flex items-center gap-3 min-w-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="Collegium Logo" className="w-8 h-8 object-contain rounded-md shadow-md shadow-primary-brand/30" />
+          <BrandEmblem size={32} className="shrink-0" />
           <span className="min-w-0">
             <span className="block font-display text-lg font-black tracking-wider text-white leading-none">COLLEGIUM</span>
             <span className="block text-[9px] font-mono text-slate-400 truncate">Philippine Collegiate Esports Network</span>

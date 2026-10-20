@@ -5,6 +5,8 @@ import {
   EventDocumentKind,
   EventInvite,
   EventSummary,
+  PendingEventApproval,
+  PublicEventSummary,
   EventTeam,
   EventTeamStatus,
   MyEventSquad,
@@ -112,6 +114,15 @@ export const eventsService = {
       `/events/${id}/close`,
       {},
     ),
+
+  /** Approved intra events anyone can spectate, optionally for one game. */
+  getPublicEvents: (gameTitle?: string) =>
+    apiClient.get<PublicEventSummary[]>(`/events/public${gameTitle ? `?gameTitle=${gameTitle}` : ""}`),
+
+  getPendingApproval: () => apiClient.get<PendingEventApproval[]>("/events/pending-approval"),
+
+  reviewEvent: (id: string, approve: boolean, reason?: string) =>
+    apiClient.patch<EventSummary>(`/events/${id}/review`, { approve, reason }),
 
   documentUrl: (eventId: string, documentId: string) =>
     `/events/${eventId}/documents/${documentId}`,

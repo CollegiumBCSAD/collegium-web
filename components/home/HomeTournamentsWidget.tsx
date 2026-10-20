@@ -1,116 +1,60 @@
-"use client";
-
-import React from "react";
 import Link from "next/link";
-import { Tournament, GameId } from "@/types";
-import { TrophyIcon } from "@/components/ui/Icons";
+import Image from "next/image";
+import { HomeTournamentsWidgetProps } from "@/types";
+import { GAME_ID_TO_ENUM } from "@/lib/games";
+import { eventCover } from "@/components/events/eventSurfaces";
+import { tournamentsForGame } from "./homeTournaments";
+import HomePanel from "./HomePanel";
 
-interface HomeTournamentsWidgetProps {
-  tournaments: Tournament[];
-  activeGame: GameId;
-}
+const STATUS_STYLE: Record<string, string> = {
+  LIVE: "border-primary-brand/50 bg-primary-brand/15 text-primary-brand",
+  COMPLETED: "border-white/[0.06] text-slate-500",
+};
 
-export default function HomeTournamentsWidget({
-  tournaments,
-  activeGame,
-}: HomeTournamentsWidgetProps) {
-  const displayTournaments = React.useMemo(() => {
-    return tournaments
-      .filter((t) => {
-        if (!t.game && !t.gameTitle) return true;
-        const g = (t.gameTitle || t.game || "").toLowerCase();
-        if (activeGame === "valo") return g.includes("val");
-        if (activeGame === "lol") return g.includes("lol") || g.includes("league");
-        if (activeGame === "codm") return g.includes("cod") || g.includes("call");
-        if (activeGame === "ml") return g.includes("ml") || g.includes("mobile");
-        return true;
-      })
-      .slice(0, 3);
-  }, [tournaments, activeGame]);
+export default function HomeTournamentsWidget({ tournaments, activeGame }: HomeTournamentsWidgetProps) {
+  const shown = tournamentsForGame(tournaments, activeGame).slice(0, 4);
+  const cover = eventCover(GAME_ID_TO_ENUM[activeGame]);
 
   return (
-    <div className="w-full space-y-2.5">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-[#202C48]/50 pb-2.5">
-        <div className="flex items-center gap-2">
-          <TrophyIcon className="w-4 h-4 text-primary-brand" />
-          <h2 className="font-display text-sm sm:text-base font-black uppercase tracking-wider text-white">
-            Circuit Brackets
-          </h2>
-        </div>
-
-        <Link
-          href="/tournaments"
-          className="font-mono text-xs font-bold text-primary-brand hover:underline flex items-center gap-1 uppercase tracking-wider"
-        >
-          <span>All Events</span>
-          <span>→</span>
-        </Link>
-      </div>
-
-      {/* Tournament Cards */}
-      {displayTournaments.length === 0 ? (
-        <div className="p-6 text-center rounded-2xl bg-gradient-to-b from-[#0B101E]/40 via-[#0B101E]/20 to-transparent border border-dashed border-[#202E4C]/50 backdrop-blur-xs space-y-1.5">
-          <p className="font-mono text-xs font-bold text-slate-300 uppercase tracking-wider">
-            No active tournaments for this circuit
-          </p>
-          <p className="font-sans text-[11px] text-slate-400">
-            Check back as collegiate organizers create new championship brackets.
-          </p>
-        </div>
+    <HomePanel title="Events" href="/tournaments" hrefLabel="All events">
+      {shown.length === 0 ? (
+        <p className="px-4 py-10 text-center text-xs text-slate-500">No tournaments in this circuit yet.</p>
       ) : (
-        <div className="space-y-2">
-          {displayTournaments.map((t) => {
-            const isLive = t.status === "LIVE";
-            const isCompleted = t.status === "COMPLETED";
-
-          return (
-            <Link
-              key={t.id}
-              href="/tournaments"
-              className="group relative flex flex-col justify-between overflow-hidden rounded-xl bg-[#0D1220] hover:bg-[#121828] border border-[#18233B] hover:border-primary-brand/40 transition-all duration-150 p-3 shadow-sm"
-            >
-              <div className="flex items-center justify-between gap-2 mb-1.5">
+        <ul className="divide-y divide-white/[0.04]">
+          {shown.map((t) => (
+            <li key={t.id}>
+              <Link
+                href={`/tournaments/${t.id}`}
+                className="group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-white/[0.025]"
+              >
+                <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md border border-white/[0.06]">
+                  <Image
+                    src={cover}
+                    alt=""
+                    fill
+                    sizes="40px"
+                    className={`object-cover transition-transform duration-500 group-hover:scale-110 ${t.status === "COMPLETED" ? "opacity-40 grayscale" : "opacity-80"}`}
+                  />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-sans text-[13px] font-bold uppercase text-slate-100 transition-colors group-hover:text-white">
+                    {t.title}
+                  </span>
+                  <span className="mt-0.5 block truncate text-[11px] text-slate-500">{t.statusText || t.bulletPoints?.[0]}</span>
+                </span>
                 <span
-                  className={`px-2 py-0.5 rounded font-mono text-[9px] font-black uppercase tracking-wider ${
-                    isLive
-                      ? "bg-rose-500/20 border border-rose-500/50 text-rose-400 animate-pulse"
-                      : isCompleted
-                      ? "bg-[#141B2D] text-slate-300"
-                      : "bg-primary-brand/20 border border-primary-brand/40 text-primary-brand"
+                  className={`inline-flex shrink-0 items-center gap-1.5 rounded border px-2 py-1 font-mono text-[9px] font-black uppercase tracking-widest ${
+                    STATUS_STYLE[t.status] ?? "border-white/10 bg-white/[0.04] text-slate-300"
                   }`}
                 >
-                  {t.status}
+                  {t.status === "LIVE" && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current" />}
+                  {t.status === "COMPLETED" ? "Final" : t.status}
                 </span>
-
-                <span className="font-mono text-[10px] text-slate-400 font-semibold">
-                  {t.bulletPoints?.[0] || "8 Universities"}
-                </span>
-              </div>
-
-              {/* Tournament Title & Status */}
-              <div className="space-y-0.5">
-                <h3 className="font-sans text-xs sm:text-sm font-bold tracking-wide uppercase text-slate-100 group-hover:text-primary-brand transition-colors line-clamp-1">
-                  {t.title}
-                </h3>
-                <p className="font-sans text-[11px] text-slate-400 line-clamp-1">
-                  {t.statusText}
-                </p>
-              </div>
-
-              {/* Action link */}
-              <div className="pt-2 mt-2 border-t border-[#18233B] flex items-center justify-between font-mono text-[10px] text-slate-400">
-                <span>Official Bracket</span>
-                <span className="text-primary-brand font-bold group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
-                  <span>View Bracket</span>
-                  <span>→</span>
-                </span>
-              </div>
-            </Link>
-          );
-        })}
-      </div>
-    )}
-  </div>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </HomePanel>
   );
 }

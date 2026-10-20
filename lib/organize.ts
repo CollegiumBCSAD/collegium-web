@@ -1,4 +1,13 @@
+import type { CSSProperties } from "react";
 import { OrganizeActionItem, OrganizeStage, Tournament } from "@/types";
+
+// Tournament gold for organizer CTAs: re-tints .game-theme-btn so organizer
+// buttons get the same glossy, glowing finish as the game-colored ones.
+export const ORGANIZER_BUTTON_VARS = {
+  "--primary-brand": "#D97706",
+  "--game-glow-rgb": "217, 119, 6",
+  "--game-btn-text": "#FFFFFF",
+} as CSSProperties;
 
 // Lane order is by urgency: running brackets first, archives last.
 export const ORGANIZE_STAGES: { id: OrganizeStage; label: string; hint: string }[] = [

@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/context/ConfirmContext";
 import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { tournamentsService } from "@/services/tournamentsService";
@@ -30,6 +31,7 @@ export default function TournamentGlobalChannel({
   isOrganizerOrAdmin = false,
 }: TournamentGlobalChannelProps) {
   const { user } = useAuth();
+  const confirm = useConfirm();
   const [messages, setMessages] = useState<TournamentChatMessage[]>([]);
   const [inputText, setInputText] = useState("");
   const [isAnnouncement, setIsAnnouncement] = useState(false);
@@ -177,7 +179,7 @@ export default function TournamentGlobalChannel({
   };
 
   const handleDeleteMessage = async (msgId: string) => {
-    if (!confirm("Delete this tournament message?")) return;
+    if (!(await confirm({ title: "Delete this message?", message: "It will be removed from the tournament channel for everyone.", confirmLabel: "Delete", tone: "danger" }))) return;
     try {
       await tournamentsService.deleteTournamentMessage(tournamentId, msgId);
       setMessages((prev) => prev.filter((m) => m.id !== msgId));

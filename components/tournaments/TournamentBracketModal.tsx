@@ -5,18 +5,20 @@ import { createPortal } from "react-dom";
 import { useAuth } from "@/context/AuthContext";
 import MatchBoxScoreModal from "@/components/MatchBoxScoreModal";
 import BracketTree from "@/components/tournaments/BracketTree";
+import BracketLiveStrip from "@/components/tournaments/BracketLiveStrip";
 import CloseMatchModal from "@/components/tournaments/CloseMatchModal";
 import TournamentGlobalChannel from "@/components/tournaments/TournamentGlobalChannel";
 import RetroactiveStatsEditModal from "@/components/tournaments/RetroactiveStatsEditModal";
 import TournamentStreamPanel from "@/components/tournaments/TournamentStreamPanel";
-import TournamentStreamPlayer from "@/components/tournaments/TournamentStreamPlayer";
+import TournamentWatchDesk from "@/components/tournaments/TournamentWatchDesk";
 import TournamentMatchHistory from "@/components/tournaments/TournamentMatchHistory";
 import {
   BracketMatch,
   BracketRound,
   TournamentBracketModalProps,
   TournamentDetail,
-  ParticipatingTeamDetail
+  ParticipatingTeamDetail,
+  TournamentStream
 } from "@/types";
 import { tournamentsService } from "@/services/tournamentsService";
 import {
@@ -59,9 +61,26 @@ export default function TournamentBracketModal({
           (tournamentDetail?.organizerId === user.id ||
             tournamentDetail?.organizer?.id === user.id)
       ));
-  const showWatchLive = Boolean(
-    tournamentDetail?.streamUrl && tournamentDetail?.streamIsLive
-  );
+  // Every broadcast; a server that predates multi-stream only sends the
+  // single legacy stream, which stands in as a read-only entry.
+  const streams: TournamentStream[] = tournamentDetail?.streams?.length
+    ? tournamentDetail.streams
+    : tournamentDetail?.streamUrl
+      ? [
+          {
+            id: "legacy",
+            url: tournamentDetail.streamUrl,
+            matchId: tournamentDetail.featuredMatchId,
+            isLive: Boolean(tournamentDetail.streamIsLive),
+          },
+        ]
+      : [];
+  const showWatchLive = streams.some((s) => s.isLive);
+  const [watchFocusId, setWatchFocusId] = useState<string | null>(null);
+  const openWatch = (streamId?: string) => {
+    setWatchFocusId(streamId ?? null);
+    setActiveTab("watch");
+  };
 
   // Check if current user is the tournament organizer or an administrator
   const isOrganizer = Boolean(
@@ -231,23 +250,11 @@ export default function TournamentBracketModal({
     onViewBoxScore: setActiveBoxScore,
     canReportResults,
     onReportResult: setReportingMatch,
-    featuredMatchId: tournamentDetail?.featuredMatchId,
+    featuredMatchIds: streams.filter((s) => s.isLive && s.matchId).map((s) => s.matchId as string),
   };
-
-  let featuredOnStream: {
-    roundName: string;
-    match: (typeof normalizedRounds)[0]["matches"][0];
-  } | null = null;
-  const featuredId = tournamentDetail?.featuredMatchId;
-  if (featuredId) {
-    for (const round of normalizedRounds) {
-      const match = round.matches.find((m) => m.id === featuredId);
-      if (match) {
-        featuredOnStream = { roundName: round.name, match };
-        break;
-      }
-    }
-  }
+  const matchNames: Record<string, string> = Object.fromEntries(
+    normalizedRounds.flatMap((r) => r.matches.map((m) => [m.id, `${m.team1.name} vs ${m.team2.name}`])),
+  );
 
   // Prefer the real bracket format/team count once loaded over the static
   // prop default, which otherwise always claims "Single Elimination".
@@ -310,7 +317,7 @@ export default function TournamentBracketModal({
             {/* Tab strip — own row so it can scroll without fighting the close button */}
             <div className="px-3 sm:px-6 md:px-8 pb-3">
               <div className="flex items-center gap-1.5 p-1.5 bg-[#0A0D18] border border-[#1E293B] overflow-x-auto scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {tournamentDetail?.streamUrl && (
+                {streams.length > 0 && (
                   <button
                     type="button"
                     onClick={() => setActiveTab("watch")}
@@ -407,35 +414,15 @@ export default function TournamentBracketModal({
             </div>
           </div>
 
-          {/* NOW ON STREAM — sticky callout when organizer features a match */}
-          {featuredOnStream && tournamentDetail?.streamUrl && (
-            <div className="shrink-0 z-20 flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 sm:px-6 py-2.5 bg-rose-950/80 border-b border-rose-500/40">
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="w-2 h-2 rounded-full bg-rose-400 animate-pulse shrink-0" />
-                <span className="text-[10px] font-mono font-black uppercase tracking-widest text-rose-300 shrink-0">
-                  Now on stream
-                </span>
-                <span className="text-slate-600 hidden sm:inline">·</span>
-                <span className="text-[10px] font-mono text-rose-200/80 uppercase tracking-wider shrink-0 hidden sm:inline">
-                  {featuredOnStream.roundName}
-                </span>
-                <span className="text-slate-600">·</span>
-                <span className="font-display text-sm font-black text-white uppercase truncate">
-                  {featuredOnStream.match.team1.name}
-                  <span className="text-rose-400 font-normal mx-1.5">vs</span>
-                  {featuredOnStream.match.team2.name}
-                </span>
-              </div>
-              {activeTab !== "watch" && (
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("watch")}
-                  className="h-8 px-3 font-mono text-[10px] font-black uppercase tracking-wider text-white bg-rose-600 hover:bg-rose-500 cursor-pointer shrink-0 self-start sm:self-auto"
-                >
-                  {showWatchLive ? "Watch desk" : "Open watch"}
-                </button>
-              )}
-            </div>
+          {/* LIVE NOW — every live match by bracket number, the on-stream one first */}
+          {!isLoading && activeTab !== "watch" && (
+            <BracketLiveStrip
+              mainRounds={mainRounds}
+              losersRounds={losersRounds}
+              streams={streams}
+              onWatch={openWatch}
+              onOpenMatch={setActiveBoxScore}
+            />
           )}
 
           {/* Modal Content Area */}
@@ -453,14 +440,15 @@ export default function TournamentBracketModal({
                   Loading Tournament Payload & Rosters...
                 </p>
               </div>
-            ) : activeTab === "watch" && tournamentDetail?.streamUrl ? (
+            ) : activeTab === "watch" && streams.length > 0 ? (
               /* WATCH DESK — stream + live bracket side by side */
               <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-0">
                 <div className="lg:w-[58%] xl:w-[62%] shrink-0 p-3 sm:p-4 flex flex-col max-h-[42vh] lg:max-h-none min-h-[180px] lg:min-h-0 lg:h-full border-b lg:border-b-0 lg:border-r border-[#1E293B]">
-                  <TournamentStreamPlayer
-                    streamUrl={tournamentDetail.streamUrl}
-                    streamIsLive={Boolean(tournamentDetail.streamIsLive)}
-                    className="flex-1 min-h-[160px] lg:min-h-0"
+                  <TournamentWatchDesk
+                    streams={streams}
+                    matchNames={matchNames}
+                    focusId={watchFocusId}
+                    onFocus={setWatchFocusId}
                   />
                 </div>
                 <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
@@ -816,29 +804,27 @@ export default function TournamentBracketModal({
 
                 {canEditStream && tournamentId && (
                   <TournamentStreamPanel
-                    key={`stream-${refreshKey}-${tournamentDetail?.streamUrl ?? ""}-${tournamentDetail?.streamIsLive}-${tournamentDetail?.featuredMatchId ?? ""}`}
+                    key={`stream-${refreshKey}`}
                     tournamentId={tournamentId}
-                    streamUrl={tournamentDetail?.streamUrl}
-                    streamIsLive={tournamentDetail?.streamIsLive}
-                    featuredMatchId={tournamentDetail?.featuredMatchId}
+                    streams={tournamentDetail?.streams ?? []}
                     rounds={rounds}
                     onSaved={() => setRefreshKey((k) => k + 1)}
                   />
                 )}
 
-                {!canEditStream && tournamentDetail?.streamUrl && (
+                {!canEditStream && streams.length > 0 && (
                   <div className="p-5 bg-[#0A0D18] border border-[#1E293B] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                       <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest block mb-1">
-                        Official Broadcast
+                        {streams.length > 1 ? `${streams.length} Live Streams` : "Official Broadcast"}
                       </span>
                       <p className="font-sans text-xs text-slate-300 truncate max-w-xl">
-                        {tournamentDetail.streamUrl}
+                        {streams.length > 1 ? "Watch them side by side or pick one." : streams[0].url}
                       </p>
                     </div>
                     <button
                       type="button"
-                      onClick={() => setActiveTab("watch")}
+                      onClick={() => openWatch()}
                       className="h-10 px-4 font-mono text-xs font-black uppercase tracking-wider text-white bg-rose-600 hover:bg-rose-500 inline-flex items-center justify-center gap-2 cursor-pointer"
                     >
                       {showWatchLive && (

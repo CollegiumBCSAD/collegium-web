@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { BracketFormat } from "./tournaments";
+import { BracketFormat, Tournament } from "./tournaments";
 
 export interface AdminNavItem {
   label: string;
@@ -64,4 +64,46 @@ export interface FlaggedMatch {
   scoreB: number;
   claimA: string;
   claimB: string;
+}
+
+/** Live size of every admin review queue, shared by the sidebar and Command Hub. */
+export interface AdminQueueCounts {
+  tournaments: number;
+  events: number;
+  coaches: number;
+  disputes: number;
+  scrims: number;
+}
+
+export interface AdminStat {
+  label: string;
+  value: number | string;
+  /** "warn" highlights a number that needs action. */
+  tone?: "default" | "warn" | "alert" | "good";
+}
+
+export interface AdminPageHeaderProps {
+  eyebrow: string;
+  title: string;
+  description?: string;
+  stats?: AdminStat[];
+  actions?: ReactNode;
+}
+
+/** Queue components report their size so the page tabs stay in sync after a review. */
+export interface AdminQueueCountProps {
+  onCountChange?: (count: number) => void;
+}
+
+export interface AdminNavGroup {
+  label: string;
+  items: AdminNavItem[];
+}
+
+export interface TournamentModerationPanelProps extends AdminQueueCountProps {
+  initialTournaments?: Tournament[];
+}
+
+export interface TournamentReviewDeskProps {
+  initialTournaments: Tournament[];
 }

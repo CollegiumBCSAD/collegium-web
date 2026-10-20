@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/context/ConfirmContext";
 import { useState } from "react";
 import Image from "next/image";
 import { coachService } from "@/services";
@@ -10,12 +11,14 @@ import { ClockIcon, MessageSquareIcon } from "@/components/ui/Icons";
 import CoachPanel from "./CoachPanel";
 
 export default function CoachInvitationsPanel({ invitations, onResponded }: CoachInvitationsPanelProps) {
+  const confirm = useConfirm();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   if (invitations.length === 0) return null;
 
   const respond = async (id: string, accept: boolean) => {
+    if (!(await confirm(accept ? { title: "Accept this invitation?", message: "You'll become this squad's coach.", confirmLabel: "Accept" } : { title: "Decline this invitation?", message: "The squad will be told you declined.", confirmLabel: "Decline", tone: "danger" }))) return;
     setBusyId(id);
     setError("");
     try {

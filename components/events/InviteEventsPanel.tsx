@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { MyEventSquad } from "@/types";
+import { InviteEventsPanelProps, MyEventSquad } from "@/types";
 import { eventsService } from "@/services/eventsService";
 import { LockIcon } from "@/components/ui/Icons";
 import { CARD, MONO_LABEL, TEAM_STATUS, eventCover } from "./eventSurfaces";
@@ -16,16 +16,18 @@ const parseInviteCode = (raw: string) => {
   return (fromUrl ?? value).replace(/[^A-Za-z0-9]/g, "").toUpperCase();
 };
 
-// Rendered only for signed-in athletes. Squads come from the account (matched
-// by verified captain email), never from this browser, so a shared computer
-// can't leak someone else's sign-up.
-export default function InviteEventsPanel() {
+// The code box is open to everyone (guests, coaches, non-athletes). Squads are
+// only loaded for signed-in athletes: they come from the account (matched by
+// verified captain email), never from this browser, so a shared computer can't
+// leak someone else's sign-up.
+export default function InviteEventsPanel({ showSquads = false }: InviteEventsPanelProps) {
   const router = useRouter();
   const [code, setCode] = useState("");
   const [codeError, setCodeError] = useState<string | null>(null);
   const [squads, setSquads] = useState<MyEventSquad[]>([]);
 
   useEffect(() => {
+    if (!showSquads) return;
     let cancelled = false;
     eventsService
       .getMySquads()
@@ -37,7 +39,7 @@ export default function InviteEventsPanel() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [showSquads]);
 
   const join = (e: React.FormEvent) => {
     e.preventDefault();

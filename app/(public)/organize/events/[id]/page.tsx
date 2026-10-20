@@ -20,7 +20,7 @@ import BackLink from "@/components/events/BackLink";
 import DeleteEventButton from "@/components/events/DeleteEventButton";
 import {
   CARD,
-  EVENT_STATUS,
+  eventStatusView,
   EYEBROW,
   GAME_LABEL,
   HERO_OUTLINE,
@@ -30,6 +30,7 @@ import {
   TEXT_ACTION,
   eventCover,
 } from "@/components/events/eventSurfaces";
+import EventApprovalNotice from "@/components/events/EventApprovalNotice";
 
 const PAGE = "flex flex-col flex-1 game-theme-bg relative";
 const WRAP = "mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-12 py-8 sm:py-12";
@@ -164,7 +165,7 @@ export default function OrganizeEventPage() {
       ? ""
       : `${window.location.origin}/events/${event.inviteCode}`;
 
-  const status = EVENT_STATUS[event.status];
+  const status = eventStatusView(event);
   const bracketDrawn = !!bracket && bracket.matches.length > 0;
   const played = bracket?.matches.filter((m) => m.winnerId && !m.isBye).length ?? 0;
   const playable = bracket?.matches.filter((m) => !m.isBye).length ?? 0;
@@ -192,6 +193,15 @@ export default function OrganizeEventPage() {
             />
           </span>
         </div>
+
+        <EventApprovalNotice
+          event={event}
+          onResubmit={async () => {
+            // Any organizer edit to a rejected event puts it back in the admin queue.
+            await eventsService.updateEvent(event.id, { name: event.name });
+            setEvent(await eventsService.getEvent(event.id));
+          }}
+        />
 
         {/* Hero */}
         <section className="grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:items-end">

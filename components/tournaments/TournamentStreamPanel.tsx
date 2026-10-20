@@ -1,136 +1,72 @@
 "use client";
 
+import { useConfirm } from "@/context/ConfirmContext";
 import { useState } from "react";
 import { tournamentsService } from "@/services/tournamentsService";
-import { BracketRound } from "@/types";
+import { TournamentStreamPanelProps } from "@/types";
+import TournamentStreamEditorRow from "./TournamentStreamEditorRow";
 
-interface TournamentStreamPanelProps {
-  tournamentId: string;
-  streamUrl?: string | null;
-  streamIsLive?: boolean;
-  featuredMatchId?: string | null;
-  rounds: BracketRound[];
-  onSaved: () => void;
-}
+/** Organizer controls for every broadcast this tournament runs. */
+export default function TournamentStreamPanel({ tournamentId, streams, rounds, onSaved }: TournamentStreamPanelProps) {
+  const confirm = useConfirm();
+  const [adding, setAdding] = useState(streams.length === 0);
 
-function matchLabel(rounds: BracketRound[], matchId: string): string {
-  for (const round of rounds) {
-    const match = round.matches.find((m) => m.id === matchId);
-    if (match) {
-      return `${round.name}: ${match.team1.name} vs ${match.team2.name}`;
-    }
-  }
-  return matchId;
-}
-
-export default function TournamentStreamPanel({
-  tournamentId,
-  streamUrl,
-  streamIsLive,
-  featuredMatchId,
-  rounds,
-  onSaved,
-}: TournamentStreamPanelProps) {
-  const [url, setUrl] = useState(streamUrl ?? "");
-  const [live, setLive] = useState(Boolean(streamIsLive));
-  const [featured, setFeatured] = useState(featuredMatchId ?? "");
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [ok, setOk] = useState(false);
-
-  const allMatches = rounds.flatMap((r) =>
-    r.matches.map((m) => ({ id: m.id, label: `${r.name}: ${m.team1.name} vs ${m.team2.name}` }))
+  const matchOptions = rounds.flatMap((r) =>
+    r.matches.map((m) => ({ id: m.id, label: `${r.name}: ${m.team1.name} vs ${m.team2.name}` })),
   );
-
-  const handleSave = async () => {
-    setSaving(true);
-    setError(null);
-    setOk(false);
-    try {
-      await tournamentsService.updateStream(tournamentId, {
-        streamUrl: url.trim() || null,
-        streamIsLive: live,
-        featuredMatchId: featured.trim() || null,
-      });
-      setOk(true);
-      onSaved();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to save stream settings");
-    } finally {
-      setSaving(false);
-    }
-  };
 
   return (
     <div className="p-5 bg-[#0A0D18] border border-rose-500/30 space-y-4">
-      <div>
-        <span className="text-[10px] font-mono text-rose-400 uppercase tracking-widest block mb-1">
-          Official Broadcast
-        </span>
-        <p className="font-sans text-xs text-slate-400">
-          One stream for this tournament. Paste YouTube / Twitch / public Facebook Live. Set &quot;On stream now&quot; so the Watch desk highlights that match.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <span className="text-[10px] font-mono text-rose-400 uppercase tracking-widest block mb-1">
+            Live streams · {streams.length}
+          </span>
+          <p className="font-sans text-xs text-slate-400 max-w-xl">
+            Add one stream per broadcast — YouTube, Twitch, or public Facebook Live. Running matches in parallel? Add a
+            stream for each; viewers see them side by side and can pick one. Link a stream to its match so the bracket
+            marks it as on stream.
+          </p>
+        </div>
+        {!adding && (
+          <button
+            type="button"
+            onClick={() => setAdding(true)}
+            className="h-9 px-4 font-mono text-[11px] font-black uppercase tracking-wider text-white bg-rose-600 hover:bg-rose-500 shrink-0"
+          >
+            + Add stream
+          </button>
+        )}
       </div>
 
-      <label className="block space-y-1.5">
-        <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">
-          Stream URL
-        </span>
-        <input
-          type="url"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="https://twitch.tv/…"
-          className="w-full h-10 px-3 bg-[#05070E] border border-[#1E293B] text-xs font-mono text-white placeholder:text-slate-600 focus:outline-none focus:border-rose-500/50"
+      {streams.map((s) => (
+        <TournamentStreamEditorRow
+          key={`${s.id}-${s.url}-${s.matchId ?? ""}-${s.isLive}-${s.label ?? ""}`}
+          stream={s}
+          matchOptions={matchOptions}
+          onSubmit={async (input) => {
+            await tournamentsService.updateStreamEntry(tournamentId, s.id, input);
+            onSaved();
+          }}
+          onRemove={async () => {
+            if (!(await confirm({ title: "Remove this stream?", message: "Viewers will no longer see it on the Watch tab.", confirmLabel: "Remove", tone: "danger" }))) return;
+            await tournamentsService.removeStream(tournamentId, s.id);
+            onSaved();
+          }}
         />
-      </label>
+      ))}
 
-      <label className="flex items-center gap-2 cursor-pointer select-none">
-        <input
-          type="checkbox"
-          checked={live}
-          onChange={(e) => setLive(e.target.checked)}
-          className="accent-rose-500"
+      {adding && (
+        <TournamentStreamEditorRow
+          matchOptions={matchOptions}
+          onSubmit={async (input) => {
+            await tournamentsService.addStream(tournamentId, input);
+            setAdding(false);
+            onSaved();
+          }}
+          onCancel={streams.length > 0 ? () => setAdding(false) : undefined}
         />
-        <span className="text-xs font-mono text-slate-300 uppercase tracking-wider">
-          We&apos;re live now
-        </span>
-      </label>
-
-      <label className="block space-y-1.5">
-        <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">
-          On stream now (optional)
-        </span>
-        <select
-          value={featured}
-          onChange={(e) => setFeatured(e.target.value)}
-          className="w-full h-10 px-3 bg-[#05070E] border border-[#1E293B] text-xs font-mono text-white focus:outline-none focus:border-rose-500/50"
-        >
-          <option value="">— none —</option>
-          {allMatches.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.label}
-            </option>
-          ))}
-        </select>
-        {featuredMatchId && !allMatches.some((m) => m.id === featuredMatchId) && (
-          <p className="text-[10px] font-mono text-slate-500">
-            Current: {matchLabel(rounds, featuredMatchId)}
-          </p>
-        )}
-      </label>
-
-      {error && <p className="text-xs font-mono text-rose-400">{error}</p>}
-      {ok && <p className="text-xs font-mono text-emerald-400">Stream settings saved.</p>}
-
-      <button
-        type="button"
-        onClick={handleSave}
-        disabled={saving}
-        className="h-10 px-5 font-mono text-xs font-black uppercase tracking-wider text-white bg-rose-600 hover:bg-rose-500 disabled:opacity-50 cursor-pointer"
-      >
-        {saving ? "Saving…" : "Save Stream"}
-      </button>
+      )}
     </div>
   );
 }

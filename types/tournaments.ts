@@ -47,6 +47,24 @@ export interface Tournament {
   streamIsLive?: boolean;
   /** Match currently featured on the official stream. */
   featuredMatchId?: string | null;
+  /** Every broadcast for this tournament; several can run at once. */
+  streams?: TournamentStream[];
+}
+
+export interface TournamentStream {
+  id: string;
+  url: string;
+  label?: string | null;
+  /** The match this stream is showing right now, if any. */
+  matchId?: string | null;
+  isLive: boolean;
+}
+
+export interface TournamentStreamInput {
+  url?: string;
+  label?: string | null;
+  matchId?: string | null;
+  isLive?: boolean;
 }
 
 export interface TournamentMatch {
@@ -148,9 +166,50 @@ export interface UniversityTournamentPlacement {
 }
 
 export interface MatchRosterPreviewMember {
+  /** Registered athlete behind this roster slot; links to their profile. */
+  userId?: string;
   displayName?: string;
   gameHandle?: string;
   preferredRole?: string;
+  isCaptain?: boolean;
+}
+
+export interface MatchScoreHeroProps {
+  team1Name: string;
+  team2Name: string;
+  /** Total kills per side once stats are reported, else null. */
+  team1Kills: number | null;
+  team2Kills: number | null;
+  isTeam1Winner: boolean;
+  isTeam2Winner: boolean;
+  isLive: boolean;
+}
+
+export interface MatchAthleteLinkProps {
+  userId?: string | null;
+  className: string;
+  children: ReactNode;
+}
+
+export interface MatchRosterRowProps {
+  member: MatchRosterPreviewMember;
+  index: number;
+}
+
+export interface MatchStatRowProps {
+  p: MatchPlayerStat;
+  maxKda: number;
+}
+
+export interface MatchTeamCardProps {
+  name: string;
+  isWinner: boolean;
+  isPlayed: boolean;
+  isLive: boolean;
+  players: MatchPlayerStat[];
+  roster?: MatchRosterPreviewMember[];
+  /** Highest KDA across both teams, for the MVP crown and bar scale. */
+  maxKda: number;
 }
 
 export interface MatchBoxScore {
@@ -401,7 +460,8 @@ export interface BracketTreeProps {
   onViewBoxScore: (match: BracketMatch) => void;
   canReportResults?: boolean;
   onReportResult?: (match: BracketMatch) => void;
-  featuredMatchId?: string | null;
+  /** Matches currently shown on any live stream. */
+  featuredMatchIds?: string[];
   /** Append empty rounds so a partially generated bracket still shows its full path. */
   projectToFinal?: boolean;
   /** Show the champion slot after the last round (undefined = hide). */
@@ -418,6 +478,39 @@ export interface BracketMatchCardProps {
   compact?: boolean;
   onOpen: () => void;
   onReport?: () => void;
+}
+
+export interface BracketLiveStripProps {
+  /** Rounds in the same order the main tree draws them, so M-numbers match the cards. */
+  mainRounds: BracketTreeRound[];
+  losersRounds: BracketTreeRound[];
+  streams: TournamentStream[];
+  /** Opens the Watch tab, focused on one stream when an id is given. */
+  onWatch: (streamId?: string) => void;
+  onOpenMatch: (match: BracketMatch) => void;
+}
+
+export interface TournamentWatchDeskProps {
+  streams: TournamentStream[];
+  /** Match id -> "TEAM A vs TEAM B", for naming a stream by what it shows. */
+  matchNames: Record<string, string>;
+  focusId: string | null;
+  onFocus: (streamId: string | null) => void;
+}
+
+export interface TournamentStreamPanelProps {
+  tournamentId: string;
+  streams: TournamentStream[];
+  rounds: BracketRound[];
+  onSaved: () => void;
+}
+
+export interface TournamentStreamEditorRowProps {
+  stream?: TournamentStream;
+  matchOptions: { id: string; label: string }[];
+  onSubmit: (input: TournamentStreamInput) => Promise<void>;
+  onRemove?: () => Promise<void>;
+  onCancel?: () => void;
 }
 
 export interface BracketTeamRowProps {

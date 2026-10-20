@@ -1,4 +1,4 @@
-import { EventGameTitle, EventStatus, EventTeamStatus } from "@/types";
+import { EventGameTitle, EventStatus, EventSummary, EventTeamStatus } from "@/types";
 
 // Visual vocabulary shared by the invite-only event pages so they read like the
 // Tournaments / Universities pages (editorial hero, dot-grid cards, key art).
@@ -38,6 +38,17 @@ export const EVENT_STATUS: Record<EventStatus, { label: string; className: strin
   ONGOING: { label: "In progress", className: "text-primary-brand", pulse: true },
   COMPLETED: { label: "Completed", className: "text-sky-300" },
 };
+
+/**
+ * What an event's status chip should say. Until an admin approves the event,
+ * that review outranks the lifecycle status (which stays DRAFT meanwhile).
+ */
+export const eventStatusView = (event: Pick<EventSummary, "status" | "approvalStatus">) =>
+  event.approvalStatus === "PENDING"
+    ? { label: "Awaiting admin approval", className: "text-amber-300", pulse: true }
+    : event.approvalStatus === "REJECTED"
+      ? { label: "Rejected by admin", className: "text-rose-300", pulse: false }
+      : EVENT_STATUS[event.status];
 
 export const TEAM_STATUS: Record<
   EventTeamStatus,

@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/context/ConfirmContext";
 import React, { useState, useRef, useCallback, useEffect, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { UserProfile } from "@/types";
@@ -29,6 +30,7 @@ function ProfilePictureModalContent({
 }) {
   const { setUserAvatar, refreshProfile } = useAuth();
 
+  const confirm = useConfirm();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(
     user.avatarOriginal || user.avatar || null
@@ -283,6 +285,7 @@ function ProfilePictureModalContent({
 
   const handleRemoveAvatar = async () => {
     if (!user.avatar) return;
+    if (!(await confirm({ title: "Remove your profile picture?", message: "Your profile will show your initials instead.", confirmLabel: "Remove", tone: "danger" }))) return;
     setError(null);
     setIsLoading(true);
     try {

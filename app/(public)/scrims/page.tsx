@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/context/ConfirmContext";
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -102,6 +103,7 @@ export default function ScrimsPage() {
   const { openWarRoom } = useWarRoom();
   const activeGame: GameId = globalGame || "valo";
 
+  const confirm = useConfirm();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isNoSquadModalOpen, setIsNoSquadModalOpen] = useState(false);
   const [scrims, setScrims] = useState<ScrimOffer[]>([]);
@@ -409,6 +411,7 @@ export default function ScrimsPage() {
   }, [scrims, isUserHost, myTeams]);
 
   const handleConfirmBooking = async (id: string, selectedOpponentId?: string) => {
+    if (!(await confirm({ title: "Confirm this booking?", message: "The scrim will be locked in with this opponent.", confirmLabel: "Confirm booking" }))) return;
     try {
       await scrimsService.confirmScrim(id, selectedOpponentId);
       const data = await scrimsService.getScrims(activeGame);
@@ -421,6 +424,7 @@ export default function ScrimsPage() {
   };
 
   const handleDeclineRequest = async (id: string, opponentId?: string) => {
+    if (!(await confirm({ title: "Decline this request?", message: "The challenging squad will be notified.", confirmLabel: "Decline", tone: "danger" }))) return;
     removePendingScrimRequest(id, opponentId);
     try {
       await scrimsService.cancelScrim(id);
@@ -441,6 +445,7 @@ export default function ScrimsPage() {
   };
 
   const handleAcceptScrim = async (id: string) => {
+    if (!(await confirm({ title: "Accept this scrim?", message: "Your squad will be booked against the host.", confirmLabel: "Accept" }))) return;
     setScrimError("");
     const scrim = scrims.find((s) => s.id === id);
     if (!scrim) return;
@@ -475,6 +480,7 @@ export default function ScrimsPage() {
   };
 
   const handleCancelScrim = async (id: string) => {
+    if (!(await confirm({ title: "Cancel this scrim?", message: "Both squads will see it as cancelled.", confirmLabel: "Cancel scrim", tone: "danger" }))) return;
     const myTeam = myTeams.find((t: Team) => t.gameTitle === activeGame) || myTeams[0];
     removeMyRequestedScrim(id, myTeam?.id);
     removePendingScrimRequest(id, myTeam?.id);
@@ -493,6 +499,7 @@ export default function ScrimsPage() {
   };
 
   const handleDeleteScrim = async (id: string) => {
+    if (!(await confirm({ title: "Delete this scrim post?", message: "It will be removed from the board permanently.", confirmLabel: "Delete", tone: "danger" }))) return;
     // Instant optimistic deletion from UI
     setScrims((prev) => prev.filter((s) => s.id !== id));
     try {
