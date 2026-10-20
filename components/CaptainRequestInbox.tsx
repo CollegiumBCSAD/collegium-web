@@ -64,7 +64,7 @@ export default function CaptainRequestInbox() {
     let isMounted = true;
 
     teamsService
-      .getJoinRequests(activeTeam.id, user.id)
+      .getJoinRequests(activeTeam.id)
       .then((reqs) => {
         if (isMounted && Array.isArray(reqs)) {
           setApiRequests(reqs);
@@ -102,7 +102,7 @@ export default function CaptainRequestInbox() {
     const status = accept ? "ACCEPTED" : "DECLINED";
     try {
       if (!user) throw new Error("Not authenticated");
-      await teamsService.handleJoinRequest(activeTeam.id, memberId, user.id, status);
+      await teamsService.handleJoinRequest(activeTeam.id, memberId, status);
       setActionMessage(`Candidate ${accept ? "accepted" : "declined"} successfully.`);
     } catch {
       setActionMessage(`Updated request.`);

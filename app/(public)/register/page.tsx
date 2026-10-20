@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { authService } from "@/services/authService";
 import { ORGANIZER_BUTTON_VARS } from "@/lib/organize";
+import { PASSWORD_MAX_LENGTH, PASSWORD_RULES, firstFailedPasswordRule } from "@/lib/password";
 import { TrophyIcon, UsersIcon, ShieldIcon, ZapIcon, CheckCircleIcon, AlertTriangleIcon } from "@/components/ui/Icons";
 
 const LOADING_SCREEN = (
@@ -44,18 +45,12 @@ function RegisterContent() {
   const [isResending, setIsResending] = useState(false);
   const [resendMessage, setResendMessage] = useState("");
 
-  const getUniversityFromEmail = (emailStr: string) => {
+  const getEduDomainFromEmail = (emailStr: string) => {
     const domain = emailStr.split("@")[1]?.toLowerCase() || "";
-    if (domain === "umak.edu.ph") return "University of Makati (UMAK)";
-    if (domain === "ust.edu.ph") return "University of Santo Tomas (UST)";
-    if (domain === "dlsu.edu.ph") return "De La Salle University (DLSU)";
-    if (domain === "admu.edu.ph") return "Ateneo de Manila University (ADMU)";
-    if (domain === "up.edu.ph") return "University of the Philippines (UP)";
-    if (domain.endsWith(".edu.ph")) return `${domain.split(".")[0].toUpperCase()} University`;
-    return null;
+    return domain.endsWith(".edu.ph") ? domain : null;
   };
 
-  const detectedUniversity = getUniversityFromEmail(email);
+  const detectedDomain = getEduDomainFromEmail(email);
   const isEduPh = email.toLowerCase().includes("@") && email.toLowerCase().split("@")[1]?.endsWith(".edu.ph");
 
   useEffect(() => {
@@ -87,8 +82,9 @@ function RegisterContent() {
       setError("Registration requires a valid Philippine institutional email (.edu.ph).");
       return;
     }
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
+    const failedRule = firstFailedPasswordRule(password);
+    if (failedRule) {
+      setError(`Password must meet every requirement: ${failedRule.label.toLowerCase()}.`);
       return;
     }
     if (password !== confirmPassword) {
@@ -399,11 +395,11 @@ function RegisterContent() {
               placeholder={isOrganizer ? "organizer@umak.edu.ph" : "student@umak.edu.ph"}
               className="w-full h-11 px-4 rounded-xl bg-[#080C14] border border-[#1C2538] focus:border-primary-brand text-white text-sm font-sans focus:outline-none transition-colors"
             />
-            {detectedUniversity && (
+            {detectedDomain && (
               <div className="mt-2 p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30 flex items-center justify-between">
                 <span className="text-[11px] font-mono font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
                   <CheckCircleIcon className="w-3.5 h-3.5 text-emerald-400" />
-                  {detectedUniversity}
+                  {detectedDomain}
                 </span>
                 <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md ${
                   isOrganizer
@@ -425,6 +421,8 @@ function RegisterContent() {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                maxLength={PASSWORD_MAX_LENGTH}
+                aria-describedby="password-rules"
                 placeholder="••••••••"
                 className="w-full h-11 px-4 pr-16 rounded-xl bg-[#080C14] border border-[#1C2538] focus:border-primary-brand text-white text-sm font-sans focus:outline-none transition-colors"
               />
@@ -436,6 +434,20 @@ function RegisterContent() {
                 {showPassword ? "Hide" : "Show"}
               </button>
             </div>
+            <ul id="password-rules" className="mt-2 space-y-1">
+              {PASSWORD_RULES.map((rule) => {
+                const met = rule.test(password);
+                return (
+                  <li
+                    key={rule.label}
+                    className={`flex items-center gap-1.5 text-[11px] font-mono ${met ? "text-emerald-400" : "text-slate-500"}`}
+                  >
+                    <CheckCircleIcon className="w-3 h-3" />
+                    <span>{rule.label}</span>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
 
           <div>
@@ -447,6 +459,7 @@ function RegisterContent() {
                 type={showConfirmPassword ? "text" : "password"}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
+                maxLength={PASSWORD_MAX_LENGTH}
                 placeholder="••••••••"
                 className="w-full h-11 px-4 pr-16 rounded-xl bg-[#080C14] border border-[#1C2538] focus:border-primary-brand text-white text-sm font-sans focus:outline-none transition-colors"
               />

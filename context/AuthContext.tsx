@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { configureApiClient, authService } from "@/services";
 import { UserProfile, AuthContextType } from "@/types";
 
@@ -8,20 +8,51 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const STORAGE_KEY = "collegium_access_token";
 
+function readStoredToken(): string | null {
+  try {
+    return localStorage.getItem(STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writeStoredToken(token: string | null) {
+  try {
+    if (token) localStorage.setItem(STORAGE_KEY, token);
+    else localStorage.removeItem(STORAGE_KEY);
+  } catch {}
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  // The API client reads the token through this ref so it always sees the
+  // latest value, even mid-render. The token is also persisted: in production
+  // the frontend (Vercel) and API (Render) are cross-site, and browsers that
+  // block third-party cookies never send the auth cookies — the Bearer header
+  // is then the only thing that keeps a session alive across reloads.
+  const tokenRef = useRef<string | null>(null);
+
+  const storeToken = useCallback((token: string | null) => {
+    tokenRef.current = token;
+    setAccessToken(token);
+    writeStoredToken(token);
+  }, []);
 
   const clearAuth = useCallback(() => {
     setUser(null);
-    setAccessToken(null);
-    if (typeof window !== "undefined") {
-      try {
-        localStorage.removeItem(STORAGE_KEY);
-      } catch {}
-    }
-  }, []);
+    storeToken(null);
+  }, [storeToken]);
+
+  // Ignore a 401 from a request sent with an older token — e.g. the initial
+  // anonymous getMe() resolving after verify-email has already logged in.
+  const handleUnauthorized = useCallback(
+    (rejectedToken: string | null) => {
+      if (rejectedToken === tokenRef.current) clearAuth();
+    },
+    [clearAuth],
+  );
 
   const fetchProfile = useCallback(async (): Promise<UserProfile | null> => {
     try {
@@ -32,24 +63,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const handleTokenRefreshed = useCallback((newToken: string) => {
-    setAccessToken(newToken);
-  }, []);
-
   const loginWithToken = useCallback(async (token?: string) => {
     if (token) {
-      setAccessToken(token);
+      storeToken(token);
     }
-    configureApiClient(() => token || null, clearAuth, handleTokenRefreshed);
+    const tokenUsed = tokenRef.current;
 
     const profile = await fetchProfile();
     if (profile) {
       setUser(profile);
-    } else {
+    } else if (tokenRef.current === tokenUsed) {
       clearAuth();
     }
     return profile;
-  }, [clearAuth, fetchProfile, handleTokenRefreshed]);
+  }, [clearAuth, fetchProfile, storeToken]);
 
   const logoutUser = useCallback(async () => {
     try {
@@ -73,16 +100,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    configureApiClient(() => accessToken, clearAuth, handleTokenRefreshed);
+    configureApiClient(() => tokenRef.current, handleUnauthorized, storeToken);
+
+    const stored = readStoredToken();
+    tokenRef.current = stored;
+
     fetchProfile().then((profile) => {
       if (profile) {
+        setAccessToken(tokenRef.current);
         setUser(profile);
-      } else {
+      } else if (tokenRef.current === stored) {
         clearAuth();
       }
       setIsLoaded(true);
     });
-  }, [accessToken, clearAuth, fetchProfile, handleTokenRefreshed]);
+  }, [clearAuth, fetchProfile, handleUnauthorized, storeToken]);
 
   return (
     <AuthContext.Provider

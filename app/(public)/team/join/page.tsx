@@ -204,7 +204,6 @@ function JoinTeamContent() {
     setIsLoading(true);
     try {
       const res = await teamsService.joinTeam(selectedTeam.id, {
-        userId: user.id,
         gameHandle: gameHandle.trim(),
         preferredRole: preferredRole.trim(),
         inviteCode: inviteCodeParam || undefined,

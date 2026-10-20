@@ -58,7 +58,7 @@ export default function RosterDetailsModal({ team, isOpen, onClose, onRosterUpda
     setIsLeaving(true);
     setLeaveError("");
     try {
-      await teamsService.leaveTeam(team.id, user.id);
+      await teamsService.leaveTeam(team.id);
       onClose();
       if (onRosterUpdated) onRosterUpdated();
       else window.location.reload();

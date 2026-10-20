@@ -40,7 +40,7 @@ export default function DashboardPage() {
     if (!(await confirm({ title: "Withdraw your join request?", message: "The captain will no longer see your request.", confirmLabel: "Withdraw", tone: "danger" }))) return;
     if (!user) return;
     try {
-      await teamsService.leaveTeam(teamId, user.id);
+      await teamsService.leaveTeam(teamId);
       refreshTeams();
     } catch {}
   };
